@@ -1,0 +1,6 @@
+[
+  { "id": "uniqlo-airism-oversized", "label": "loose", "measurements": { "chest_cm": 47, "length_cm": 58, "sleeve_cm": 22.5 } },
+  { "id": "smartwool", "label": "great", "measurements": { "chest_cm": 44, "length_cm": 58, "sleeve_cm": 19 } },
+  { "id": "stay-freaky-nike", "label": "great", "measurements": { "chest_cm": 46, "length_cm": 62, "sleeve_cm": 21 } },
+  { "id": "jack-jones-original", "label": "great", "measurements": { "chest_cm": 45, "length_cm": 60, "sleeve_cm": 19 } }
+]

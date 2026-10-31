@@ -1,0 +1,7 @@
+[
+  { "id": "nike-sportswear-fabric", "label": "great", "measurements": { "chest_cm": 57.5, "length_cm": 70, "sleeve_cm": 23 } },
+  { "id": "uniqlo-normal-1", "label": "great", "measurements": { "chest_cm": 58, "length_cm": 64.5, "sleeve_cm": 22.5 } },
+  { "id": "uniqlo-normal-2", "label": "loose", "measurements": { "chest_cm": 61.5, "length_cm": 72.5, "sleeve_cm": 23.5 } },
+  { "id": "nike-tee-loose-white", "label": "tight", "measurements": { "chest_cm": 56, "length_cm": 69, "sleeve_cm": 20 } },
+  { "id": "nike-tee-loose-black", "label": "tight", "measurements": { "chest_cm": 52.5, "length_cm": 68, "sleeve_cm": 20 } }
+]

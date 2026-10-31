@@ -1,0 +1,6 @@
+[
+  { "id": "blue-uniqlo-oxford", "label": "great", "measurements": { "chest_cm": 54, "length_cm": 72, "sleeve_cm": 63 } },
+  { "id": "white-gap-tee", "label": "great", "measurements": { "chest_cm": 52.5, "length_cm": 70, "sleeve_cm": null } },
+  { "id": "grey-zara-shirt", "label": "loose", "measurements": { "chest_cm": 57, "length_cm": 75, "sleeve_cm": 65 } },
+  { "id": "black-hm-polo", "label": "tight", "measurements": { "chest_cm": 51, "length_cm": 68, "sleeve_cm": null } }
+]

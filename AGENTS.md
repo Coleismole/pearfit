@@ -10,14 +10,15 @@ Out of scope: avatars, 3D, Unity, SMPL-X, MediaPipe, cloth simulation. Do not ad
 
 ## Architecture
 - TypeScript everywhere except SQL.
-- Frontend and backend talk only through the API. Request/response types live in
-  `shared/types.ts`; both sides import it. Change the contract there first, never ad hoc.
-- Matching engine (`engine/`) is pure TypeScript: no I/O, no network, no LLM, no framework imports.
-  The API layer calls the engine; the engine never calls the API.
-- Endpoints (custom code only where there is a secret or real logic):
-  - `POST /api/recommend`: wardrobe + candidate -> recommended size, % match ranking, verdict, confidence
-  - `POST /api/parse-product` (later): URL or raw HTML -> candidate garment
-  - `POST /api/ingest-gmail` (later)
+- First MVP has no frontend: the matching engine runs from the terminal. Do not add a UI or API
+  server unless the team decides to.
+- `engine/src/` is the matching engine: pure functions, no I/O, no network, no LLM, no framework
+  imports. Shared types live in `engine/src/types.ts`.
+- `engine/cli/` does file loading/validation and the terminal runners. It calls the engine;
+  the engine never calls it.
+- `webscraper/` is a separate app with its own `package.json`. Don't mix its code into `engine/`.
+- Later, when there is an API: endpoints exist only where there is a secret or real logic
+  (`/recommend`, `/parse-product`, `/ingest-gmail`), and they import types from the engine.
 - Supabase (auth, DB) is planned but not in use yet. Do not add it until the team decides to.
 
 ## Core design rule
@@ -41,7 +42,7 @@ Owned shirt:
 - Any measurement may be `null`. Code must handle `null` on every field.
 - `id`: lowercase, dashes, no spaces, unique per person.
 
-Candidate garment (proposal, not yet agreed by the team):
+Candidate garment (used by the Pilot 1 engine; sizes listed smallest to largest):
 ```json
 {
   "id": "cos-oxford",
@@ -53,8 +54,8 @@ Candidate garment (proposal, not yet agreed by the team):
 `review` is one of `"runs_small"`, `"true_to_size"`, `"runs_large"`, or `null`.
 
 ## Engine rules
-- Weights, thresholds and the % scale live in one config file per garment category. No magic
-  numbers elsewhere.
+- Weights, thresholds and the % scale live in `engine/src/config.ts`, one config per garment
+  category. No magic numbers elsewhere.
 - Missing dimensions must not make a shirt look closer: normalize by the weights actually present.
 - The review signal only breaks ties between close sizes; it never overrides measurements.
 - Every engine change ships with a unit test using hand-computed numbers.
@@ -65,12 +66,11 @@ Candidate garment (proposal, not yet agreed by the team):
 - No new dependency without a one-line reason in the PR.
 - No secrets in code or commits. Keys go in `.env.local` (gitignored); list their names in `.env.example`.
 - Prefer boring, readable code over clever code. Match the surrounding style.
-- Don't touch frontend files when working on the engine, or the reverse, unless the task says so.
+- Don't touch `webscraper/` when working on the engine, or the reverse, unless the task says so.
 
-## Commands
-TODO: fill in from the real `package.json` once the repo is set up.
-- Install: `npm install`
-- Dev server: `npm run dev`
+## Commands (engine, run from `engine/`; Node 22.18+)
+- Install dev deps: `npm install`
+- Recommend: `npm run recommend -- <owner> [candidateId]`
+- Eval against ground truth: `npm run eval`
 - Tests: `npm test`
-- Typecheck: `npx tsc --noEmit`
-- Scorer eval: `npm run eval`
+- Typecheck: `npm run typecheck`

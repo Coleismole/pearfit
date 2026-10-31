@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cos-oxford",
+    "name": "COS oxford",
+    "review": "runs_small",
+    "sizes": {
+      "S": { "chest_cm": 51, "length_cm": 70, "sleeve_cm": 62 },
+      "M": { "chest_cm": 54.5, "length_cm": 72.5, "sleeve_cm": 63.5 },
+      "L": { "chest_cm": 57.5, "length_cm": 75, "sleeve_cm": 65 }
+    }
+  },
+  {
+    "id": "muji-tee",
+    "name": "Muji crew tee",
+    "review": null,
+    "sizes": {
+      "S": { "chest_cm": 50, "length_cm": 68, "sleeve_cm": null },
+      "M": { "chest_cm": 53, "length_cm": 71, "sleeve_cm": null },
+      "L": { "chest_cm": 56, "length_cm": 73, "sleeve_cm": null }
+    }
+  },
+  {
+    "id": "boxy-tee",
+    "name": "Indie boxy tee",
+    "review": "runs_large",
+    "sizes": {
+      "M": { "chest_cm": 58, "length_cm": 66, "sleeve_cm": null },
+      "L": { "chest_cm": 61, "length_cm": 68, "sleeve_cm": null }
+    }
+  }
+]

@@ -1,0 +1,149 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  normalizeSize,
+  classifyReviewFitAndSentiment,
+  parseRawReviewBatch,
+  aggregateProductFitReport,
+  calculateSizeRecommendation,
+  generateSqlInsertDump,
+} from './fitAnalyzer';
+
+test('normalizeSize maps diverse size strings and numeric sizes into canonical XS-XXL', () => {
+  assert.equal(normalizeSize('extra small'), 'XS');
+  assert.equal(normalizeSize('Small'), 'S');
+  assert.equal(normalizeSize('Med'), 'M');
+  assert.equal(normalizeSize('Large'), 'L');
+  assert.equal(normalizeSize('1XL'), 'XL');
+  assert.equal(normalizeSize('2XL'), 'XXL');
+  assert.equal(normalizeSize('28'), 'S');
+  assert.equal(normalizeSize('32'), 'M');
+  assert.equal(normalizeSize('36'), 'XL');
+});
+
+test('classifyReviewFitAndSentiment identifies fit direction, wash shrinkage, and fabric opacity cues', () => {
+  const smallResult = classifyReviewFitAndSentiment(
+    'This jacket runs very small! Way too tight across the shoulders and short in the sleeves. Definitely size up.',
+    2
+  );
+  assert.equal(smallResult.fitDirection, 'runs_small');
+  assert.ok(smallResult.fitSkew < -0.4);
+  assert.equal(smallResult.sizedUpOrDownMention, 'sized_up');
+  assert.ok(
+    smallResult.anatomicalMentions.some(
+      (m) => m.zone === 'shoulders' && m.tension === 'tight'
+    )
+  );
+
+  const tshirtResult = classifyReviewFitAndSentiment(
+    'Relaxed drop-shoulder fit that runs large out of the bag, but shrank half an inch in length after tumble drying. Thick 240 gsm heavyweight cotton that is completely opaque and not see-through.',
+    4,
+    'Slightly Large'
+  );
+  assert.equal(tshirtResult.mentionsShrinkage, true);
+  assert.equal(tshirtResult.mentionsFabricOpacity, 'thick_opaque');
+
+  const ttsResult = classifyReviewFitAndSentiment(
+    'True to size and fits like a glove! Comfortable shoulders and great drape.',
+    5
+  );
+  assert.equal(ttsResult.fitDirection, 'true_to_size');
+  assert.ok(Math.abs(ttsResult.fitSkew) < 0.25);
+  assert.equal(ttsResult.sentimentPolarity, 'positive');
+});
+
+test('parseRawReviewBatch parses both HTML review cards and plain text blocks', () => {
+  const htmlSample = `
+    <div class="review-card" data-size="L" data-rating="2" data-author="Maya K.">
+      <h4>Way too tight in the chest</h4>
+      <p>Ordered size L and it runs small. Pulls at the chest buttons and tight in the shoulders.</p>
+    </div>
+    <div class="review-card" data-size="S" data-rating="5" data-author="Elena R.">
+      <h4>Perfect fit for S</h4>
+      <p>True to size! Fits perfectly in the waist and length.</p>
+    </div>
+  `;
+  const parsedHtml = parseRawReviewBatch(htmlSample);
+  assert.equal(parsedHtml.length, 2);
+  assert.equal(parsedHtml[0].sizePurchased, 'L');
+  assert.equal(parsedHtml[0].author, 'Maya K.');
+
+  const textSample = `
+Size: XL | Rating: 2/5
+Runs small and shrunk after wash. Tight across the shoulders.
+
+Size: M | Rating: 5/5
+True to size, fits perfectly and super soft knit.
+  `;
+  const parsedText = parseRawReviewBatch(textSample);
+  assert.equal(parsedText.length, 2);
+  assert.equal(parsedText[0].sizePurchased, 'XL');
+  assert.equal(parsedText[1].sizePurchased, 'M');
+});
+
+test('aggregateProductFitReport and calculateSizeRecommendation compute per-size sentiment, shrinkage, and advice', () => {
+  const report = aggregateProductFitReport(
+    {
+      id: 'hm-tee-test',
+      name: 'H&M Relaxed Fit Heavyweight Cotton T-Shirt',
+      brand: 'H&M',
+      category: 'T-Shirts & Tops',
+      sku: 'HM-1096385',
+      price: '$19.99',
+      fabricComposition: '100% Heavyweight Cotton Jersey (240 GSM)',
+      sourceUrl: 'https://www2.hm.com/en_us/productpage.1096385001.html',
+    },
+    [
+      {
+        id: '1',
+        author: 'A',
+        sizePurchased: 'L',
+        rating: 2,
+        title: 'Tight shoulders after dryer',
+        body: 'Runs small after wash! Shrunk in the dryer and tight in the shoulders and chest. Size up.',
+        date: '2026-10-01',
+        verifiedPurchase: true,
+      },
+      {
+        id: '2',
+        author: 'B',
+        sizePurchased: 'L',
+        rating: 3,
+        title: 'Snug fit',
+        body: 'Runs small and narrow in the shoulders, though thick cotton is not see-through.',
+        date: '2026-10-02',
+        verifiedPurchase: true,
+      },
+      {
+        id: '3',
+        author: 'C',
+        sizePurchased: 'S',
+        rating: 5,
+        title: 'Fits great',
+        body: 'True to size, fits perfectly in the waist and sleeves. Heavyweight 240 gsm fabric is opaque.',
+        date: '2026-10-03',
+        verifiedPurchase: true,
+      },
+    ]
+  );
+
+  assert.equal(report.tshirtSignals.overallShrinkagePct, 33);
+  assert.equal(report.tshirtSignals.fabricOpacityPct, 100);
+
+  const sizeL = report.sizeSummaries.find((s) => s.size === 'L')!;
+  assert.equal(sizeL.reviewCount, 2);
+  assert.equal(sizeL.runsSmallPct, 100);
+  assert.equal(sizeL.shrinkageMentionPct, 50);
+  assert.equal(sizeL.verdict, 'Runs Small');
+
+  const recForL = calculateSizeRecommendation(report, 'L', 'regular');
+  assert.equal(recForL.action, 'Size Up');
+  assert.equal(recForL.recommendedSize, 'XL');
+
+  assert.ok(typeof report.gradingDelta === 'number');
+  const sqlDump = generateSqlInsertDump([report]);
+  assert.ok(sqlDump.includes('CREATE TABLE IF NOT EXISTS commercial_skus'));
+  assert.ok(sqlDump.includes('INSERT INTO commercial_skus'));
+  assert.ok(sqlDump.includes('INSERT INTO sku_size_metrics'));
+  assert.ok(sqlDump.includes('HM-1096385'));
+});

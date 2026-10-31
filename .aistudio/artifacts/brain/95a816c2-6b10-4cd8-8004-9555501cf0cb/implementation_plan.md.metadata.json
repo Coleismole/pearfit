@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan for scraping and displaying the H&M Relaxed Fit Heavyweight Cotton T-Shirt fit review dataset, setting it as the default active report and live scraper preset, and adding T-shirt-specific telemetry for post-wash shrinkage frequency by size and fabric weight/opacity mentions.",
+  "updatedAt":  "2026-10-31T01:16:49.926182294Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

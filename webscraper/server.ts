@@ -19,6 +19,16 @@ import {
   parseJsonLdScripts,
 } from './src/utils/structuredData.ts';
 import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR } from './server/headlessFetch.ts';
+import {
+  cleanProductTitle,
+  labelledValue,
+  leafTexts,
+  LABEL_LINE,
+  longestFreeText,
+  productIdFromUrl,
+  ratingFromLabel,
+  ratingFromStarIcons,
+} from './server/pageHelpers.ts';
 
 dotenv.config();
 
@@ -756,16 +766,6 @@ function inferCategory(...hints: (string | null | undefined)[]): ProductFitRepor
   return 'T-Shirts & Tops';
 }
 
-/** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */
-function ratingFromLabel(label: string | undefined): string {
-  const m = label?.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+)/i);
-  if (!m) return '';
-  const value = parseFloat(m[1]);
-  const best = parseFloat(m[2]);
-  if (!(best > 1)) return '';
-  return best === 5 ? String(value) : String(1 + ((value - 1) / (best - 1)) * 4);
-}
-
 function looksLikeFullHtmlDocument(input: string): boolean {
   return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5000));
 }
@@ -798,10 +798,10 @@ function scrapeHtmlWithCheerio(
   const extractedName =
     overrides?.productName ||
     structured?.name ||
-    meta('meta[property="og:title"]') ||
+    cleanProductTitle(meta('meta[property="og:title"]')) ||
     firstText('h1.product-title') ||
+    cleanProductTitle($('title').first().text()) ||
     firstText('h1') ||
-    $('title').text().split('|')[0]?.trim() ||
     'Unknown product';
 
   const extractedBrand =
@@ -829,6 +829,7 @@ function scrapeHtmlWithCheerio(
     meta('meta[property="product:retailer_item_id"]') ||
     $('[data-sku]').attr('data-sku') ||
     // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
+    productIdFromUrl(sourceUrl) ||
     `URL-${stableHash(sourceUrl)}`;
 
   const priceAmount = meta('meta[property="product:price:amount"]') || meta('meta[property="og:price:amount"]');
@@ -859,14 +860,33 @@ function scrapeHtmlWithCheerio(
       selectorsUsed.push('review-card DOM selectors');
       reviewElements.each((idx, el) => {
         const node = $(el);
+        // Skip wrappers that contain another matched card (avoids double counting).
+        if (node.find(REVIEW_CARD_SELECTOR).length > 0) return;
         const nodeText = node.text().replace(/\s+/g, ' ').trim();
+        const lines = leafTexts($, node);
+
+        const isDate = (l: string) => /^\d{1,2}\/\d{1,2}\/\d{2,4}$|^\d{4}-\d{2}-\d{2}$/.test(l);
+        const author =
+          node.attr('data-author') ||
+          node.attr('data-reviewer') ||
+          node.find('[itemprop="author"]').first().text().trim() ||
+          node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
+          'Anonymous';
         const body =
           node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
-          node.find('p').last().text().replace(/\s+/g, ' ').trim() ||
+          longestFreeText(lines, [author]) ||
           nodeText;
+        // Unlabelled markup: the first short free-text line before the body is the title.
+        const title =
+          node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().replace(/\s+/g, ' ').trim() ||
+          lines.slice(0, Math.max(0, lines.indexOf(body))).find(
+            (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l)
+          ) ||
+          '';
         const sizePurchased =
           node.attr('data-size') ||
           node.find('.review-size-tag strong').text().trim() ||
+          labelledValue(lines, /^(purchased size|size purchased|size ordered|size bought|size)$/i) ||
           nodeText.match(/Size(?:\s+(?:Purchased|Ordered|Bought))?:\s*([A-Za-z0-9]+)/i)?.[1] ||
           extractSizeFromReviewText(body);
         const ratingStr =
@@ -877,24 +897,22 @@ function scrapeHtmlWithCheerio(
           node.find('.review-rating').text().match(/(\d(?:\.\d)?)/)?.[1] ||
           // Accessible star widgets: aria-label/title like "4 out of 5 stars".
           ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr('aria-label') ?? node.find('[title*="out of 5" i]').first().attr('title')) ||
+          ratingFromStarIcons($, node) ||
           '';
         const declaredFitTag =
           node.attr('data-fit') ||
           node.find('.review-fit-tag').text().replace(/^Fit:\s*/i, '').trim() ||
+          labelledValue(lines, /^(how it fits|fit|overall fit|sizing)$/i) ||
           undefined;
-        const author =
-          node.attr('data-author') ||
-          node.attr('data-reviewer') ||
-          node.find('[itemprop="author"]').first().text().trim() ||
-          node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
-          'Anonymous';
-        const title =
-          node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().trim() || '';
         const date =
           node.attr('data-date') ||
           node.find('[itemprop="datePublished"]').attr('content') ||
           node.find('time').attr('datetime') ||
+          lines.find(isDate) ||
           '';
+        const reviewerHeight = labelledValue(lines, /^height$/i) || undefined;
+        const reviewerBuild = labelledValue(lines, /^(weight|body type|build)$/i) || undefined;
+        const usualSize = labelledValue(lines, /^(usual size|normally wears|usually wears)$/i) || undefined;
         const parsedRating = parseFloat(ratingStr);
 
         if (body.length > 8) {
@@ -902,12 +920,15 @@ function scrapeHtmlWithCheerio(
             id: `dom-rev-${idx + 1}`,
             author,
             sizePurchased,
+            usualSize,
             // 3 = neutral midpoint when the card shows no rating.
             rating: Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, Math.round(parsedRating))) : 3,
             title,
             body,
             date,
             verifiedPurchase: false,
+            reviewerHeight,
+            reviewerBuild,
             declaredFitTag,
           });
         }

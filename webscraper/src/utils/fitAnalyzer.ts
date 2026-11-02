@@ -331,7 +331,15 @@ export function classifyReviewFitAndSentiment(
 
   if (declaredFitTag) {
     const tagLower = declaredFitTag.toLowerCase();
-    if (tagLower.includes('slightly small')) {
+    // "A bit loose", "A little tight", "Somewhat small" are the mild options on many review forms.
+    const mild = /\b(slightly|a bit|a little|somewhat)\b/.test(tagLower);
+    if (mild && /small|tight/.test(tagLower)) {
+      rawSkewSum -= 0.45;
+      cueCount += 1;
+    } else if (mild && /large|big|loose/.test(tagLower)) {
+      rawSkewSum += 0.45;
+      cueCount += 1;
+    } else if (tagLower.includes('slightly small')) {
       rawSkewSum -= 0.45;
       cueCount += 1;
     } else if (tagLower.includes('small') || tagLower.includes('tight')) {

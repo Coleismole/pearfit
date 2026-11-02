@@ -13,7 +13,7 @@ import type { Browser, Page } from 'playwright';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
-  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"]';
+  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
@@ -21,6 +21,9 @@ const USER_AGENT =
 const NAV_TIMEOUT_MS = 45_000;
 const REVIEW_WAIT_MS = 10_000;
 const MAX_LOAD_MORE_CLICKS = 5;
+const MAX_INFINITE_SCROLL_ROUNDS = 10;
+/** Stop paging once this many review cards are on the page; enough for fit statistics. */
+const MAX_REVIEWS = 200;
 
 export interface RenderedPage {
   html: string;
@@ -171,6 +174,14 @@ export async function renderPageHtml(url: string): Promise<RenderedPage> {
         const clicked = await clickFirst(page, 'button', /^(load|show|see|view) more( reviews)?$/i);
         if (!clicked) break;
         if (!(await waitForMoreReviews(page, before, 5000))) break;
+      }
+
+      // Infinite scroll: keep scrolling to the bottom while new review cards keep appearing.
+      for (let i = 0; i < MAX_INFINITE_SCROLL_ROUNDS; i++) {
+        const before = await countReviews(page);
+        if (before >= MAX_REVIEWS) break;
+        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+        if (!(await waitForMoreReviews(page, before, 4000))) break;
       }
     }
 

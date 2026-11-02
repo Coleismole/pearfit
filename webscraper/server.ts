@@ -10,6 +10,7 @@ import {
   parseRawReviewBatch,
   type ProductFitReport,
   type RawScrapedReview,
+  type ScraperTelemetry,
 } from './src/utils/fitAnalyzer.ts';
 import { HM_HEAVYWEIGHT_TEE_REVIEWS, SEED_CATALOG } from './src/data/seedCatalog.ts';
 import {
@@ -17,6 +18,7 @@ import {
   extractStructuredProduct,
   parseJsonLdScripts,
 } from './src/utils/structuredData.ts';
+import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR } from './server/headlessFetch.ts';
 
 dotenv.config();
 
@@ -754,6 +756,16 @@ function inferCategory(...hints: (string | null | undefined)[]): ProductFitRepor
   return 'T-Shirts & Tops';
 }
 
+/** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */
+function ratingFromLabel(label: string | undefined): string {
+  const m = label?.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+)/i);
+  if (!m) return '';
+  const value = parseFloat(m[1]);
+  const best = parseFloat(m[2]);
+  if (!(best > 1)) return '';
+  return best === 5 ? String(value) : String(1 + ((value - 1) / (best - 1)) * 4);
+}
+
 function looksLikeFullHtmlDocument(input: string): boolean {
   return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5000));
 }
@@ -842,9 +854,7 @@ function scrapeHtmlWithCheerio(
 
   // 2. Review cards in the DOM (microdata and common review-widget markup).
   if (reviews.length === 0) {
-    const reviewElements = $(
-      '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .stamped-review'
-    );
+    const reviewElements = $(REVIEW_CARD_SELECTOR);
     if (reviewElements.length > 0) {
       selectorsUsed.push('review-card DOM selectors');
       reviewElements.each((idx, el) => {
@@ -865,6 +875,8 @@ function scrapeHtmlWithCheerio(
           node.find('[itemprop="ratingValue"]').text().trim() ||
           node.find('[data-score]').attr('data-score') ||
           node.find('.review-rating').text().match(/(\d(?:\.\d)?)/)?.[1] ||
+          // Accessible star widgets: aria-label/title like "4 out of 5 stars".
+          ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr('aria-label') ?? node.find('[title*="out of 5" i]').first().attr('title')) ||
           '';
         const declaredFitTag =
           node.attr('data-fit') ||
@@ -929,11 +941,53 @@ function scrapeHtmlWithCheerio(
         reviewNodesMatched: reviews.length,
         selectorsUsed,
         parseDurationMs,
-        engineMode: 'cheerio-dom+deterministic-nlp' as const,
+        engineMode: 'cheerio-dom+deterministic-nlp' as ScraperTelemetry['engineMode'],
       },
     },
     reviews,
   };
+}
+
+type RenderMode = 'auto' | 'always' | 'never';
+
+const PASTE_HINT =
+  ' If the reviews show in your own browser, copy them (or View Source) and paste into the raw HTML box instead.';
+
+/** Plain HTTP fetch. Returns the HTML, or a status + message describing the failure. */
+interface StaticFetchError {
+  status: number;
+  message: string;
+  blocked: boolean;
+}
+
+async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFetchError> {
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(20000),
+    });
+  } catch (fetchErr) {
+    const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+    return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+  }
+  if (!response.ok) {
+    const blocked = response.status === 403 || response.status === 429 || response.status === 503;
+    return {
+      status: 400,
+      message: blocked
+        ? `${url} returned HTTP ${response.status}: the store refuses automated requests.`
+        : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
+      blocked,
+    };
+  }
+  return { html: await response.text() };
 }
 
 function getDatabaseSummary() {
@@ -1092,6 +1146,7 @@ async function startServer() {
         sku,
         category,
         commitToDb = true,
+        render,
       } = req.body as {
         url?: string;
         rawHtml?: string;
@@ -1100,10 +1155,14 @@ async function startServer() {
         sku?: string;
         category?: ProductFitReport['category'];
         commitToDb?: boolean;
+        render?: RenderMode;
       };
 
+      const renderMode: RenderMode = render === 'always' || render === 'never' ? render : 'auto';
       let targetHtml = (rawHtml || '').trim();
       let sourceUrl = (url || 'batch://direct-review-payload').trim();
+      let isRemoteUrl = false;
+      let staticError: StaticFetchError | null = null;
 
       if (!targetHtml && url) {
         const mockMatch = url.match(/\/api\/mock-store\/([a-z0-9-]+)/i);
@@ -1112,33 +1171,12 @@ async function startServer() {
           targetHtml = renderMockStoreHtml(mockProd);
           sourceUrl = `https://storefront.fitpulse.local/api/mock-store/${mockProd.slug}`;
         } else if (/^https?:\/\//i.test(url)) {
-          let response: Response;
-          try {
-            response = await fetch(url, {
-              headers: {
-                'User-Agent':
-                  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
-                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-              },
-              redirect: 'follow',
-              signal: AbortSignal.timeout(20000),
-            });
-          } catch (fetchErr) {
-            const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-            res.status(502).json({ error: `Could not reach ${url}: ${reason}` });
-            return;
+          isRemoteUrl = true;
+          if (renderMode !== 'always') {
+            const result = await fetchStaticHtml(url);
+            if ('html' in result) targetHtml = result.html;
+            else staticError = result;
           }
-          if (!response.ok) {
-            const blocked = response.status === 403 || response.status === 429 || response.status === 503;
-            res.status(400).json({
-              error: blocked
-                ? `${url} returned HTTP ${response.status}: the store is blocking automated requests. Open the page in your browser, copy the review section (or View Source), and paste it into the raw HTML box instead.`
-                : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
-            });
-            return;
-          }
-          targetHtml = await response.text();
         } else {
           res.status(400).json({
             error:
@@ -1148,24 +1186,56 @@ async function startServer() {
         }
       }
 
-      if (!targetHtml) {
-        res.status(400).json({
-          error: 'No HTML or review content provided to scrape.',
+      const overrides = { productName, brand, sku, category };
+      let scraped = targetHtml ? scrapeHtmlWithCheerio(targetHtml, sourceUrl, overrides) : null;
+      let headlessNote: string | null = null;
+
+      // Headless fallback for reviews loaded by JavaScript. Not used when the store refused
+      // the request (403/429/503): that refusal is respected, not worked around.
+      const needsRender =
+        isRemoteUrl &&
+        renderMode !== 'never' &&
+        !staticError?.blocked &&
+        (renderMode === 'always' || !scraped || scraped.reviews.length === 0);
+      if (needsRender) {
+        try {
+          const rendered = await renderPageHtml(url!);
+          if (rendered.status !== null && rendered.status >= 400) {
+            headlessNote = `Headless browser got HTTP ${rendered.status}.`;
+          } else {
+            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides);
+            renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
+            renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
+            if (!scraped || renderedScrape.reviews.length > 0 || scraped.reviews.length === 0) {
+              scraped = renderedScrape;
+              targetHtml = rendered.html;
+            }
+            if (renderedScrape.reviews.length === 0) {
+              headlessNote = 'Rendered the page in a headless browser but still found no reviews.';
+            }
+          }
+        } catch (renderErr) {
+          const reason = renderErr instanceof Error ? renderErr.message.split('\n')[0] : String(renderErr);
+          headlessNote = /Executable doesn't exist|browserType\.launch|Cannot find (module|package) 'playwright'/i.test(reason)
+            ? 'Headless browser is not installed (run `npx playwright install chromium`).'
+            : `Headless browser render failed: ${reason}`;
+        }
+      }
+
+      if (!scraped) {
+        const parts = [staticError?.message ?? 'No HTML or review content provided to scrape.', headlessNote].filter(Boolean);
+        res.status(staticError?.status ?? 400).json({
+          error: `${parts.join(' ')}${isRemoteUrl ? PASTE_HINT : ''}`,
         });
         return;
       }
 
-      const { meta, reviews } = scrapeHtmlWithCheerio(targetHtml, sourceUrl, {
-        productName,
-        brand,
-        sku,
-        category,
-      });
+      const { meta, reviews } = scraped;
 
       if (reviews.length === 0) {
         res.status(422).json({
-          error: looksLikeFullHtmlDocument(targetHtml)
-            ? 'No reviews found in the page HTML. Many stores load reviews with JavaScript (Bazaarvoice, Yotpo, PowerReviews), so they are not in the server response. Copy the reviews from your browser and paste them into the raw HTML box instead.'
+          error: isRemoteUrl || looksLikeFullHtmlDocument(targetHtml)
+            ? `No reviews found on the page.${headlessNote ? ` ${headlessNote}` : ''}${PASTE_HINT}`
             : 'No recognizable clothing reviews were found in the pasted content.',
         });
         return;
@@ -1202,6 +1272,12 @@ async function startServer() {
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.once(signal, () => {
+      closeHeadlessBrowser().finally(() => process.exit(0));
     });
   }
 

@@ -101,7 +101,7 @@ export interface ScraperTelemetry {
   reviewNodesMatched: number;
   selectorsUsed: string[];
   parseDurationMs: number;
-  engineMode: 'cheerio-dom+deterministic-nlp' | 'batch-parser';
+  engineMode: 'cheerio-dom+deterministic-nlp' | 'headless-chromium+cheerio-dom' | 'batch-parser';
 }
 
 export interface GarmentFabricAndWashSignals {

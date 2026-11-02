@@ -1,5 +1,6 @@
 [
   { "owner": "sample", "candidate": "cos-oxford", "correctSize": "M", "closestShirt": "blue-uniqlo-oxford" },
   { "owner": "sample", "candidate": "muji-tee", "correctSize": "M", "closestShirt": "white-gap-tee" },
-  { "owner": "sample", "candidate": "boxy-tee", "correctSize": "M", "holdout": true }
+  { "owner": "sample", "candidate": "boxy-tee", "correctSize": "M", "holdout": true },
+  { "owner": "person1", "candidate": "xl-chart-test", "correctSize": "XL" }
 ]

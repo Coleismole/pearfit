@@ -187,3 +187,12 @@ test('parseRawReviewBatch leaves size empty when the text does not state one', (
   assert.equal(parsed[0].sizePurchased, '');
   assert.equal(parsed[1].sizePurchased, '');
 });
+
+test('mild fit answers ("A bit loose", "A little tight") skew less than "Runs large/small"', () => {
+  const body = 'Nice parka.';
+  const mildLoose = classifyReviewFitAndSentiment(body, 5, 'A bit loose').fitSkew;
+  const runsLarge = classifyReviewFitAndSentiment(body, 5, 'Runs large').fitSkew;
+  const mildTight = classifyReviewFitAndSentiment(body, 5, 'A little tight').fitSkew;
+  assert.ok(mildLoose > 0 && mildLoose < runsLarge, `${mildLoose} vs ${runsLarge}`);
+  assert.ok(mildTight < 0, String(mildTight));
+});

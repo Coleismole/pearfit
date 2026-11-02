@@ -8,10 +8,17 @@ import {
   aggregateProductFitReport,
   generateSqlInsertDump,
   parseRawReviewBatch,
-  ProductFitReport,
-  RawScrapedReview,
+  type ProductFitReport,
+  type RawScrapedReview,
+  type ScraperTelemetry,
 } from './src/utils/fitAnalyzer.ts';
 import { HM_HEAVYWEIGHT_TEE_REVIEWS, SEED_CATALOG } from './src/data/seedCatalog.ts';
+import {
+  extractSizeFromReviewText,
+  extractStructuredProduct,
+  parseJsonLdScripts,
+} from './src/utils/structuredData.ts';
+import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR } from './server/headlessFetch.ts';
 
 dotenv.config();
 
@@ -170,7 +177,7 @@ const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
     insertReviewStmt.run(
       `${report.sku}::${r.id}`,
       report.sku,
-      r.normalizedSize,
+      r.normalizedSize ?? 'UNKNOWN',
       r.sizePurchased,
       r.fitDirection,
       r.fitSkew,
@@ -711,6 +718,58 @@ function renderMockStoreHtml(product: MockStoreProduct): string {
 </html>`;
 }
 
+/** Stable short hash so the same URL always gets the same fallback SKU. */
+function stableHash(input: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36).toUpperCase();
+}
+
+const VALID_CATEGORIES: ProductFitReport['category'][] = [
+  'T-Shirts & Tops',
+  'Outerwear',
+  'Knitwear',
+  'Trousers',
+  'Fleece & Hoodies',
+  'Shirting',
+  'Dresses',
+];
+
+/** Maps a free-text category/product name onto the app's fixed category list. */
+function inferCategory(...hints: (string | null | undefined)[]): ProductFitReport['category'] {
+  for (const hint of hints) {
+    if (!hint) continue;
+    const exact = VALID_CATEGORIES.find((c) => c.toLowerCase() === hint.toLowerCase());
+    if (exact) return exact;
+    const h = hint.toLowerCase();
+    if (/hoodie|sweatshirt|fleece|crewneck sweat/.test(h)) return 'Fleece & Hoodies';
+    if (/jacket|coat|parka|puffer|blazer|outerwear|anorak|vest/.test(h)) return 'Outerwear';
+    if (/sweater|knit|cardigan|jumper|pullover/.test(h)) return 'Knitwear';
+    if (/trouser|pant|jean|chino|short|legging|jogger/.test(h)) return 'Trousers';
+    if (/dress|skirt/.test(h)) return 'Dresses';
+    if (/oxford|button[- ]?(down|up)|shirt(?!s? ?&)|flannel|overshirt/.test(h) && !/t-?shirt|tee/.test(h)) return 'Shirting';
+    if (/t-?shirt|tee|tank|top|polo|henley/.test(h)) return 'T-Shirts & Tops';
+  }
+  return 'T-Shirts & Tops';
+}
+
+/** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */
+function ratingFromLabel(label: string | undefined): string {
+  const m = label?.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+)/i);
+  if (!m) return '';
+  const value = parseFloat(m[1]);
+  const best = parseFloat(m[2]);
+  if (!(best > 1)) return '';
+  return best === 5 ? String(value) : String(1 + ((value - 1) / (best - 1)) * 4);
+}
+
+function looksLikeFullHtmlDocument(input: string): boolean {
+  return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5000));
+}
+
 function scrapeHtmlWithCheerio(
   html: string,
   sourceUrl: string,
@@ -726,116 +785,144 @@ function scrapeHtmlWithCheerio(
   const domNodesScanned = $('*').length;
   const selectorsUsed: string[] = [];
 
+  // 1. schema.org JSON-LD: the most reliable source on real storefronts.
+  const jsonLdScripts = $('script[type="application/ld+json"]')
+    .map((_i, el) => $(el).contents().text())
+    .get();
+  const structured = extractStructuredProduct(parseJsonLdScripts(jsonLdScripts));
+  if (structured) selectorsUsed.push('script[type="application/ld+json"] Product');
+
+  const meta = (selector: string) => $(selector).attr('content')?.trim() || null;
+  const firstText = (selector: string) => $(selector).first().text().replace(/\s+/g, ' ').trim() || null;
+
   const extractedName =
     overrides?.productName ||
-    $('meta[property="og:title"]').attr('content') ||
-    $('h1.product-title').first().text().trim() ||
-    $('h1').first().text().trim() ||
+    structured?.name ||
+    meta('meta[property="og:title"]') ||
+    firstText('h1.product-title') ||
+    firstText('h1') ||
     $('title').text().split('|')[0]?.trim() ||
-    'Scraped Apparel SKU';
+    'Unknown product';
 
   const extractedBrand =
     overrides?.brand ||
-    $('meta[name="product:brand"]').attr('content') ||
-    $('.product-brand').first().text().trim() ||
-    'Commercial Apparel Vendor';
+    structured?.brand ||
+    meta('meta[name="product:brand"]') ||
+    meta('meta[property="product:brand"]') ||
+    meta('meta[property="og:site_name"]') ||
+    firstText('.product-brand') ||
+    'Unknown brand';
 
-  const rawCategory =
+  const category =
     overrides?.category ||
-    ($('meta[name="product:category"]').attr('content') as ProductFitReport['category']) ||
-    'T-Shirts & Tops';
-
-  const validCategories: ProductFitReport['category'][] = [
-    'T-Shirts & Tops',
-    'Outerwear',
-    'Knitwear',
-    'Trousers',
-    'Fleece & Hoodies',
-    'Shirting',
-    'Dresses',
-  ];
-  const category: ProductFitReport['category'] = validCategories.includes(rawCategory)
-    ? rawCategory
-    : 'T-Shirts & Tops';
+    inferCategory(
+      meta('meta[name="product:category"]'),
+      meta('meta[property="product:category"]'),
+      structured?.category,
+      extractedName
+    );
 
   const sku =
     overrides?.sku ||
-    $('meta[name="product:sku"]').attr('content') ||
+    structured?.sku ||
+    meta('meta[name="product:sku"]') ||
+    meta('meta[property="product:retailer_item_id"]') ||
     $('[data-sku]').attr('data-sku') ||
-    `SKU-${Math.floor(1000 + Math.random() * 8999)}`;
+    // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
+    `URL-${stableHash(sourceUrl)}`;
 
+  const priceAmount = meta('meta[property="product:price:amount"]') || meta('meta[property="og:price:amount"]');
+  const priceCurrency = meta('meta[property="product:price:currency"]') || meta('meta[property="og:price:currency"]');
   const price =
-    $('meta[name="product:price"]').attr('content') ||
+    structured?.price ||
+    meta('meta[name="product:price"]') ||
+    (priceAmount ? [priceAmount, priceCurrency].filter(Boolean).join(' ') : null) ||
     $('[data-price]').attr('data-price') ||
-    '$24.99';
+    'Unknown';
 
   const fabricComposition =
-    $('meta[name="product:fabric"]').attr('content') ||
+    structured?.material ||
+    meta('meta[name="product:fabric"]') ||
     $('[data-fabric]').attr('data-fabric') ||
-    'Scraped Garment Specification';
+    'Unknown';
 
   const reviews: RawScrapedReview[] = [];
 
-  const reviewElements = $('[data-review-card], .review-card, [itemprop="review"], .review-item');
-  if (reviewElements.length > 0) {
-    selectorsUsed.push('[data-review-card]', '.review-card', '.review-body-copy');
-    reviewElements.each((idx, el) => {
-      const node = $(el);
-      const sizePurchased =
-        node.attr('data-size') ||
-        node.find('.review-size-tag strong').text().trim() ||
-        node
-          .text()
-          .match(/Size(?:\s+Purchased)?:\s*([A-Za-z0-9]+)/i)?.[1] ||
-        'M';
-      const ratingStr =
-        node.attr('data-rating') ||
-        node
-          .find('.review-rating')
-          .text()
-          .match(/(\d(?:\.\d)?)/)?.[1] ||
-        '4';
-      const declaredFitTag =
-        node.attr('data-fit') ||
-        node
-          .find('.review-fit-tag')
-          .text()
-          .replace(/^Fit:\s*/i, '')
-          .trim() ||
-        undefined;
-      const author =
-        node.attr('data-author') ||
-        node.find('.review-author').text().trim() ||
-        `Verified Reviewer #${idx + 1}`;
-      const title =
-        node.find('.review-title, h3, h4').first().text().trim() || 'Verified Fit Review';
-      const body =
-        node.find('.review-body-copy, p').last().text().trim() || node.text().trim();
-      const date = node.attr('data-date') || '2026-10-25';
-
-      if (body.length > 8) {
-        reviews.push({
-          id: `dom-rev-${idx + 1}`,
-          author,
-          sizePurchased,
-          rating: Math.min(5, Math.max(1, Math.round(parseFloat(ratingStr) || 4))),
-          title,
-          body,
-          date,
-          verifiedPurchase: true,
-          declaredFitTag,
-        });
-      }
-    });
+  if (structured && structured.reviews.length > 0) {
+    reviews.push(...structured.reviews);
   }
 
+  // 2. Review cards in the DOM (microdata and common review-widget markup).
   if (reviews.length === 0) {
-    selectorsUsed.push('fallback-text-blocks');
-    const fallbackReviews = parseRawReviewBatch(html);
-    reviews.push(...fallbackReviews);
+    const reviewElements = $(REVIEW_CARD_SELECTOR);
+    if (reviewElements.length > 0) {
+      selectorsUsed.push('review-card DOM selectors');
+      reviewElements.each((idx, el) => {
+        const node = $(el);
+        const nodeText = node.text().replace(/\s+/g, ' ').trim();
+        const body =
+          node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
+          node.find('p').last().text().replace(/\s+/g, ' ').trim() ||
+          nodeText;
+        const sizePurchased =
+          node.attr('data-size') ||
+          node.find('.review-size-tag strong').text().trim() ||
+          nodeText.match(/Size(?:\s+(?:Purchased|Ordered|Bought))?:\s*([A-Za-z0-9]+)/i)?.[1] ||
+          extractSizeFromReviewText(body);
+        const ratingStr =
+          node.attr('data-rating') ||
+          node.find('[itemprop="ratingValue"]').attr('content') ||
+          node.find('[itemprop="ratingValue"]').text().trim() ||
+          node.find('[data-score]').attr('data-score') ||
+          node.find('.review-rating').text().match(/(\d(?:\.\d)?)/)?.[1] ||
+          // Accessible star widgets: aria-label/title like "4 out of 5 stars".
+          ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr('aria-label') ?? node.find('[title*="out of 5" i]').first().attr('title')) ||
+          '';
+        const declaredFitTag =
+          node.attr('data-fit') ||
+          node.find('.review-fit-tag').text().replace(/^Fit:\s*/i, '').trim() ||
+          undefined;
+        const author =
+          node.attr('data-author') ||
+          node.attr('data-reviewer') ||
+          node.find('[itemprop="author"]').first().text().trim() ||
+          node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
+          'Anonymous';
+        const title =
+          node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().trim() || '';
+        const date =
+          node.attr('data-date') ||
+          node.find('[itemprop="datePublished"]').attr('content') ||
+          node.find('time').attr('datetime') ||
+          '';
+        const parsedRating = parseFloat(ratingStr);
+
+        if (body.length > 8) {
+          reviews.push({
+            id: `dom-rev-${idx + 1}`,
+            author,
+            sizePurchased,
+            // 3 = neutral midpoint when the card shows no rating.
+            rating: Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, Math.round(parsedRating))) : 3,
+            title,
+            body,
+            date,
+            verifiedPurchase: false,
+            declaredFitTag,
+          });
+        }
+      });
+    }
   }
 
-  const parseDurationMs = Math.max(12, Date.now() - startTime);
+  // 3. Free-text fallback, only for pasted review text/snippets. On a full fetched page it
+  // would treat navigation and footer text as "reviews".
+  if (reviews.length === 0 && !looksLikeFullHtmlDocument(html)) {
+    selectorsUsed.push('fallback-text-blocks');
+    reviews.push(...parseRawReviewBatch(html));
+  }
+
+  const parseDurationMs = Date.now() - startTime;
 
   return {
     meta: {
@@ -850,15 +937,57 @@ function scrapeHtmlWithCheerio(
       scraperTelemetry: {
         sourceUrl,
         scrapedAt: new Date().toISOString(),
-        domNodesScanned: Math.max(domNodesScanned, reviews.length * 14 + 42),
+        domNodesScanned,
         reviewNodesMatched: reviews.length,
         selectorsUsed,
         parseDurationMs,
-        engineMode: 'cheerio-dom+deterministic-nlp' as const,
+        engineMode: 'cheerio-dom+deterministic-nlp' as ScraperTelemetry['engineMode'],
       },
     },
     reviews,
   };
+}
+
+type RenderMode = 'auto' | 'always' | 'never';
+
+const PASTE_HINT =
+  ' If the reviews show in your own browser, copy them (or View Source) and paste into the raw HTML box instead.';
+
+/** Plain HTTP fetch. Returns the HTML, or a status + message describing the failure. */
+interface StaticFetchError {
+  status: number;
+  message: string;
+  blocked: boolean;
+}
+
+async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFetchError> {
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(20000),
+    });
+  } catch (fetchErr) {
+    const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+    return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+  }
+  if (!response.ok) {
+    const blocked = response.status === 403 || response.status === 429 || response.status === 503;
+    return {
+      status: 400,
+      message: blocked
+        ? `${url} returned HTTP ${response.status}: the store refuses automated requests.`
+        : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
+      blocked,
+    };
+  }
+  return { html: await response.text() };
 }
 
 function getDatabaseSummary() {
@@ -1017,6 +1146,7 @@ async function startServer() {
         sku,
         category,
         commitToDb = true,
+        render,
       } = req.body as {
         url?: string;
         rawHtml?: string;
@@ -1025,10 +1155,14 @@ async function startServer() {
         sku?: string;
         category?: ProductFitReport['category'];
         commitToDb?: boolean;
+        render?: RenderMode;
       };
 
+      const renderMode: RenderMode = render === 'always' || render === 'never' ? render : 'auto';
       let targetHtml = (rawHtml || '').trim();
       let sourceUrl = (url || 'batch://direct-review-payload').trim();
+      let isRemoteUrl = false;
+      let staticError: StaticFetchError | null = null;
 
       if (!targetHtml && url) {
         const mockMatch = url.match(/\/api\/mock-store\/([a-z0-9-]+)/i);
@@ -1037,20 +1171,12 @@ async function startServer() {
           targetHtml = renderMockStoreHtml(mockProd);
           sourceUrl = `https://storefront.fitpulse.local/api/mock-store/${mockProd.slug}`;
         } else if (/^https?:\/\//i.test(url)) {
-          const response = await fetch(url, {
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (compatible; FitPulseCommercialScraper/3.0)',
-              Accept: 'text/html,application/xhtml+xml',
-            },
-          });
-          if (!response.ok) {
-            res.status(400).json({
-              error: `Remote server returned HTTP ${response.status} when scraping ${url}.`,
-            });
-            return;
+          isRemoteUrl = true;
+          if (renderMode !== 'always') {
+            const result = await fetchStaticHtml(url);
+            if ('html' in result) targetHtml = result.html;
+            else staticError = result;
           }
-          targetHtml = await response.text();
         } else {
           res.status(400).json({
             error:
@@ -1060,24 +1186,57 @@ async function startServer() {
         }
       }
 
-      if (!targetHtml) {
-        res.status(400).json({
-          error: 'No HTML or review content provided to scrape.',
+      const overrides = { productName, brand, sku, category };
+      let scraped = targetHtml ? scrapeHtmlWithCheerio(targetHtml, sourceUrl, overrides) : null;
+      let headlessNote: string | null = null;
+
+      // Headless fallback for reviews loaded by JavaScript. Not used when the store refused
+      // the request (403/429/503): that refusal is respected, not worked around.
+      const needsRender =
+        isRemoteUrl &&
+        renderMode !== 'never' &&
+        !staticError?.blocked &&
+        (renderMode === 'always' || !scraped || scraped.reviews.length === 0);
+      if (needsRender) {
+        try {
+          const rendered = await renderPageHtml(url!);
+          if (rendered.status !== null && rendered.status >= 400) {
+            headlessNote = `Headless browser got HTTP ${rendered.status}.`;
+          } else {
+            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides);
+            renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
+            renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
+            if (!scraped || renderedScrape.reviews.length > 0 || scraped.reviews.length === 0) {
+              scraped = renderedScrape;
+              targetHtml = rendered.html;
+            }
+            if (renderedScrape.reviews.length === 0) {
+              headlessNote = 'Rendered the page in a headless browser but still found no reviews.';
+            }
+          }
+        } catch (renderErr) {
+          const reason = renderErr instanceof Error ? renderErr.message.split('\n')[0] : String(renderErr);
+          headlessNote = /Executable doesn't exist|browserType\.launch|Cannot find (module|package) 'playwright'/i.test(reason)
+            ? 'Headless browser is not installed (run `npx playwright install chromium`).'
+            : `Headless browser render failed: ${reason}`;
+        }
+      }
+
+      if (!scraped) {
+        const parts = [staticError?.message ?? 'No HTML or review content provided to scrape.', headlessNote].filter(Boolean);
+        res.status(staticError?.status ?? 400).json({
+          error: `${parts.join(' ')}${isRemoteUrl ? PASTE_HINT : ''}`,
         });
         return;
       }
 
-      const { meta, reviews } = scrapeHtmlWithCheerio(targetHtml, sourceUrl, {
-        productName,
-        brand,
-        sku,
-        category,
-      });
+      const { meta, reviews } = scraped;
 
       if (reviews.length === 0) {
         res.status(422).json({
-          error:
-            'No recognizable clothing reviews were found in the target document.',
+          error: isRemoteUrl || looksLikeFullHtmlDocument(targetHtml)
+            ? `No reviews found on the page.${headlessNote ? ` ${headlessNote}` : ''}${PASTE_HINT}`
+            : 'No recognizable clothing reviews were found in the pasted content.',
         });
         return;
       }
@@ -1099,7 +1258,7 @@ async function startServer() {
     }
   });
 
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
@@ -1113,6 +1272,12 @@ async function startServer() {
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.once(signal, () => {
+      closeHeadlessBrowser().finally(() => process.exit(0));
     });
   }
 

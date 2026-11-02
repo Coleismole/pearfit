@@ -307,7 +307,7 @@ export const ReviewCorpusTable: React.FC<Props> = ({
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div className="flex flex-wrap items-center gap-2 text-slate-600">
                   <span className="font-mono font-bold text-slate-900">
-                    Size {review.normalizedSize}
+                    {review.normalizedSize ? `Size ${review.normalizedSize}` : 'Size unknown'}
                   </span>
                   <span aria-hidden="true">·</span>
                   <span

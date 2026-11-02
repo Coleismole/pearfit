@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   normalizeSize,
+  normalizeSizeOrNull,
   classifyReviewFitAndSentiment,
   parseRawReviewBatch,
   aggregateProductFitReport,
@@ -146,4 +147,43 @@ test('aggregateProductFitReport and calculateSizeRecommendation compute per-size
   assert.ok(sqlDump.includes('INSERT INTO commercial_skus'));
   assert.ok(sqlDump.includes('INSERT INTO sku_size_metrics'));
   assert.ok(sqlDump.includes('HM-1096385'));
+});
+
+test('normalizeSizeOrNull returns null for missing or unrecognized sizes instead of guessing', () => {
+  assert.equal(normalizeSizeOrNull(''), null);
+  assert.equal(normalizeSizeOrNull(undefined), null);
+  assert.equal(normalizeSizeOrNull('one size'), null);
+  assert.equal(normalizeSizeOrNull('Medium'), 'M');
+  // Lenient UI variant still defaults to M.
+  assert.equal(normalizeSize(''), 'M');
+});
+
+test('reviews with unknown size count toward overall stats but not any per-size bucket', () => {
+  const report = aggregateProductFitReport(
+    {
+      id: 't',
+      name: 'Tee',
+      brand: 'B',
+      category: 'T-Shirts & Tops',
+      sku: 'T-1',
+      price: 'Unknown',
+      fabricComposition: 'Unknown',
+      sourceUrl: 'https://example.test/tee',
+    },
+    [
+      { id: '1', author: 'A', sizePurchased: '', rating: 4, title: '', body: 'Runs small, tight in the chest.', date: '', verifiedPurchase: false },
+      { id: '2', author: 'B', sizePurchased: 'L', rating: 5, title: '', body: 'True to size, fits perfectly.', date: '', verifiedPurchase: false },
+    ]
+  );
+  assert.equal(report.totalReviews, 2);
+  const perSizeTotal = report.sizeSummaries.reduce((acc, s) => acc + s.reviewCount, 0);
+  assert.equal(perSizeTotal, 1);
+  assert.equal(report.sizeSummaries.find((s) => s.size === 'M')!.reviewCount, 0);
+});
+
+test('parseRawReviewBatch leaves size empty when the text does not state one', () => {
+  const parsed = parseRawReviewBatch('Lovely shirt, great colour and soft fabric.\n\nRuns a bit long in the sleeves overall.');
+  assert.equal(parsed.length, 2);
+  assert.equal(parsed[0].sizePurchased, '');
+  assert.equal(parsed[1].sizePurchased, '');
 });

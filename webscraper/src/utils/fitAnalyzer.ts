@@ -43,7 +43,7 @@ export interface RawScrapedReview {
 }
 
 export interface AnalyzedReview extends RawScrapedReview {
-  normalizedSize: GarmentSize;
+  normalizedSize: GarmentSize | null; // null = reviewer's size unknown; excluded from per-size stats
   fitDirection: FitDirection;
   fitSkew: number; // -1.0 (very small) to +1.0 (very large)
   sentimentScore: number; // 0 to 100
@@ -178,9 +178,13 @@ const ZONE_LABELS: Record<AnatomicalZone, string> = {
  * Normalizes diverse raw apparel size strings ("Small", "32", "Extra Large", "2XL", "M/L")
  * into canonical XS - XXL buckets.
  */
-export function normalizeSize(rawSize: string): GarmentSize {
+/**
+ * Maps a raw size string to XS-XXL, or null when the size is missing or unrecognized.
+ * Scraped data must use this: an unknown size is never guessed.
+ */
+export function normalizeSizeOrNull(rawSize: string | null | undefined): GarmentSize | null {
   const cleaned = (rawSize || '').trim().toUpperCase();
-  if (!cleaned) return 'M';
+  if (!cleaned) return null;
 
   if (cleaned === 'XS' || cleaned === 'EXTRA SMALL' || cleaned === 'X-SMALL' || cleaned === 'XXS') {
     return 'XS';
@@ -228,7 +232,15 @@ export function normalizeSize(rawSize: string): GarmentSize {
   if (cleaned.startsWith('XL')) return 'XL';
   if (cleaned.startsWith('S')) return 'S';
   if (cleaned.startsWith('L')) return 'L';
-  return 'M';
+  if (cleaned.startsWith('M')) return 'M';
+  return null;
+}
+
+/**
+ * Lenient variant for shopper-entered sizes in the UI: falls back to M when unrecognized.
+ */
+export function normalizeSize(rawSize: string): GarmentSize {
+  return normalizeSizeOrNull(rawSize) ?? 'M';
 }
 
 interface CueRule {
@@ -517,7 +529,7 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
       fullTag.match(/data-size=["']([^"']+)["']/i)?.[1] ||
       innerHtml.match(/Size(?:\s+Purchased)?:\s*<[^>]+>([^<]+)</i)?.[1] ||
       innerHtml.match(/Size(?:\s+Purchased)?:\s*([A-Za-z0-9-]+)/i)?.[1] ||
-      'M';
+      '';
 
     const attrRating =
       fullTag.match(/data-rating=["'](\d(?:\.\d)?)["']/i)?.[1] ||
@@ -604,7 +616,7 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
     results.push({
       id: `parsed-review-${idx + 1}`,
       author: `Reviewer #${idx + 1}`,
-      sizePurchased: sizeMatch ? sizeMatch[1] : GARMENT_SIZES[idx % GARMENT_SIZES.length],
+      sizePurchased: sizeMatch ? sizeMatch[1] : '',
       rating,
       title: cleanBody.slice(0, 48) + (cleanBody.length > 48 ? '...' : ''),
       body: cleanBody,
@@ -634,7 +646,7 @@ export function aggregateProductFitReport(
   rawReviews: RawScrapedReview[]
 ): ProductFitReport {
   const analyzedReviews: AnalyzedReview[] = rawReviews.map((r) => {
-    const normalizedSize = normalizeSize(r.sizePurchased);
+    const normalizedSize = normalizeSizeOrNull(r.sizePurchased);
     const classification = classifyReviewFitAndSentiment(r.body, r.rating, r.declaredFitTag);
     return {
       ...r,

@@ -91,6 +91,25 @@ db.exec(`
     rows_affected INTEGER NOT NULL,
     committed_at TEXT NOT NULL
   );
+
+  -- Size-chart measurements (flat-lay cm) per SKU and size. sort_order runs smallest to largest.
+  CREATE TABLE IF NOT EXISTS size_chart (
+    sku TEXT NOT NULL,
+    size_code TEXT NOT NULL,
+    sort_order INTEGER NOT NULL,
+    chest_cm REAL,
+    length_cm REAL,
+    sleeve_cm REAL,
+    PRIMARY KEY (sku, size_code)
+  );
+
+  -- Per-brand correction for length/sleeve: offset = hand-measured - chart at a known size.
+  -- NULL or no row = convention unconfirmed, so the engine export leaves that dimension null.
+  CREATE TABLE IF NOT EXISTS brand_offsets (
+    brand TEXT PRIMARY KEY,
+    length_cm REAL,
+    sleeve_cm REAL
+  );
 `);
 
 const upsertReportTransaction = db.transaction((report: ProductFitReport) => {

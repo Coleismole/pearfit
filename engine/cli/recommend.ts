@@ -1,20 +1,21 @@
-// Usage: npm run recommend -- <owner> [candidateId]
-// Omit candidateId to run every candidate in data/candidates.json.
+// Usage: npm run recommend -- <owner> [candidateId] [--candidates <path>]
+// Omit candidateId to run every candidate. --candidates defaults to data/candidates.json; point it at the
+// exporter's data/candidates.generated.json to run scraped data without merging it into the curated file.
 import { recommend } from "../src/recommend.ts";
 import type { Candidate, OwnedShirt, Recommendation } from "../src/types.ts";
-import { listOwners, loadCandidates, loadWardrobe } from "./load.ts";
-
-const [owner, candidateId] = process.argv.slice(2);
-
-if (!owner) {
-  console.error("Usage: npm run recommend -- <owner> [candidateId]");
-  console.error(`Owners found: ${listOwners().join(", ") || "(none in data/wardrobes/)"}`);
-  process.exit(1);
-}
+import { parseCliArgs } from "./args.ts";
+import { DATA_DIR, listOwners, loadCandidates, loadWardrobe } from "./load.ts";
 
 try {
+  const opts = parseCliArgs(process.argv.slice(2));
+  const [owner, candidateId] = opts.positionals;
+  if (!owner) {
+    console.error("Usage: npm run recommend -- <owner> [candidateId] [--candidates <path>]");
+    console.error(`Owners found: ${listOwners().join(", ") || "(none in data/wardrobes/)"}`);
+    process.exit(1);
+  }
   const wardrobe = loadWardrobe(owner);
-  const candidates = loadCandidates();
+  const candidates = loadCandidates(DATA_DIR, opts.candidatesPath);
   const selected = candidateId ? candidates.filter((c) => c.id === candidateId) : candidates;
   if (selected.length === 0) {
     console.error(`No candidate "${candidateId}". Available: ${candidates.map((c) => c.id).join(", ")}`);

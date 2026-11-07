@@ -8,6 +8,7 @@
   "scripts": {
     "recommend": "node cli/recommend.ts",
     "eval": "node cli/eval.ts",
+    "eval:generated": "node cli/eval.ts --candidates data/candidates.generated.json",
     "export-candidates": "node cli/export-candidates.ts",
     "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit"

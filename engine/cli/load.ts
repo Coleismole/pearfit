@@ -1,6 +1,6 @@
 // File loading and validation. Kept outside src/ so the engine itself stays free of I/O.
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { Candidate, EvalCase, Measurements, OwnedShirt } from "../src/types.ts";
 import { DIMS } from "../src/types.ts";
 
@@ -34,8 +34,9 @@ export function listOwners(dataDir = DATA_DIR): string[] {
     .map((f) => f.slice(0, -5));
 }
 
-export function loadCandidates(dataDir = DATA_DIR): Candidate[] {
-  const file = join(dataDir, "candidates.json");
+// `file` overrides data/candidates.json, e.g. the exporter's candidates.generated.json. Read-only: nothing here writes.
+export function loadCandidates(dataDir = DATA_DIR, file?: string): Candidate[] {
+  file = file ? resolve(file) : join(dataDir, "candidates.json");
   const raw = readJson(file);
   if (!Array.isArray(raw)) fail(file, "expected a JSON array of candidates");
   return raw.map((c: any, i: number) => {
@@ -53,8 +54,8 @@ export function loadCandidates(dataDir = DATA_DIR): Candidate[] {
   });
 }
 
-export function loadCases(dataDir = DATA_DIR): EvalCase[] {
-  const file = join(dataDir, "cases.json");
+export function loadCases(dataDir = DATA_DIR, file?: string): EvalCase[] {
+  file = file ? resolve(file) : join(dataDir, "cases.json");
   const raw = readJson(file);
   if (!Array.isArray(raw)) fail(file, "expected a JSON array of cases");
   return raw;

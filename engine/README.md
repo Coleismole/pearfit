@@ -11,10 +11,45 @@ cd engine
 npm install          # only needed for typecheck
 npm run recommend -- sample              # every candidate vs the sample wardrobe
 npm run recommend -- sample cos-oxford   # one candidate
-npm run eval         # check picks against data/cases.json
+npm run eval         # check picks against data/cases.json, and explain every size miss
+npm run eval:generated   # same, but with candidates from data/candidates.generated.json (the exporter's output)
 npm test             # unit tests
 npm run typecheck
 ```
+
+## Running scraped data
+The exporter writes `data/candidates.generated.json`. It never touches the hand-curated
+`data/candidates.json`, and neither do the runners: they only read. Point them at the generated file:
+```bash
+node cli/export-candidates.ts [dbPath] [outPath]                        # webscraper DB -> data/candidates.generated.json
+npm run recommend -- <owner> [candidateId] --candidates data/candidates.generated.json
+npm run eval -- --candidates data/candidates.generated.json --cases data/<your-cases>.json
+```
+- `--candidates <path>` works on `recommend` and `eval`. `--cases <path>` works on `eval`, because
+  scraped candidate ids (SKU slugs) won't match the ids in `data/cases.json`.
+- A case whose candidate is not in the candidates file (for example a SKU the scraper has no size
+  chart for yet) is listed as skipped. It does not stop the run.
+- Unknown flags and unreadable files exit with an error. They never fall back to the default file.
+
+## Reading the eval's miss analysis
+Each size miss prints why it missed:
+```
+MISS: wanted L, got M (1 size too small)
+why: measurements. M is 2.12cm closer than L (M 0.29 vs blue-shirt, L 2.41 vs blue-shirt)
+dim       M ease  L ease  M share  L share   swing
+chest       +0.5    +3.0     0.29     1.76   +1.47  <- driver
+```
+- Each size is compared with its own closest `great` shirt. **ease** is candidate minus shirt, in cm.
+- **share** is the dimension's part of that size's distance (weight x |ease| / weights present), so
+  the shares of a size add up to its distance.
+- **swing** = correct share minus chosen share. The swings add up to the **margin** (correct distance
+  minus chosen distance). Positive swing means that dimension pushed toward the wrong size. The
+  **driver** is the dimension with the largest positive swing.
+- **cause** is `measurements` (the chosen size really was closer), `tie_break` (the review signal or
+  size order won a near-tie that measurements went the other way on), `correct_unscorable` (the right
+  size shares no measurement with any great shirt) or `no_pick`.
+- The end summary counts causes, drivers and direction (too small / too large) over **tuning cases
+  only**. Holdout cases still print their own miss detail, so look at those once, not while tuning.
 
 ## Adding real data
 
@@ -65,6 +100,7 @@ All numbers live in `src/config.ts`.
 
 ## Layout
 - `src/`: the engine. Pure functions, no file or network access.
-- `cli/`: file loading/validation, the `recommend` runner and `eval`.
+- `src/analyze.ts`: miss analysis (per-dimension gap, margin, cause) for one recommendation.
+- `cli/`: file loading/validation, flag parsing, the `recommend` runner, `eval` and its report.
 - `data/`: wardrobes, candidates, cases. The `sample` files are made-up demo data.
 - `test/`: unit tests with hand-computed expected values.

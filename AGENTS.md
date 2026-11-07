@@ -40,6 +40,11 @@ Owned shirt:
 - `chest_cm` is pit-to-pit measured flat (half the circumference). Every source must use this
   convention. Mixing flat and circumference is the #1 silent bug.
 - Any measurement may be `null`. Code must handle `null` on every field.
+- Chest (pit-to-pit / body width) is the trusted dimension — consistent across sources. Length and sleeve
+  are only comparable within one convention: prefer a per-brand offset calibrated from a shirt the user
+  owns (hand-measure it, compare to that brand's chart at the known size, store the difference, and apply
+  it to that brand's charts). When no offset is known and the chart's convention can't be confirmed, set
+  that dimension to null rather than mixing conventions.
 - `id`: lowercase, dashes, no spaces, unique per person.
 
 Candidate garment (used by the Pilot 1 engine; sizes listed smallest to largest):

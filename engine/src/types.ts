@@ -2,16 +2,27 @@
 
 export type FitLabel = "great" | "tight" | "loose";
 
+// Canonical physical meaning of each measurement, in cm:
+//   chest_cm:  pit-to-pit measured flat (half the garment circumference)
+//   length_cm: highest point of the shoulder straight down to the bottom hem, laid flat
+//   sleeve_cm: from the shoulder seam to the end of the sleeve
+// Every source (scan, scraper, each brand's chart) must convert INTO these definitions before storing.
+// Never store a raw brand number in a different convention — a circumference would be 2x wrong.
 export type Dim = "chest_cm" | "length_cm" | "sleeve_cm";
 export const DIMS: readonly Dim[] = ["chest_cm", "length_cm", "sleeve_cm"];
 
-// chest_cm is pit-to-pit measured flat (half the circumference). null = not measured.
+// null = not measured.
 export type Measurements = Record<Dim, number | null>;
 
 export interface OwnedShirt {
   id: string;
   label: FitLabel;
   measurements: Measurements;
+  // Optional metadata from scanning the tag — used for chart lookup, joining to the scraper DB by sku,
+  // and display. The engine ignores these.
+  brand?: string;
+  sku?: string;
+  size?: string;
 }
 
 export type ReviewSignal = "runs_small" | "true_to_size" | "runs_large" | null;

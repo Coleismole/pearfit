@@ -27,5 +27,33 @@
       "M": { "chest_cm": 58, "length_cm": 66, "sleeve_cm": null },
       "L": { "chest_cm": 61, "length_cm": 68, "sleeve_cm": null }
     }
+  },
+  {
+    "id": "xl-chart-test",
+    "name": "XL chart test shirt",
+    "review": null,
+    "sizes": {
+      "XXS": { "chest_cm": 45.1, "length_cm": null, "sleeve_cm": null },
+      "XS": { "chest_cm": 47.6, "length_cm": null, "sleeve_cm": null },
+      "S": { "chest_cm": 50.2, "length_cm": null, "sleeve_cm": null },
+      "M": { "chest_cm": 52.7, "length_cm": null, "sleeve_cm": null },
+      "L": { "chest_cm": 55.9, "length_cm": null, "sleeve_cm": null },
+      "XL": { "chest_cm": 59.1, "length_cm": null, "sleeve_cm": null },
+      "XXL": { "chest_cm": 62.2, "length_cm": null, "sleeve_cm": null }
+    }
+  },
+  {
+    "id": "keith-haring",
+    "name": "Keith Haring",
+    "review": null,
+    "sizes": {
+      "XXS": { "chest_cm": 46.5, "length_cm": 61.5, "sleeve_cm": null },
+      "XS": { "chest_cm": 49.5, "length_cm": 63.5, "sleeve_cm": null },
+      "S": { "chest_cm": 52.5, "length_cm": 66.5, "sleeve_cm": null },
+      "M": { "chest_cm": 55.5, "length_cm": 69.5, "sleeve_cm": null },
+      "L": { "chest_cm": 59.5, "length_cm": 72.5, "sleeve_cm": null },
+      "XL": { "chest_cm": 63.5, "length_cm": 74.5, "sleeve_cm": null },
+      "XXL": { "chest_cm": 66.5, "length_cm": 75, "sleeve_cm": null }
+    }
   }
 ]

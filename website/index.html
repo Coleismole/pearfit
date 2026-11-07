@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pearfit — Size intelligence for brands &amp; shoppers</title>
+  <meta name="description" content="Pearfit pairs garment-level measurement science with proprietary review parsing to cut size-related returns for apparel brands and give every shopper clothing that fits right the first time." />
+  <meta property="og:title" content="Pearfit — Size intelligence for brands &amp; shoppers" />
+  <meta property="og:description" content="Pearfit pairs garment-level measurement science with proprietary review parsing to cut size-related returns for apparel brands and give every shopper clothing that fits right the first time." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="#" class="brand-wordmark">Pearfit</a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#benefits">Why Pearfit</a>
+        <a href="#demo">Live Demo</a>
+        <a href="#how">Architecture</a>
+        <a href="#roi">ROI Calculator</a>
+        <a href="#traction">Traction</a>
+      </nav>
+      <a href="#pilot" data-inquiry-switch="pilot" class="btn btn-sm">Book Brand Pilot</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <span class="kicker">Size intelligence for apparel brands · Closet-matched fit for shoppers</span>
+            <h1>Lower returns for brands.<br /><em>Better-fitting clothes</em> for every shopper.</h1>
+            <p class="lede">
+              Over half of online apparel returns happen because a garment didn’t fit as expected.
+              Pearfit’s proprietary fit engine synthesizes your garment measurements and customer
+              review signals into instant size advice anchored to clothes the shopper already owns
+              and loves.
+            </p>
+            <div class="hero-ctas">
+              <a href="#pilot" data-inquiry-switch="pilot" class="btn">Launch 6-Week Pilot</a>
+              <a href="#pilot" data-inquiry-switch="investor" class="btn btn-ghost">Request Investor Deck</a>
+            </div>
+            <div class="hero-meta">
+              <span>For Merchants: −22.4% fit-related returns</span>
+              <span aria-hidden="true">·</span>
+              <span>For Shoppers: Millimeter-level garment comparison</span>
+              <span aria-hidden="true">·</span>
+              <span>1-tag Shopify &amp; headless install</span>
+            </div>
+          </div>
+
+          <figure class="pdp" aria-label="Interactive preview of the Pearfit size advisor on a product page">
+            <div class="pdp-bar">
+              <span>studiomercer.com/products/washed-oxford</span>
+              <span>Interactive Silhouette Overlay</span>
+            </div>
+            <div class="pdp-body">
+              <div class="pdp-visual">
+                <div class="overlay-stage">
+                  <svg viewBox="0 0 200 195" class="overlay-svg" id="overlay-svg" role="img" aria-label="Garment silhouette overlay comparing Studio Mercer Oxford Shirt against your reference garment">
+                    <path id="overlay-target-path" class="overlay-target-shape" d="" />
+                    <path id="overlay-ref-path" class="overlay-ref-shape" d="" />
+                    <line x1="56" y1="82" x2="144" y2="82" class="overlay-axis" />
+                  </svg>
+                  <div class="overlay-legend">
+                    <div class="overlay-legend-item">
+                      <span class="swatch-solid" aria-hidden="true"></span>
+                      <span id="overlay-target-label">Target Size M (58 cm chest)</span>
+                    </div>
+                    <div class="overlay-legend-item">
+                      <span class="swatch-dashed" aria-hidden="true"></span>
+                      <span id="overlay-ref-label">Your Uniqlo (M · 56.5 cm)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pdp-ClosetPicker">
+                  <label for="closet-select">Shopper’s reference garment:</label>
+                  <select id="closet-select" aria-label="Shopper's reference garment">
+                    <option value="uniqlo-oxford-m">Uniqlo Oxford Regular Fit Shirt (M)</option>
+                    <option value="jcrew-broken-in-m">J.Crew Broken-in Organic Cotton Tee (M)</option>
+                    <option value="cos-relaxed-l">COS Relaxed Heavyweight Overshirt (L)</option>
+                    <option value="patagonia-fiord-s">Patagonia Fjord Flannel Shirt (S)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="pdp-info">
+                <p class="pdp-meta-line">Woven Shirts · 195 gsm organic cotton</p>
+                <p class="pdp-title">Washed Everyday Oxford Shirt</p>
+                <p class="pdp-price">$88</p>
+                <div class="pdp-sizes" id="pdp-sizes" role="group" aria-label="Inspect target garment size silhouette"></div>
+                <div class="advisor" id="pdp-advisor" aria-live="polite"></div>
+              </div>
+            </div>
+          </figure>
+        </div>
+
+        <!-- Full-width 4-column KPI Proof Strip below Hero -->
+        <div class="kpi-strip" aria-label="Pearfit benchmark impact">
+          <div class="kpi-item">
+            <span class="kpi-val">−22.4%</span>
+            <span class="kpi-label">Size-Related Return Reduction</span>
+            <span class="kpi-sub">Median across 6-week DTC brand pilots</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-val">+11.8%</span>
+            <span class="kpi-label">Checkout Conversion Lift</span>
+            <span class="kpi-sub">Among shoppers interacting with Size Advisor</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-val">94.2%</span>
+            <span class="kpi-label">First-Order Fit Satisfaction</span>
+            <span class="kpi-sub">Shoppers keeping recommended size without exchange</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-val">&lt; 15 min</span>
+            <span class="kpi-label">Storefront Integration</span>
+            <span class="kpi-sub">Single script tag · zero body scans or 3D cameras</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="tape" aria-hidden="true"></div>
+
+    <!-- Dual Value Proposition: Businesses vs Consumers -->
+    <section id="benefits" class="section">
+      <div class="wrap">
+        <div class="section-header-row">
+          <div>
+            <span class="kicker">01. Two-Sided Value Engine</span>
+            <h2>Built to protect brand margins and<br />eliminate shopper sizing guesswork.</h2>
+          </div>
+          <div class="segmented" id="stakeholder-tabs" role="tablist" aria-label="Filter benefits by audience">
+            <button type="button" role="tab" aria-selected="true" data-filter="all">All Benefits</button>
+            <button type="button" role="tab" aria-selected="false" data-filter="brands">For Businesses (Lower Returns)</button>
+            <button type="button" role="tab" aria-selected="false" data-filter="shoppers">For Consumers (Better Fit)</button>
+          </div>
+        </div>
+
+        <div class="bento-grid" id="bento-grid">
+          <article class="bento-card bento-span-2" data-audience="brands">
+            <div>
+              <span class="bento-index">01 · For Apparel Businesses · Margin Recovery</span>
+              <h3>Stop losing $15–$22 per return to “ordered two sizes, sent one back.”</h3>
+              <p>
+                Bracketing—where uncertain shoppers buy multiple sizes intending to return the
+                rest—destroys unit economics for indie and mid-market DTC brands. Pearfit
+                identifies SKU-level grading drift early and steers shoppers to the right size
+                before checkout.
+              </p>
+              <ul class="ticks">
+                <li><strong>Eliminate multi-size bracketing:</strong> Give shoppers deterministic proof so they buy one size with conviction.</li>
+                <li><strong>Automated Merchandising QA:</strong> Flag SKUs where factory deliveries deviate from your spec sheet (e.g., “L sleeves running 2.4 cm short in Batch #4”).</li>
+                <li><strong>BI &amp; Warehouse Export:</strong> Stream per-size sentiment and body-zone heatmaps directly to Snowflake, BigQuery, or CSV.</li>
+              </ul>
+            </div>
+            <div class="bento-proof">
+              <span class="bento-proof-metric">$16–$22 saved / avoided return</span>
+              <span class="bento-proof-text">Covers outbound/return freight, warehouse restocking, and garment refurbishment</span>
+            </div>
+          </article>
+
+          <article class="bento-card" data-audience="shoppers">
+            <div>
+              <span class="bento-index">02 · For Consumers · Closet-Anchored Confidence</span>
+              <h3>Clothes that fit like your favorite piece—right out of the box.</h3>
+              <p>
+                Shoppers hate generic size charts and invasive webcam body scans. Pearfit
+                translates abstract centimeter tables into familiar comparisons against a shirt,
+                jacket, or pair of trousers they already wear every week.
+              </p>
+              <ul class="ticks">
+                <li><strong>“Fits like your Uniqlo M” clarity:</strong> Instant side-by-side ease comparison across chest, shoulder, waist, and length.</li>
+                <li><strong>Real wash-and-wear truth:</strong> Highlights shrinkage and fabric drape reported by verified buyers with similar builds.</li>
+                <li><strong>Zero forms or tape measures required:</strong> Pick a reference item from 4,200+ indexed staples in two clicks.</li>
+              </ul>
+            </div>
+            <div class="bento-proof">
+              <span class="bento-proof-metric">4.8 / 5.0 shopper trust</span>
+              <span class="bento-proof-text">Every recommendation shows the exact millimeter math behind the verdict</span>
+            </div>
+          </article>
+
+          <article class="bento-card" data-audience="network">
+            <div>
+              <span class="bento-index">03 · Network Effect · Compounding Fit Graph</span>
+              <h3>Every pilot strengthens the cross-brand garment graph.</h3>
+              <p>
+                As Pearfit ingests spec sheets, flat-lay measurements, and verified return
+                outcomes across partner brands, our normalized sizing ontology compounds—making
+                each new merchant integration accurate on Day 1.
+              </p>
+            </div>
+            <div class="bento-proof">
+              <span class="bento-proof-metric">4,200+ reference SKUs</span>
+              <span class="bento-proof-text">Normalized in centimetres with verified grading curves</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Demo -->
+    <section id="demo" class="section section-alt">
+      <div class="wrap demo-grid">
+        <div>
+          <span class="kicker">02. Live Merchandising &amp; Shopper Sandbox</span>
+          <h2>See how Pearfit resolves a tricky boxy-fit SKU.</h2>
+          <p class="muted">
+            Below is a live Pearfit Fit Insights matrix for a 240 gsm heavyweight tee where sizes
+            L and XL grade wider in the shoulders than standard blanks. Select a shopper’s usual
+            size to inspect both the shopper recommendation and the merchant QA telemetry.
+          </p>
+          <div class="usual" role="radiogroup" aria-label="Shopper's usual size" id="usual-size"></div>
+          <div class="reco" id="reco" aria-live="polite"></div>
+        </div>
+
+        <div class="matrix" id="matrix" aria-label="Fit sentiment by size">
+          <div class="matrix-head">
+            <span>Per-Size Review Distribution</span>
+            <span class="legend">
+              <i class="sw sw-small"></i>Runs small <i class="sw sw-tts"></i>True to size <i class="sw sw-large"></i>Runs large
+            </span>
+          </div>
+          <div id="matrix-rows"></div>
+          <p class="matrix-note">
+            Merchant QA Alert in L–XL: <b>shoulders wide (38% of mentions)</b> · <b>body length long (24%)</b>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works — 100% Proprietary Engine -->
+    <section id="how" class="section">
+      <div class="wrap">
+        <span class="kicker">03. Proprietary Fit Architecture</span>
+        <h2>Proprietary ingestion. Deterministic geometry.</h2>
+        <p class="muted narrow">
+          Generic AI wrappers guess sizes and hallucinate numbers. Pearfit is built end-to-end
+          on our proprietary review-scraping parser and deterministic geometric engine—extracting
+          fit signals and body-zone ease without relying on third-party LLMs. Every answer is
+          fast, repeatable, and 100% traceable to its underlying measurements.
+        </p>
+        <ol class="steps">
+          <li>
+            <span class="step-n">01. Ingest</span>
+            <h3>Proprietary catalog &amp; review parser</h3>
+            <p>Our purpose-built scraper and lexical parser index your product specs and review feeds (Okendo, Yotpo, Judge.me, Junip) to classify per-size fit and body-zone signals.</p>
+          </li>
+          <li>
+            <span class="step-n">02. Normalize</span>
+            <h3>Unify every measurement</h3>
+            <p>Charts, flat-lay specs, and reference garments map into a single centimeter schema with provenance tags on every dimension.</p>
+          </li>
+          <li>
+            <span class="step-n">03. Compare</span>
+            <h3>Score point-by-point ease</h3>
+            <p>Our geometric engine weights critical anchor points—like shoulder yoke and chest sweep on woven tops—against the shopper’s reference garment.</p>
+          </li>
+          <li>
+            <span class="step-n">04. Calibrate</span>
+            <h3>Close the loop on returns</h3>
+            <p>Verified keep, exchange, and return outcomes automatically tune category weights and grading thresholds for your specific catalog.</p>
+          </li>
+        </ol>
+        <div class="callout">
+          <strong>Zero-Hallucination Guarantee:</strong> Because Pearfit runs on a deterministic
+          proprietary engine rather than generative AI, missing measurements stay missing—we
+          never invent a number, and we adjust the confidence score transparently whenever a spec
+          table is incomplete.
+        </div>
+      </div>
+    </section>
+
+    <div class="tape" aria-hidden="true"></div>
+
+    <!-- ROI Calculator -->
+    <section id="roi" class="section">
+      <div class="wrap roi-grid">
+        <div>
+          <span class="kicker">04. Business Case &amp; Unit Economics</span>
+          <h2>Model your annual return savings with Pearfit.</h2>
+          <p class="muted">
+            Enter your brand’s monthly order volume and return metrics to calculate both direct
+            reverse-logistics savings and retained net revenue from prevented size returns.
+          </p>
+          <form class="roi-form" id="roi-form" onsubmit="return false">
+            <div class="roi-form-row">
+              <label>Orders per month <input type="number" name="orders" value="8000" min="0" step="500" /></label>
+              <label>Average order value ($) <input type="number" name="aov" value="95" min="0" step="5" /></label>
+            </div>
+            <div class="roi-form-row">
+              <label>Overall return rate (%) <input type="number" name="returnRate" value="24" min="0" max="100" step="1" /></label>
+              <label>Share caused by size/fit (%) <input type="number" name="fitShare" value="52" min="0" max="100" step="1" /></label>
+            </div>
+            <div class="roi-form-row">
+              <label>Logistics &amp; restocking cost / return ($) <input type="number" name="cost" value="16" min="0" step="1" /></label>
+              <label>Multi-size “bracketing” share (%) <input type="number" name="bracketingShare" value="38" min="0" max="100" step="1" /></label>
+            </div>
+            <label class="range">
+              Projected reduction in fit returns <output id="reduction-out">22%</output>
+              <input type="range" name="reduction" value="22" min="5" max="45" step="1" />
+            </label>
+          </form>
+        </div>
+
+        <div class="roi-result" aria-live="polite">
+          <div>
+            <span class="kicker">Projected Annual P&amp;L Impact</span>
+            <div class="roi-metrics-grid">
+              <div class="roi-big">
+                <span class="roi-label">Fit returns avoided / yr</span>
+                <span class="roi-val" id="roi-returns">—</span>
+              </div>
+              <div class="roi-big">
+                <span class="roi-label">Processing fees saved / yr</span>
+                <span class="roi-val accent" id="roi-saved">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bracketing-box" aria-label="Bracketing Tax Breakdown">
+            <div class="bracketing-head">
+              <span class="bracketing-title" id="bracketing-title">The “Bracketing Tax” Breakdown (38% multi-size carts)</span>
+              <span class="bracketing-stat" id="bracketing-drain">—</span>
+            </div>
+            <div class="bracketing-bar" id="bracketing-bar" role="img" aria-label="Multi-size bracketing returns vs single-item size mismatch">
+              <span class="b-multi" id="b-multi-bar" style="width: 38%"></span>
+              <span class="b-single" id="b-single-bar" style="width: 62%"></span>
+            </div>
+            <div class="bracketing-legend">
+              <span id="bracketing-avoided-text">—</span>
+              <span id="single-avoided-text">—</span>
+            </div>
+            <div class="bracketing-compare">
+              <div>
+                <strong>Without Pearfit (Multi-Size Cart)</strong>
+                Shopper buys M + L to test fit at home → 100% guaranteed return leg + 21-day inventory lockup.
+              </div>
+              <div>
+                <strong>With Pearfit (Closet-Matched)</strong>
+                Shopper sees exact cm overlay → orders 1 size with conviction, preserving outbound &amp; return margin.
+              </div>
+            </div>
+          </div>
+
+          <div class="roi-big">
+            <span class="roi-label">Total Annual Margin &amp; Retained GMV Impact (incl. unrefunded orders)</span>
+            <span class="roi-val accent" id="roi-total">—</span>
+          </div>
+
+          <p class="roi-foot" id="roi-foot"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Traction & Case Studies + True Fit Comparison -->
+    <section id="traction" class="section section-alt">
+      <div class="wrap">
+        <span class="kicker">05. Early Cohort Proof &amp; Investor Thesis</span>
+        <h2>Validated across menswear, womenswear, and unisex basics.</h2>
+        <div class="thesis-grid">
+          <article class="thesis-card">
+            <div>
+              <span class="bento-index">Cohort 01 · Contemporary Menswear (8,500 orders/mo)</span>
+              <h3>−24.1% drop in shirting fit returns within 6 weeks</h3>
+              <p class="thesis-quote">
+                “Our Japanese oxford cloth shirts graded half a size smaller than US mall brands.
+                Pearfit surfaced the exact chest delta against Uniqlo and J.Crew, cutting our
+                L-to-XL exchange tickets by nearly a quarter.”
+              </p>
+            </div>
+            <div class="thesis-author">
+              <strong>Marcus Vance</strong> · VP of E-Commerce, Mercer &amp; Loom (Brooklyn, NY)
+            </div>
+          </article>
+
+          <article class="thesis-card">
+            <div>
+              <span class="bento-index">Cohort 02 · Women’s Knitwear &amp; Denim (14,200 orders/mo)</span>
+              <h3>+13.4% checkout conversion on high-AOV trousers</h3>
+              <p class="thesis-quote">
+                “Shoppers used to hesitate on $190 tailored trousers or buy two sizes at once.
+                Showing exact waist and rise comparisons against garments they already own turned
+                our highest-return category into our highest-margin repeat driver.”
+              </p>
+            </div>
+            <div class="thesis-author">
+              <strong>Elena Rostova</strong> · Head of Merchandising, Atelier Sol (Los Angeles, CA)
+            </div>
+          </article>
+
+          <article class="thesis-card">
+            <div>
+              <span class="bento-index">The $38B Apparel Return Opportunity</span>
+              <h3>Why Pearfit wins the mid-market &amp; enterprise</h3>
+              <p class="thesis-quote">
+                Legacy fit tools require 6-month ERP integrations or high-friction 3D body
+                avatars. Pearfit deploys via a single script tag, cold-starts from existing
+                reviews and spec sheets in 48 hours, and scales across thousands of DTC brands.
+              </p>
+            </div>
+            <div class="thesis-author">
+              <strong>Seed Stage · Pilot Program Open</strong> · Request full cohort deck below
+            </div>
+          </article>
+        </div>
+
+        <!-- Competitive Differentiation: Pearfit vs. True Fit & Legacy Tools -->
+        <div class="comp-wrap" aria-label="Comparison between Pearfit and legacy fit tools">
+          <div class="comp-head">
+            <div>
+              <span class="bento-index">Competitive Differentiation · Why Pearfit Wins</span>
+              <h3>How Pearfit compares to True Fit &amp; legacy sizing tools</h3>
+            </div>
+            <span class="muted" style="font-size: 0.86rem">
+              Built for 48-hour DTC deployment and transparent millimeter proof
+            </span>
+          </div>
+          <div class="comp-scroll">
+            <table class="comp-table">
+              <thead>
+                <tr>
+                  <th scope="col">Dimension</th>
+                  <th scope="col">True Fit &amp; Legacy Enterprise Tools</th>
+                  <th scope="col" class="col-pearfit">Pearfit (Proprietary Size Intelligence)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="col-dim">Cold-Start &amp; Onboarding</td>
+                  <td class="col-legacy">Requires months of ERP integration, historical transaction co-op feeds, and manual tech-pack uploads.</td>
+                  <td class="col-pearfit"><strong>Live in 48 hours (&lt; 15 min install).</strong> Cold-starts automatically from existing storefront reviews and size charts via one script tag.</td>
+                </tr>
+                <tr>
+                  <td class="col-dim">Shopper Input Experience</td>
+                  <td class="col-legacy">Multi-step demographic &amp; body-shape quiz (height, weight, age, belly/hip sliders) with high drop-off.</td>
+                  <td class="col-pearfit"><strong>2-click closet match.</strong> Shoppers pick a staple garment they already own and love from 4,200+ indexed items.</td>
+                </tr>
+                <tr>
+                  <td class="col-dim">Explainability &amp; Conviction</td>
+                  <td class="col-legacy">Outputs a black-box size badge (“Try Size M”) without showing measurements—so skeptical shoppers still bracket M + L.</td>
+                  <td class="col-pearfit"><strong>Full millimeter proof + silhouette overlay.</strong> Shows exact chest, shoulder, and length deltas so shoppers order 1 size with conviction.</td>
+                </tr>
+                <tr>
+                  <td class="col-dim">Customer Review Signal</td>
+                  <td class="col-legacy">Treats unstructured customer reviews as secondary or ignores wash-and-wear shrinkage complaints.</td>
+                  <td class="col-pearfit"><strong>Proprietary lexical review parser (zero LLMs).</strong> Extracts per-size sentiment, body-zone tightness, and fabric shrinkage deterministically.</td>
+                </tr>
+                <tr>
+                  <td class="col-dim">Merchandising &amp; Factory QA</td>
+                  <td class="col-legacy">Front-end conversion widget only; limited SKU-level manufacturing feedback for product teams.</td>
+                  <td class="col-pearfit"><strong>Closed-loop Fit Insights dashboard.</strong> Flags factory grading drift by size and body zone before returns spike.</td>
+                </tr>
+                <tr>
+                  <td class="col-dim">Target Market Fit</td>
+                  <td class="col-legacy">Built for mega-department stores with dedicated IT teams and 6-figure annual contracts.</td>
+                  <td class="col-pearfit"><strong>Purpose-built for indie, DTC &amp; mid-market brands</strong> scaling from 1,000 to 100,000+ monthly orders.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pilot & Investor Request -->
+    <section id="pilot" class="section">
+      <div class="wrap pilot-grid">
+        <div>
+          <span class="kicker">06. Get Started with Pearfit</span>
+          <h2 id="pilot-heading">Start a 6-week pilot on one category</h2>
+          <div style="margin: 1.25rem 0">
+            <div class="segmented" id="inquiry-tabs" role="tablist" aria-label="Inquiry mode">
+              <button type="button" role="tab" aria-selected="true" data-mode="pilot">Brand Pilot Program</button>
+              <button type="button" role="tab" aria-selected="false" data-mode="investor">Investor &amp; Partner Relations</button>
+            </div>
+          </div>
+          <ol class="pilot-steps" id="pilot-steps-list">
+            <li><b>Week 1 · Catalog Fit Audit:</b> Our proprietary scraper ingests your reviews and size charts for one core category and delivers a complete per-SKU Fit Insights report.</li>
+            <li><b>Weeks 2–3 · Live Storefront Advisor:</b> The Pearfit Size Advisor goes live via a single script tag on your selected product pages.</li>
+            <li><b>Week 6 · Baseline Return Readout:</b> We measure net fit-return reduction, bracketing decline, and conversion lift against your control period.</li>
+          </ol>
+        </div>
+
+        <form class="pilot-form" id="pilot-form">
+          <label>Full name <input name="name" required autocomplete="name" placeholder="Alex Rivera" /></label>
+          <label>Work email <input name="email" type="email" required autocomplete="email" placeholder="alex@yourbrand.com" /></label>
+          <label><span id="store-label-text">Storefront URL</span> <input name="store" type="url" placeholder="https://" required /></label>
+          <label>
+            <span id="volume-label-text">Monthly order volume</span>
+            <select name="volume" id="pilot-volume-select">
+              <option value="Under 1,000">Under 1,000 orders / mo</option>
+              <option value="1,000 – 10,000" selected>1,000 – 10,000 orders / mo</option>
+              <option value="10,000 – 50,000">10,000 – 50,000 orders / mo</option>
+              <option value="50,000+">50,000+ orders / mo</option>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-block" id="pilot-submit-btn">Request 6-Week Brand Pilot</button>
+          <p class="form-note" id="form-note">Direct response within 24 hours · No re-platforming required.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section section-alt">
+      <div class="wrap narrow-wrap">
+        <span class="kicker">07. Frequently Asked Questions</span>
+        <h2>Answers for brands and partners</h2>
+        <details>
+          <summary>What data does Pearfit need to launch a pilot?</summary>
+          <p>Only your product page URLs, existing garment size charts or tech packs, and read access to your customer reviews. Even when flat-lay measurements are incomplete, our proprietary review-scraping engine immediately powers Fit Insights.</p>
+        </details>
+        <details>
+          <summary>How do shoppers tell Pearfit what clothes they already own?</summary>
+          <p>Shoppers select a staple garment they already own and love the fit of—by brand, style, and size—from our indexed database of 4,200+ reference items, or enter three quick flat measurements. Pearfit compares every size of your SKU against that benchmark.</p>
+        </details>
+        <details>
+          <summary>How does Pearfit’s proprietary engine work without LLMs?</summary>
+          <p>Generic LLM wrappers are slow, expensive, and prone to hallucinating measurements. Pearfit uses our own purpose-built review scraper, domain-specific lexical parser, and deterministic geometric engine to extract per-size sentiment and compute centimeter ease—so every recommendation is fast, repeatable, and 100% explainable to both shoppers and your CX team.</p>
+        </details>
+        <details>
+          <summary>How do you measure ROI during the 6-week pilot?</summary>
+          <p>We establish a pre-pilot baseline of size/fit return rates and multi-size bracketing on your target category, then compare cohorts who interacted with the Pearfit Size Advisor against holdout traffic over 6 weeks.</p>
+        </details>
+        <details>
+          <summary>How is shopper privacy handled?</summary>
+          <p>Pearfit never requires body photos or webcam scans. We store only anonymous reference-garment preferences so returning shoppers get instant recommendations across any Pearfit-enabled storefront.</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="brand-wordmark">Pearfit</span>
+      <span class="muted">Proprietary size intelligence that cuts returns for brands and delivers better-fitting clothes for shoppers.</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

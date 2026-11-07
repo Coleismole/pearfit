@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitPulse — Size intelligence that cuts returns</title>
+  <meta name="description" content="FitPulse turns your product reviews and garment measurements into per-size fit intelligence and on-page size advice, so fewer orders come back because they didn't fit." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="#" class="logo" aria-label="FitPulse home">
+        <span class="logo-mark" aria-hidden="true"></span>FitPulse
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#product">Product</a>
+        <a href="#how">How it works</a>
+        <a href="#roi">ROI</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a href="#pilot" class="btn btn-sm">Start a pilot</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Fit intelligence for apparel brands</p>
+          <h1>Fewer orders back<br />with <em>“didn’t fit.”</em></h1>
+          <p class="lede">
+            FitPulse reads every review in your catalog, works out how each size really fits,
+            and tells shoppers which size to order. The advice is tied to clothes they already own,
+            and every answer shows the numbers behind it.
+          </p>
+          <div class="hero-ctas">
+            <a href="#pilot" class="btn">Start a pilot</a>
+            <a href="#demo" class="btn btn-ghost">See it on a product</a>
+          </div>
+          <ul class="hero-points">
+            <li>One script tag, any storefront</li>
+            <li>Built for indie &amp; DTC catalogs</li>
+            <li>Every answer shows its measurements</li>
+          </ul>
+        </div>
+
+        <figure class="pdp" aria-label="Example of the FitPulse size advisor on a product page">
+          <div class="pdp-bar"><span></span><span></span><span></span><i>yourstore.com/products/oxford-shirt</i></div>
+          <div class="pdp-body">
+            <div class="pdp-photo" aria-hidden="true">
+              <svg viewBox="0 0 120 120" class="shirt"><path d="M42 18 L60 26 L78 18 L102 30 L94 52 L84 48 L84 104 L36 104 L36 48 L26 52 L18 30 Z" /></svg>
+            </div>
+            <div class="pdp-info">
+              <p class="pdp-brand">Your Brand</p>
+              <p class="pdp-title">Washed Oxford Shirt</p>
+              <p class="pdp-price">$68</p>
+              <div class="pdp-sizes" aria-hidden="true">
+                <span>S</span><span class="on">M</span><span>L</span><span>XL</span>
+              </div>
+              <div class="advisor">
+                <div class="advisor-head">
+                  <span class="logo-mark sm" aria-hidden="true"></span>
+                  <strong>Get the M</strong>
+                  <span class="chip chip-good">High confidence</span>
+                </div>
+                <p>Fits like your <b>blue Uniqlo oxford</b> (M).</p>
+                <dl class="ease">
+                  <div><dt>Chest</dt><dd>+1.5 cm</dd></div>
+                  <div><dt>Shoulder</dt><dd>+0.5 cm</dd></div>
+                  <div><dt>Length</dt><dd>−1.0 cm</dd></div>
+                </dl>
+                <p class="advisor-foot">Reviews: 71% say true to size in M</p>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <div class="tape" aria-hidden="true"></div>
+
+    <!-- Product -->
+    <section id="product" class="section">
+      <div class="wrap">
+        <p class="eyebrow">Two tools, one fit model</p>
+        <h2>Know how your sizes fit.<br />Help shoppers pick the right one.</h2>
+        <div class="cards">
+          <article class="card">
+            <span class="card-num">01</span>
+            <h3>Fit Insights</h3>
+            <p>A dashboard for your merchandising and product teams. We scrape and classify every review into <em>runs small</em>, <em>true to size</em> or <em>runs large</em>, broken down by size and body zone.</p>
+            <ul class="ticks">
+              <li>A fit verdict for every size on every SKU</li>
+              <li>Body-zone complaints: chest, shoulders, waist, length, sleeves</li>
+              <li>Shrinkage and fabric signals from wash-and-wear reviews</li>
+              <li>Export to SQL or JSON for your own BI tools</li>
+            </ul>
+          </article>
+          <article class="card">
+            <span class="card-num">02</span>
+            <h3>Size Advisor</h3>
+            <p>A light widget for your product pages. Shoppers pick a garment they already own. FitPulse compares measurements and tells them which size to order.</p>
+            <ul class="ticks">
+              <li>“Fits like your…” answers instead of a bare size chart</li>
+              <li>A confidence level on every recommendation</li>
+              <li>Review signal used as a tie-breaker, never as a guess</li>
+              <li>Learns from your real keep and return outcomes</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive demo -->
+    <section id="demo" class="section section-alt">
+      <div class="wrap demo-grid">
+        <div>
+          <p class="eyebrow">Live sample · illustrative data</p>
+          <h2>What your team sees</h2>
+          <p class="muted">This is a Fit Insights view for one sample SKU, a 240 gsm boxy tee. Pick the size a shopper usually wears to see what the advisor would tell them.</p>
+          <div class="usual" role="radiogroup" aria-label="Shopper's usual size" id="usual-size"></div>
+          <div class="reco" id="reco" aria-live="polite"></div>
+        </div>
+        <div class="matrix" id="matrix" aria-label="Fit sentiment by size">
+          <div class="matrix-head">
+            <span>Size</span>
+            <span class="legend"><i class="sw sw-small"></i>Runs small <i class="sw sw-tts"></i>True to size <i class="sw sw-large"></i>Runs large</span>
+          </div>
+          <div id="matrix-rows"></div>
+          <p class="matrix-note">Zone mentions in L–XL: <b>shoulders wide (38%)</b>, <b>body length long (24%)</b></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how" class="section">
+      <div class="wrap">
+        <p class="eyebrow">How it works</p>
+        <h2>Language to the AI. Math to the engine.</h2>
+        <p class="muted narrow">We use a small language model only to pull structured facts out of messy text such as reviews, product pages and size charts. A rules engine your team can check makes the sizing decision. That way every answer can be traced to its numbers.</p>
+        <ol class="steps">
+          <li>
+            <span class="step-n">1</span>
+            <h3>Connect your catalog</h3>
+            <p>Point us at your product pages and review feed. We pull measurements, size charts and review text.</p>
+          </li>
+          <li>
+            <span class="step-n">2</span>
+            <h3>Normalize every measurement</h3>
+            <p>Charts, flat-lays and wardrobe items go into one schema: centimetres, one measuring convention, and a source tag on every value.</p>
+          </li>
+          <li>
+            <span class="step-n">3</span>
+            <h3>Score the fit</h3>
+            <p>We compare each size with the shopper’s reference garment point by point and weight the points that matter, like chest and shoulders on a shirt. The closest size wins.</p>
+          </li>
+          <li>
+            <span class="step-n">4</span>
+            <h3>Learn from outcomes</h3>
+            <p>Keep and return data from your store tunes the weights and thresholds for each garment category over time.</p>
+          </li>
+        </ol>
+        <div class="callout">
+          <strong>Missing data stays missing.</strong> If a measurement isn’t on the page, we leave it blank and lower the confidence. We never invent a number, because a made-up figure would throw off the whole fit calculation.
+        </div>
+      </div>
+    </section>
+
+    <div class="tape" aria-hidden="true"></div>
+
+    <!-- ROI -->
+    <section id="roi" class="section">
+      <div class="wrap roi-grid">
+        <div>
+          <p class="eyebrow">ROI estimate</p>
+          <h2>What are fit returns costing you?</h2>
+          <p class="muted">Enter your own numbers. The reduction rate is an assumption. A pilot is how we measure the real one for your catalog.</p>
+          <form class="roi-form" id="roi-form" onsubmit="return false">
+            <label>Orders per month <input type="number" name="orders" value="5000" min="0" step="100" /></label>
+            <label>Return rate (%) <input type="number" name="returnRate" value="25" min="0" max="100" step="1" /></label>
+            <label>Share of returns that are size/fit (%) <input type="number" name="fitShare" value="50" min="0" max="100" step="1" /></label>
+            <label>Cost to process one return ($) <input type="number" name="cost" value="15" min="0" step="1" /></label>
+            <label class="range">Assumed reduction in fit returns <output id="reduction-out">15%</output>
+              <input type="range" name="reduction" value="15" min="0" max="50" step="1" />
+            </label>
+          </form>
+        </div>
+        <div class="roi-result" aria-live="polite">
+          <div class="roi-big">
+            <span class="roi-label">Fit returns avoided / year</span>
+            <span class="roi-val" id="roi-returns">—</span>
+          </div>
+          <div class="roi-big">
+            <span class="roi-label">Return processing saved / year</span>
+            <span class="roi-val accent" id="roi-saved">—</span>
+          </div>
+          <p class="roi-foot">Counts processing costs only (shipping, handling, restocking). Revenue you keep from orders that aren’t refunded comes on top of this.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why -->
+    <section class="section section-alt">
+      <div class="wrap">
+        <p class="eyebrow">Why FitPulse</p>
+        <h2>Size tech that isn’t only for the biggest retailers</h2>
+        <div class="why">
+          <div><h3>Built for the long tail</h3><p>Most fit tools target the biggest retailers and need long integrations. FitPulse works with the catalogs, review volumes and teams that indie and DTC brands actually have.</p></div>
+          <div><h3>Answers you can check</h3><p>Your customer sees “within 1.5 cm of your Uniqlo oxford,” not “the AI says M.” Your support team can explain every recommendation.</p></div>
+          <div><h3>Light to install</h3><p>Add one script tag to your product template. No re-platforming and no body scans.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pilot -->
+    <section id="pilot" class="section">
+      <div class="wrap pilot-grid">
+        <div>
+          <p class="eyebrow">Pilot program</p>
+          <h2>Start with one category</h2>
+          <ol class="pilot-steps">
+            <li><b>Week 1.</b> We analyze your reviews for one category and hand you a Fit Insights report.</li>
+            <li><b>Weeks 2–3.</b> The Size Advisor goes live on those product pages.</li>
+            <li><b>Week 6.</b> We compare fit-return rates against your baseline together.</li>
+          </ol>
+        </div>
+        <form class="pilot-form" id="pilot-form">
+          <label>Name <input name="name" required autocomplete="name" /></label>
+          <label>Work email <input name="email" type="email" required autocomplete="email" /></label>
+          <label>Store URL <input name="store" type="url" placeholder="https://" required /></label>
+          <label>Monthly orders
+            <select name="volume">
+              <option>Under 1,000</option>
+              <option selected>1,000 – 10,000</option>
+              <option>10,000 – 50,000</option>
+              <option>50,000+</option>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-block">Request a pilot</button>
+          <p class="form-note" id="form-note">Opens your email app with your details filled in.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section section-alt">
+      <div class="wrap narrow-wrap">
+        <h2>Questions</h2>
+        <details><summary>What data do you need from us?</summary><p>Product page URLs and access to your reviews. Garment measurements or size charts improve accuracy a lot. If they aren’t published, the review signal still drives Fit Insights.</p></details>
+        <details><summary>How do shoppers tell you what they own?</summary><p>They add a garment they own and like the fit of, either by brand, item and size or by measuring it flat. We then compare every size of your product against that garment.</p></details>
+        <details><summary>Is the size decision made by AI?</summary><p>No. A language model only turns text into structured fields. A rules-based engine makes the sizing decision, so it’s consistent, explainable and tunable against your return data.</p></details>
+        <details><summary>Which platforms do you support?</summary><p>Any storefront where you can add a script tag to the product template.</p></details>
+        <details><summary>What happens to shopper data?</summary><p>We store only the measurements needed to make a recommendation. We never sell or share them with other brands.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="logo"><span class="logo-mark" aria-hidden="true"></span>FitPulse</span>
+      <span class="muted">Size intelligence for apparel brands.</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

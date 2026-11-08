@@ -24,9 +24,11 @@ Out of scope: avatars, 3D, Unity, SMPL-X, MediaPipe, cloth simulation. Do not ad
   (`webscraper/commercial_fit.db`). The candidate export (`engine/cli/export-candidates.ts`) can read
   its source rows from the shared Supabase store with `--source supabase`; local SQLite is the default
   and the fallback. Only `engine/cli/` does that I/O: the engine (`engine/src/`) stays pure and never
-  touches Supabase or the network. The publishable/anon key is safe to commit — tables have RLS and
-  anon can only call the commit function, so reading the tables needs `SUPABASE_SECRET_KEY` or a read
-  policy; `SUPABASE_SECRET_KEY` goes in `.env.local`, never committed. Auth is not in use yet.
+  touches Supabase or the network. The publishable/anon key is safe to commit — tables have RLS, anon
+  can only write through the commit function, and can read only the three export tables
+  (`commercial_skus`, `sku_size_chart`, `brand_offsets`) through select policies in
+  `webscraper/fit_store.sql`; `SUPABASE_SECRET_KEY` goes in `.env.local`, never committed. Auth is not
+  in use yet.
 
 ## Core design rule
 LLMs do language only (messy text -> structured numbers). Code makes every decision and does all math.

@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --prefix webscraper && npm install",
+  "installCommand": "sh scripts/vercel-install.sh",
   "buildCommand": "node scripts/assemble-site.mjs",
   "outputDirectory": "site",
   "rewrites": [
@@ -10,7 +10,7 @@
   "functions": {
     "api/scraper/[[...path]].js": {
       "maxDuration": 60,
-      "includeFiles": "api/scraper/.env.example"
+      "includeFiles": "webscraper/.env.example"
     }
   }
 }

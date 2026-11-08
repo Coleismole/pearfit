@@ -119,10 +119,11 @@ function isSizeHeader(header: string): boolean {
   return h === '' || h === 'size' || h === 'sizes' || h === 'size (us)' || /^size\b/.test(h);
 }
 
-function chestCm(value: number, unit: Unit, kind: ChestKind): number {
+/** A header that does not say flat or circumference gives null. We never guess the convention. */
+function chestCm(value: number, unit: Unit, kind: ChestKind): number | null {
+  if (kind === 'unspecified') return null;
   const cm = toCm(value, unit);
-  const flat = kind === 'flat' || (kind === 'unspecified' && cm <= 80);
-  return round1(flat ? cm : cm / 2);
+  return round1(kind === 'flat' ? cm : cm / 2);
 }
 
 interface ParsedTable {
@@ -162,10 +163,10 @@ function parseHtmlTable(
     for (const col of cols) {
       const parsed = parseCell(cells[col.index] ?? '', tableUnit);
       if (!parsed) continue;
-      any = true;
       if (col.kind === 'chest' && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest);
       if (col.kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (col.kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
+      if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
     }
     if (any) tableHasValue = true;
     seen.add(size);
@@ -205,10 +206,10 @@ function parseTransposedTable(
       if (!row) return;
       const parsed = parseCell(cells[index + 1] ?? '', rowUnit);
       if (!parsed) return;
-      any = true;
       if (kind === 'chest' && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
       if (kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
+      if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
     });
   }
   return any ? { rows } : null;

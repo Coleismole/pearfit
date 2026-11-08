@@ -1,6 +1,6 @@
 {
   "installCommand": "if [ -f webscraper/package.json ]; then export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1; (cd webscraper && npm ci); npm ci; else echo 'Static site, skipping npm'; fi",
-  "buildCommand": "if [ -f scripts/assemble-site.mjs ]; then node scripts/assemble-site.mjs; else mkdir -p site && cp index.html styles.css app.js site/; fi",
+  "buildCommand": "if [ -f scripts/assemble-site.mjs ]; then node scripts/assemble-site.mjs; else mkdir -p site && cp index.html site/ && { cp styles.css app.js site/ || true; }; fi",
   "outputDirectory": "site",
   "rewrites": [
     { "source": "/scraper/api/(.*)", "destination": "/api/scraper/$1" },

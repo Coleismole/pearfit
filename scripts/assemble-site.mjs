@@ -46,6 +46,13 @@ const websiteScraper = path.join(website, 'scraper');
 const websiteApi = path.join(website, 'api', 'scraper');
 await rm(websiteScraper, { recursive: true, force: true });
 await cp(path.join(root, 'webscraper', 'dist'), websiteScraper, { recursive: true });
+// A project rooted at website/scraper still runs the repo build command, which
+// looks for this script and otherwise copies styles.css and app.js.
+await mkdir(path.join(websiteScraper, 'scripts'), { recursive: true });
+await cp(
+  path.join(root, 'scripts', 'vercel-directory-build.mjs'),
+  path.join(websiteScraper, 'scripts', 'assemble-site.mjs'),
+);
 await rm(websiteApi, { recursive: true, force: true });
 await mkdir(websiteApi, { recursive: true });
 await cp(outfile, path.join(websiteApi, '[[...path]].js'));

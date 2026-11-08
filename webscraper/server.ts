@@ -19,6 +19,7 @@ import {
   parseJsonLdScripts,
 } from './src/utils/structuredData.ts';
 import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR } from './server/headlessFetch.ts';
+import { parseSizeChart, type SizeChartRow } from './server/sizeChart.ts';
 import {
   cleanProductTitle,
   labelledValue,
@@ -111,9 +112,10 @@ db.exec(`
     committed_at TEXT NOT NULL
   );
 
-  -- Empty on purpose. The engine export reads these tables. The scraper does not fill them,
-  -- and they are not sent to Supabase.
-  -- Size-chart measurements (flat-lay cm) per SKU and size. sort_order runs smallest to largest.
+  -- Flat-lay cm per SKU and size, filled from the brand chart on the product page.
+  -- chest_cm is pit-to-pit. Length and sleeve stay as the chart states them; the engine
+  -- export leaves those null until a brand offset confirms the convention.
+  -- Not sent to Supabase. sort_order runs smallest to largest.
   CREATE TABLE IF NOT EXISTS size_chart (
     sku TEXT NOT NULL,
     size_code TEXT NOT NULL,
@@ -231,6 +233,21 @@ const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
     VALUES (?, ?, ?, ?, ?)
   `).run(report.sku, report.name, 'UPSERT_COMMIT', totalRows, nowIso);
 });
+
+function saveSizeChart(sku: string, rows: SizeChartRow[]) {
+  if (rows.length === 0) return;
+  const insert = db.prepare(`
+    INSERT INTO size_chart (sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  const write = db.transaction(() => {
+    db.prepare(`DELETE FROM size_chart WHERE sku = ?`).run(sku);
+    for (const row of rows) {
+      insert.run(sku, row.size, row.sortOrder, row.chest_cm, row.length_cm, row.sleeve_cm);
+    }
+  });
+  write();
+}
 
 interface MockStoreProduct {
   slug: string;
@@ -1275,24 +1292,36 @@ async function startServer() {
       const { meta, reviews } = scraped;
 
       if (reviews.length === 0) {
+        const sizeChart = targetHtml ? parseSizeChart(targetHtml) : [];
+        const chartNote =
+          commitToDb && sizeChart.length > 0 && scraped
+            ? ` Size chart saved for ${scraped.meta.sku}: ${sizeChart.length} sizes in size_chart.`
+            : '';
+        if (commitToDb && scraped && sizeChart.length > 0) saveSizeChart(scraped.meta.sku, sizeChart);
         res.status(422).json({
-          error: isRemoteUrl || looksLikeFullHtmlDocument(targetHtml)
-            ? `No reviews found on the page.${headlessNote ? ` ${headlessNote}` : ''}${PASTE_HINT}`
-            : 'No recognizable clothing reviews were found in the pasted content.',
+          error: `${
+            isRemoteUrl || looksLikeFullHtmlDocument(targetHtml)
+              ? `No reviews found on the page.${headlessNote ? ` ${headlessNote}` : ''}${PASTE_HINT}`
+              : 'No recognizable clothing reviews were found in the pasted content.'
+          }${chartNote}`,
+          sizeChart,
         });
         return;
       }
 
       const report = aggregateProductFitReport(meta, reviews);
+      const sizeChart = targetHtml ? parseSizeChart(targetHtml) : [];
 
       let supabase: SupabaseSync | null = null;
       if (commitToDb) {
         upsertReportTransaction(report);
+        saveSizeChart(report.sku, sizeChart);
         supabase = await pushFitReports([report]);
       }
 
       res.json({
         report,
+        sizeChart,
         committedToDb: commitToDb,
         supabase,
         dbState: getDatabaseSummary(),

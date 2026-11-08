@@ -170,7 +170,11 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
       if (autoCommitToDb) {
         const remote = supabaseNote(data.supabase);
         setCommitBanner(
-          `Scraped & Dumped SKU ${data.report.sku} (${data.report.name}) into SQLite Database: 1 SKU row, ${data.report.sizeSummaries.length} size_metrics rows, and ${data.report.totalReviews} review rows committed.${remote}`
+          `Scraped & Dumped SKU ${data.report.sku} (${data.report.name}) into SQLite Database: 1 SKU row, ${data.report.sizeSummaries.length} size_metrics rows, and ${data.report.totalReviews} review rows committed.${remote}${
+            Array.isArray(data.sizeChart) && data.sizeChart.length > 0
+              ? ` Size chart: ${data.sizeChart.length} sizes saved to size_chart.`
+              : ''
+          }`
         );
       } else {
         setCommitBanner(

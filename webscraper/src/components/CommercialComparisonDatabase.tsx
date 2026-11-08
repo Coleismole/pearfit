@@ -123,7 +123,7 @@ export const CommercialComparisonDatabase: React.FC<Props> = ({
 
     const link = document.createElement('a');
     link.setAttribute('href', encodeURI(csvContent));
-    link.setAttribute('download', 'fitpulse_commercial_sku_comparison.csv');
+    link.setAttribute('download', 'pearfit_scraper_commercial_sku_comparison.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -189,7 +189,7 @@ export const CommercialComparisonDatabase: React.FC<Props> = ({
         <div className="flex flex-wrap items-center gap-2">
           <a
             href="/api/db/dump.sql"
-            download="fitpulse_commercial_db_dump.sql"
+            download="pearfit_scraper_commercial_db_dump.sql"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-800 bg-stone-100 hover:bg-stone-200 rounded-md transition-colors whitespace-nowrap shrink-0"
           >
             <FileCode2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -197,7 +197,7 @@ export const CommercialComparisonDatabase: React.FC<Props> = ({
           </a>
           <a
             href="/api/db/dump.json"
-            download="fitpulse_commercial_db_dump.json"
+            download="pearfit_scraper_commercial_db_dump.json"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-800 bg-stone-100 hover:bg-stone-200 rounded-md transition-colors whitespace-nowrap shrink-0"
           >
             <Database className="w-3.5 h-3.5" aria-hidden="true" />

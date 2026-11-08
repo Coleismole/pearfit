@@ -1144,7 +1144,7 @@ async function startServer() {
     res.setHeader('Content-Type', 'application/sql; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="fitpulse_commercial_db_dump.sql"'
+      'attachment; filename="pearfit_scraper_commercial_db_dump.sql"'
     );
     res.send(sql);
   });
@@ -1156,13 +1156,13 @@ async function startServer() {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="fitpulse_commercial_db_dump.json"'
+      'attachment; filename="pearfit_scraper_commercial_db_dump.json"'
     );
     res.send(
       JSON.stringify(
         {
           exportedAt: new Date().toISOString(),
-          engine: 'FitPulse Commercial Apparel Fit Database (SQLite3 + Deterministic NLP)',
+          engine: 'Pearfit Scraper Commercial Apparel Fit Database (SQLite3 + Deterministic NLP)',
           tables: {
             commercial_skus: skus,
             sku_size_metrics: sizeMetrics,
@@ -1209,7 +1209,7 @@ async function startServer() {
         if (mockMatch && MOCK_STORE_PRODUCTS[mockMatch[1]]) {
           const mockProd = MOCK_STORE_PRODUCTS[mockMatch[1]];
           targetHtml = renderMockStoreHtml(mockProd);
-          sourceUrl = `https://storefront.fitpulse.local/api/mock-store/${mockProd.slug}`;
+          sourceUrl = `https://storefront.pearfitscraper.local/api/mock-store/${mockProd.slug}`;
         } else if (/^https?:\/\//i.test(url)) {
           isRemoteUrl = true;
           if (renderMode !== 'always') {
@@ -1322,7 +1322,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`FitPulse Commercial Scraper & Database Server listening on http://0.0.0.0:${PORT}`);
+    console.log(`Pearfit Scraper Commercial Scraper & Database Server listening on http://0.0.0.0:${PORT}`);
   });
 }
 

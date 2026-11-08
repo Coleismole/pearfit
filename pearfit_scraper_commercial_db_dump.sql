@@ -1,4 +1,4 @@
--- FitPulse Commercial Apparel Fit Database Dump
+-- Pearfit Scraper Commercial Apparel Fit Database Dump
 -- Generated At: 2026-11-06T16:42:25.876Z
 -- Engine: Deterministic Cheerio DOM + Rule-Based Lexical Fit Classifier (No LLM)
 

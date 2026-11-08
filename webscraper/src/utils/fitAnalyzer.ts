@@ -1022,7 +1022,7 @@ export function aggregateProductFitReport(
 export function generateSqlInsertDump(reports: ProductFitReport[]): string {
   const esc = (val: string) => (val || '').replace(/'/g, "''");
   const lines: string[] = [
-    '-- FitPulse Commercial Apparel Fit Database Dump',
+    '-- Pearfit Scraper Commercial Apparel Fit Database Dump',
     `-- Generated At: ${new Date().toISOString()}`,
     '-- Engine: Deterministic Cheerio DOM + Rule-Based Lexical Fit Classifier (No LLM)',
     '',

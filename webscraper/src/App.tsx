@@ -205,7 +205,7 @@ export default function App() {
             href="#top"
             className="font-display text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
           >
-            FitPulse
+            Pearfit Scraper
           </a>
 
           {/* Zone 2: 4 concise single-line text navigation links */}
@@ -739,7 +739,7 @@ export default function App() {
               <span>Table: commercial_skus + sku_size_metrics</span>
               <a
                 href="/api/db/dump.sql"
-                download="fitpulse-commercial-database.sql"
+                download="pearfit-scraper-commercial-database.sql"
                 className="font-semibold text-slate-900 hover:underline"
               >
                 Download Full .SQL Dump →
@@ -762,7 +762,7 @@ export default function App() {
       <footer className="border-t border-stone-200 bg-white py-6 px-6 mt-12">
         <div className="max-w-[1360px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
-            FitPulse — Commercial B2B Apparel Review Scraper &amp; SQLite
+            Pearfit Scraper — Commercial B2B Apparel Review Scraper &amp; SQLite
             Comparison Database (Zero-LLM Deterministic Engine)
           </div>
           <div className="flex items-center gap-4">
@@ -790,7 +790,7 @@ export default function App() {
             <span aria-hidden="true">·</span>
             <a
               href="/api/db/dump.sql"
-              download="fitpulse-commercial-database.sql"
+              download="pearfit-scraper-commercial-database.sql"
               className="hover:text-slate-900 transition-colors"
             >
               Export SQL Dump

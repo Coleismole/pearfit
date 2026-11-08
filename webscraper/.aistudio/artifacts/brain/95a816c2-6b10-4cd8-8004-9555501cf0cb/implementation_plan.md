@@ -45,7 +45,7 @@ This update scrapes and integrates customer fit reviews for the **H&M Relaxed Fi
 - **Architecture & Component Diagram**:
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                        FitPulse Client Workspace                          │
+│                     Pearfit Scraper Client Workspace                      │
 │                                                                           │
 │  ┌─────────────────────────────────────────────────────────────────────┐  │
 │  │ ScraperWorkbenchBar (Default Preset: H&M Heavyweight Relaxed Tee)   │  │

@@ -1,6 +1,6 @@
 {
   "exportedAt": "2026-11-06T16:38:15.696Z",
-  "engine": "FitPulse Commercial Apparel Fit Database (SQLite3 + Deterministic NLP)",
+  "engine": "Pearfit Scraper Commercial Apparel Fit Database (SQLite3 + Deterministic NLP)",
   "tables": {
     "commercial_skus": [
       {

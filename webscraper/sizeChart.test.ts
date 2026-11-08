@@ -6,7 +6,7 @@ test('an inch chest chart is stored as pit-to-pit centimeters', () => {
   const html = `
     <table>
       <caption>Size guide (inches)</caption>
-      <tr><th>Size</th><th>Chest</th><th>Length</th><th>Sleeve</th></tr>
+      <tr><th>Size</th><th>Chest circumference</th><th>Length</th><th>Sleeve</th></tr>
       <tr><td>S</td><td>36</td><td>28</td><td>33</td></tr>
       <tr><td>M</td><td>40</td><td>29</td><td>34</td></tr>
     </table>`;
@@ -53,7 +53,7 @@ test('a transposed chart keeps a missing cell and a range as null', () => {
     <table>
       <caption>Size chart (cm)</caption>
       <tr><th>Size</th><th>S</th><th>M</th></tr>
-      <tr><th>Chest</th><td>50</td><td>54-56</td></tr>
+      <tr><th>Pit to pit</th><td>50</td><td>54-56</td></tr>
       <tr><th>Body length</th><td></td><td>72</td></tr>
       <tr><th>Sleeve</th><td>—</td><td>64</td></tr>
     </table>`;
@@ -79,6 +79,45 @@ test('a chart with no unit is ignored', () => {
     <table>
       <tr><th>Size</th><th>Chest</th><th>Length</th></tr>
       <tr><td>S</td><td>36</td><td>28</td></tr>
+    </table>`;
+  assert.deepEqual(parseSizeChart(html), []);
+});
+
+test('a chest header that does not say flat or circumference gives null, not a guess', () => {
+  const html = `
+    <table>
+      <caption>Size guide (cm)</caption>
+      <tr><th>Size</th><th>Chest</th><th>Length</th></tr>
+      <tr><td>M</td><td>54</td><td>72</td></tr>
+      <tr><td>L</td><td>110</td><td>74</td></tr>
+    </table>`;
+  // 54 and 110 would both have been guessed before. Length is unaffected.
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 72, sleeve_cm: null },
+    { size: 'L', sortOrder: 3, chest_cm: null, length_cm: 74, sleeve_cm: null },
+  ]);
+});
+
+test('an unspecified chest row in a transposed chart is null too', () => {
+  const html = `
+    <table>
+      <caption>Size chart (cm)</caption>
+      <tr><th>Size</th><th>S</th><th>M</th></tr>
+      <tr><th>Chest</th><td>50</td><td>54</td></tr>
+      <tr><th>Body length</th><td>70</td><td>72</td></tr>
+    </table>`;
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'S', sortOrder: 1, chest_cm: null, length_cm: 70, sleeve_cm: null },
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 72, sleeve_cm: null },
+  ]);
+});
+
+test('a chart whose only numbers are an unspecified chest yields no rows', () => {
+  const html = `
+    <table>
+      <caption>Size guide (cm)</caption>
+      <tr><th>Size</th><th>Chest</th></tr>
+      <tr><td>M</td><td>54</td></tr>
     </table>`;
   assert.deepEqual(parseSizeChart(html), []);
 });

@@ -10,6 +10,7 @@
  * Playwright is imported lazily so the server still starts when no browser is installed.
  */
 import type { Browser, Page } from 'playwright';
+import { isBlockedHostname } from './publicUrl.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
@@ -56,6 +57,23 @@ let renderTail: Promise<void> = Promise.resolve();
 /** Chromium pack for Vercel. The full Playwright browser does not fit in that function. */
 const SERVERLESS_CHROMIUM_PACK =
   'https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar';
+
+/** A test page on localhost may load private hosts. A public product page may not. */
+function startUrlAllowsPrivate(raw: string): boolean {
+  try {
+    return isBlockedHostname(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
+}
+
+function requestHostIsBlocked(raw: string): boolean {
+  try {
+    return isBlockedHostname(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
+}
 
 function renderBudgetMs(): number {
   // The hosted function is capped at 60s, including the Chromium download on a cold start.
@@ -187,10 +205,13 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     locale: 'en-US',
     viewport: { width: 1366, height: 900 },
   });
+  const allowPrivate = startUrlAllowsPrivate(url);
   // Images, video and fonts are irrelevant to review text; skipping them makes renders faster.
   await context.route('**/*', (route) => {
     const type = route.request().resourceType();
-    return type === 'image' || type === 'media' || type === 'font' ? route.abort() : route.continue();
+    if (type === 'image' || type === 'media' || type === 'font') return route.abort();
+    if (!allowPrivate && requestHostIsBlocked(route.request().url())) return route.abort();
+    return route.continue();
   });
 
   const page = await context.newPage();
@@ -276,7 +297,7 @@ interface ServerlessPage {
   url(): string;
   setUserAgent(ua: string): Promise<void>;
   setRequestInterception(enabled: boolean): Promise<void>;
-  on(event: 'request', handler: (req: { resourceType(): string; abort(): Promise<void>; continue(): Promise<void> }) => void): void;
+  on(event: 'request', handler: (req: { url(): string; resourceType(): string; abort(): Promise<void>; continue(): Promise<void> }) => void): void;
   evaluate(pageFunction: string): Promise<unknown>;
   waitForNetworkIdle(opts: { timeout: number }): Promise<void>;
   waitForSelector(selector: string, opts: { timeout: number }): Promise<unknown>;
@@ -316,12 +337,16 @@ const CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
 async function renderWithServerlessChromium(url: string): Promise<RenderedPage> {
   const browser = (await getBrowser()) as unknown as { newPage(): Promise<ServerlessPage> };
   const page = await browser.newPage();
+  const allowPrivate = startUrlAllowsPrivate(url);
   await page.setUserAgent(USER_AGENT);
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const type = req.resourceType();
-    if (type === 'image' || type === 'media' || type === 'font') void req.abort();
-    else void req.continue();
+    if (type === 'image' || type === 'media' || type === 'font' || (!allowPrivate && requestHostIsBlocked(req.url()))) {
+      void req.abort();
+    } else {
+      void req.continue();
+    }
   });
 
   let timedOut = false;

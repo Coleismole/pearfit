@@ -1,4 +1,4 @@
-import type { RawScrapedReview } from './fitAnalyzer.ts';
+import { REVIEW_SIZE_TOKEN, type RawScrapedReview } from './fitAnalyzer.ts';
 
 /**
  * Product + reviews pulled from schema.org JSON-LD (<script type="application/ld+json">).
@@ -95,10 +95,16 @@ function parseRating(ratingRaw: unknown): number | null {
 
 /** Size the reviewer says they bought, if the review text states it. '' when unknown. */
 export function extractSizeFromReviewText(body: string): string {
-  const match =
-    body.match(/\bsize(?:\s+(?:purchased|ordered|bought))?\s*[:=-]\s*(XXS|XXL|2XL|3XL|XL|XS|S|M|L|small|medium|large|\d{1,2})\b/i) ||
-    body.match(/\b(?:bought|ordered|got|wearing|wear|purchased)\s+(?:a|an|the|my|size)?\s*(XXL|2XL|XL|XS|S|M|L|small|medium|large|x-?small|x-?large)\b/i) ||
-    body.match(/\bin\s+(?:a\s+|size\s+)(XXL|2XL|XL|XS|S|M|L|small|medium|large)\b/i);
+  const labeled = new RegExp(
+    `\\bsize(?:\\s+(?:purchased|ordered|bought))?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`,
+    'i',
+  );
+  const bought = new RegExp(
+    `\\b(?:bought|ordered|got|wearing|wear|purchased)\\s+(?:a|an|the|my|size)?\\s*(${REVIEW_SIZE_TOKEN})\\b`,
+    'i',
+  );
+  const wornIn = new RegExp(`\\bin\\s+(?:a\\s+|size\\s+)(${REVIEW_SIZE_TOKEN})\\b`, 'i');
+  const match = body.match(labeled) || body.match(bought) || body.match(wornIn);
   return match ? match[1] : '';
 }
 

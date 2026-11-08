@@ -112,6 +112,22 @@ test('an unspecified chest row in a transposed chart is null too', () => {
   ]);
 });
 
+test('a half inch and a one-digit size are kept', () => {
+  const html = `
+    <table>
+      <caption>Size guide (inches)</caption>
+      <tr><th>Size</th><th>Body width</th><th>Length</th></tr>
+      <tr><td>2</td><td>16 1/2</td><td>27</td></tr>
+      <tr><td>8 (US)</td><td>19</td><td>28½</td></tr>
+    </table>`;
+  // 16.5 × 2.54 = 41.91 → 41.9; 27 × 2.54 = 68.58 → 68.6
+  // 19 × 2.54 = 48.26 → 48.3; 28.5 × 2.54 = 72.39 → 72.4
+  assert.deepEqual(parseSizeChart(html), [
+    { size: '2', sortOrder: 1002, chest_cm: 41.9, length_cm: 68.6, sleeve_cm: null },
+    { size: '8', sortOrder: 1008, chest_cm: 48.3, length_cm: 72.4, sleeve_cm: null },
+  ]);
+});
+
 test('a chart whose only numbers are an unspecified chest yields no rows', () => {
   const html = `
     <table>

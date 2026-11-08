@@ -15,6 +15,7 @@ import {
 } from './fitAnalyzer';
 import { SCRAPABLE_PRESET_TARGETS } from './seedCatalog';
 import { apiPath } from './clientApi';
+import type { FitChartPayload } from './fitPayload';
 
 function supabaseNote(sync: { ok?: boolean; error?: string; skipped?: boolean; reason?: string } | null): string {
   if (!sync) return '';
@@ -29,8 +30,10 @@ interface Props {
     report: ProductFitReport,
     dbState?: {
       reports: ProductFitReport[];
+      charts?: Record<string, FitChartPayload[]>;
       stats: { skuCount: number; sizeMetricRows: number; reviewRows: number };
-    }
+    },
+    sizeChart?: FitChartPayload[],
   ) => void;
   onBatchCommitted: (dbState: {
     reports: ProductFitReport[];
@@ -167,7 +170,11 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
         throw new Error(data.error || 'Failed to scrape reviews from target.');
       }
 
-      onScrapedReportReady(data.report, data.dbState);
+      onScrapedReportReady(
+        data.report,
+        data.committedToDb ? data.dbState : undefined,
+        Array.isArray(data.sizeChart) ? data.sizeChart : undefined,
+      );
       if (autoCommitToDb) {
         const remote = supabaseNote(data.supabase);
         setCommitBanner(
@@ -183,7 +190,8 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
         );
       }
     } catch (err) {
-      if (scrapeMode === 'batch' && rawInput.trim()) {
+      // A server error is shown as-is. The local parser is only for when the server cannot be reached.
+      if (scrapeMode === 'batch' && err instanceof TypeError && rawInput.trim()) {
         const parsed = parseRawReviewBatch(rawInput);
         if (parsed.length > 0) {
           const localReport = aggregateProductFitReport(
@@ -200,7 +208,6 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
             parsed
           );
           onScrapedReportReady(localReport);
-          setIsScraping(false);
           return;
         }
       }
@@ -219,6 +226,8 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
     try {
       let latestDbState = null;
       let totalReviewsScraped = 0;
+      let committed = 0;
+      let failed = 0;
       for (const preset of SCRAPABLE_PRESET_TARGETS) {
         const res = await fetch(apiPath('/api/scrape'), {
           method: 'POST',
@@ -227,15 +236,24 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
         });
         if (res.ok) {
           const data = await res.json();
-          latestDbState = data.dbState;
-          totalReviewsScraped += data.report?.totalReviews || 0;
+          if (data.report) {
+            latestDbState = data.dbState;
+            totalReviewsScraped += data.report.totalReviews || 0;
+            committed += 1;
+            continue;
+          }
         }
+        failed += 1;
       }
       if (latestDbState) {
         onBatchCommitted(latestDbState);
         setCommitBanner(
-          `Batch Scrape & Database Dump Complete: ${SCRAPABLE_PRESET_TARGETS.length} SKUs (${totalReviewsScraped} reviews) parsed via Cheerio DOM and committed to commercial_fit.db.`
+          `Batch scrape committed ${committed} of ${SCRAPABLE_PRESET_TARGETS.length} SKUs (${totalReviewsScraped} reviews) to commercial_fit.db.${
+            failed > 0 ? ` ${failed} could not be scraped.` : ''
+          }`
         );
+      } else {
+        setErrorMessage('None of the preset pages could be scraped.');
       }
     } catch {
       setErrorMessage('Batch scrape pipeline encountered an error.');

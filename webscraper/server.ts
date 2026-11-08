@@ -8,6 +8,7 @@ import {
   aggregateProductFitReport,
   generateSqlInsertDump,
   parseRawReviewBatch,
+  type DumpSizeChartRow,
   type ProductFitReport,
   type RawScrapedReview,
   type ScraperTelemetry,
@@ -31,6 +32,7 @@ import {
   ratingFromStarIcons,
 } from './pageHelpers.ts';
 import { checkFitStore, deleteRemoteFitSku, listRemoteFitSkus, pushFitReports, type SupabaseSync } from './supabaseFit.ts';
+import { blockedFetchTargetResolved } from './publicUrl.ts';
 
 function serverDir(): string {
   // The Vercel bundle is CommonJS, where import.meta.url is empty. Skip it there.
@@ -889,6 +891,53 @@ function looksLikeFullHtmlDocument(input: string): boolean {
   return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5000));
 }
 
+/** JSON-LD stays the base. DOM cards fill a blank size and add reviews that were not in the script. */
+function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedReview[]): RawScrapedReview[] {
+  const norm = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
+  const merged = primary.map((review) => ({ ...review }));
+  const index = new Map<string, RawScrapedReview>();
+  for (const review of merged) {
+    const key = norm(review.body);
+    if (key && !index.has(key)) index.set(key, review);
+  }
+  for (const review of extra) {
+    const key = norm(review.body);
+    const existing = key ? index.get(key) : undefined;
+    if (!existing) {
+      merged.push(review);
+      if (key) index.set(key, review);
+      continue;
+    }
+    if (!existing.sizePurchased && review.sizePurchased) existing.sizePurchased = review.sizePurchased;
+    if (!existing.declaredFitTag && review.declaredFitTag) existing.declaredFitTag = review.declaredFitTag;
+    if (!existing.date && review.date) existing.date = review.date;
+    if ((!existing.author || existing.author === 'Anonymous') && review.author && review.author !== 'Anonymous') {
+      existing.author = review.author;
+    }
+    if (!existing.usualSize && review.usualSize) existing.usualSize = review.usualSize;
+  }
+  return merged;
+}
+
+function chartRowsFromClient(value: unknown): SizeChartRow[] {
+  if (!Array.isArray(value)) return [];
+  const rows: SizeChartRow[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue;
+    const row = item as Record<string, unknown>;
+    if (typeof row.size !== 'string' || !row.size.trim()) continue;
+    const measurement = (field: unknown) => (typeof field === 'number' && Number.isFinite(field) ? field : null);
+    rows.push({
+      size: row.size.trim(),
+      sortOrder: typeof row.sortOrder === 'number' && Number.isFinite(row.sortOrder) ? row.sortOrder : rows.length,
+      chest_cm: measurement(row.chest_cm),
+      length_cm: measurement(row.length_cm),
+      sleeve_cm: measurement(row.sleeve_cm),
+    });
+  }
+  return rows;
+}
+
 function scrapeHtmlWithCheerio(
   html: string,
   sourceUrl: string,
@@ -966,14 +1015,11 @@ function scrapeHtmlWithCheerio(
     $('[data-fabric]').attr('data-fabric') ||
     'Unknown';
 
-  const reviews: RawScrapedReview[] = [];
-
-  if (structured && structured.reviews.length > 0) {
-    reviews.push(...structured.reviews);
-  }
+  const domReviews: RawScrapedReview[] = [];
 
   // 2. Review cards in the DOM (microdata and common review-widget markup).
-  if (reviews.length === 0) {
+  // JSON-LD often carries only a few reviews. The cards on the page are still read.
+  {
     const reviewElements = $(REVIEW_CARD_SELECTOR);
     if (reviewElements.length > 0) {
       selectorsUsed.push('review-card DOM selectors');
@@ -1035,7 +1081,7 @@ function scrapeHtmlWithCheerio(
         const parsedRating = parseFloat(ratingStr);
 
         if (body.length > 8) {
-          reviews.push({
+          domReviews.push({
             id: `dom-rev-${idx + 1}`,
             author,
             sizePurchased,
@@ -1054,6 +1100,8 @@ function scrapeHtmlWithCheerio(
       });
     }
   }
+
+  const reviews = mergeScrapedReviews(structured?.reviews ?? [], domReviews);
 
   // 3. Free-text fallback, only for pasted review text/snippets. On a full fetched page it
   // would treat navigation and footer text as "reviews".
@@ -1100,34 +1148,50 @@ interface StaticFetchError {
   blocked: boolean;
 }
 
+const FETCH_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+};
+
 async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFetchError> {
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(20000),
-    });
-  } catch (fetchErr) {
-    const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-    return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+  let current = url;
+  for (let hop = 0; hop <= 5; hop++) {
+    const blocked = await blockedFetchTargetResolved(current);
+    if (blocked) return { status: 400, message: blocked, blocked: true };
+    let response: Response;
+    try {
+      response = await fetch(current, {
+        headers: FETCH_HEADERS,
+        redirect: 'manual',
+        signal: AbortSignal.timeout(20000),
+      });
+    } catch (fetchErr) {
+      const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+      return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+    }
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (!location || hop === 5) {
+        return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
+      }
+      current = new URL(location, current).toString();
+      continue;
+    }
+    if (!response.ok) {
+      const refused = response.status === 403 || response.status === 429 || response.status === 503;
+      return {
+        status: 400,
+        message: refused
+          ? `${url} returned HTTP ${response.status}: the store refuses automated requests.`
+          : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
+        blocked: refused,
+      };
+    }
+    return { html: await response.text() };
   }
-  if (!response.ok) {
-    const blocked = response.status === 403 || response.status === 429 || response.status === 503;
-    return {
-      status: 400,
-      message: blocked
-        ? `${url} returned HTTP ${response.status}: the store refuses automated requests.`
-        : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
-      blocked,
-    };
-  }
-  return { html: await response.text() };
+  return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
 }
 
 function getDatabaseSummary() {
@@ -1154,10 +1218,37 @@ function getDatabaseSummary() {
     .prepare(`SELECT id, sku, product_name, action, rows_affected, committed_at FROM ingestion_log ORDER BY id DESC LIMIT 10`)
     .all();
 
+  const chartRows = db
+    .prepare(
+      `SELECT sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm
+       FROM size_chart ORDER BY sku, sort_order`,
+    )
+    .all() as {
+    sku: string;
+    size_code: string;
+    sort_order: number;
+    chest_cm: number | null;
+    length_cm: number | null;
+    sleeve_cm: number | null;
+  }[];
+  const charts: Record<string, SizeChartRow[]> = {};
+  for (const row of chartRows) {
+    const list = charts[row.sku] ?? [];
+    list.push({
+      size: row.size_code,
+      sortOrder: row.sort_order,
+      chest_cm: row.chest_cm,
+      length_cm: row.length_cm,
+      sleeve_cm: row.sleeve_cm,
+    });
+    charts[row.sku] = list;
+  }
+
   return {
     reports,
     stats,
     recentLogs,
+    charts,
   };
 }
 
@@ -1204,9 +1295,10 @@ export function createApp() {
 
   app.post('/api/db/commit', async (req, res) => {
     try {
-      const { report, reports } = req.body as {
+      const { report, reports, charts: incomingCharts } = req.body as {
         report?: ProductFitReport;
         reports?: ProductFitReport[];
+        charts?: Record<string, unknown>;
       };
 
       const list = reports || (report ? [report] : []);
@@ -1217,6 +1309,8 @@ export function createApp() {
 
       for (const item of list) {
         upsertReportTransaction(item);
+        const rows = chartRowsFromClient(incomingCharts?.[item.sku]);
+        if (rows.length > 0) saveSizeChart(item.sku, rows);
       }
 
       const supabase = await pushFitReports(list, chartsBySku(list));
@@ -1232,8 +1326,7 @@ export function createApp() {
     }
   });
 
-  app.delete('/api/db/sku/:sku', async (req, res) => {
-    const sku = req.params.sku;
+  const deleteSkuTransaction = db.transaction((sku: string) => {
     db.prepare(`DELETE FROM commercial_skus WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_size_metrics WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_reviews WHERE sku = ?`).run(sku);
@@ -1242,14 +1335,22 @@ export function createApp() {
       INSERT INTO ingestion_log (sku, product_name, action, rows_affected, committed_at)
       VALUES (?, ?, 'DELETE_SKU', 1, ?)
     `).run(sku, sku, new Date().toISOString());
+  });
+
+  app.delete('/api/db/sku/:sku', async (req, res) => {
+    const sku = req.params.sku;
+    deleteSkuTransaction(sku);
 
     const supabase = await deleteRemoteFitSku(sku);
     res.json({ supabase, ...getDatabaseSummary() });
   });
 
   app.get('/api/db/dump.sql', (_req, res) => {
-    const { reports } = getDatabaseSummary();
-    const sql = generateSqlInsertDump(reports);
+    const { reports, charts } = getDatabaseSummary();
+    const chartRows: DumpSizeChartRow[] = Object.entries(charts).flatMap(([sku, rows]) =>
+      rows.map((row) => ({ sku, ...row })),
+    );
+    const sql = generateSqlInsertDump(reports, chartRows);
     res.setHeader('Content-Type', 'application/sql; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
@@ -1323,6 +1424,11 @@ export function createApp() {
           sourceUrl = `https://storefront.pearfitscraper.local/api/mock-store/${mockProd.slug}`;
         } else if (/^https?:\/\//i.test(url)) {
           isRemoteUrl = true;
+          const blocked = await blockedFetchTargetResolved(url);
+          if (blocked) {
+            res.status(400).json({ error: blocked });
+            return;
+          }
           if (renderMode !== 'always') {
             const result = await fetchStaticHtml(url);
             if ('html' in result) targetHtml = result.html;

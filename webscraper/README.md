@@ -8,7 +8,7 @@ npm run dev
 
 Open http://127.0.0.1:3000 and scrape. Fit numbers go to the shared Supabase project. A size chart on the page is saved in the local `size_chart` table (pit-to-pit chest, centimeters). The project URL and publishable key are already in `.env.example`, which the server reads on its own. Review text stays in the local SQLite file.
 
-On Vercel the marketing site is `pearfit.app` and this app is `pearfit.app/scraper`. That copy can still push fit numbers to Supabase. Review text lives only as long as the function instance does, because Vercel has nowhere to keep the SQLite file, and scrapes use the HTML the store returns. A headless browser is not available there.
+On Vercel the marketing site is `pearfit.app` and this app is `pearfit.app/scraper`. That copy can still push fit numbers to Supabase. Review text lives only as long as the function instance does, because Vercel has nowhere to keep the SQLite file. Scrapes read the HTML the store returns, and a headless Chromium can still run there inside a 50 second budget.
 
 If the terminal says the fit store is not writable, or the page says `list_fit_catalog` is missing, open the Supabase SQL editor and run `fit_store.sql` once. That is a one-time step for the project. After it, every teammate can clone, push, and read the same fit rows.
 

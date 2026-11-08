@@ -59,15 +59,19 @@ export function chartSizeCode(raw: string): string | null {
   if (letters[cleaned]) return letters[cleaned];
   const word = cleaned.match(/\b(XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
   if (word && letters[word[1]]) return letters[word[1]];
-  if (/^\d{2,3}$/.test(cleaned)) return cleaned;
+  // US women's sizes are one digit (2, 4, 6, 8). A chart that only kept 10+ dropped them.
+  const numeric = cleaned.match(/^(?:US|UK|EU|IT|FR|JP)?\s*(\d{1,3})(?:\s*\((?:US|UK|EU|IT|FR|JP)\))?$/);
+  if (numeric) return numeric[1];
   return null;
 }
 
 function sortOrder(size: string, index: number): number {
   const letter = LETTERS.indexOf(size as (typeof LETTERS)[number]);
   if (letter >= 0) return letter;
+  // 00 is smaller than 0. Number("00") is 0, so it needs its own rank.
+  if (size === '00') return 999;
   const numeric = Number(size);
-  if (Number.isFinite(numeric)) return 1000 + numeric;
+  if (/^\d+$/.test(size) && Number.isFinite(numeric)) return 1000 + numeric;
   return 2000 + index;
 }
 
@@ -78,15 +82,46 @@ function unitInText(text: string): Unit | null {
   return null;
 }
 
+const UNICODE_FRACTIONS: Record<string, number> = {
+  '½': 0.5,
+  '¼': 0.25,
+  '¾': 0.75,
+  '⅛': 0.125,
+  '⅜': 0.375,
+  '⅝': 0.625,
+  '⅞': 0.875,
+};
+
+/** Reads one stated measurement. "21 1/2" is 21.5. A truncated 21 would be a different size. */
+function readMeasurement(text: string): number | null {
+  const mixed = text.match(/(\d+)\s+(\d+)\s*\/\s*(\d+)/);
+  if (mixed) {
+    const den = Number(mixed[3]);
+    if (den === 0) return null;
+    return Number(mixed[1]) + Number(mixed[2]) / den;
+  }
+  const unicode = text.match(/(\d+(?:\.\d+)?)\s*([½¼¾⅛⅜⅝⅞])/);
+  if (unicode) return Number(unicode[1]) + UNICODE_FRACTIONS[unicode[2]];
+  const bare = text.match(/(\d+)\s*\/\s*(\d+)/);
+  if (bare) {
+    const den = Number(bare[2]);
+    if (den === 0) return null;
+    return Number(bare[1]) / den;
+  }
+  const match = text.match(/(\d+(?:\.\d+)?)/);
+  if (!match) return null;
+  const value = Number(match[1]);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return value;
+}
+
 function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: Unit } | null {
   const text = raw.replace(/\s+/g, ' ').trim();
   if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
   // A range is not one measurement. Leave it null instead of picking an end.
   if (/\d\s*[-–—]\s*\d/.test(text)) return null;
-  const match = text.match(/(\d+(?:\.\d+)?)/);
-  if (!match) return null;
-  const value = Number(match[1]);
-  if (!Number.isFinite(value) || value <= 0) return null;
+  const value = readMeasurement(text);
+  if (value === null || value <= 0) return null;
   const unit = /cm\b/i.test(text)
     ? 'cm'
     : /in(?:ch(?:es)?)?\b|"|″/.test(text)

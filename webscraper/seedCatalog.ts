@@ -1076,7 +1076,7 @@ export const SCRAPABLE_PRESET_TARGETS: ScrapablePresetTarget[] = [
     sku: 'HM-0685816-BLK',
     category: 'T-Shirts & Tops',
     url: '/api/mock-store/hm-regular-fit-crew-tee',
-    description: '160 GSM Lightweight Jersey · 12 reviews across XS–XXL',
+    description: '160 GSM Lightweight Jersey · 9 reviews across XS–XXL',
     expectedTendency: 'Runs Small (-0.48)',
   },
   {

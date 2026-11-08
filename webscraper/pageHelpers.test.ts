@@ -68,6 +68,7 @@ test('cleanProductTitle strips "Reviews for" and the site suffix', () => {
 
 test('productIdFromUrl finds product codes in common URL shapes', () => {
   assert.equal(productIdFromUrl('https://www.uniqlo.com/ca/en/products/E487396-000/00/reviews'), 'E487396-000');
+  assert.equal(productIdFromUrl('https://shop.example/products/e487396-000'), 'e487396-000');
   assert.equal(productIdFromUrl('https://www.patagonia.com/product/mens-shirt/45215.html'), '45215');
   assert.equal(productIdFromUrl('https://example.com/about'), null);
 });

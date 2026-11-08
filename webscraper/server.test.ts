@@ -139,9 +139,88 @@ test('a failed page fetch does not claim the page was scraped', async () => {
       commitToDb: false,
       render: 'auto',
     });
-    assert.equal(scraped.status, 502);
-    assert.match(String(scraped.json.error), /Could not reach/);
+    assert.equal(scraped.status, 400);
+    assert.match(String(scraped.json.error), /not a public address/);
     assert.equal(scraped.json.report, undefined);
+  } finally {
+    server.close();
+  }
+});
+
+const MERGE_HTML = `<!DOCTYPE html><html><head><title>Merge Tee</title>
+<script type="application/ld+json">
+{"@type":"Product","name":"Merge Tee","sku":"MERGE-1","review":[
+  {"@type":"Review","author":"Sam","reviewBody":"Size purchased: M. Runs small across the chest and shoulders.","reviewRating":{"ratingValue":2}}
+]}
+</script></head><body>
+<h1>Merge Tee</h1>
+<article class="review-card" data-size="M" data-author="Sam" data-rating="2">
+  <p class="review-body-copy">Size purchased: M. Runs small across the chest and shoulders.</p>
+</article>
+<article class="review-card" data-size="L" data-author="Kim" data-rating="5">
+  <p class="review-body-copy">True to size in the waist and the sleeves feel perfect today.</p>
+</article>
+</body></html>`;
+
+test('JSON-LD reviews do not hide other review cards on the page', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const scraped = await request(port, 'POST', '/api/scrape', {
+      rawHtml: MERGE_HTML,
+      commitToDb: false,
+      render: 'never',
+    });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json.error));
+    const report = scraped.json.report as { totalReviews: number; reviews: { author: string; body: string }[] };
+    assert.equal(report.totalReviews, 2);
+    assert.deepEqual(
+      report.reviews.map((review) => review.author),
+      ['Sam', 'Kim'],
+    );
+  } finally {
+    server.close();
+  }
+});
+
+test('a commit stores the size chart sent with the report', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const report = aggregateProductFitReport(
+      {
+        id: 'chart-commit',
+        name: 'Chart Commit',
+        brand: 'Example',
+        category: 'Shirting',
+        sku: 'CHART-COMMIT-1',
+        price: 'Unknown',
+        fabricComposition: '100% cotton',
+        sourceUrl: 'https://example.test/chart-commit',
+      },
+      [
+        {
+          id: '1',
+          author: 'A',
+          sizePurchased: 'M',
+          rating: 4,
+          title: '',
+          body: 'True to size and fits perfectly in the chest.',
+          date: '',
+          verifiedPurchase: false,
+        },
+      ]
+    );
+    const committed = await request(port, 'POST', '/api/db/commit', {
+      report,
+      charts: {
+        'CHART-COMMIT-1': [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: null, sleeve_cm: 63 }],
+      },
+    });
+    assert.equal(committed.status, 200, JSON.stringify(committed.json.error));
+    const charts = committed.json.charts as Record<string, { size: string; chest_cm: number; sleeve_cm: number }[]>;
+    assert.equal(charts['CHART-COMMIT-1'][0].chest_cm, 54);
+    assert.equal(charts['CHART-COMMIT-1'][0].sleeve_cm, 63);
+    const removed = await request(port, 'DELETE', '/api/db/sku/CHART-COMMIT-1');
+    assert.equal(removed.status, 200);
   } finally {
     server.close();
   }

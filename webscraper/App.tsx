@@ -19,6 +19,7 @@ import { SizeSentimentMatrix } from './SizeSentimentMatrix';
 import { GarmentBlueprintIllustration } from './GarmentBlueprintIllustration';
 import { ReviewCorpusTable } from './ReviewCorpusTable';
 import { apiPath } from './clientApi';
+import type { FitChartPayload } from './fitPayload';
 
 export default function App() {
   const [catalog, setCatalog] = useState<ProductFitReport[]>(SEED_CATALOG);
@@ -35,7 +36,8 @@ export default function App() {
     null
   );
   const [isCommittingActiveSku, setIsCommittingActiveSku] = useState(false);
-  const [skuCommitMessage, setSkuCommitMessage] = useState<string | null>(null);
+  const [skuNotice, setSkuNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [charts, setCharts] = useState<Record<string, FitChartPayload[]>>({});
 
   const fetchDatabaseRecords = async (whenEmpty: 'samples' | 'keep' = 'samples') => {
     try {
@@ -46,9 +48,11 @@ export default function App() {
       if (Array.isArray(loadedReports) && loadedReports.length > 0) {
         setCatalog(loadedReports);
         setUsingSamples(false);
+        setCharts(data.charts && typeof data.charts === 'object' ? data.charts : {});
       } else if (whenEmpty === 'samples') {
         setCatalog(SEED_CATALOG);
         setUsingSamples(true);
+        setCharts({});
       }
     } catch {
       // Keep the sample catalog if the local database cannot be read
@@ -84,19 +88,31 @@ export default function App() {
     setActiveProductId(productId);
     setSelectedSize('ALL');
     setSelectedZoneFilter(null);
-    setSkuCommitMessage(null);
+    setSkuNotice(null);
   };
 
-  const handleScrapedReportReady = (newReport: ProductFitReport) => {
+  const handleScrapedReportReady = (
+    newReport: ProductFitReport,
+    dbState?: { reports?: ProductFitReport[]; charts?: Record<string, FitChartPayload[]> },
+    sizeChart?: FitChartPayload[],
+  ) => {
     setUsingSamples(false);
-    setCatalog((prev) => {
-      const filtered = prev.filter((item) => item.sku !== newReport.sku);
-      return [newReport, ...filtered];
-    });
     setActiveProductId(newReport.id);
     setSelectedSize('ALL');
     setSelectedZoneFilter(null);
-    fetchDatabaseRecords('keep');
+    setSkuNotice(null);
+    if (dbState?.reports && dbState.reports.length > 0) {
+      setCatalog(dbState.reports);
+      setCharts(dbState.charts ?? {});
+    } else {
+      setCatalog((prev) => {
+        const base = usingSamples ? [] : prev;
+        return [newReport, ...base.filter((item) => item.sku !== newReport.sku)];
+      });
+      if (sizeChart && sizeChart.length > 0) {
+        setCharts((prev) => ({ ...(usingSamples ? {} : prev), [newReport.sku]: sizeChart }));
+      }
+    }
     fetchRemoteFitStore();
   };
 
@@ -106,53 +122,86 @@ export default function App() {
   };
 
   const handleDeleteSku = async (sku: string) => {
+    if (usingSamples) {
+      setSkuNotice({ ok: false, text: 'These are samples. They are not in the database.' });
+      return;
+    }
     try {
       const res = await fetch(apiPath(`/api/db/sku/${encodeURIComponent(sku)}`), {
         method: 'DELETE',
       });
-      if (res.ok) {
-        const data = await res.json();
-        const loadedReports: ProductFitReport[] = data.reports || data.records || [];
-        if (Array.isArray(loadedReports) && loadedReports.length > 0) {
-          setCatalog(loadedReports);
-          setUsingSamples(false);
-          if (activeReport.sku === sku) {
-            setActiveProductId(loadedReports[0].id);
-          }
-        } else {
-          setCatalog(SEED_CATALOG);
-          setUsingSamples(true);
-          setActiveProductId(SEED_CATALOG[0].id);
-        }
-        fetchRemoteFitStore();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSkuNotice({ ok: false, text: data.error || 'The SKU was not removed.' });
+        return;
       }
+      const loadedReports: ProductFitReport[] = data.reports || data.records || [];
+      if (Array.isArray(loadedReports) && loadedReports.length > 0) {
+        setCatalog(loadedReports);
+        setUsingSamples(false);
+        setCharts(data.charts && typeof data.charts === 'object' ? data.charts : {});
+        if (activeReport.sku === sku) {
+          setActiveProductId(loadedReports[0].id);
+        }
+      } else {
+        setCatalog(SEED_CATALOG);
+        setUsingSamples(true);
+        setCharts({});
+        setActiveProductId(SEED_CATALOG[0].id);
+      }
+      if (data.supabase && data.supabase.ok === false && data.supabase.error) {
+        setSkuNotice({
+          ok: false,
+          text: `Removed from this machine. Supabase was not updated: ${data.supabase.error}`,
+        });
+      } else {
+        setSkuNotice(null);
+      }
+      fetchRemoteFitStore();
     } catch {
-      // Ignore error
+      setSkuNotice({ ok: false, text: 'The SKU was not removed.' });
     }
   };
 
   const handleCommitActiveSkuToDb = async () => {
+    if (usingSamples) {
+      setSkuNotice({ ok: false, text: 'These are samples. Scrape a product page to store a real SKU.' });
+      return;
+    }
     setIsCommittingActiveSku(true);
-    setSkuCommitMessage(null);
+    setSkuNotice(null);
     try {
       const response = await fetch(apiPath('/api/db/commit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ report: activeReport }),
+        body: JSON.stringify({
+          report: activeReport,
+          charts: { [activeReport.sku]: charts[activeReport.sku] ?? [] },
+        }),
       });
-      if (response.ok) {
-        const data = await response.json();
-        const remote =
-          data.supabase?.ok
-            ? ' Fit values were sent to Supabase.'
-            : data.supabase?.error
-              ? ` Supabase was not updated: ${data.supabase.error}`
-              : '';
-        setSkuCommitMessage(
-          `Committed SKU ${activeReport.sku} (1 SKU row, ${activeReport.sizeSummaries.length} size_metrics rows, ${activeReport.totalReviews} review rows) to commercial_fit.db.${remote}`
-        );
-        fetchRemoteFitStore();
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSkuNotice({ ok: false, text: data.error || 'The SKU was not saved.' });
+        return;
       }
+      if (Array.isArray(data.reports) && data.reports.length > 0) {
+        setCatalog(data.reports);
+        setUsingSamples(false);
+      }
+      if (data.charts && typeof data.charts === 'object') setCharts(data.charts);
+      const remote =
+        data.supabase?.ok
+          ? ' Fit values were sent to Supabase.'
+          : data.supabase?.error
+            ? ` Supabase was not updated: ${data.supabase.error}`
+            : '';
+      setSkuNotice({
+        ok: !data.supabase?.error,
+        text: `Committed SKU ${activeReport.sku} (1 SKU row, ${activeReport.sizeSummaries.length} size rows, ${activeReport.totalReviews} review rows) to commercial_fit.db.${remote}`,
+      });
+      fetchRemoteFitStore();
+    } catch {
+      setSkuNotice({ ok: false, text: 'The SKU was not saved.' });
     } finally {
       setIsCommittingActiveSku(false);
     }
@@ -196,7 +245,11 @@ export default function App() {
     );
   };
 
-  const activeSkuSqlSnippet = generateSqlInsertDump([activeReport]);
+  const activeChart = charts[activeReport.sku] ?? [];
+  const activeSkuSqlSnippet = generateSqlInsertDump(
+    [activeReport],
+    activeChart.map((row) => ({ sku: activeReport.sku, ...row })),
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50 text-slate-900">
@@ -716,10 +769,16 @@ export default function App() {
                 </div>
               </div>
 
-              {skuCommitMessage && (
-                <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-900 flex items-center gap-1.5">
+              {skuNotice && (
+                <div
+                  className={`mt-3 px-3 py-2 border rounded-md text-xs flex items-center gap-1.5 ${
+                    skuNotice.ok
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                      : 'bg-red-50 border-red-200 text-red-800'
+                  }`}
+                >
                   <Check className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                  <span>{skuCommitMessage}</span>
+                  <span>{skuNotice.text}</span>
                 </div>
               )}
 
@@ -774,6 +833,34 @@ export default function App() {
                 </p>
               </div>
 
+              {activeChart.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-[11px] font-semibold text-slate-600 mb-1.5">
+                    Size chart, centimeters. Chest is pit-to-pit. A blank cell was not on the chart.
+                  </div>
+                  <table className="w-full text-xs font-mono tabular-nums">
+                    <thead>
+                      <tr className="text-left text-slate-500">
+                        <th className="py-1 pr-3 font-sans font-medium">Size</th>
+                        <th className="py-1 pr-3 font-sans font-medium">Chest</th>
+                        <th className="py-1 pr-3 font-sans font-medium">Length</th>
+                        <th className="py-1 font-sans font-medium">Sleeve</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeChart.map((row) => (
+                        <tr key={row.size} className="border-t border-stone-200">
+                          <td className="py-1 pr-3">{row.size}</td>
+                          <td className="py-1 pr-3">{row.chest_cm === null ? '—' : row.chest_cm.toFixed(1)}</td>
+                          <td className="py-1 pr-3">{row.length_cm === null ? '—' : row.length_cm.toFixed(1)}</td>
+                          <td className="py-1">{row.sleeve_cm === null ? '—' : row.sleeve_cm.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
               {/* Single-SKU SQL INSERT Preview */}
               <div className="mt-4">
                 <div className="text-[11px] font-semibold text-slate-600 mb-1.5">
@@ -786,7 +873,7 @@ export default function App() {
             </div>
 
             <div className="mt-4 pt-3 border-t border-stone-200 flex items-center justify-between text-[11px] text-slate-500">
-              <span>Table: commercial_skus + sku_size_metrics</span>
+              <span>Tables: commercial_skus, sku_size_metrics, size_chart</span>
               <a
                 href={apiPath('/api/db/dump.sql')}
                 download="pearfit-scraper-commercial-database.sql"

@@ -986,6 +986,13 @@ input, select {
   display: grid;
   gap: 14px;
 }
+.inquiry-honey {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
 .form-note {
   font-size: 0.82rem;
   color: var(--ink-2);

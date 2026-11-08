@@ -13,4 +13,4 @@ The page describes what exists today: a scraper that stores numerical fit values
 Open `website/index.html` in a browser, or run `npx serve website`.
 
 ## Inquiries
-The form addresses `customerservice@pearfit.app`. It copies the message and opens a mail draft to that address. The message is sent when the visitor sends the draft.
+The form posts the inquiry to `customerservice@pearfit.app` through FormSubmit. The first submission asks that inbox to confirm the address. After that, each form send delivers the email.

@@ -395,32 +395,53 @@ function setInquiryMode(mode) {
   }
 }
 
-function handlePilot(e) {
+async function handlePilot(e) {
   e.preventDefault();
-  const d = new FormData(e.target);
+  const form = e.target;
+  const d = new FormData(form);
+  const note = document.getElementById('form-note');
+  const submit = document.getElementById('pilot-submit-btn');
+  if (String(d.get('_honey') || '').trim()) return;
+
   const subject =
     inquiryMode === 'investor'
       ? 'Pearfit inquiry'
       : 'Pearfit brand pilot inquiry';
-  const body = [
-    `To: ${INQUIRY_INBOX}`,
-    `Subject: ${subject}`,
-    '',
-    `Inquiry type: ${inquiryMode === 'investor' ? 'Investor / Partner' : 'Brand Pilot'}`,
-    `Name: ${d.get('name')}`,
-    `Email: ${d.get('email')}`,
-    `Organization / Store: ${d.get('store')}`,
-    `Scale / Focus: ${d.get('volume')}`,
-  ].join('\n');
-  const result = document.getElementById('inquiry-result');
-  result.hidden = false;
-  result.textContent = body;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(body).catch(() => {});
+  submit.disabled = true;
+  note.textContent = 'Sending…';
+  try {
+    const response = await fetch(
+      `https://formsubmit.co/ajax/${encodeURIComponent(INQUIRY_INBOX)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          _subject: subject,
+          _template: 'table',
+          _captcha: 'false',
+          _replyto: d.get('email'),
+          inquiry_type: inquiryMode === 'investor' ? 'Investor / Partner' : 'Brand Pilot',
+          name: d.get('name'),
+          email: d.get('email'),
+          organization: d.get('store'),
+          scale: d.get('volume'),
+        }),
+      }
+    );
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.success === false || data.success === 'false') {
+      throw new Error(data.message || 'The inquiry was not accepted.');
+    }
+    note.textContent = data.message || `Sent to ${INQUIRY_INBOX}.`;
+    form.reset();
+  } catch (err) {
+    note.textContent =
+      err instanceof Error && err.message
+        ? err.message
+        : `The inquiry was not sent. Write to ${INQUIRY_INBOX} instead.`;
+  } finally {
+    submit.disabled = false;
   }
-  document.getElementById('form-note').textContent =
-    `Message copied. Send it to ${INQUIRY_INBOX}. A mail draft should also open.`;
-  window.location.href = `mailto:${INQUIRY_INBOX}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 // Initialize all interactive controls

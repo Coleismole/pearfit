@@ -1,3 +1,4 @@
+import { readFileSync, writeFileSync } from 'node:fs';
 import { cp, mkdir, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -30,6 +31,15 @@ await esbuild.build({
   logLevel: 'info',
 });
 await cp(path.join(root, 'webscraper', '.env.example'), path.join(path.dirname(outfile), '.env.example'));
+// Vercel does not load a committed .env file into the function, so the hosted
+// scraper never saw the project URL and skipped the Supabase write.
+const exampleText = readFileSync(path.join(root, 'webscraper', '.env.example'), 'utf8');
+const publicValue = (name) => {
+  const line = exampleText.split(/\r?\n/).find((entry) => entry.startsWith(`${name}=`));
+  return line ? line.slice(name.length + 1).trim() : '';
+};
+const prelude = `if (!process.env.SUPABASE_URL) process.env.SUPABASE_URL = ${JSON.stringify(publicValue('SUPABASE_URL'))};\nif (!process.env.SUPABASE_PUBLISHABLE_KEY) process.env.SUPABASE_PUBLISHABLE_KEY = ${JSON.stringify(publicValue('SUPABASE_PUBLISHABLE_KEY'))};\n`;
+writeFileSync(outfile, prelude + readFileSync(outfile, 'utf8'));
 
 // www.pearfit.app is the Vercel project rooted at website/. Ship the scraper there.
 const websiteScraper = path.join(website, 'scraper');

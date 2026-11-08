@@ -20,7 +20,7 @@ function supabaseNote(sync: { ok?: boolean; error?: string; skipped?: boolean; r
   if (!sync) return '';
   if (sync.ok) return ' Fit values were sent to Supabase.';
   if (sync.error) return ` Supabase was not updated: ${sync.error}`;
-  if (sync.skipped) return '';
+  if (sync.skipped) return sync.reason ? ` Supabase was not updated: ${sync.reason}` : '';
   return '';
 }
 

@@ -1,3 +1,5 @@
+if (!process.env.SUPABASE_URL) process.env.SUPABASE_URL = "https://beidotlssxvfmvgiiypd.supabase.co";
+if (!process.env.SUPABASE_PUBLISHABLE_KEY) process.env.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_lEuoTCaujbySyV5Gf_AZoA_U_1uMg6Z";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;

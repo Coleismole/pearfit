@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { interpretFitStoreProbe, readSupabaseEnv } from './supabaseFit.ts';
+import { interpretFitStoreProbe, readSupabaseEnv, remoteSkusFromCatalog } from './supabaseFit.ts';
 
 test('readSupabaseEnv requires a url and prefers the secret key', () => {
   assert.equal(readSupabaseEnv({}), null);
@@ -23,6 +23,38 @@ test('readSupabaseEnv requires a url and prefers the secret key', () => {
     })?.key,
     'sec',
   );
+});
+
+test('remote catalog rows keep fit fields and drop rows without a sku', () => {
+  assert.deepEqual(
+    remoteSkusFromCatalog([
+      {
+        sku: 'HM-1',
+        productId: 'hm-1',
+        brand: 'H&M',
+        name: 'Tee',
+        overallVerdict: 'True to Size',
+        totalReviews: 4,
+        committedAt: '2026-11-08T00:00:00Z',
+        sizes: [{ size: 'M' }, { size: 'L' }],
+        reviews: [{ body: 'secret review' }],
+      },
+      { name: 'missing sku' },
+    ]),
+    [
+      {
+        sku: 'HM-1',
+        productId: 'hm-1',
+        brand: 'H&M',
+        name: 'Tee',
+        overallVerdict: 'True to Size',
+        totalReviews: 4,
+        sizeCount: 2,
+        committedAt: '2026-11-08T00:00:00Z',
+      },
+    ],
+  );
+  assert.deepEqual(remoteSkusFromCatalog(null), []);
 });
 
 test('a rejected empty sku means the fit store is reachable', () => {

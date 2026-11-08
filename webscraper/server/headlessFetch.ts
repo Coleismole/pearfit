@@ -19,6 +19,8 @@ const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 
 const NAV_TIMEOUT_MS = 45_000;
+/** Whole render, including scrolling and load-more. One page cannot hold the browser longer than this. */
+export const RENDER_DEADLINE_MS = 90_000;
 const REVIEW_WAIT_MS = 10_000;
 const MAX_LOAD_MORE_CLICKS = 5;
 const MAX_INFINITE_SCROLL_ROUNDS = 10;
@@ -33,6 +35,7 @@ export interface RenderedPage {
 }
 
 let browserPromise: Promise<Browser> | null = null;
+let renderTail: Promise<void> = Promise.resolve();
 
 async function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
@@ -123,6 +126,15 @@ async function waitForMoreReviews(page: Page, before: number, timeoutMs: number)
 }
 
 export async function renderPageHtml(url: string): Promise<RenderedPage> {
+  const run = renderTail.then(() => renderPageHtmlOnce(url));
+  renderTail = run.then(
+    () => {},
+    () => {},
+  );
+  return run;
+}
+
+async function renderPageHtmlOnce(url: string): Promise<RenderedPage> {
   const browser = await getBrowser();
   const context = await browser.newContext({
     userAgent: USER_AGENT,
@@ -136,6 +148,11 @@ export async function renderPageHtml(url: string): Promise<RenderedPage> {
   });
 
   const page = await context.newPage();
+  let timedOut = false;
+  const deadline = setTimeout(() => {
+    timedOut = true;
+    context.close().catch(() => {});
+  }, RENDER_DEADLINE_MS);
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
@@ -192,7 +209,13 @@ export async function renderPageHtml(url: string): Promise<RenderedPage> {
       finalUrl: page.url(),
       reviewSelectorFound,
     };
+  } catch (err) {
+    if (timedOut) {
+      throw new Error(`Headless render timed out after ${RENDER_DEADLINE_MS / 1000}s`);
+    }
+    throw err;
   } finally {
-    await context.close();
+    clearTimeout(deadline);
+    await context.close().catch(() => {});
   }
 }

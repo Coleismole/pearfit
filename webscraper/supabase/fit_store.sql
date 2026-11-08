@@ -58,7 +58,7 @@ begin
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
-      and p.proname in ('commit_fit_report', 'delete_fit_sku')
+      and p.proname in ('commit_fit_report', 'delete_fit_sku', 'list_fit_catalog')
   loop
     execute format('drop function %s', fn);
   end loop;
@@ -162,6 +162,47 @@ begin
 end;
 $$;
 
+create function public.list_fit_catalog()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'sku', s.sku,
+        'productId', s.product_id,
+        'brand', s.brand,
+        'name', s.product_name,
+        'overallVerdict', s.overall_verdict,
+        'totalReviews', s.total_reviews,
+        'committedAt', s.committed_at,
+        'sizes', (
+          select coalesce(
+            jsonb_agg(
+              jsonb_build_object(
+                'size', m.size_code,
+                'reviewCount', m.review_count,
+                'fitSkew', m.fit_skew,
+                'verdict', m.fit_verdict
+              )
+              order by m.size_code
+            ),
+            '[]'::jsonb
+          )
+          from public.sku_size_metrics m
+          where m.sku = s.sku
+        )
+      )
+      order by s.committed_at desc
+    ),
+    '[]'::jsonb
+  )
+  from public.commercial_skus s;
+$$;
+
 -- Grant every overload. A signature mismatch leaves the API calling a function anon still cannot execute.
 do $$
 declare
@@ -172,7 +213,7 @@ begin
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
-      and p.proname in ('commit_fit_report', 'delete_fit_sku')
+      and p.proname in ('commit_fit_report', 'delete_fit_sku', 'list_fit_catalog')
   loop
     execute format('revoke all on function %s from public', fn);
     execute format(

@@ -12,7 +12,7 @@ import {
   type RawScrapedReview,
   type ScraperTelemetry,
 } from './src/utils/fitAnalyzer.ts';
-import { HM_HEAVYWEIGHT_TEE_REVIEWS, SEED_CATALOG } from './src/data/seedCatalog.ts';
+import { HM_HEAVYWEIGHT_TEE_REVIEWS } from './src/data/seedCatalog.ts';
 import {
   extractSizeFromReviewText,
   extractStructuredProduct,
@@ -29,7 +29,7 @@ import {
   ratingFromLabel,
   ratingFromStarIcons,
 } from './server/pageHelpers.ts';
-import { checkFitStore, deleteRemoteFitSku, pushFitReports, type SupabaseSync } from './server/supabaseFit.ts';
+import { checkFitStore, deleteRemoteFitSku, listRemoteFitSkus, pushFitReports, type SupabaseSync } from './server/supabaseFit.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -111,6 +111,8 @@ db.exec(`
     committed_at TEXT NOT NULL
   );
 
+  -- Empty on purpose. The engine export reads these tables. The scraper does not fill them,
+  -- and they are not sent to Supabase.
   -- Size-chart measurements (flat-lay cm) per SKU and size. sort_order runs smallest to largest.
   CREATE TABLE IF NOT EXISTS size_chart (
     sku TEXT NOT NULL,
@@ -229,16 +231,6 @@ const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
     VALUES (?, ?, ?, ?, ?)
   `).run(report.sku, report.name, 'UPSERT_COMMIT', totalRows, nowIso);
 });
-
-// Seed initial commercial SKUs into SQLite if empty
-const existingCount = (
-  db.prepare(`SELECT COUNT(*) as cnt FROM commercial_skus`).get() as { cnt: number }
-).cnt;
-if (existingCount === 0) {
-  for (const item of SEED_CATALOG) {
-    upsertReportTransaction(item);
-  }
-}
 
 interface MockStoreProduct {
   slug: string;
@@ -1095,6 +1087,11 @@ async function startServer() {
   });
 
   // Commercial SQLite Database Query & Inspection Endpoints
+  app.get('/api/db/remote', async (_req, res) => {
+    const remote = await listRemoteFitSkus();
+    res.json(remote);
+  });
+
   app.get('/api/db/records', (_req, res) => {
     res.json(getDatabaseSummary());
   });

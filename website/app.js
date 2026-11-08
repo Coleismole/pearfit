@@ -1,6 +1,5 @@
 // Where pilot and investor requests are sent.
-const PILOT_INBOX = 'hello@pearfit.com';
-const INVESTOR_INBOX = 'investors@pearfit.com';
+const INQUIRY_INBOX = 'customerservice@pearfit.app';
 
 // Illustrative per-size review split for one sample SKU (percent of reviews).
 const SAMPLE_SIZES = [
@@ -188,13 +187,13 @@ function renderHeroPdp() {
 
   const headline =
     displayedSize === match.recommendedSize
-      ? `Recommended: Size ${match.recommendedSize}`
-      : `Inspecting Size ${displayedSize} (Best: ${match.recommendedSize})`;
+      ? `Sample: size ${match.recommendedSize}`
+      : `Sample: inspecting size ${displayedSize} (closest: ${match.recommendedSize})`;
 
   document.getElementById('pdp-advisor').innerHTML = `
     <div class="advisor-head">
       <strong>${headline}</strong>
-      <span class="advisor-conf">${geo.inspectedConfidence}% match score</span>
+      <span class="advisor-conf">${geo.inspectedConfidence}% sample score</span>
     </div>
     <p>Overlaying Size <b>${displayedSize}</b> onto your <b>${selectedRef.brand} ${selectedRef.item}</b> (${selectedRef.size}). ${geo.fitNote}.</p>
     <dl class="ease">
@@ -218,7 +217,7 @@ function initStakeholderTabs() {
       });
       cards.forEach((card) => {
         const aud = card.dataset.audience;
-        if (filter === 'all' || aud === 'network' || aud === filter) {
+        if (filter === 'all' || aud === filter) {
           card.style.display = '';
           if (aud === 'shoppers') {
             card.classList.toggle('bento-span-2', filter === 'shoppers');
@@ -282,7 +281,7 @@ function renderReco() {
   const action = moved > 0 ? 'size up' : moved < 0 ? 'size down' : 'stay true to size';
   const sign = skew > 0 ? '+' : '';
   document.getElementById('reco').innerHTML = `
-    <h3>Usually ${row.size} → Pearfit recommends ${recommended}</h3>
+    <h3>Usually ${row.size} → this sample suggests ${recommended}</h3>
     <p><span class="conf">${confidence}% confidence</span> · Shopper guidance: <strong>${action}</strong></p>
     <p>In size ${row.size}, ${row.large}% of ${row.reviews} verified reviewers report it runs large while ${row.small}% report small (net fit index ${sign}${skew.toFixed(2)}).</p>`;
 }
@@ -349,7 +348,7 @@ function renderRoi() {
     `Single-item avoided: ${fmtInt.format(singleItemReturnsAvoided)} (${fmtUsd.format(singleItemLogisticsSavedUsd)} saved)`;
 
   document.getElementById('roi-foot').textContent =
-    `Exact reconciliation: ${fmtInt.format(avoided)} prevented returns × $${cost} logistics fee = ${fmtUsd.format(savedUsd)} processing saved, plus ${fmtUsd.format(retainedGmvUsd)} in retained net GMV (45% of prevented returns where shoppers otherwise refund without reordering).`;
+    `Your model: ${fmtInt.format(avoided)} avoided returns × $${cost} logistics fee = ${fmtUsd.format(savedUsd)} processing saved, plus ${fmtUsd.format(retainedGmvUsd)} if 45% of those shoppers keep the order instead of refunding. The reduction rate and the 45% share are assumptions in this calculator.`;
 }
 
 // Inquiry Mode Switch (Brand Pilot vs Investor Relations)
@@ -379,9 +378,9 @@ function setInquiryMode(mode) {
       <option value="10,000 – 50,000">10,000 – 50,000 orders / mo</option>
       <option value="50,000+">50,000+ orders / mo</option>`;
     document.getElementById('pilot-steps-list').innerHTML = `
-      <li><b>Week 1 · Catalog Fit Audit:</b> Our proprietary scraper ingests your reviews and size charts for one core category and delivers a complete per-SKU Fit Insights report.</li>
-      <li><b>Weeks 2–3 · Live Storefront Advisor:</b> The Pearfit Size Advisor goes live via a single script tag on your selected product pages.</li>
-      <li><b>Week 6 · Baseline Return Readout:</b> We measure net fit-return reduction, bracketing decline, and conversion lift against your control period.</li>`;
+      <li><b>Scrape one category:</b> The scraper reads reviews and stores numerical fit values for each size.</li>
+      <li><b>Read the shared table:</b> Those fit rows are in the same database from any machine that runs the scraper.</li>
+      <li><b>Decide what to look at next:</b> A storefront size advisor is a later step. This starts with the fit table.</li>`;
     document.getElementById('pilot-submit-btn').textContent = 'Request 6-Week Brand Pilot';
   } else {
     selectEl.innerHTML = `
@@ -389,31 +388,39 @@ function setInquiryMode(mode) {
       <option value="Angel / Operator Syndicate">Angel / Operator Syndicate</option>
       <option value="Ecommerce Agency / Tech Partner">Ecommerce Agency / Tech Partner</option>`;
     document.getElementById('pilot-steps-list').innerHTML = `
-      <li><b>Live Cohort Telemetry:</b> Review anonymized before/after return curves and conversion lift across our pilot merchants.</li>
-      <li><b>Proprietary Garment Graph:</b> See how our cross-brand measurement ontology and proprietary review-scraping engine create a defensible data moat with every new SKU.</li>
-      <li><b>Go-To-Market &amp; Unit Economics:</b> Inspect our 48-hour onboarding pipeline and Shopify / headless ecosystem distribution strategy.</li>`;
-    document.getElementById('pilot-submit-btn').textContent = 'Request Investor Deck & Data Room';
+      <li><b>The fit table:</b> What is stored for each SKU and each size.</li>
+      <li><b>What stays local:</b> Full review text remains on the machine that scraped it.</li>
+      <li><b>How a brand runs it:</b> Clone the repo, scrape, and read the same shared fit rows.</li>`;
+    document.getElementById('pilot-submit-btn').textContent = 'Send an investor inquiry';
   }
 }
 
 function handlePilot(e) {
   e.preventDefault();
   const d = new FormData(e.target);
-  const inbox = inquiryMode === 'investor' ? INVESTOR_INBOX : PILOT_INBOX;
   const subject =
     inquiryMode === 'investor'
-      ? 'Pearfit Investor Deck & Data Room Request'
-      : 'Pearfit 6-Week Brand Pilot Request';
+      ? 'Pearfit inquiry'
+      : 'Pearfit brand pilot inquiry';
   const body = [
-    `Inquiry Type: ${inquiryMode === 'investor' ? 'Investor / Partner' : 'Brand Pilot'}`,
+    `To: ${INQUIRY_INBOX}`,
+    `Subject: ${subject}`,
+    '',
+    `Inquiry type: ${inquiryMode === 'investor' ? 'Investor / Partner' : 'Brand Pilot'}`,
     `Name: ${d.get('name')}`,
     `Email: ${d.get('email')}`,
     `Organization / Store: ${d.get('store')}`,
     `Scale / Focus: ${d.get('volume')}`,
   ].join('\n');
-  window.location.href = `mailto:${inbox}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const result = document.getElementById('inquiry-result');
+  result.hidden = false;
+  result.textContent = body;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(body).catch(() => {});
+  }
   document.getElementById('form-note').textContent =
-    'Confirmed! Send the email that just opened and our team will reply within 24 hours.';
+    `Message copied. Send it to ${INQUIRY_INBOX}. A mail draft should also open.`;
+  window.location.href = `mailto:${INQUIRY_INBOX}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 // Initialize all interactive controls

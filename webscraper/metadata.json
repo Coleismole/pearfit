@@ -2,5 +2,5 @@
   "name": "Pearfit Scraper — Apparel Size & Fit Review Scraper",
   "description": "Web scraper and garment fit intelligence platform that extracts clothing reviews, determines whether items run small, true to size, or large, and summarizes sentiment trends across every product size.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

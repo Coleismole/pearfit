@@ -65,6 +65,66 @@ export async function pushFitReports(reports: ProductFitReport[]): Promise<Supab
   return { ok: true };
 }
 
+export interface RemoteFitSku {
+  sku: string;
+  productId: string;
+  brand: string;
+  name: string;
+  overallVerdict: string;
+  totalReviews: number;
+  sizeCount: number;
+  committedAt: string | null;
+}
+
+export type RemoteFitList =
+  | { ok: true; skus: RemoteFitSku[] }
+  | { ok: false; skipped: true; reason: string }
+  | { ok: false; error: string };
+
+function textField(row: Record<string, unknown>, key: string, fallback = ''): string {
+  const value = row[key];
+  return typeof value === 'string' ? value : fallback;
+}
+
+/** Maps the list_fit_catalog jsonb array. Rows without a sku are dropped. */
+export function remoteSkusFromCatalog(rows: unknown): RemoteFitSku[] {
+  if (!Array.isArray(rows)) return [];
+  const skus: RemoteFitSku[] = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    const record = row as Record<string, unknown>;
+    const sku = textField(record, 'sku');
+    if (!sku) continue;
+    const sizes = Array.isArray(record.sizes) ? record.sizes : [];
+    skus.push({
+      sku,
+      productId: textField(record, 'productId', sku),
+      brand: textField(record, 'brand'),
+      name: textField(record, 'name', sku),
+      overallVerdict: textField(record, 'overallVerdict'),
+      totalReviews: typeof record.totalReviews === 'number' ? record.totalReviews : 0,
+      sizeCount: sizes.length,
+      committedAt: typeof record.committedAt === 'string' ? record.committedAt : null,
+    });
+  }
+  return skus;
+}
+
+export async function listRemoteFitSkus(): Promise<RemoteFitList> {
+  const env = readSupabaseEnv();
+  if (!env) {
+    return { ok: false, skipped: true, reason: 'SUPABASE_URL or a Supabase key is not set' };
+  }
+  const { data, error } = await getClient(env).rpc('list_fit_catalog');
+  if (error) {
+    const message = /could not find the function|schema cache/i.test(error.message)
+      ? 'The shared fit store has no list_fit_catalog function yet. Run webscraper/supabase/fit_store.sql once in the Supabase SQL editor.'
+      : error.message;
+    return { ok: false, error: message };
+  }
+  return { ok: true, skus: remoteSkusFromCatalog(data) };
+}
+
 export async function deleteRemoteFitSku(sku: string): Promise<SupabaseSync> {
   const env = readSupabaseEnv();
   if (!env) {

@@ -20,9 +20,10 @@
       <a href="#" class="brand-wordmark">Pearfit</a>
       <nav class="nav-links" aria-label="Primary">
         <a href="#benefits">Why Pearfit</a>
-        <a href="#demo">Live Demo</a>
+        <a href="#demo">Sample</a>
         <a href="#how">Architecture</a>
         <a href="#roi">ROI Calculator</a>
+        <a href="#faq">FAQ</a>
       </nav>
       <a href="#pilot" data-inquiry-switch="pilot" class="btn btn-sm">Book Brand Pilot</a>
     </div>
@@ -37,28 +38,27 @@
             <span class="kicker">Size intelligence for apparel brands · Closet-matched fit for shoppers</span>
             <h1>Lower returns for brands.<br /><em>Better-fitting clothes</em> for every shopper.</h1>
             <p class="lede">
-              Over half of online apparel returns happen because a garment didn’t fit as expected.
-              Pearfit’s proprietary fit engine synthesizes your garment measurements and customer
-              review signals into instant size advice anchored to clothes the shopper already owns
-              and loves.
+              Size is one of the main reasons online apparel comes back. Pearfit turns customer
+              reviews into numerical fit values for each size, and a separate comparison engine
+              measures a garment against clothes the shopper already owns.
             </p>
             <div class="hero-ctas">
               <a href="#pilot" data-inquiry-switch="pilot" class="btn">Launch 6-Week Pilot</a>
-              <a href="#pilot" data-inquiry-switch="investor" class="btn btn-ghost">Request Investor Deck</a>
+              <a href="#pilot" data-inquiry-switch="investor" class="btn btn-ghost">Investor inquiry</a>
             </div>
             <div class="hero-meta">
-              <span>For Merchants: −22.4% fit-related returns</span>
+              <span>For brands: fit numbers for every size</span>
               <span aria-hidden="true">·</span>
-              <span>For Shoppers: Millimeter-level garment comparison</span>
+              <span>For shoppers: compared with a garment they own</span>
               <span aria-hidden="true">·</span>
-              <span>1-tag Shopify &amp; headless install</span>
+              <span>Review text stays on the machine that scraped it</span>
             </div>
           </div>
 
-          <figure class="pdp" aria-label="Interactive preview of the Pearfit size advisor on a product page">
+          <figure class="pdp" aria-label="Sample preview of a size comparison on a product page">
             <div class="pdp-bar">
               <span>studiomercer.com/products/washed-oxford</span>
-              <span>Interactive Silhouette Overlay</span>
+              <span>Sample silhouette</span>
             </div>
             <div class="pdp-body">
               <div class="pdp-visual">
@@ -103,26 +103,26 @@
         </div>
 
         <!-- Full-width 4-column KPI Proof Strip below Hero -->
-        <div class="kpi-strip" aria-label="Pearfit benchmark impact">
+        <div class="kpi-strip" aria-label="What Pearfit stores">
           <div class="kpi-item">
-            <span class="kpi-val">−22.4%</span>
-            <span class="kpi-label">Size-Related Return Reduction</span>
-            <span class="kpi-sub">Median across 6-week DTC brand pilots</span>
+            <span class="kpi-val">Fit values</span>
+            <span class="kpi-label">Per size, from reviews</span>
+            <span class="kpi-sub">Runs small, true to size, and runs large</span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-val">+11.8%</span>
-            <span class="kpi-label">Checkout Conversion Lift</span>
-            <span class="kpi-sub">Among shoppers interacting with Size Advisor</span>
+            <span class="kpi-val">One row</span>
+            <span class="kpi-label">Per size of a SKU</span>
+            <span class="kpi-sub">Review count, skew, verdict, shrinkage</span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-val">94.2%</span>
-            <span class="kpi-label">First-Order Fit Satisfaction</span>
-            <span class="kpi-sub">Shoppers keeping recommended size without exchange</span>
+            <span class="kpi-val">Blank</span>
+            <span class="kpi-label">When a measurement is missing</span>
+            <span class="kpi-sub">Nothing is filled in to make a size look closer</span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-val">&lt; 15 min</span>
-            <span class="kpi-label">Storefront Integration</span>
-            <span class="kpi-sub">Single script tag · zero body scans or 3D cameras</span>
+            <span class="kpi-val">Shared</span>
+            <span class="kpi-label">Fit table for every machine</span>
+            <span class="kpi-sub">Review text stays in the local scrape file</span>
           </div>
         </div>
       </div>
@@ -149,59 +149,57 @@
           <article class="bento-card bento-span-2" data-audience="brands">
             <div>
               <span class="bento-index">01 · For Apparel Businesses · Margin Recovery</span>
-              <h3>Stop losing $15–$22 per return to “ordered two sizes, sent one back.”</h3>
+              <h3>Read how each size actually fits, before you guess from a handful of reviews.</h3>
               <p>
-                Bracketing—where uncertain shoppers buy multiple sizes intending to return the
-                rest—destroys unit economics for indie and mid-market DTC brands. Pearfit
-                identifies SKU-level grading drift early and steers shoppers to the right size
-                before checkout.
+                Shoppers who are unsure often buy two sizes and send one back. Pearfit counts
+                what reviewers say about each size: runs small, true to size, runs large,
+                shrinkage, and sentiment.
               </p>
               <ul class="ticks">
-                <li><strong>Eliminate multi-size bracketing:</strong> Give shoppers deterministic proof so they buy one size with conviction.</li>
-                <li><strong>Automated Merchandising QA:</strong> Flag SKUs where factory deliveries deviate from your spec sheet (e.g., “L sleeves running 2.4 cm short in Batch #4”).</li>
-                <li><strong>BI &amp; Warehouse Export:</strong> Stream per-size sentiment and body-zone heatmaps directly to Snowflake, BigQuery, or CSV.</li>
+                <li><strong>One verdict per size:</strong> Review count, fit skew, and the share of reviews in each direction.</li>
+                <li><strong>Shrinkage and opacity, counted:</strong> Mentions are tallied. The wording of the reviews is not copied into the shared table.</li>
+                <li><strong>The same table everywhere:</strong> A scrape on any machine writes that SKU’s fit numbers to the shared database.</li>
               </ul>
             </div>
             <div class="bento-proof">
-              <span class="bento-proof-metric">$16–$22 saved / avoided return</span>
-              <span class="bento-proof-text">Covers outbound/return freight, warehouse restocking, and garment refurbishment</span>
+              <span class="bento-proof-metric">Fit numbers, per size</span>
+              <span class="bento-proof-text">The ROI calculator below uses your own assumptions</span>
             </div>
           </article>
 
           <article class="bento-card" data-audience="shoppers">
             <div>
               <span class="bento-index">02 · For Consumers · Closet-Anchored Confidence</span>
-              <h3>Clothes that fit like your favorite piece—right out of the box.</h3>
+              <h3>Compare a garment with one the shopper already wears.</h3>
               <p>
-                Shoppers hate generic size charts and invasive webcam body scans. Pearfit
-                translates abstract centimeter tables into familiar comparisons against a shirt,
-                jacket, or pair of trousers they already wear every week.
+                The comparison engine measures a candidate size against an owned garment. The
+                preview on this page is a sample of that idea, using made-up shirts and a score
+                computed only for the illustration.
               </p>
               <ul class="ticks">
-                <li><strong>“Fits like your Uniqlo M” clarity:</strong> Instant side-by-side ease comparison across chest, shoulder, waist, and length.</li>
-                <li><strong>Real wash-and-wear truth:</strong> Highlights shrinkage and fabric drape reported by verified buyers with similar builds.</li>
-                <li><strong>Zero forms or tape measures required:</strong> Pick a reference item from 4,200+ indexed staples in two clicks.</li>
+                <li><strong>Sample overlay:</strong> Chest, shoulder, and length for one oxford and four reference shirts.</li>
+                <li><strong>Sample review split:</strong> The size matrix below uses a fixed set of review percentages.</li>
+                <li><strong>No body scan:</strong> The sample asks the shopper to pick a reference garment.</li>
               </ul>
             </div>
             <div class="bento-proof">
-              <span class="bento-proof-metric">4.8 / 5.0 shopper trust</span>
-              <span class="bento-proof-text">Every recommendation shows the exact millimeter math behind the verdict</span>
+              <span class="bento-proof-metric">Sample preview</span>
+              <span class="bento-proof-text">The match score on this page is not the comparison engine</span>
             </div>
           </article>
 
           <article class="bento-card" data-audience="network">
             <div>
               <span class="bento-index">03 · Network Effect · Compounding Fit Graph</span>
-              <h3>Every pilot strengthens the cross-brand garment graph.</h3>
+              <h3>Each scrape adds that SKU’s fit numbers to the shared table.</h3>
               <p>
-                As Pearfit ingests spec sheets, flat-lay measurements, and verified return
-                outcomes across partner brands, our normalized sizing ontology compounds—making
-                each new merchant integration accurate on Day 1.
+                A second scrape of the same SKU replaces its size rows. Full review text stays
+                in the local file on the machine that scraped it.
               </p>
             </div>
             <div class="bento-proof">
-              <span class="bento-proof-metric">4,200+ reference SKUs</span>
-              <span class="bento-proof-text">Normalized in centimetres with verified grading curves</span>
+              <span class="bento-proof-metric">Shared fit rows</span>
+              <span class="bento-proof-text">commercial_skus and sku_size_metrics</span>
             </div>
           </article>
         </div>
@@ -212,12 +210,12 @@
     <section id="demo" class="section section-alt">
       <div class="wrap demo-grid">
         <div>
-          <span class="kicker">02. Live Merchandising &amp; Shopper Sandbox</span>
-          <h2>See how Pearfit resolves a tricky boxy-fit SKU.</h2>
+          <span class="kicker">02. Sample fit preview</span>
+          <h2>A sample of a size preview, using made-up review splits.</h2>
           <p class="muted">
-            Below is a live Pearfit Fit Insights matrix for a 240 gsm heavyweight tee where sizes
-            L and XL grade wider in the shoulders than standard blanks. Select a shopper’s usual
-            size to inspect both the shopper recommendation and the merchant QA telemetry.
+            The percentages below are sample data for one heavyweight tee. Pick a usual size to
+            see how this page turns that sample split into a size note. The score is computed
+            here for the illustration.
           </p>
           <div class="usual" role="radiogroup" aria-label="Shopper's usual size" id="usual-size"></div>
           <div class="reco" id="reco" aria-live="polite"></div>
@@ -232,7 +230,7 @@
           </div>
           <div id="matrix-rows"></div>
           <p class="matrix-note">
-            Merchant QA Alert in L–XL: <b>shoulders wide (38% of mentions)</b> · <b>body length long (24%)</b>
+            Sample note for L–XL: <b>shoulders wide (38% of mentions)</b> · <b>body length long (24%)</b>
           </p>
         </div>
       </div>
@@ -244,38 +242,36 @@
         <span class="kicker">03. Proprietary Fit Architecture</span>
         <h2>Proprietary ingestion. Deterministic geometry.</h2>
         <p class="muted narrow">
-          Generic AI wrappers guess sizes and hallucinate numbers. Pearfit is built end-to-end
-          on our proprietary review-scraping parser and deterministic geometric engine—extracting
-          fit signals and body-zone ease without relying on third-party LLMs. Every answer is
-          fast, repeatable, and 100% traceable to its underlying measurements.
+          The scraper reads a product page and classifies reviews with deterministic rules.
+          Fit numbers are stored per size. A separate comparison engine measures a candidate
+          against a garment the shopper already owns. Missing measurements stay blank.
         </p>
         <ol class="steps">
           <li>
             <span class="step-n">01. Ingest</span>
-            <h3>Proprietary catalog &amp; review parser</h3>
-            <p>Our purpose-built scraper and lexical parser index your product specs and review feeds (Okendo, Yotpo, Judge.me, Junip) to classify per-size fit and body-zone signals.</p>
+            <h3>Read the reviews on a product page</h3>
+            <p>The scraper loads the page and classifies each review by size, fit direction, shrinkage, and sentiment.</p>
           </li>
           <li>
-            <span class="step-n">02. Normalize</span>
-            <h3>Unify every measurement</h3>
-            <p>Charts, flat-lay specs, and reference garments map into a single centimeter schema with provenance tags on every dimension.</p>
+            <span class="step-n">02. Store</span>
+            <h3>Keep the numbers</h3>
+            <p>Each size gets a row: review count, fit skew, verdict, and shrinkage mentions. Full review text stays on the machine that scraped it.</p>
           </li>
           <li>
             <span class="step-n">03. Compare</span>
-            <h3>Score point-by-point ease</h3>
-            <p>Our geometric engine weights critical anchor points—like shoulder yoke and chest sweep on woven tops—against the shopper’s reference garment.</p>
+            <h3>Measure against an owned garment</h3>
+            <p>The comparison engine scores the sizes it has measurements for. A missing centimeter stays empty.</p>
           </li>
           <li>
-            <span class="step-n">04. Calibrate</span>
-            <h3>Close the loop on returns</h3>
-            <p>Verified keep, exchange, and return outcomes automatically tune category weights and grading thresholds for your specific catalog.</p>
+            <span class="step-n">04. Replace</span>
+            <h3>A later scrape updates that SKU</h3>
+            <p>Scraping the same SKU again replaces its size rows in the shared table. It does not add a second copy.</p>
           </li>
         </ol>
         <div class="callout">
-          <strong>Zero-Hallucination Guarantee:</strong> Because Pearfit runs on a deterministic
-          proprietary engine rather than generative AI, missing measurements stay missing—we
-          never invent a number, and we adjust the confidence score transparently whenever a spec
-          table is incomplete.
+          <strong>Missing measurements stay blank.</strong> The comparison engine leaves an
+          unknown centimeter empty. The match score in the sample above is a separate illustration
+          on this page.
         </div>
       </div>
     </section>
@@ -289,8 +285,8 @@
           <span class="kicker">04. Business Case &amp; Unit Economics</span>
           <h2>Model your annual return savings with Pearfit.</h2>
           <p class="muted">
-            Enter your brand’s monthly order volume and return metrics to calculate both direct
-            reverse-logistics savings and retained net revenue from prevented size returns.
+            Enter your own monthly orders and return rates. The reduction slider is your
+            assumption. This calculator does not report a measured Pearfit result.
           </p>
           <form class="roi-form" id="roi-form" onsubmit="return false">
             <div class="roi-form-row">
@@ -306,7 +302,7 @@
               <label>Multi-size “bracketing” share (%) <input type="number" name="bracketingShare" value="38" min="0" max="100" step="1" /></label>
             </div>
             <label class="range">
-              Projected reduction in fit returns <output id="reduction-out">22%</output>
+              Your assumed reduction in fit returns <output id="reduction-out">22%</output>
               <input type="range" name="reduction" value="22" min="5" max="45" step="1" />
             </label>
           </form>
@@ -343,7 +339,7 @@
             <div class="bracketing-compare">
               <div>
                 <strong>Without Pearfit (Multi-Size Cart)</strong>
-                Shopper buys M + L to test fit at home → 100% guaranteed return leg + 21-day inventory lockup.
+                Shopper buys M + L to test fit at home → the extra size is returned, and that unit is out of stock while it travels back.
               </div>
               <div>
                 <strong>With Pearfit (Closet-Matched)</strong>
@@ -366,7 +362,7 @@
     <section id="pilot" class="section">
       <div class="wrap pilot-grid">
         <div>
-          <span class="kicker">06. Get Started with Pearfit</span>
+          <span class="kicker">05. Get Started with Pearfit</span>
           <h2 id="pilot-heading">Start a 6-week pilot on one category</h2>
           <div style="margin: 1.25rem 0">
             <div class="segmented" id="inquiry-tabs" role="tablist" aria-label="Inquiry mode">
@@ -375,9 +371,9 @@
             </div>
           </div>
           <ol class="pilot-steps" id="pilot-steps-list">
-            <li><b>Week 1 · Catalog Fit Audit:</b> Our proprietary scraper ingests your reviews and size charts for one core category and delivers a complete per-SKU Fit Insights report.</li>
-            <li><b>Weeks 2–3 · Live Storefront Advisor:</b> The Pearfit Size Advisor goes live via a single script tag on your selected product pages.</li>
-            <li><b>Week 6 · Baseline Return Readout:</b> We measure net fit-return reduction, bracketing decline, and conversion lift against your control period.</li>
+            <li><b>Scrape one category:</b> The scraper reads reviews and stores numerical fit values for each size.</li>
+            <li><b>Read the shared table:</b> Those fit rows are in the same database from any machine that runs the scraper.</li>
+            <li><b>Decide what to look at next:</b> A storefront size advisor is a later step. This starts with the fit table.</li>
           </ol>
         </div>
 
@@ -395,7 +391,8 @@
             </select>
           </label>
           <button type="submit" class="btn btn-block" id="pilot-submit-btn">Request 6-Week Brand Pilot</button>
-          <p class="form-note" id="form-note">Direct response within 24 hours · No re-platforming required.</p>
+          <p class="form-note" id="form-note">Sends a message to customerservice@pearfit.app. The note arrives when that message is sent.</p>
+          <div id="inquiry-result" class="form-success" hidden></div>
         </form>
       </div>
     </section>
@@ -403,27 +400,27 @@
     <!-- FAQ -->
     <section id="faq" class="section section-alt">
       <div class="wrap narrow-wrap">
-        <span class="kicker">07. Frequently Asked Questions</span>
+        <span class="kicker">06. Frequently Asked Questions</span>
         <h2>Answers for brands and partners</h2>
         <details>
           <summary>What data does Pearfit need to launch a pilot?</summary>
-          <p>Only your product page URLs, existing garment size charts or tech packs, and read access to your customer reviews. Even when flat-lay measurements are incomplete, our proprietary review-scraping engine immediately powers Fit Insights.</p>
+          <p>Product page URLs. The scraper reads the reviews on those pages and stores numerical fit values per size. Full review text stays on the machine that scraped it. Size charts are not part of the shared fit table.</p>
         </details>
         <details>
           <summary>How do shoppers tell Pearfit what clothes they already own?</summary>
-          <p>Shoppers select a staple garment they already own and love the fit of—by brand, style, and size—from our indexed database of 4,200+ reference items, or enter three quick flat measurements. Pearfit compares every size of your SKU against that benchmark.</p>
+          <p>The sample on this page lets you pick one of four reference shirts. Comparing a real catalog with clothes a shopper owns is the separate comparison engine. This page does not store that choice.</p>
         </details>
         <details>
           <summary>How does Pearfit’s proprietary engine work without LLMs?</summary>
-          <p>Generic LLM wrappers are slow, expensive, and prone to hallucinating measurements. Pearfit uses our own purpose-built review scraper, domain-specific lexical parser, and deterministic geometric engine to extract per-size sentiment and compute centimeter ease—so every recommendation is fast, repeatable, and 100% explainable to both shoppers and your CX team.</p>
+          <p>The scraper classifies review text with deterministic rules and stores the resulting numbers. When a measurement is missing, it stays blank. The sample score on this page is an illustration, separate from the comparison engine.</p>
         </details>
         <details>
           <summary>How do you measure ROI during the 6-week pilot?</summary>
-          <p>We establish a pre-pilot baseline of size/fit return rates and multi-size bracketing on your target category, then compare cohorts who interacted with the Pearfit Size Advisor against holdout traffic over 6 weeks.</p>
+          <p>The calculator on this page is a model you fill in. A pilot would compare your own fit-return rate before and after, using your orders.</p>
         </details>
         <details>
           <summary>How is shopper privacy handled?</summary>
-          <p>Pearfit never requires body photos or webcam scans. We store only anonymous reference-garment preferences so returning shoppers get instant recommendations across any Pearfit-enabled storefront.</p>
+          <p>The sample on this page stores nothing. The scraper keeps review text on the machine that scraped it. The shared database receives the fit numbers.</p>
         </details>
       </div>
     </section>

@@ -21,6 +21,11 @@ import { ReviewCorpusTable } from './components/ReviewCorpusTable';
 
 export default function App() {
   const [catalog, setCatalog] = useState<ProductFitReport[]>(SEED_CATALOG);
+  const [usingSamples, setUsingSamples] = useState(true);
+  const [remoteSkus, setRemoteSkus] = useState<
+    { sku: string; brand: string; name: string; overallVerdict: string; totalReviews: number; sizeCount: number }[]
+  >([]);
+  const [remoteNote, setRemoteNote] = useState<string | null>(null);
   const [activeProductId, setActiveProductId] = useState<string>(
     SEED_CATALOG[0].id
   );
@@ -31,7 +36,7 @@ export default function App() {
   const [isCommittingActiveSku, setIsCommittingActiveSku] = useState(false);
   const [skuCommitMessage, setSkuCommitMessage] = useState<string | null>(null);
 
-  const fetchDatabaseRecords = async () => {
+  const fetchDatabaseRecords = async (whenEmpty: 'samples' | 'keep' = 'samples') => {
     try {
       const response = await fetch('/api/db/records');
       if (!response.ok) return;
@@ -39,14 +44,36 @@ export default function App() {
       const loadedReports: ProductFitReport[] = data.reports || data.records || [];
       if (Array.isArray(loadedReports) && loadedReports.length > 0) {
         setCatalog(loadedReports);
+        setUsingSamples(false);
+      } else if (whenEmpty === 'samples') {
+        setCatalog(SEED_CATALOG);
+        setUsingSamples(true);
       }
     } catch {
-      // Keep seeded catalog fallback if offline
+      // Keep the sample catalog if the local database cannot be read
+    }
+  };
+
+  const fetchRemoteFitStore = async () => {
+    try {
+      const response = await fetch('/api/db/remote');
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.ok) {
+        setRemoteSkus(data.skus || []);
+        setRemoteNote(null);
+        return;
+      }
+      setRemoteSkus([]);
+      setRemoteNote(data.error || data.reason || 'The shared fit store could not be read.');
+    } catch {
+      setRemoteNote('The shared fit store could not be read.');
     }
   };
 
   useEffect(() => {
     fetchDatabaseRecords();
+    fetchRemoteFitStore();
   }, []);
 
   const activeReport =
@@ -60,6 +87,7 @@ export default function App() {
   };
 
   const handleScrapedReportReady = (newReport: ProductFitReport) => {
+    setUsingSamples(false);
     setCatalog((prev) => {
       const filtered = prev.filter((item) => item.sku !== newReport.sku);
       return [newReport, ...filtered];
@@ -67,11 +95,13 @@ export default function App() {
     setActiveProductId(newReport.id);
     setSelectedSize('ALL');
     setSelectedZoneFilter(null);
-    fetchDatabaseRecords();
+    fetchDatabaseRecords('keep');
+    fetchRemoteFitStore();
   };
 
   const handleBatchCommitted = () => {
     fetchDatabaseRecords();
+    fetchRemoteFitStore();
   };
 
   const handleDeleteSku = async (sku: string) => {
@@ -84,10 +114,16 @@ export default function App() {
         const loadedReports: ProductFitReport[] = data.reports || data.records || [];
         if (Array.isArray(loadedReports) && loadedReports.length > 0) {
           setCatalog(loadedReports);
+          setUsingSamples(false);
           if (activeReport.sku === sku) {
             setActiveProductId(loadedReports[0].id);
           }
+        } else {
+          setCatalog(SEED_CATALOG);
+          setUsingSamples(true);
+          setActiveProductId(SEED_CATALOG[0].id);
         }
+        fetchRemoteFitStore();
       }
     } catch {
       // Ignore error
@@ -112,8 +148,9 @@ export default function App() {
               ? ` Supabase was not updated: ${data.supabase.error}`
               : '';
         setSkuCommitMessage(
-          `Committed SKU ${activeReport.sku} (1 SKU row, 6 size_metrics rows, ${activeReport.totalReviews} review rows) to commercial_fit.db.${remote}`
+          `Committed SKU ${activeReport.sku} (1 SKU row, ${activeReport.sizeSummaries.length} size_metrics rows, ${activeReport.totalReviews} review rows) to commercial_fit.db.${remote}`
         );
+        fetchRemoteFitStore();
       }
     } finally {
       setIsCommittingActiveSku(false);
@@ -239,6 +276,61 @@ export default function App() {
           onBatchCommitted={handleBatchCommitted}
         />
 
+        <section
+          aria-labelledby="shared-fit-store-heading"
+          className="bg-white border border-stone-200 rounded-lg p-6"
+        >
+          <h2
+            id="shared-fit-store-heading"
+            className="text-lg font-bold text-slate-900 tracking-tight"
+          >
+            Shared fit store
+          </h2>
+          <p className="text-xs text-slate-600 mt-1">
+            Fit numbers in Supabase. Review text is not in this list.
+          </p>
+          {remoteNote ? (
+            <p className="text-sm text-amber-800 mt-3">{remoteNote}</p>
+          ) : remoteSkus.length === 0 ? (
+            <p className="text-sm text-slate-600 mt-3">No shared fit rows yet.</p>
+          ) : (
+            <ul className="mt-4 divide-y divide-stone-200">
+              {remoteSkus.map((row) => {
+                const onThisMachine =
+                  !usingSamples && catalog.some((item) => item.sku === row.sku);
+                return (
+                  <li
+                    key={row.sku}
+                    className="py-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm"
+                  >
+                    <span className="font-mono text-xs">{row.sku}</span>
+                    <span className="text-slate-800">{row.name}</span>
+                    <span className="text-slate-500">{row.brand}</span>
+                    <span className="text-slate-700">{row.overallVerdict}</span>
+                    <span className="font-mono text-xs text-slate-500">
+                      {row.totalReviews} reviews · {row.sizeCount} sizes
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {onThisMachine ? 'Also in the local database' : 'Not in the local database'}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {!usingSamples && remoteSkus.length > 0 && (
+            <ul className="mt-3 text-xs text-slate-600">
+              {catalog
+                .filter((item) => !remoteSkus.some((row) => row.sku === item.sku))
+                .map((item) => (
+                  <li key={item.sku}>
+                    <span className="font-mono">{item.sku}</span> is only on this machine.
+                  </li>
+                ))}
+            </ul>
+          )}
+        </section>
+
         {/* Active SKU fit values. Comparison happens in the separate engine. */}
         <section
           aria-labelledby="active-garment-heading"
@@ -252,8 +344,9 @@ export default function App() {
                 aria-hidden="true"
               />
               <span>
-                Active SKU Telemetry Inspector ({catalog.length} SKUs in SQLite
-                DB):
+                {usingSamples
+                  ? `Sample products (${catalog.length}). These are not scrapes and are not in the local database.`
+                  : `Active SKU Telemetry Inspector (${catalog.length} SKUs in the local database):`}
               </span>
             </div>
 
@@ -275,6 +368,7 @@ export default function App() {
                         : 'bg-stone-100 text-slate-700 hover:bg-stone-200 hover:text-slate-900'
                     }`}
                   >
+                    {usingSamples && <span>Sample </span>}
                     <span className="font-mono">{item.sku}</span> ·{' '}
                     {item.name.split(' ').slice(0, 3).join(' ')} (
                     {item.overallVerdict})

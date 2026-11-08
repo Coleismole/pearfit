@@ -1,0 +1,5 @@
+{
+  "installCommand": "echo Static marketing site",
+  "buildCommand": "echo Static marketing site",
+  "outputDirectory": "."
+}

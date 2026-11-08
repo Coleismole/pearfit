@@ -89,7 +89,9 @@ test('fit payload keeps numerical fit values and drops review text', () => {
     },
   } as unknown as ProductFitReport;
 
-  const payload = fitPayloadFromReport(report);
+  const payload = fitPayloadFromReport(report, [
+    { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: null, sleeve_cm: null },
+  ]);
   const encoded = JSON.stringify(payload);
 
   assert.equal(payload.sku, 'SKU-1');
@@ -100,6 +102,12 @@ test('fit payload keeps numerical fit values and drops review text', () => {
   assert.equal(payload.sizes[0].size, 'M');
   assert.equal(payload.sizes[0].fitSkew, -0.4);
   assert.equal(payload.sizes[0].primaryFitNote, '100% report small fit');
+  assert.equal(payload.chart.length, 1);
+  assert.equal(payload.chart[0].chest_cm, 54);
+  assert.equal(payload.chart[0].length_cm, null);
+  assert.equal(payload.chart[0].sleeve_cm, null);
+  assert.equal(encoded.includes('"length_cm":null'), true);
+  assert.equal(encoded.includes('"sleeve_cm":null'), true);
   assert.equal(encoded.includes('SECRET'), false);
   assert.equal(encoded.includes('reviews'), false);
   assert.equal(encoded.includes('sampleQuote'), false);

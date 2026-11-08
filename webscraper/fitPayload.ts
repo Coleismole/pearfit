@@ -1,4 +1,5 @@
 import type { ProductFitReport } from './fitAnalyzer.ts';
+import type { SizeChartRow } from './sizeChart.ts';
 
 /** Fit numbers sent to Supabase. Review text is intentionally absent. */
 export interface FitPayload {
@@ -23,6 +24,16 @@ export interface FitPayload {
   sourceUrl: string;
   scrapedAt: string;
   sizes: FitSizePayload[];
+  /** Brand chart, pit-to-pit chest. A measurement the chart did not state is null. */
+  chart: FitChartPayload[];
+}
+
+export interface FitChartPayload {
+  size: string;
+  sortOrder: number;
+  chest_cm: number | null;
+  length_cm: number | null;
+  sleeve_cm: number | null;
 }
 
 export interface FitSizePayload {
@@ -40,7 +51,7 @@ export interface FitSizePayload {
   primaryFitNote: string;
 }
 
-export function fitPayloadFromReport(report: ProductFitReport): FitPayload {
+export function fitPayloadFromReport(report: ProductFitReport, chart: SizeChartRow[] = []): FitPayload {
   return {
     sku: report.sku,
     productId: report.id,
@@ -75,6 +86,13 @@ export function fitPayloadFromReport(report: ProductFitReport): FitPayload {
       avgRating: size.avgRating,
       returnRisk: size.returnRisk,
       primaryFitNote: size.primaryFitNote,
+    })),
+    chart: chart.map((row) => ({
+      size: row.size,
+      sortOrder: row.sortOrder,
+      chest_cm: row.chest_cm,
+      length_cm: row.length_cm,
+      sleeve_cm: row.sleeve_cm,
     })),
   };
 }

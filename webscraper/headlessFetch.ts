@@ -232,6 +232,11 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       }
     }
 
+    // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
+    await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
+    await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     return {
       html,
@@ -361,6 +366,10 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
         if (!(await waitForMore(before, 4000))) break;
       }
     }
+
+    await clickRole('tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
+    await clickRole('button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+    await sleep(500);
 
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     return { html, status, finalUrl: page.url(), reviewSelectorFound };

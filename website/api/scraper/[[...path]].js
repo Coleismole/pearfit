@@ -89452,6 +89452,10 @@ async function renderWithPlaywright(url) {
         if (!await waitForMoreReviews(page, before2, 4e3)) break;
       }
     }
+    await clickFirst(page, "tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
+    await clickFirst(page, "button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+    await page.waitForLoadState("networkidle", { timeout: 3e3 }).catch(() => {
+    });
     const html3 = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
     return {
       html: html3,
@@ -89558,6 +89562,9 @@ async function renderWithServerlessChromium(url) {
         if (!await waitForMore(before2, 4e3)) break;
       }
     }
+    await clickRole("tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
+    await clickRole("button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+    await sleep2(500);
     const html3 = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
     return { html: html3, status, finalUrl: page.url(), reviewSelectorFound };
   } catch (err) {
@@ -89627,7 +89634,8 @@ function unitInText(text4) {
 }
 function parseCell(raw, tableUnit) {
   const text4 = raw.replace(/\s+/g, " ").trim();
-  if (!text4 || /^(-|–|—|n\/a)$/i.test(text4)) return null;
+  if (!text4 || /^(-|–|—|n\/a|null|unknown)$/i.test(text4)) return null;
+  if (/\d\s*[-–—]\s*\d/.test(text4)) return null;
   const match = text4.match(/(\d+(?:\.\d+)?)/);
   if (!match) return null;
   const value = Number(match[1]);
@@ -89674,6 +89682,7 @@ function parseHtmlTable(headers, body, tableUnit) {
   if (cols.length === 0) return null;
   const rows = [];
   const seen = /* @__PURE__ */ new Set();
+  let tableHasValue = false;
   body.forEach((cells, index2) => {
     const size = chartSizeCode(cells[sizeIdx] ?? "");
     if (!size || seen.has(size)) return;
@@ -89693,11 +89702,45 @@ function parseHtmlTable(headers, body, tableUnit) {
       if (col.kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (col.kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
     }
-    if (!any) return;
+    if (any) tableHasValue = true;
     seen.add(size);
     rows.push(row);
   });
-  return rows.length > 0 ? { rows } : null;
+  return tableHasValue ? { rows } : null;
+}
+function parseTransposedTable(headers, body, tableUnit) {
+  const sizes = headers.slice(1).map((cell) => chartSizeCode(cell));
+  if (sizes.filter(Boolean).length < 2) return null;
+  const rows = [];
+  sizes.forEach((size, index2) => {
+    if (!size) return;
+    rows.push({
+      size,
+      sortOrder: sortOrder(size, index2),
+      chest_cm: null,
+      length_cm: null,
+      sleeve_cm: null
+    });
+  });
+  let any = false;
+  for (const cells of body) {
+    const kind = measureCol(cells[0] ?? "");
+    if (!kind) continue;
+    const rowUnit = unitInText(cells[0] ?? "") ?? tableUnit;
+    const chest = kind === "chest" ? chestKind(cells[0] ?? "") : null;
+    sizes.forEach((size, index2) => {
+      if (!size) return;
+      const row = rows.find((item) => item.size === size);
+      if (!row) return;
+      const parsed = parseCell(cells[index2 + 1] ?? "", rowUnit);
+      if (!parsed) return;
+      any = true;
+      if (kind === "chest" && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
+      if (kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
+      if (kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
+    });
+  }
+  return any ? { rows } : null;
 }
 function tableGrid($2, table) {
   const grid = [];
@@ -89720,7 +89763,52 @@ function rowsFromTables(html3) {
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
     const context = [node.find("caption").text(), node.attr("class") ?? "", node.prev().text(), grid[headerAt].join(" ")].join(" ");
-    const parsed = parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unitInText(context));
+    const unit = unitInText(context);
+    const parsed = preferChart(
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
+      parseTransposedTable(grid[0], grid.slice(1), unit)
+    );
+    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+  });
+  return best.length > 0 ? best : rowsFromDivCharts($2);
+}
+function filledMeasurements(rows) {
+  if (!rows) return 0;
+  return rows.reduce(
+    (count, row) => count + [row.chest_cm, row.length_cm, row.sleeve_cm].filter((value) => value !== null).length,
+    0
+  );
+}
+function preferChart(byRow, byColumn) {
+  if (filledMeasurements(byColumn?.rows) > filledMeasurements(byRow?.rows)) return byColumn;
+  return byRow;
+}
+function cellTexts($2, node) {
+  const cells = [];
+  $2(node).children().each((_i, child) => {
+    const text4 = $2(child).text().replace(/\s+/g, " ").trim();
+    if (text4) cells.push(text4);
+  });
+  return cells;
+}
+function rowsFromDivCharts($2) {
+  let best = [];
+  $2('[class*="size-chart"], [class*="sizechart"], [class*="size-guide"], [class*="sizeguide"], [id*="size-chart"], [id*="size-guide"]').each((_i, box) => {
+    if ($2(box).is("table") || $2(box).find("table").length > 0) return;
+    const grid = [];
+    $2(box).find('li, [class*="row"]').each((_r, row) => {
+      const cells = cellTexts($2, row);
+      if (cells.length >= 2) grid.push(cells);
+    });
+    if (grid.length < 2) return;
+    const context = [$2(box).attr("class") ?? "", $2(box).attr("id") ?? "", grid[0].join(" ")].join(" ");
+    const unit = unitInText(context);
+    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
+    if (headerAt < 0) return;
+    const parsed = preferChart(
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
+      parseTransposedTable(grid[0], grid.slice(1), unit)
+    );
     if (parsed && parsed.rows.length > best.length) best = parsed.rows;
   });
   return best;
@@ -98029,7 +98117,7 @@ function shouldShowDeprecationWarning() {
 if (shouldShowDeprecationWarning()) console.warn("\u26A0\uFE0F  Node.js 20 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 22 or later. For more information, visit: https://github.com/orgs/supabase/discussions/45715");
 
 // webscraper/fitPayload.ts
-function fitPayloadFromReport(report) {
+function fitPayloadFromReport(report, chart = []) {
   return {
     sku: report.sku,
     productId: report.id,
@@ -98064,6 +98152,13 @@ function fitPayloadFromReport(report) {
       avgRating: size.avgRating,
       returnRisk: size.returnRisk,
       primaryFitNote: size.primaryFitNote
+    })),
+    chart: chart.map((row) => ({
+      size: row.size,
+      sortOrder: row.sortOrder,
+      chest_cm: row.chest_cm,
+      length_cm: row.length_cm,
+      sleeve_cm: row.sleeve_cm
     }))
   };
 }
@@ -98100,7 +98195,7 @@ async function checkFitStore() {
   const { error } = await getClient(env).rpc("commit_fit_report", { payload: {} });
   return interpretFitStoreProbe(error?.message ?? null);
 }
-async function pushFitReports(reports) {
+async function pushFitReports(reports, charts = {}) {
   const env = readSupabaseEnv();
   if (!env) {
     return { ok: false, skipped: true, reason: "SUPABASE_URL or a Supabase key is not set" };
@@ -98108,7 +98203,7 @@ async function pushFitReports(reports) {
   const db2 = getClient(env);
   for (const report of reports) {
     const { error } = await db2.rpc("commit_fit_report", {
-      payload: fitPayloadFromReport(report)
+      payload: fitPayloadFromReport(report, charts[report.sku] ?? [])
     });
     if (error) return { ok: false, error: error.message };
   }
@@ -98250,9 +98345,8 @@ db.exec(`
   );
 
   -- Flat-lay cm per SKU and size, filled from the brand chart on the product page.
-  -- chest_cm is pit-to-pit. Length and sleeve stay as the chart states them; the engine
-  -- export leaves those null until a brand offset confirms the convention.
-  -- Not sent to Supabase. sort_order runs smallest to largest.
+  -- chest_cm is pit-to-pit. A cell the chart does not state is NULL, never 0.
+  -- The same rows are sent to Supabase sku_size_chart. sort_order runs smallest to largest.
   CREATE TABLE IF NOT EXISTS size_chart (
     sku TEXT NOT NULL,
     size_code TEXT NOT NULL,
@@ -98363,6 +98457,24 @@ var upsertReportTransaction = db.transaction((report) => {
     VALUES (?, ?, ?, ?, ?)
   `).run(report.sku, report.name, "UPSERT_COMMIT", totalRows, nowIso);
 });
+function loadSizeChart(sku) {
+  const rows = db.prepare(
+    `SELECT size_code, sort_order, chest_cm, length_cm, sleeve_cm
+       FROM size_chart WHERE sku = ? ORDER BY sort_order`
+  ).all(sku);
+  return rows.map((row) => ({
+    size: row.size_code,
+    sortOrder: row.sort_order,
+    chest_cm: row.chest_cm,
+    length_cm: row.length_cm,
+    sleeve_cm: row.sleeve_cm
+  }));
+}
+function chartsBySku(reports) {
+  const charts = {};
+  for (const report of reports) charts[report.sku] = loadSizeChart(report.sku);
+  return charts;
+}
 function saveSizeChart(sku, rows) {
   if (rows.length === 0) return;
   const insert = db.prepare(`
@@ -99097,7 +99209,7 @@ function createApp() {
       for (const item of list) {
         upsertReportTransaction(item);
       }
-      const supabase = await pushFitReports(list);
+      const supabase = await pushFitReports(list, chartsBySku(list));
       res.json({
         committedCount: list.length,
         supabase,
@@ -99244,7 +99356,7 @@ function createApp() {
       if (commitToDb) {
         upsertReportTransaction(report);
         saveSizeChart(report.sku, sizeChart);
-        supabase = await pushFitReports([report]);
+        supabase = await pushFitReports([report], { [report.sku]: sizeChart });
       }
       res.json({
         report,

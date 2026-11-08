@@ -48,6 +48,32 @@ test('a labeled circumference is halved and body width in inches is not', () => 
   assert.equal(parseSizeChart(flat)[0].chest_cm, 53.3);
 });
 
+test('a transposed chart keeps a missing cell and a range as null', () => {
+  const html = `
+    <table>
+      <caption>Size chart (cm)</caption>
+      <tr><th>Size</th><th>S</th><th>M</th></tr>
+      <tr><th>Chest</th><td>50</td><td>54-56</td></tr>
+      <tr><th>Body length</th><td></td><td>72</td></tr>
+      <tr><th>Sleeve</th><td>—</td><td>64</td></tr>
+    </table>`;
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'S', sortOrder: 1, chest_cm: 50, length_cm: null, sleeve_cm: null },
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 72, sleeve_cm: 64 },
+  ]);
+});
+
+test('a div size guide is read when the page has no table', () => {
+  const html = `
+    <div class="size-chart">
+      <div class="row"><span>Size</span><span>Pit to pit (cm)</span><span>Sleeve (cm)</span></div>
+      <div class="row"><span>L</span><span>58</span><span>n/a</span></div>
+    </div>`;
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'L', sortOrder: 3, chest_cm: 58, length_cm: null, sleeve_cm: null },
+  ]);
+});
+
 test('a chart with no unit is ignored', () => {
   const html = `
     <table>

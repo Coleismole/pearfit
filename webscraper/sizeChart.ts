@@ -80,7 +80,9 @@ function unitInText(text: string): Unit | null {
 
 function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: Unit } | null {
   const text = raw.replace(/\s+/g, ' ').trim();
-  if (!text || /^(-|–|—|n\/a)$/i.test(text)) return null;
+  if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
+  // A range is not one measurement. Leave it null instead of picking an end.
+  if (/\d\s*[-–—]\s*\d/.test(text)) return null;
   const match = text.match(/(\d+(?:\.\d+)?)/);
   if (!match) return null;
   const value = Number(match[1]);
@@ -145,6 +147,7 @@ function parseHtmlTable(
 
   const rows: SizeChartRow[] = [];
   const seen = new Set<string>();
+  let tableHasValue = false;
   body.forEach((cells, index) => {
     const size = chartSizeCode(cells[sizeIdx] ?? '');
     if (!size || seen.has(size)) return;
@@ -164,11 +167,51 @@ function parseHtmlTable(
       if (col.kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (col.kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
     }
-    if (!any) return;
+    if (any) tableHasValue = true;
     seen.add(size);
     rows.push(row);
   });
-  return rows.length > 0 ? { rows } : null;
+  return tableHasValue ? { rows } : null;
+}
+
+/** Sizes across the header, one measurement per row. Unknown cells stay null. */
+function parseTransposedTable(
+  headers: string[],
+  body: string[][],
+  tableUnit: Unit | null,
+): ParsedTable | null {
+  const sizes = headers.slice(1).map((cell) => chartSizeCode(cell));
+  if (sizes.filter(Boolean).length < 2) return null;
+  const rows: SizeChartRow[] = [];
+  sizes.forEach((size, index) => {
+    if (!size) return;
+    rows.push({
+      size,
+      sortOrder: sortOrder(size, index),
+      chest_cm: null,
+      length_cm: null,
+      sleeve_cm: null,
+    });
+  });
+  let any = false;
+  for (const cells of body) {
+    const kind = measureCol(cells[0] ?? '');
+    if (!kind) continue;
+    const rowUnit = unitInText(cells[0] ?? '') ?? tableUnit;
+    const chest = kind === 'chest' ? chestKind(cells[0] ?? '') : null;
+    sizes.forEach((size, index) => {
+      if (!size) return;
+      const row = rows.find((item) => item.size === size);
+      if (!row) return;
+      const parsed = parseCell(cells[index + 1] ?? '', rowUnit);
+      if (!parsed) return;
+      any = true;
+      if (kind === 'chest' && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
+      if (kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
+      if (kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
+    });
+  }
+  return any ? { rows } : null;
 }
 
 function tableGrid($: cheerio.CheerioAPI, table: unknown): string[][] {
@@ -197,7 +240,62 @@ function rowsFromTables(html: string): SizeChartRow[] {
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
     const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
-    const parsed = parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unitInText(context));
+    const unit = unitInText(context);
+    const parsed = preferChart(
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
+      parseTransposedTable(grid[0], grid.slice(1), unit),
+    );
+    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+  });
+  return best.length > 0 ? best : rowsFromDivCharts($);
+}
+
+function filledMeasurements(rows: SizeChartRow[] | undefined): number {
+  if (!rows) return 0;
+  return rows.reduce(
+    (count, row) => count + [row.chest_cm, row.length_cm, row.sleeve_cm].filter((value) => value !== null).length,
+    0,
+  );
+}
+
+/** Row charts win a tie. A transposed chart is used only when it yields more numbers. */
+function preferChart(byRow: ParsedTable | null, byColumn: ParsedTable | null): ParsedTable | null {
+  if (filledMeasurements(byColumn?.rows) > filledMeasurements(byRow?.rows)) return byColumn;
+  return byRow;
+}
+
+function cellTexts($: cheerio.CheerioAPI, node: unknown): string[] {
+  const cells: string[] = [];
+  $(node as never)
+    .children()
+    .each((_i, child) => {
+      const text = $(child).text().replace(/\s+/g, ' ').trim();
+      if (text) cells.push(text);
+    });
+  return cells;
+}
+
+/** Div and list charts, used when the brand did not mark the chart up as a table. */
+function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
+  let best: SizeChartRow[] = [];
+  $('[class*="size-chart"], [class*="sizechart"], [class*="size-guide"], [class*="sizeguide"], [id*="size-chart"], [id*="size-guide"]').each((_i, box) => {
+    if ($(box).is('table') || $(box).find('table').length > 0) return;
+    const grid: string[][] = [];
+    $(box)
+      .find('li, [class*="row"]')
+      .each((_r, row) => {
+        const cells = cellTexts($, row);
+        if (cells.length >= 2) grid.push(cells);
+      });
+    if (grid.length < 2) return;
+    const context = [$(box).attr('class') ?? '', $(box).attr('id') ?? '', grid[0].join(' ')].join(' ');
+    const unit = unitInText(context);
+    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
+    if (headerAt < 0) return;
+    const parsed = preferChart(
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
+      parseTransposedTable(grid[0], grid.slice(1), unit),
+    );
     if (parsed && parsed.rows.length > best.length) best = parsed.rows;
   });
   return best;

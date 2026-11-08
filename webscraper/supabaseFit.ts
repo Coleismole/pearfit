@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { ProductFitReport } from './fitAnalyzer.ts';
 import { fitPayloadFromReport } from './fitPayload.ts';
+import type { SizeChartRow } from './sizeChart.ts';
 
 export type SupabaseSync =
   | { ok: true }
@@ -50,7 +51,10 @@ export async function checkFitStore(): Promise<SupabaseSync> {
   return interpretFitStoreProbe(error?.message ?? null);
 }
 
-export async function pushFitReports(reports: ProductFitReport[]): Promise<SupabaseSync> {
+export async function pushFitReports(
+  reports: ProductFitReport[],
+  charts: Record<string, SizeChartRow[]> = {},
+): Promise<SupabaseSync> {
   const env = readSupabaseEnv();
   if (!env) {
     return { ok: false, skipped: true, reason: 'SUPABASE_URL or a Supabase key is not set' };
@@ -58,7 +62,7 @@ export async function pushFitReports(reports: ProductFitReport[]): Promise<Supab
   const db = getClient(env);
   for (const report of reports) {
     const { error } = await db.rpc('commit_fit_report', {
-      payload: fitPayloadFromReport(report),
+      payload: fitPayloadFromReport(report, charts[report.sku] ?? []),
     });
     if (error) return { ok: false, error: error.message };
   }

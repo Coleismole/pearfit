@@ -43,10 +43,25 @@ create table if not exists public.sku_size_metrics (
   primary key (sku, size_code)
 );
 
+-- Brand size chart. chest_cm is pit-to-pit, flat, in centimeters.
+-- length_cm and sleeve_cm are whatever the chart stated, converted to cm.
+-- A measurement the chart did not state is NULL. Do not store 0 for unknown.
+create table if not exists public.sku_size_chart (
+  sku text not null references public.commercial_skus (sku) on delete cascade,
+  size_code text not null,
+  sort_order integer not null,
+  chest_cm double precision,
+  length_cm double precision,
+  sleeve_cm double precision,
+  primary key (sku, size_code)
+);
+
 alter table public.commercial_skus enable row level security;
 alter table public.sku_size_metrics enable row level security;
+alter table public.sku_size_chart enable row level security;
 revoke all on table public.commercial_skus from anon, authenticated;
 revoke all on table public.sku_size_metrics from anon, authenticated;
+revoke all on table public.sku_size_chart from anon, authenticated;
 
 -- Drop first so the recreated functions are owned by the role running this script.
 do $$
@@ -148,6 +163,34 @@ begin
     s->>'returnRisk',
     s->>'primaryFitNote'
   from jsonb_array_elements(coalesce(payload->'sizes', '[]'::jsonb)) as s;
+
+  -- Replace this SKU's chart only when the scrape actually found one.
+  -- A missing or empty chart leaves the previous rows in place.
+  if jsonb_typeof(payload->'chart') = 'array' and jsonb_array_length(payload->'chart') > 0 then
+    delete from public.sku_size_chart where sku = payload->>'sku';
+
+    insert into public.sku_size_chart (
+      sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm
+    )
+    select
+      payload->>'sku',
+      s->>'size',
+      coalesce((s->>'sortOrder')::integer, 0),
+      case
+        when jsonb_typeof(s->'chest_cm') = 'number' then (s->>'chest_cm')::double precision
+        else null
+      end,
+      case
+        when jsonb_typeof(s->'length_cm') = 'number' then (s->>'length_cm')::double precision
+        else null
+      end,
+      case
+        when jsonb_typeof(s->'sleeve_cm') = 'number' then (s->>'sleeve_cm')::double precision
+        else null
+      end
+    from jsonb_array_elements(payload->'chart') as s
+    where coalesce(s->>'size', '') <> '';
+  end if;
 end;
 $$;
 
@@ -194,6 +237,23 @@ as $$
           )
           from public.sku_size_metrics m
           where m.sku = s.sku
+        ),
+        'chart', (
+          select coalesce(
+            jsonb_agg(
+              jsonb_build_object(
+                'size', c.size_code,
+                'sortOrder', c.sort_order,
+                'chest_cm', c.chest_cm,
+                'length_cm', c.length_cm,
+                'sleeve_cm', c.sleeve_cm
+              )
+              order by c.sort_order
+            ),
+            '[]'::jsonb
+          )
+          from public.sku_size_chart c
+          where c.sku = s.sku
         )
       )
       order by s.committed_at desc

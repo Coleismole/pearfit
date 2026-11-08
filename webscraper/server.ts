@@ -124,9 +124,8 @@ db.exec(`
   );
 
   -- Flat-lay cm per SKU and size, filled from the brand chart on the product page.
-  -- chest_cm is pit-to-pit. Length and sleeve stay as the chart states them; the engine
-  -- export leaves those null until a brand offset confirms the convention.
-  -- Not sent to Supabase. sort_order runs smallest to largest.
+  -- chest_cm is pit-to-pit. A cell the chart does not state is NULL, never 0.
+  -- The same rows are sent to Supabase sku_size_chart. sort_order runs smallest to largest.
   CREATE TABLE IF NOT EXISTS size_chart (
     sku TEXT NOT NULL,
     size_code TEXT NOT NULL,
@@ -244,6 +243,34 @@ const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
     VALUES (?, ?, ?, ?, ?)
   `).run(report.sku, report.name, 'UPSERT_COMMIT', totalRows, nowIso);
 });
+
+function loadSizeChart(sku: string): SizeChartRow[] {
+  const rows = db
+    .prepare(
+      `SELECT size_code, sort_order, chest_cm, length_cm, sleeve_cm
+       FROM size_chart WHERE sku = ? ORDER BY sort_order`,
+    )
+    .all(sku) as {
+    size_code: string;
+    sort_order: number;
+    chest_cm: number | null;
+    length_cm: number | null;
+    sleeve_cm: number | null;
+  }[];
+  return rows.map((row) => ({
+    size: row.size_code,
+    sortOrder: row.sort_order,
+    chest_cm: row.chest_cm,
+    length_cm: row.length_cm,
+    sleeve_cm: row.sleeve_cm,
+  }));
+}
+
+function chartsBySku(reports: ProductFitReport[]): Record<string, SizeChartRow[]> {
+  const charts: Record<string, SizeChartRow[]> = {};
+  for (const report of reports) charts[report.sku] = loadSizeChart(report.sku);
+  return charts;
+}
 
 function saveSizeChart(sku: string, rows: SizeChartRow[]) {
   if (rows.length === 0) return;
@@ -1141,7 +1168,7 @@ export function createApp() {
         upsertReportTransaction(item);
       }
 
-      const supabase = await pushFitReports(list);
+      const supabase = await pushFitReports(list, chartsBySku(list));
       res.json({
         committedCount: list.length,
         supabase,
@@ -1330,7 +1357,7 @@ export function createApp() {
       if (commitToDb) {
         upsertReportTransaction(report);
         saveSizeChart(report.sku, sizeChart);
-        supabase = await pushFitReports([report]);
+        supabase = await pushFitReports([report], { [report.sku]: sizeChart });
       }
 
       res.json({

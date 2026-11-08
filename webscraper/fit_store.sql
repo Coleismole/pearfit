@@ -63,6 +63,9 @@ create table if not exists public.sku_size_chart (
 -- Existing projects created this column as NOT NULL. Re-run this script so an unknown opacity can be null.
 alter table public.commercial_skus alter column fabric_opacity_pct drop not null;
 
+-- Existing projects may have been created without this column. commit_fit_report below writes it.
+alter table public.commercial_skus add column if not exists retail_price text;
+
 alter table public.commercial_skus enable row level security;
 alter table public.sku_size_metrics enable row level security;
 alter table public.sku_size_chart enable row level security;

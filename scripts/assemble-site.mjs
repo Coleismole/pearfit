@@ -6,17 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const site = path.join(root, 'site');
-
-await rm(site, { recursive: true, force: true });
-await mkdir(site, { recursive: true });
-
-await cp(path.join(root, 'website'), site, {
-  recursive: true,
-  filter: (src) => {
-    const base = path.basename(src);
-    return base !== 'README.md' && base !== 'placeholder.txt';
-  },
-});
+const website = path.join(root, 'website');
 
 const scraperBuild = spawnSync('npm', ['run', 'build'], {
   cwd: path.join(root, 'webscraper'),
@@ -25,13 +15,10 @@ const scraperBuild = spawnSync('npm', ['run', 'build'], {
 });
 if (scraperBuild.status !== 0) process.exit(scraperBuild.status ?? 1);
 
-await cp(path.join(root, 'webscraper', 'dist'), path.join(site, 'scraper'), { recursive: true });
-
 const require = createRequire(path.join(root, 'webscraper', 'package.json'));
 const esbuild = require('esbuild');
 const outfile = path.join(root, 'api', 'scraper', '[[...path]].js');
 await mkdir(path.dirname(outfile), { recursive: true });
-await cp(path.join(root, 'webscraper', '.env.example'), path.join(path.dirname(outfile), '.env.example'));
 await esbuild.build({
   entryPoints: [path.join(root, 'webscraper', 'vercelHandler.ts')],
   bundle: true,
@@ -41,4 +28,25 @@ await esbuild.build({
   outfile,
   external: ['better-sqlite3', 'playwright', 'vite'],
   logLevel: 'info',
+});
+await cp(path.join(root, 'webscraper', '.env.example'), path.join(path.dirname(outfile), '.env.example'));
+
+// www.pearfit.app is the Vercel project rooted at website/. Ship the scraper there.
+const websiteScraper = path.join(website, 'scraper');
+const websiteApi = path.join(website, 'api', 'scraper');
+await rm(websiteScraper, { recursive: true, force: true });
+await cp(path.join(root, 'webscraper', 'dist'), websiteScraper, { recursive: true });
+await rm(websiteApi, { recursive: true, force: true });
+await mkdir(websiteApi, { recursive: true });
+await cp(outfile, path.join(websiteApi, '[[...path]].js'));
+await cp(path.join(root, 'webscraper', '.env.example'), path.join(websiteApi, '.env.example'));
+
+await rm(site, { recursive: true, force: true });
+await mkdir(site, { recursive: true });
+await cp(website, site, {
+  recursive: true,
+  filter: (src) => {
+    const base = path.basename(src);
+    return !['README.md', 'placeholder.txt', 'package.json', 'package-lock.json', 'vercel.json', 'node_modules', 'api'].includes(base);
+  },
 });

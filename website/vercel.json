@@ -1,5 +1,16 @@
 {
-  "installCommand": "echo Static marketing site",
-  "buildCommand": "echo Static marketing site",
-  "outputDirectory": "."
+  "installCommand": "npm ci",
+  "buildCommand": "echo Pearfit site",
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/scraper/api/(.*)", "destination": "/api/scraper/$1" },
+    { "source": "/scraper", "destination": "/scraper/index.html" },
+    { "source": "/scraper/(.*)", "destination": "/scraper/index.html" }
+  ],
+  "functions": {
+    "api/scraper/[[...path]].js": {
+      "maxDuration": 60,
+      "includeFiles": "api/scraper/.env.example"
+    }
+  }
 }

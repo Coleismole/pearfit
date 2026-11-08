@@ -15,16 +15,9 @@ import {
   generateSqlInsertDump,
 } from './utils/fitAnalyzer';
 import { ScraperWorkbenchBar } from './components/ScraperWorkbenchBar';
-import { CommercialComparisonDatabase } from './components/CommercialComparisonDatabase';
 import { SizeSentimentMatrix } from './components/SizeSentimentMatrix';
 import { GarmentBlueprintIllustration } from './components/GarmentBlueprintIllustration';
 import { ReviewCorpusTable } from './components/ReviewCorpusTable';
-
-interface DbStatsState {
-  skuCount: number;
-  sizeMetricRows: number;
-  reviewRows: number;
-}
 
 export default function App() {
   const [catalog, setCatalog] = useState<ProductFitReport[]>(SEED_CATALOG);
@@ -35,11 +28,6 @@ export default function App() {
   const [selectedZoneFilter, setSelectedZoneFilter] = useState<string | null>(
     null
   );
-  const [dbStats, setDbStats] = useState<DbStatsState>({
-    skuCount: SEED_CATALOG.length,
-    sizeMetricRows: SEED_CATALOG.length * 6,
-    reviewRows: SEED_CATALOG.reduce((sum, r) => sum + r.totalReviews, 0),
-  });
   const [isCommittingActiveSku, setIsCommittingActiveSku] = useState(false);
   const [skuCommitMessage, setSkuCommitMessage] = useState<string | null>(null);
 
@@ -51,17 +39,6 @@ export default function App() {
       const loadedReports: ProductFitReport[] = data.reports || data.records || [];
       if (Array.isArray(loadedReports) && loadedReports.length > 0) {
         setCatalog(loadedReports);
-        const s = data.stats || data;
-        setDbStats({
-          skuCount: s.skuCount ?? loadedReports.length,
-          sizeMetricRows: s.sizeMetricRows ?? loadedReports.length * 6,
-          reviewRows:
-            s.reviewRows ??
-            loadedReports.reduce(
-              (acc: number, r: ProductFitReport) => acc + r.totalReviews,
-              0
-            ),
-        });
       }
     } catch {
       // Keep seeded catalog fallback if offline
@@ -85,13 +62,7 @@ export default function App() {
   const handleScrapedReportReady = (newReport: ProductFitReport) => {
     setCatalog((prev) => {
       const filtered = prev.filter((item) => item.sku !== newReport.sku);
-      const next = [newReport, ...filtered];
-      setDbStats({
-        skuCount: next.length,
-        sizeMetricRows: next.length * 6,
-        reviewRows: next.reduce((sum, r) => sum + r.totalReviews, 0),
-      });
-      return next;
+      return [newReport, ...filtered];
     });
     setActiveProductId(newReport.id);
     setSelectedSize('ALL');
@@ -113,12 +84,6 @@ export default function App() {
         const loadedReports: ProductFitReport[] = data.reports || data.records || [];
         if (Array.isArray(loadedReports) && loadedReports.length > 0) {
           setCatalog(loadedReports);
-          const s = data.stats || data;
-          setDbStats({
-            skuCount: s.skuCount ?? loadedReports.length,
-            sizeMetricRows: s.sizeMetricRows ?? loadedReports.length * 6,
-            reviewRows: s.reviewRows ?? 0,
-          });
           if (activeReport.sku === sku) {
             setActiveProductId(loadedReports[0].id);
           }
@@ -140,14 +105,14 @@ export default function App() {
       });
       if (response.ok) {
         const data = await response.json();
-        const s = data.stats || data;
-        setDbStats({
-          skuCount: s.skuCount ?? catalog.length,
-          sizeMetricRows: s.sizeMetricRows ?? catalog.length * 6,
-          reviewRows: s.reviewRows ?? activeReport.totalReviews,
-        });
+        const remote =
+          data.supabase?.ok
+            ? ' Fit values were sent to Supabase.'
+            : data.supabase?.error
+              ? ` Supabase was not updated: ${data.supabase.error}`
+              : '';
         setSkuCommitMessage(
-          `Committed SKU ${activeReport.sku} (1 SKU row, 6 size_metrics rows, ${activeReport.totalReviews} review rows) to commercial_fit.db`
+          `Committed SKU ${activeReport.sku} (1 SKU row, 6 size_metrics rows, ${activeReport.totalReviews} review rows) to commercial_fit.db.${remote}`
         );
       }
     } finally {
@@ -224,16 +189,6 @@ export default function App() {
               Scraper Pipeline
             </a>
             <a
-              href="#comparison-database"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection('comparison-database');
-              }}
-              className="hover:text-slate-900 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
-            >
-              Comparison DB
-            </a>
-            <a
               href="#size-matrix"
               onClick={(e) => {
                 e.preventDefault();
@@ -284,16 +239,7 @@ export default function App() {
           onBatchCommitted={handleBatchCommitted}
         />
 
-        {/* Section 2: Commercial Multi-SKU Fit Comparison Database & SQL/JSON/CSV Dump */}
-        <CommercialComparisonDatabase
-          catalog={catalog}
-          activeProductId={activeReport.id}
-          onSelectProduct={handleSelectProduct}
-          onDeleteSku={handleDeleteSku}
-          dbStats={dbStats}
-        />
-
-        {/* Section 3: Active SKU Deep-Dive Inspection Header */}
+        {/* Active SKU fit values. Comparison happens in the separate engine. */}
         <section
           aria-labelledby="active-garment-heading"
           className="bg-white border border-stone-200 rounded-lg p-6"
@@ -635,17 +581,18 @@ export default function App() {
               <div className="flex items-start justify-between gap-3 pb-4 border-b border-stone-200">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                    SKU Relational Record &amp; Grading QA
+                    SKU fit record
                   </h2>
                   <p className="text-xs text-slate-600 mt-0.5">
-                    SQLite schema mapping and size-grading consistency check for{' '}
+                    Numerical fit values for{' '}
                     <span className="font-mono font-semibold text-slate-800">
                       {activeReport.sku}
                     </span>
-                    .
+                    . Comparison runs in the separate engine.
                   </p>
                 </div>
 
+                <div className="flex flex-col gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleCommitActiveSkuToDb}
@@ -660,6 +607,14 @@ export default function App() {
                   />
                   <span>Sync SKU to DB</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteSku(activeReport.sku)}
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-slate-700 bg-stone-100 rounded-md hover:bg-stone-200 transition-colors shrink-0"
+                >
+                  Remove SKU
+                </button>
+                </div>
               </div>
 
               {skuCommitMessage && (
@@ -716,11 +671,7 @@ export default function App() {
                   </span>
                 </div>
                 <p className="text-slate-600 mt-1 leading-relaxed">
-                  {activeReport.gradingDelta <= -0.15
-                    ? 'QA Alert: Upper sizes (L, XL, XXL) skew significantly tighter than core sizes (XS–M). Recommend increasing chest/shoulder grading increments by +1.2 cm on L–XXL blocks.'
-                    : activeReport.gradingDelta >= 0.15
-                    ? 'QA Note: Upper sizes (L–XXL) grade looser relative to XS–M. Verify sleeve and sweep grading tolerances.'
-                    : 'Grading Spec Balanced: Fit skew remains consistent across both XS–M and L–XXL size blocks.'}
+                  {activeReport.sizingGradingAlert}
                 </p>
               </div>
 
@@ -762,8 +713,7 @@ export default function App() {
       <footer className="border-t border-stone-200 bg-white py-6 px-6 mt-12">
         <div className="max-w-[1360px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
-            Pearfit Scraper — Commercial B2B Apparel Review Scraper &amp; SQLite
-            Comparison Database (Zero-LLM Deterministic Engine)
+            Pearfit Scraper — numerical fit values are sent to the comparison engine
           </div>
           <div className="flex items-center gap-4">
             <a
@@ -775,17 +725,6 @@ export default function App() {
               className="hover:text-slate-900 transition-colors"
             >
               Scraper Pipeline
-            </a>
-            <span aria-hidden="true">·</span>
-            <a
-              href="#comparison-database"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection('comparison-database');
-              }}
-              className="hover:text-slate-900 transition-colors"
-            >
-              Comparison DB
             </a>
             <span aria-hidden="true">·</span>
             <a

@@ -15,6 +15,14 @@ import {
 } from '../utils/fitAnalyzer';
 import { SCRAPABLE_PRESET_TARGETS } from '../data/seedCatalog';
 
+function supabaseNote(sync: { ok?: boolean; error?: string; skipped?: boolean; reason?: string } | null): string {
+  if (!sync) return '';
+  if (sync.ok) return ' Fit values were sent to Supabase.';
+  if (sync.error) return ` Supabase was not updated: ${sync.error}`;
+  if (sync.skipped) return '';
+  return '';
+}
+
 interface Props {
   onScrapedReportReady: (
     report: ProductFitReport,
@@ -160,8 +168,9 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
 
       onScrapedReportReady(data.report, data.dbState);
       if (autoCommitToDb) {
+        const remote = supabaseNote(data.supabase);
         setCommitBanner(
-          `Scraped & Dumped SKU ${data.report.sku} (${data.report.name}) into SQLite Database: 1 SKU row, 6 size_metrics rows, and ${data.report.totalReviews} review rows committed.`
+          `Scraped & Dumped SKU ${data.report.sku} (${data.report.name}) into SQLite Database: 1 SKU row, 6 size_metrics rows, and ${data.report.totalReviews} review rows committed.${remote}`
         );
       } else {
         setCommitBanner(

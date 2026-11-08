@@ -155,16 +155,6 @@ export interface ProductFitReport {
   committedToDbAt?: string;
 }
 
-export interface SizeRecommendationResult {
-  usualSize: GarmentSize;
-  recommendedSize: GarmentSize;
-  action: 'Size Up' | 'Stay True to Size' | 'Size Down';
-  confidencePct: number;
-  headline: string;
-  reasoning: string;
-  sizeSpecificEvidence: string;
-}
-
 const ZONE_LABELS: Record<AnatomicalZone, string> = {
   shoulders: 'Shoulders & Drop Seam',
   chest: 'Chest & Bust',
@@ -954,7 +944,7 @@ export function aggregateProductFitReport(
 
   const merchandisingTakeaway =
     overallVerdict === 'Runs Small' || overallVerdict === 'Slightly Small'
-      ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${overallFitIndex}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}. Pattern spec adjustment recommended on ${mostMentionedZone?.zone || 'chest'} ease.`
+      ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${overallFitIndex}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}.`
       : overallVerdict === 'Runs Large' || overallVerdict === 'Slightly Large'
       ? `Runs Large (${runsLargePct}% of reviews, Fit Index +${overallFitIndex}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.`
       : `True to Size (${trueToSizePct}% of reviews, Fit Index ${overallFitIndex >= 0 ? `+${overallFitIndex}` : overallFitIndex}). Mean sentiment score: ${overallSentimentScore}/100.`;
@@ -1083,77 +1073,4 @@ export function generateSqlInsertDump(reports: ProductFitReport[]): string {
   }
 
   return lines.join('\n');
-}
-
-/**
- * Recommends the best garment size for a shopper based on their usual size,
- * fit preference ('snug' | 'regular' | 'relaxed'), and the scraped sentiment for that exact size.
- */
-export function calculateSizeRecommendation(
-  report: ProductFitReport,
-  usualSize: GarmentSize,
-  preference: 'snug' | 'regular' | 'relaxed'
-): SizeRecommendationResult {
-  const sizeIdx = GARMENT_SIZES.indexOf(usualSize);
-  const targetSummary = report.sizeSummaries.find((s) => s.size === usualSize);
-
-  const effectiveSkew =
-    targetSummary && targetSummary.reviewCount > 0
-      ? targetSummary.fitSkew
-      : report.overallFitIndex;
-
-  const prefBias = preference === 'relaxed' ? -0.22 : preference === 'snug' ? 0.22 : 0;
-  const adjustedSkew = effectiveSkew + prefBias;
-
-  let recommendedIdx = sizeIdx;
-  let action: SizeRecommendationResult['action'] = 'Stay True to Size';
-
-  if (adjustedSkew <= -0.3) {
-    recommendedIdx = Math.min(GARMENT_SIZES.length - 1, sizeIdx + 1);
-    action = recommendedIdx > sizeIdx ? 'Size Up' : 'Stay True to Size';
-  } else if (adjustedSkew >= 0.35) {
-    recommendedIdx = Math.max(0, sizeIdx - 1);
-    action = recommendedIdx < sizeIdx ? 'Size Down' : 'Stay True to Size';
-  }
-
-  const recommendedSize = GARMENT_SIZES[recommendedIdx];
-  const confidencePct = Math.min(
-    96,
-    Math.max(
-      72,
-      Math.round(78 + Math.abs(effectiveSkew) * 18 + (targetSummary?.reviewCount || 0) * 1.5)
-    )
-  );
-
-  const shrinkageNote =
-    targetSummary && targetSummary.shrinkageMentionPct > 0
-      ? ` (${targetSummary.shrinkageMentionPct}% in size ${usualSize} note wash shrinkage if tumble-dried)`
-      : '';
-
-  const sizeSpecificEvidence =
-    targetSummary && targetSummary.reviewCount > 0
-      ? `In size ${usualSize} (${targetSummary.reviewCount} reviews), ${targetSummary.runsSmallPct}% say runs small, ${targetSummary.trueToSizePct}% say true to size, and ${targetSummary.runsLargePct}% say runs large${shrinkageNote}.`
-      : `Across ${report.totalReviews} garment reviews, the overall fit index is ${report.overallFitIndex}.`;
-
-  let headline = `Order ${recommendedSize} (${action})`;
-  let reasoning = '';
-
-  if (action === 'Size Up') {
-    reasoning = `Size ${usualSize} skews small (Fit Index ${effectiveSkew}) for ${report.name}. Stepping up to ${recommendedSize} compensates for reported tension and matches your ${preference} fit preference.`;
-  } else if (action === 'Size Down') {
-    reasoning = `Size ${usualSize} cuts generously (Fit Index +${effectiveSkew}) on ${report.name}. Sizing down to ${recommendedSize} eliminates excess drop-shoulder bulk while maintaining a clean ${preference} silhouette.`;
-  } else {
-    headline = `Order Your Usual ${recommendedSize} (True to Size)`;
-    reasoning = `Size ${usualSize} tracks well with your ${preference} fit preference (Fit Index ${effectiveSkew >= 0 ? `+${effectiveSkew}` : effectiveSkew}). Air-dry after cold washing to preserve the out-of-the-bag torso length.`;
-  }
-
-  return {
-    usualSize,
-    recommendedSize,
-    action,
-    confidencePct,
-    headline,
-    reasoning,
-    sizeSpecificEvidence,
-  };
 }

@@ -6,7 +6,6 @@ import {
   classifyReviewFitAndSentiment,
   parseRawReviewBatch,
   aggregateProductFitReport,
-  calculateSizeRecommendation,
   generateSqlInsertDump,
 } from './fitAnalyzer';
 
@@ -82,7 +81,7 @@ True to size, fits perfectly and super soft knit.
   assert.equal(parsedText[1].sizePurchased, 'M');
 });
 
-test('aggregateProductFitReport and calculateSizeRecommendation compute per-size sentiment, shrinkage, and advice', () => {
+test('aggregateProductFitReport computes per-size sentiment and shrinkage', () => {
   const report = aggregateProductFitReport(
     {
       id: 'hm-tee-test',
@@ -136,10 +135,6 @@ test('aggregateProductFitReport and calculateSizeRecommendation compute per-size
   assert.equal(sizeL.runsSmallPct, 100);
   assert.equal(sizeL.shrinkageMentionPct, 50);
   assert.equal(sizeL.verdict, 'Runs Small');
-
-  const recForL = calculateSizeRecommendation(report, 'L', 'regular');
-  assert.equal(recForL.action, 'Size Up');
-  assert.equal(recForL.recommendedSize, 'XL');
 
   assert.ok(typeof report.gradingDelta === 'number');
   const sqlDump = generateSqlInsertDump([report]);

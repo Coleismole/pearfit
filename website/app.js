@@ -68,6 +68,30 @@ function formatDelta(val) {
   return '0.0 cm';
 }
 
+const pendingPostHogCalls = [];
+let posthogReady = false;
+
+function callPostHog(callback) {
+  if (posthogReady) {
+    callback(window.posthog);
+  } else {
+    pendingPostHogCalls.push(callback);
+  }
+}
+
+window.addEventListener('posthog:initialized', () => {
+  posthogReady = true;
+  pendingPostHogCalls.splice(0).forEach((callback) => callback(window.posthog));
+});
+
+function capture(event, properties) {
+  callPostHog((posthog) => posthog.capture(event, properties));
+}
+
+function logPostHog(level, message, attributes) {
+  callPostHog((posthog) => posthog.logger?.[level]?.(message, attributes));
+}
+
 function buildShirtSvgPath(m) {
   const cx = 100;
   const topY = 22;
@@ -181,6 +205,10 @@ function renderHeroPdp() {
   sizesHost.querySelectorAll('button').forEach((btn) => {
     btn.addEventListener('click', () => {
       manualPdpSize = btn.dataset.sz;
+      capture('fit_size_inspected', {
+        product_id: TARGET_OXFORD_SHIRT.id,
+        selected_size: manualPdpSize,
+      });
       renderHeroPdp();
     });
   });
@@ -212,6 +240,7 @@ function initStakeholderTabs() {
   tabsHost.querySelectorAll('button').forEach((btn) => {
     btn.addEventListener('click', () => {
       const filter = btn.dataset.filter;
+      capture('stakeholder_audience_selected', { audience: filter });
       tabsHost.querySelectorAll('button').forEach((b) => {
         b.setAttribute('aria-selected', String(b === btn));
       });
@@ -269,6 +298,11 @@ function renderMatrix() {
   host.querySelectorAll('.mrow').forEach((rowEl) => {
     rowEl.addEventListener('click', () => {
       activeIdx = Number(rowEl.dataset.i);
+      capture('fit_recommendation_explored', {
+        interaction: 'fit_matrix',
+        usual_size: SAMPLE_SIZES[activeIdx].size,
+        recommended_size: recommend(activeIdx).recommended,
+      });
       renderUsual();
       renderMatrix();
       renderReco();
@@ -294,6 +328,11 @@ function renderUsual() {
   host.querySelectorAll('button').forEach((b) =>
     b.addEventListener('click', () => {
       activeIdx = Number(b.dataset.i);
+      capture('fit_recommendation_explored', {
+        interaction: 'usual_size_picker',
+        usual_size: SAMPLE_SIZES[activeIdx].size,
+        recommended_size: recommend(activeIdx).recommended,
+      });
       renderUsual();
       renderMatrix();
       renderReco();
@@ -356,6 +395,7 @@ let inquiryMode = 'pilot';
 
 function setInquiryMode(mode) {
   inquiryMode = mode;
+  capture('inquiry_mode_selected', { inquiry_mode: inquiryMode });
   document.querySelectorAll('#inquiry-tabs button').forEach((b) => {
     b.setAttribute('aria-selected', String(b.dataset.mode === mode));
   });
@@ -433,8 +473,11 @@ async function handlePilot(e) {
       throw new Error(data.message || 'The inquiry was not accepted.');
     }
     note.textContent = data.message || `Sent to ${INQUIRY_INBOX}.`;
+    capture('inquiry_submitted', { inquiry_mode: inquiryMode });
+    logPostHog('info', 'inquiry delivered', { inquiry_mode: inquiryMode });
     form.reset();
   } catch (err) {
+    logPostHog('warn', 'inquiry delivery failed', { inquiry_mode: inquiryMode });
     note.textContent =
       err instanceof Error && err.message
         ? err.message
@@ -448,6 +491,7 @@ async function handlePilot(e) {
 document.getElementById('closet-select').addEventListener('change', (e) => {
   selectedRefId = e.target.value;
   manualPdpSize = null;
+  capture('fit_reference_selected', { reference_garment_id: selectedRefId });
   renderHeroPdp();
 });
 
@@ -466,4 +510,7 @@ renderMatrix();
 renderReco();
 renderRoi();
 document.getElementById('roi-form').addEventListener('input', renderRoi);
+document.getElementById('roi-form').addEventListener('change', (e) => {
+  capture('roi_calculator_adjusted', { input_name: e.target.name });
+});
 document.getElementById('pilot-form').addEventListener('submit', handlePilot);

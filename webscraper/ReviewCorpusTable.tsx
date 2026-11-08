@@ -5,7 +5,7 @@ import {
   GARMENT_SIZES,
   GarmentSize,
   ProductFitReport,
-} from '../utils/fitAnalyzer';
+} from './fitAnalyzer';
 
 interface Props {
   report: ProductFitReport;

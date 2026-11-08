@@ -11,7 +11,7 @@ import {
   GarmentSize,
   ProductFitReport,
   SizeSentimentSummary,
-} from '../utils/fitAnalyzer';
+} from './fitAnalyzer';
 
 interface Props {
   report: ProductFitReport;

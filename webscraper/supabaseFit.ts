@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { ProductFitReport } from '../src/utils/fitAnalyzer.ts';
+import type { ProductFitReport } from './fitAnalyzer.ts';
 import { fitPayloadFromReport } from './fitPayload.ts';
 
 export type SupabaseSync =
@@ -118,7 +118,7 @@ export async function listRemoteFitSkus(): Promise<RemoteFitList> {
   const { data, error } = await getClient(env).rpc('list_fit_catalog');
   if (error) {
     const message = /could not find the function|schema cache/i.test(error.message)
-      ? 'The shared fit store has no list_fit_catalog function yet. Run webscraper/supabase/fit_store.sql once in the Supabase SQL editor.'
+      ? 'The shared fit store has no list_fit_catalog function yet. Run webscraper/fit_store.sql once in the Supabase SQL editor.'
       : error.message;
     return { ok: false, error: message };
   }

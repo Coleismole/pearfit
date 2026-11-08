@@ -2,7 +2,7 @@ import {
   aggregateProductFitReport,
   type ProductFitReport,
   type RawScrapedReview,
-} from '../utils/fitAnalyzer.ts';
+} from './fitAnalyzer.ts';
 
 export const HM_HEAVYWEIGHT_TEE_REVIEWS: RawScrapedReview[] = [
   {

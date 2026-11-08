@@ -11,15 +11,15 @@ import {
   type ProductFitReport,
   type RawScrapedReview,
   type ScraperTelemetry,
-} from './src/utils/fitAnalyzer.ts';
-import { HM_HEAVYWEIGHT_TEE_REVIEWS } from './src/data/seedCatalog.ts';
+} from './fitAnalyzer.ts';
+import { HM_HEAVYWEIGHT_TEE_REVIEWS } from './seedCatalog.ts';
 import {
   extractSizeFromReviewText,
   extractStructuredProduct,
   parseJsonLdScripts,
-} from './src/utils/structuredData.ts';
-import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR } from './server/headlessFetch.ts';
-import { parseSizeChart, type SizeChartRow } from './server/sizeChart.ts';
+} from './structuredData.ts';
+import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR } from './headlessFetch.ts';
+import { parseSizeChart, type SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
   labelledValue,
@@ -29,8 +29,8 @@ import {
   productIdFromUrl,
   ratingFromLabel,
   ratingFromStarIcons,
-} from './server/pageHelpers.ts';
-import { checkFitStore, deleteRemoteFitSku, listRemoteFitSkus, pushFitReports, type SupabaseSync } from './server/supabaseFit.ts';
+} from './pageHelpers.ts';
+import { checkFitStore, deleteRemoteFitSku, listRemoteFitSkus, pushFitReports, type SupabaseSync } from './supabaseFit.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1367,7 +1367,7 @@ async function startServer() {
         return;
       }
       console.log(`Supabase fit store is not writable yet: ${sync.error}`);
-      console.log('One person runs webscraper/supabase/fit_store.sql once in the Supabase SQL editor. After that, every clone can push.');
+      console.log('One person runs webscraper/fit_store.sql once in the Supabase SQL editor. After that, every clone can push.');
     }).catch((err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
       console.log(`Supabase fit store check failed: ${message}`);

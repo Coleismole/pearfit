@@ -12,8 +12,8 @@ import {
   aggregateProductFitReport,
   parseRawReviewBatch,
   ProductFitReport,
-} from '../utils/fitAnalyzer';
-import { SCRAPABLE_PRESET_TARGETS } from '../data/seedCatalog';
+} from './fitAnalyzer';
+import { SCRAPABLE_PRESET_TARGETS } from './seedCatalog';
 
 function supabaseNote(sync: { ok?: boolean; error?: string; skipped?: boolean; reason?: string } | null): string {
   if (!sync) return '';

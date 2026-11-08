@@ -8,16 +8,16 @@ import {
   Check,
   RefreshCw,
 } from 'lucide-react';
-import { SEED_CATALOG } from './data/seedCatalog';
+import { SEED_CATALOG } from './seedCatalog';
 import {
   GarmentSize,
   ProductFitReport,
   generateSqlInsertDump,
-} from './utils/fitAnalyzer';
-import { ScraperWorkbenchBar } from './components/ScraperWorkbenchBar';
-import { SizeSentimentMatrix } from './components/SizeSentimentMatrix';
-import { GarmentBlueprintIllustration } from './components/GarmentBlueprintIllustration';
-import { ReviewCorpusTable } from './components/ReviewCorpusTable';
+} from './fitAnalyzer';
+import { ScraperWorkbenchBar } from './ScraperWorkbenchBar';
+import { SizeSentimentMatrix } from './SizeSentimentMatrix';
+import { GarmentBlueprintIllustration } from './GarmentBlueprintIllustration';
+import { ReviewCorpusTable } from './ReviewCorpusTable';
 
 export default function App() {
   const [catalog, setCatalog] = useState<ProductFitReport[]>(SEED_CATALOG);

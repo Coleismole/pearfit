@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/utils/*.test.ts server/*.test.ts",
+    "test": "tsx --test *.test.ts",
     "browsers:install": "playwright install chromium"
   },
   "dependencies": {

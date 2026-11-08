@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProductFitReport, ZoneBreakdown } from '../utils/fitAnalyzer';
+import { ProductFitReport, ZoneBreakdown } from './fitAnalyzer';
 
 interface Props {
   category: ProductFitReport['category'];

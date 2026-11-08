@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import type { ProductFitReport } from '../src/utils/fitAnalyzer.ts';
+import type { ProductFitReport } from './fitAnalyzer.ts';
 import { fitPayloadFromReport } from './fitPayload.ts';
 
 test('fit payload keeps numerical fit values and drops review text', () => {

@@ -1,4 +1,4 @@
-import type { ProductFitReport } from '../src/utils/fitAnalyzer.ts';
+import type { ProductFitReport } from './fitAnalyzer.ts';
 
 /** Fit numbers sent to Supabase. Review text is intentionally absent. */
 export interface FitPayload {

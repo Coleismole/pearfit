@@ -32,14 +32,25 @@ import {
 } from './pageHelpers.ts';
 import { checkFitStore, deleteRemoteFitSku, listRemoteFitSkus, pushFitReports, type SupabaseSync } from './supabaseFit.ts';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, '.env.local') });
-dotenv.config({ path: path.join(__dirname, '.env') });
-dotenv.config({ path: path.join(__dirname, '.env.example') });
+function serverDir(): string {
+  // The Vercel bundle is CommonJS, where import.meta.url is empty. Skip it there.
+  if (process.env.VERCEL) return path.join(process.cwd(), 'api', 'scraper');
+  return path.dirname(fileURLToPath(import.meta.url));
+}
 
-// Initialize persistent SQLite Commercial Apparel Fit Database
-const dbPath = path.join(__dirname, 'commercial_fit.db');
+function loadEnvFiles() {
+  const dirs = [serverDir(), path.join(process.cwd(), 'webscraper'), path.join(process.cwd(), 'api', 'scraper')];
+  for (const name of ['.env.local', '.env', '.env.example']) {
+    for (const dir of dirs) {
+      dotenv.config({ path: path.join(dir, name) });
+    }
+  }
+}
+loadEnvFiles();
+
+// Local clones keep the database next to the server. Vercel can only write to /tmp,
+// and that copy disappears when the function instance goes away. Fit numbers still go to Supabase.
+const dbPath = process.env.VERCEL ? '/tmp/commercial_fit.db' : path.join(serverDir(), 'commercial_fit.db');
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
@@ -1072,7 +1083,7 @@ function getDatabaseSummary() {
   };
 }
 
-async function startServer() {
+export function createApp() {
   const app = express();
   app.use(express.json({ limit: '4mb' }));
 
@@ -1332,6 +1343,11 @@ async function startServer() {
     }
   });
 
+  return app;
+}
+
+async function startServer() {
+  const app = createApp();
   const PORT = Number(process.env.PORT) || 3000;
 
   if (process.env.NODE_ENV !== 'production') {
@@ -1342,7 +1358,7 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(__dirname, 'dist');
+    const distPath = path.join(serverDir(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
@@ -1375,4 +1391,6 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}

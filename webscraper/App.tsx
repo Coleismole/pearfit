@@ -18,6 +18,7 @@ import { ScraperWorkbenchBar } from './ScraperWorkbenchBar';
 import { SizeSentimentMatrix } from './SizeSentimentMatrix';
 import { GarmentBlueprintIllustration } from './GarmentBlueprintIllustration';
 import { ReviewCorpusTable } from './ReviewCorpusTable';
+import { apiPath } from './clientApi';
 
 export default function App() {
   const [catalog, setCatalog] = useState<ProductFitReport[]>(SEED_CATALOG);
@@ -38,7 +39,7 @@ export default function App() {
 
   const fetchDatabaseRecords = async (whenEmpty: 'samples' | 'keep' = 'samples') => {
     try {
-      const response = await fetch('/api/db/records');
+      const response = await fetch(apiPath('/api/db/records'));
       if (!response.ok) return;
       const data = await response.json();
       const loadedReports: ProductFitReport[] = data.reports || data.records || [];
@@ -56,7 +57,7 @@ export default function App() {
 
   const fetchRemoteFitStore = async () => {
     try {
-      const response = await fetch('/api/db/remote');
+      const response = await fetch(apiPath('/api/db/remote'));
       if (!response.ok) return;
       const data = await response.json();
       if (data.ok) {
@@ -106,7 +107,7 @@ export default function App() {
 
   const handleDeleteSku = async (sku: string) => {
     try {
-      const res = await fetch(`/api/db/sku/${encodeURIComponent(sku)}`, {
+      const res = await fetch(apiPath(`/api/db/sku/${encodeURIComponent(sku)}`), {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -134,7 +135,7 @@ export default function App() {
     setIsCommittingActiveSku(true);
     setSkuCommitMessage(null);
     try {
-      const response = await fetch('/api/db/commit', {
+      const response = await fetch(apiPath('/api/db/commit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ report: activeReport }),
@@ -783,7 +784,7 @@ export default function App() {
             <div className="mt-4 pt-3 border-t border-stone-200 flex items-center justify-between text-[11px] text-slate-500">
               <span>Table: commercial_skus + sku_size_metrics</span>
               <a
-                href="/api/db/dump.sql"
+                href={apiPath('/api/db/dump.sql')}
                 download="pearfit-scraper-commercial-database.sql"
                 className="font-semibold text-slate-900 hover:underline"
               >
@@ -822,7 +823,7 @@ export default function App() {
             </a>
             <span aria-hidden="true">·</span>
             <a
-              href="/api/db/dump.sql"
+              href={apiPath('/api/db/dump.sql')}
               download="pearfit-scraper-commercial-database.sql"
               className="hover:text-slate-900 transition-colors"
             >

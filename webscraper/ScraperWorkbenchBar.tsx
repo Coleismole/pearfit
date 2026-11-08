@@ -14,6 +14,7 @@ import {
   ProductFitReport,
 } from './fitAnalyzer';
 import { SCRAPABLE_PRESET_TARGETS } from './seedCatalog';
+import { apiPath } from './clientApi';
 
 function supabaseNote(sync: { ok?: boolean; error?: string; skipped?: boolean; reason?: string } | null): string {
   if (!sync) return '';
@@ -102,7 +103,7 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
     try {
       const cleanPath = targetUrl.replace(/^https?:\/\/[^/]+/, '');
       if (cleanPath.startsWith('/api/mock-store/')) {
-        const res = await fetch(`${cleanPath}/raw`);
+        const res = await fetch(apiPath(`${cleanPath}/raw`));
         if (res.ok) {
           const data = await res.json();
           setInspectedHtmlPreview(data.html);
@@ -144,7 +145,7 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
 
     setIsScraping(true);
     try {
-      const response = await fetch('/api/scrape', {
+      const response = await fetch(apiPath('/api/scrape'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
@@ -219,7 +220,7 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
       let latestDbState = null;
       let totalReviewsScraped = 0;
       for (const preset of SCRAPABLE_PRESET_TARGETS) {
-        const res = await fetch('/api/scrape', {
+        const res = await fetch(apiPath('/api/scrape'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: preset.url, commitToDb: true }),

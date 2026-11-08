@@ -382,7 +382,7 @@
           <label class="inquiry-honey">Company website <input name="_honey" tabindex="-1" autocomplete="off" /></label>
           <label>Full name <input name="name" required autocomplete="name" placeholder="Alex Rivera" /></label>
           <label>Work email <input name="email" type="email" required autocomplete="email" placeholder="alex@yourbrand.com" /></label>
-          <label><span id="store-label-text">Storefront URL</span> <input name="store" type="url" placeholder="https://" required /></label>
+          <label><span id="store-label-text">Storefront URL</span> <input id="pilot-store-input" name="store" type="url" placeholder="https://" required /></label>
           <label>
             <span id="volume-label-text">Monthly order volume</span>
             <select name="volume" id="pilot-volume-select">
@@ -405,7 +405,7 @@
         <h2>Answers for brands and partners</h2>
         <details>
           <summary>What data does Pearfit need to launch a pilot?</summary>
-          <p>Product page URLs. The scraper reads the reviews on those pages and stores numerical fit values per size. Full review text stays on the machine that scraped it. Size charts are not part of the shared fit table.</p>
+          <p>Product page URLs. The scraper reads the reviews on those pages and stores numerical fit values per size. Full review text stays on the machine that scraped it. A size chart on the page is stored with those fit rows. A measurement the chart does not state stays blank.</p>
         </details>
         <details>
           <summary>How do shoppers tell Pearfit what clothes they already own?</summary>

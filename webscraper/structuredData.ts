@@ -55,6 +55,19 @@ function collectNodes(root: unknown, out: Json[] = []): Json[] {
   return out;
 }
 
+/** True when itemReviewed names a sku or product that is not this one. Unlinked reviews stay. */
+function reviewIsForAnotherProduct(review: Json, product: Json): boolean {
+  const reviewed = review.itemReviewed;
+  if (!isObject(reviewed)) return false;
+  const reviewedSku = text(reviewed.sku);
+  const productSku = text(product.sku);
+  if (reviewedSku && productSku) return reviewedSku !== productSku;
+  const reviewedName = text(reviewed.name);
+  const productName = text(product.name);
+  if (reviewedName && productName) return reviewedName !== productName;
+  return false;
+}
+
 function formatPrice(offersRaw: unknown): string | null {
   for (const offer of asArray(offersRaw)) {
     if (!isObject(offer)) continue;
@@ -100,10 +113,21 @@ export function extractStructuredProduct(jsonLdBlocks: unknown[]): StructuredPro
   const product = nodes.find((n) => hasType(n, 'Product') || hasType(n, 'ProductGroup'));
   if (!product) return null;
 
-  // Reviews may sit on the Product, or on separate Review nodes pointing at it.
+  // Reviews may sit on the Product, or on separate Review nodes for that same product.
+  // Reviews nested on a different product, or whose itemReviewed names one, are left out.
   const reviewNodes = new Set<Json>();
+  const ownedByAnotherProduct = new Set<Json>();
+  for (const node of nodes) {
+    if (node === product || (!hasType(node, 'Product') && !hasType(node, 'ProductGroup'))) continue;
+    for (const review of asArray(node.review ?? node.reviews)) {
+      if (isObject(review)) ownedByAnotherProduct.add(review);
+    }
+  }
   for (const r of asArray(product.review ?? product.reviews)) if (isObject(r)) reviewNodes.add(r);
-  for (const n of nodes) if (hasType(n, 'Review')) reviewNodes.add(n);
+  for (const n of nodes) {
+    if (!hasType(n, 'Review') || ownedByAnotherProduct.has(n) || reviewIsForAnotherProduct(n, product)) continue;
+    reviewNodes.add(n);
+  }
 
   const reviews: RawScrapedReview[] = [];
   let idx = 0;

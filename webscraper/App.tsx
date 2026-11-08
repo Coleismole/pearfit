@@ -444,8 +444,12 @@ export default function App() {
                     <div className="font-semibold text-slate-900">
                       Fabric Weight &amp; Transparency:{' '}
                       <span className="font-mono tabular-nums text-emerald-800">
-                        {activeReport.tshirtSignals.fabricOpacityPct}% Opaque (
-                        {activeReport.tshirtSignals.gsmSpec})
+                        {activeReport.tshirtSignals.fabricOpacityPct === null
+                          ? 'Opacity not stated'
+                          : `${activeReport.tshirtSignals.fabricOpacityPct}% opaque`}
+                        {activeReport.tshirtSignals.gsmSpec
+                          ? ` (${activeReport.tshirtSignals.gsmSpec})`
+                          : ''}
                       </span>
                     </div>
                     <p className="text-slate-600 mt-0.5">

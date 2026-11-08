@@ -2,7 +2,7 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { closeHeadlessBrowser, renderPageHtml } from './headlessFetch.ts';
+import { closeHeadlessBrowser, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
 
 // A product page whose reviews exist only after JavaScript runs: one batch appears after
 // clicking a "Reviews" tab, one lives in a shadow root, and a "Load more" button adds a third.
@@ -28,6 +28,33 @@ const PAGE = `<!DOCTYPE html><html><head><title>JS Tee</title></head><body>
   const root = document.getElementById('shadow-host').attachShadow({ mode: 'open' });
   root.innerHTML = card('Cy', 'Shadow DOM review: runs large overall.');
 </script></body></html>`;
+
+test('headless render runs only for a remote page that still needs JavaScript', () => {
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: false, reviewCount: 0 }),
+    true
+  );
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: false, reviewCount: 4 }),
+    false
+  );
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: true, reviewCount: null }),
+    false
+  );
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'always', staticFailed: false, reviewCount: 4 }),
+    true
+  );
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'never', staticFailed: false, reviewCount: 0 }),
+    false
+  );
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: false, renderMode: 'always', staticFailed: false, reviewCount: null }),
+    false
+  );
+});
 
 let browserAvailable = true;
 try {

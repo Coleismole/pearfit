@@ -5,6 +5,8 @@
     "node": "22.x"
   },
   "dependencies": {
-    "better-sqlite3": "^13.0.3"
+    "@sparticuz/chromium-min": "153.0.0",
+    "better-sqlite3": "^13.0.3",
+    "puppeteer-core": "25.16.0"
   }
 }

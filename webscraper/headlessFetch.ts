@@ -34,6 +34,22 @@ export interface RenderedPage {
   reviewSelectorFound: boolean;
 }
 
+/**
+ * Headless is for pages whose reviews are added by JavaScript.
+ * A failed static fetch (including 404 and "could not reach") is reported as that failure.
+ * A store that refused the request (403/429/503) is not retried in a browser.
+ */
+export function shouldUseHeadlessRender(input: {
+  isRemoteUrl: boolean;
+  renderMode: 'auto' | 'always' | 'never';
+  staticFailed: boolean;
+  reviewCount: number | null;
+}): boolean {
+  if (!input.isRemoteUrl || input.renderMode === 'never' || input.staticFailed) return false;
+  if (input.renderMode === 'always') return true;
+  return input.reviewCount === null || input.reviewCount === 0;
+}
+
 let browserPromise: Promise<{ close(): Promise<void> }> | null = null;
 let renderTail: Promise<void> = Promise.resolve();
 

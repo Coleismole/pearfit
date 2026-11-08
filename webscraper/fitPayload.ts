@@ -18,7 +18,8 @@ export interface FitPayload {
   trueToSizePct: number;
   runsLargePct: number;
   shrinkageMentionPct: number;
-  fabricOpacityPct: number;
+  /** Null when reviews never mention opacity. */
+  fabricOpacityPct: number | null;
   sentimentScore: number;
   avgRating: number;
   sourceUrl: string;

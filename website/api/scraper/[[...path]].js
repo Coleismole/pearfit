@@ -87557,7 +87557,7 @@ var TRUE_TO_SIZE_CUES = [
   { pattern: /\bexact(ly)?\s+my\s+usual\s+size\b|\bstandard\s+sizing\b|\bbuy\s+your\s+normal\s+size\b/i, label: "matches usual size", weight: 0 },
   { pattern: /\bperfect\s+(tailored\s+|relaxed\s+|boxy\s+)?fit\b/i, label: "perfect fit", weight: 0 }
 ];
-var SHRINKAGE_REGEX = /\b(shrunk|shrank|shrinks?|shrinkage|tumble\s+dr(y|ied)|dryer|shortened\s+in\s+the\s+wash|after\s+(the\s+)?first\s+wash|cold\s+wash|hang\s+dry|air\s+dry)\b/i;
+var SHRINKAGE_REGEX = /\b(shrunk|shrank|shrinks?|shrinkage|shortened\s+in\s+the\s+wash)\b/i;
 var OPAQUE_HEAVY_REGEX = /\b(not\s+see[- ]?through|non[- ]?see[- ]?through|zero\s+transparency|opaque|thick\s+(cotton|jersey|fabric|weight|collar)|heavyweight|220\s*gsm|240\s*gsm|260\s*gsm|280\s*gsm|substantial\s+(cotton|weight|feel)|sturdy\s+cotton)\b/i;
 var SHEER_THIN_REGEX = /\b(see[- ]?through|sheer|paper[- ]?thin|flimsy|transparent)\b/i;
 var POSITIVE_SENTIMENT_WORDS = /\b(love|excellent|flattering|comfortable|high-quality|stunning|perfect|soft|durable|favorite|worth\s+every\s+penny|great\s+drape|impeccable|breathable|compliments|substantial|opaque|sturdy)\b/gi;
@@ -87652,7 +87652,7 @@ function classifyReviewFitAndSentiment(text4, rating = 4, declaredFitTag) {
       const isTight = /\b(tight|snug|narrow|short|small|pinch|pull|constrict|restrict|cramps?|squeeze|shrunk|shrank)\b/i.test(
         joined
       );
-      const isLoose = /\b(loose|baggy|wide|long|large|big|roomy|boxy|drop|gap|excess|swimming|relaxed|generous)\b/i.test(
+      const isLoose = /\b(loose|baggy|wide|long|large|big|roomy|boxy|gap|excess|swimming|relaxed|generous)\b/i.test(
         joined
       );
       let tension = "optimal";
@@ -87733,6 +87733,10 @@ function skewToVerdict(fitSkew, count) {
   if (fitSkew >= 0.18) return "Slightly Large";
   return "True to Size";
 }
+function formatSigned(n, digits = 2) {
+  const text4 = n.toFixed(digits);
+  return n > 0 ? `+${text4}` : text4;
+}
 function parseRawReviewBatch(rawInput) {
   const trimmed = (rawInput || "").trim();
   if (!trimmed) return [];
@@ -87745,7 +87749,7 @@ function parseRawReviewBatch(rawInput) {
     const innerHtml = match[1];
     index2 += 1;
     const attrSize = fullTag.match(/data-size=["']([^"']+)["']/i)?.[1] || innerHtml.match(/Size(?:\s+Purchased)?:\s*<[^>]+>([^<]+)</i)?.[1] || innerHtml.match(/Size(?:\s+Purchased)?:\s*([A-Za-z0-9-]+)/i)?.[1] || "";
-    const attrRating = fullTag.match(/data-rating=["'](\d(?:\.\d)?)["']/i)?.[1] || innerHtml.match(/(\d(?:\.\d)?)\s*\/\s*5/i)?.[1] || "4";
+    const attrRating = fullTag.match(/data-rating=["'](\d(?:\.\d)?)["']/i)?.[1] || innerHtml.match(/(\d(?:\.\d)?)\s*\/\s*5/i)?.[1] || "";
     const attrFit = fullTag.match(/data-fit=["']([^"']+)["']/i)?.[1] || innerHtml.match(/Fit:\s*([^<\n]+)/i)?.[1];
     const author = fullTag.match(/data-author=["']([^"']+)["']/i)?.[1] || innerHtml.match(/class=["'][^"']*author[^"']*["'][^>]*>([^<]+)</i)?.[1] || `Verified Buyer #${index2}`;
     const title = innerHtml.match(/<h[345][^>]*>([^<]+)<\/h[345]>/i)?.[1] || innerHtml.match(/class=["'][^"']*title[^"']*["'][^>]*>([^<]+)</i)?.[1] || "Customer Fit Review";
@@ -87755,11 +87759,11 @@ function parseRawReviewBatch(rawInput) {
         id: `scraped-html-${index2}`,
         author: author.trim(),
         sizePurchased: attrSize.trim(),
-        rating: Math.min(5, Math.max(1, Math.round(parseFloat(attrRating) || 4))),
+        rating: Math.min(5, Math.max(1, Math.round(parseFloat(attrRating) || 3))),
         title: title.trim(),
         body: bodyText,
-        date: "2026-10-25",
-        verifiedPurchase: true,
+        date: "",
+        verifiedPurchase: false,
         declaredFitTag: attrFit?.trim()
       });
     }
@@ -87775,17 +87779,13 @@ function parseRawReviewBatch(rawInput) {
       /\b(?:bought|ordered|wearing|got)\s+(?:a\s+|an\s+|size\s+)?(XXL|2XL|XL|XS|S|M|L|Small|Medium|Large)\b/i
     );
     const ratingMatch = block.match(/\bRating\s*[:=-]\s*(\d(?:\.\d)?)/i) || block.match(/\b(\d)\s*\/\s*5\s*stars?\b/i) || block.match(/★{1,5}/);
-    let rating = 4;
+    let rating = 3;
     if (ratingMatch) {
       if (ratingMatch[0].includes("\u2605")) {
         rating = ratingMatch[0].length;
       } else if (ratingMatch[1]) {
         rating = Math.min(5, Math.max(1, Math.round(parseFloat(ratingMatch[1]))));
       }
-    } else if (/\b(returned|unwearable|disappointed|terrible)\b/i.test(block)) {
-      rating = 2;
-    } else if (/\b(perfect|love|favorite|flattering|best)\b/i.test(block)) {
-      rating = 5;
     }
     const cleanBody = block.replace(/^\[.*?\]\s*/, "").replace(/\s+/g, " ").trim();
     results.push({
@@ -87795,8 +87795,8 @@ function parseRawReviewBatch(rawInput) {
       rating,
       title: cleanBody.slice(0, 48) + (cleanBody.length > 48 ? "..." : ""),
       body: cleanBody,
-      date: "2026-10-20",
-      verifiedPurchase: true
+      date: "",
+      verifiedPurchase: false
     });
   });
   return results;
@@ -87835,11 +87835,11 @@ function aggregateProductFitReport(meta, rawReviews) {
     (r) => r.mentionsFabricOpacity === "thin_sheer"
   ).length;
   const opacityTotalMentions = opaqueReviewCount + sheerReviewCount;
-  const fabricOpacityPct = opacityTotalMentions > 0 ? Math.round(opaqueReviewCount / opacityTotalMentions * 100) : 92;
+  const fabricOpacityPct = opacityTotalMentions > 0 ? Math.round(opaqueReviewCount / opacityTotalMentions * 100) : null;
   const gsmMatch = meta.fabricComposition.match(/(\d{3}\s*gsm|\d{1,2}(?:\.\d)?\s*oz)/i);
-  const gsmSpec = gsmMatch ? gsmMatch[1].toUpperCase() : "240 GSM Standard";
-  const washCareAdvisory = overallShrinkagePct >= 25 ? `${overallShrinkagePct}% of reviewers report post-wash shrinkage (0.5"\u20131" in torso length when tumble-dried). Cold wash & hang dry recommended.` : overallShrinkagePct > 0 ? `Minor wash shrinkage noted (${overallShrinkagePct}% of reviews). Cold wash preserves initial drape.` : "Minimal shrinkage reported across customer wash cycles.";
-  const fabricWeightConsensus = opaqueReviewCount >= sheerReviewCount && opaqueReviewCount > 0 ? `${fabricOpacityPct}% of fabric mentions praise substantial, non-see-through opacity (${gsmSpec}).` : sheerReviewCount > opaqueReviewCount ? `Reviewers flag lightweight/sheer transparency in lighter colorways.` : `Structured ${gsmSpec} weave holds shape cleanly across sizes.`;
+  const gsmSpec = gsmMatch ? gsmMatch[1].toUpperCase() : null;
+  const washCareAdvisory = overallShrinkagePct >= 25 ? `${overallShrinkagePct}% of reviewers mention shrinkage. Cold wash and hang dry.` : overallShrinkagePct > 0 ? `${overallShrinkagePct}% of reviews mention shrinkage.` : "No reviewer mentioned shrinkage.";
+  const fabricWeightConsensus = fabricOpacityPct !== null && opaqueReviewCount >= sheerReviewCount && opaqueReviewCount > 0 ? `${fabricOpacityPct}% of fabric mentions describe it as opaque${gsmSpec ? ` (${gsmSpec})` : ""}.` : sheerReviewCount > opaqueReviewCount ? "Reviewers describe the fabric as lightweight or sheer." : gsmSpec ? `The page states ${gsmSpec}. Reviews do not mention opacity.` : "Reviews do not mention fabric weight or opacity.";
   const sizeSummaries = GARMENT_SIZES.map((size) => {
     const group = analyzedReviews.filter((r) => r.normalizedSize === size);
     const count = group.length;
@@ -87925,13 +87925,13 @@ function aggregateProductFitReport(meta, rawReviews) {
     let trendSummary = "";
     if (verdict === "Runs Small" || verdict === "Slightly Small") {
       primaryFitNote = `${sSmallPct}% report small fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews small (Fit Index ${fitSkew > 0 ? `+${fitSkew}` : fitSkew}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ""}Sentiment is ${sentimentScore}/100 (${avgRating}\u2605).`;
+      trendSummary = `Size ${size} skews small (Fit Index ${formatSigned(fitSkew)}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ""}Sentiment is ${sentimentScore}/100 (${avgRating}\u2605).`;
     } else if (verdict === "Runs Large" || verdict === "Slightly Large") {
       primaryFitNote = `${sLargePct}% report relaxed/large fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews roomy/large (Fit Index +${fitSkew}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% note slight tightening after first wash. ` : ""}Sentiment is ${sentimentScore}/100 (${avgRating}\u2605).`;
+      trendSummary = `Size ${size} skews roomy/large (Fit Index ${formatSigned(fitSkew)}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention shrinkage. ` : ""}Sentiment is ${sentimentScore}/100 (${avgRating}\u2605).`;
     } else {
       primaryFitNote = `${sTtsPct}% confirm true-to-size fit`;
-      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${fitSkew >= 0 ? `+${fitSkew}` : fitSkew}): ${sTtsPct}% of reviewers report accurate proportions with ${sentimentScore}/100 positive sentiment.`;
+      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${formatSigned(fitSkew)}): ${sTtsPct}% of reviewers report accurate proportions with ${sentimentScore}/100 positive sentiment.`;
     }
     const bestSample = group.find((r) => r.fitDirection !== "true_to_size") || group[0];
     return {
@@ -87969,10 +87969,10 @@ function aggregateProductFitReport(meta, rawReviews) {
         label: ZONE_LABELS[zone],
         mentionCount: 0,
         tightPct: 0,
-        optimalPct: 100,
+        optimalPct: totalReviews === 0 ? 0 : 100,
         loosePct: 0,
         netTensionScore: 0,
-        statusLabel: "Standard fit"
+        statusLabel: totalReviews === 0 ? "No reviews" : "Standard fit"
       };
     }
     const tightC = mentions.filter((m) => m.tension === "tight").length;
@@ -88007,17 +88007,19 @@ function aggregateProductFitReport(meta, rawReviews) {
   const plusAvgSkew = plusSizes.length > 0 ? plusSizes.reduce((acc, s) => acc + s.fitSkew, 0) / plusSizes.length : overallFitIndex;
   const gradingDelta = Number((plusAvgSkew - coreAvgSkew).toFixed(2));
   let sizingGradingAlert = "";
-  if (gradingDelta <= -0.22) {
-    sizingGradingAlert = `Grading Compression in Upper Sizes (Delta ${gradingDelta}): Sizes L\u2013XXL skew tighter (${plusAvgSkew.toFixed(2)}) than XS\u2013M (+${coreAvgSkew.toFixed(2)}).`;
+  if (totalReviews === 0) {
+    sizingGradingAlert = "No reviews, so grading was not compared.";
+  } else if (gradingDelta <= -0.22) {
+    sizingGradingAlert = `Grading Compression in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L\u2013XXL skew tighter (${formatSigned(plusAvgSkew)}) than XS\u2013M (${formatSigned(coreAvgSkew)}).`;
   } else if (gradingDelta >= 0.25) {
-    sizingGradingAlert = `Grading Flare in Upper Sizes (Delta +${gradingDelta}): Sizes L\u2013XXL skew looser (+${plusAvgSkew.toFixed(2)}) than XS\u2013M (${coreAvgSkew.toFixed(2)}).`;
+    sizingGradingAlert = `Grading Flare in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L\u2013XXL skew looser (${formatSigned(plusAvgSkew)}) than XS\u2013M (${formatSigned(coreAvgSkew)}).`;
   } else {
-    sizingGradingAlert = `Linear Spec Grading (Delta ${gradingDelta >= 0 ? `+${gradingDelta}` : gradingDelta}): Fit skew tracks evenly across XS\u2013M (${coreAvgSkew.toFixed(2)}) and L\u2013XXL (${plusAvgSkew.toFixed(2)}).`;
+    sizingGradingAlert = `Linear Spec Grading (Delta ${formatSigned(gradingDelta)}): Fit skew tracks evenly across XS\u2013M (${formatSigned(coreAvgSkew)}) and L\u2013XXL (${formatSigned(plusAvgSkew)}).`;
   }
   const mostMentionedZone = [...anatomicalBreakdown].sort(
     (a, b) => b.mentionCount - a.mentionCount
   )[0];
-  const merchandisingTakeaway = overallVerdict === "Runs Small" || overallVerdict === "Slightly Small" ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${overallFitIndex}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}.` : overallVerdict === "Runs Large" || overallVerdict === "Slightly Large" ? `Runs Large (${runsLargePct}% of reviews, Fit Index +${overallFitIndex}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.` : `True to Size (${trueToSizePct}% of reviews, Fit Index ${overallFitIndex >= 0 ? `+${overallFitIndex}` : overallFitIndex}). Mean sentiment score: ${overallSentimentScore}/100.`;
+  const merchandisingTakeaway = totalReviews === 0 ? "No reviews were found, so there is no fit verdict." : overallVerdict === "Runs Small" || overallVerdict === "Slightly Small" ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}.` : overallVerdict === "Runs Large" || overallVerdict === "Slightly Large" ? `Runs Large (${runsLargePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.` : `True to Size (${trueToSizePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Mean sentiment score: ${overallSentimentScore}/100.`;
   return {
     id: meta.id,
     name: meta.name,
@@ -88059,15 +88061,10 @@ function aggregateProductFitReport(meta, rawReviews) {
     scraperTelemetry: {
       sourceUrl: meta.sourceUrl,
       scrapedAt: meta.scraperTelemetry?.scrapedAt || (/* @__PURE__ */ new Date()).toISOString(),
-      domNodesScanned: meta.scraperTelemetry?.domNodesScanned || totalReviews * 19 + 140,
+      domNodesScanned: meta.scraperTelemetry?.domNodesScanned ?? 0,
       reviewNodesMatched: totalReviews,
-      selectorsUsed: meta.scraperTelemetry?.selectorsUsed || [
-        "[data-review-card]",
-        ".review-size-tag",
-        ".review-body-copy",
-        'script[type="application/ld+json"]'
-      ],
-      parseDurationMs: meta.scraperTelemetry?.parseDurationMs || 164,
+      selectorsUsed: meta.scraperTelemetry?.selectorsUsed ?? [],
+      parseDurationMs: meta.scraperTelemetry?.parseDurationMs ?? 0,
       engineMode: meta.scraperTelemetry?.engineMode || "cheerio-dom+deterministic-nlp"
     },
     committedToDbAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -89208,6 +89205,17 @@ function collectNodes(root2, out = []) {
   }
   return out;
 }
+function reviewIsForAnotherProduct(review, product) {
+  const reviewed = review.itemReviewed;
+  if (!isObject(reviewed)) return false;
+  const reviewedSku = text3(reviewed.sku);
+  const productSku = text3(product.sku);
+  if (reviewedSku && productSku) return reviewedSku !== productSku;
+  const reviewedName = text3(reviewed.name);
+  const productName = text3(product.name);
+  if (reviewedName && productName) return reviewedName !== productName;
+  return false;
+}
 function formatPrice(offersRaw) {
   for (const offer of asArray(offersRaw)) {
     if (!isObject(offer)) continue;
@@ -89237,8 +89245,18 @@ function extractStructuredProduct(jsonLdBlocks) {
   const product = nodes.find((n) => hasType(n, "Product") || hasType(n, "ProductGroup"));
   if (!product) return null;
   const reviewNodes = /* @__PURE__ */ new Set();
+  const ownedByAnotherProduct = /* @__PURE__ */ new Set();
+  for (const node of nodes) {
+    if (node === product || !hasType(node, "Product") && !hasType(node, "ProductGroup")) continue;
+    for (const review of asArray(node.review ?? node.reviews)) {
+      if (isObject(review)) ownedByAnotherProduct.add(review);
+    }
+  }
   for (const r of asArray(product.review ?? product.reviews)) if (isObject(r)) reviewNodes.add(r);
-  for (const n of nodes) if (hasType(n, "Review")) reviewNodes.add(n);
+  for (const n of nodes) {
+    if (!hasType(n, "Review") || ownedByAnotherProduct.has(n) || reviewIsForAnotherProduct(n, product)) continue;
+    reviewNodes.add(n);
+  }
   const reviews = [];
   let idx = 0;
   for (const r of reviewNodes) {
@@ -89292,6 +89310,11 @@ var REVIEW_WAIT_MS = 1e4;
 var MAX_LOAD_MORE_CLICKS = 5;
 var MAX_INFINITE_SCROLL_ROUNDS = 10;
 var MAX_REVIEWS = 200;
+function shouldUseHeadlessRender(input) {
+  if (!input.isRemoteUrl || input.renderMode === "never" || input.staticFailed) return false;
+  if (input.renderMode === "always") return true;
+  return input.reviewCount === null || input.reviewCount === 0;
+}
 var browserPromise = null;
 var renderTail = Promise.resolve();
 var SERVERLESS_CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar";
@@ -98292,7 +98315,7 @@ db.exec(`
     true_to_size_pct INTEGER NOT NULL,
     runs_large_pct INTEGER NOT NULL,
     shrinkage_mention_pct INTEGER NOT NULL,
-    fabric_opacity_pct INTEGER NOT NULL,
+    fabric_opacity_pct INTEGER,
     sentiment_score INTEGER NOT NULL,
     avg_rating REAL NOT NULL,
     source_url TEXT,
@@ -98365,6 +98388,53 @@ db.exec(`
     sleeve_cm REAL
   );
 `);
+var opacityColumn = db.prepare(`PRAGMA table_info(commercial_skus)`).all().find((column) => column.name === "fabric_opacity_pct");
+if (opacityColumn?.notnull === 1) {
+  db.exec(`
+    BEGIN;
+    CREATE TABLE commercial_skus__opacity (
+      sku TEXT PRIMARY KEY,
+      product_id TEXT NOT NULL,
+      brand TEXT NOT NULL,
+      product_name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      retail_price TEXT,
+      fabric_composition TEXT,
+      total_reviews INTEGER NOT NULL,
+      overall_fit_index REAL NOT NULL,
+      overall_verdict TEXT NOT NULL,
+      grading_delta REAL NOT NULL,
+      runs_small_pct INTEGER NOT NULL,
+      true_to_size_pct INTEGER NOT NULL,
+      runs_large_pct INTEGER NOT NULL,
+      shrinkage_mention_pct INTEGER NOT NULL,
+      fabric_opacity_pct INTEGER,
+      sentiment_score INTEGER NOT NULL,
+      avg_rating REAL NOT NULL,
+      source_url TEXT,
+      scraped_at TEXT NOT NULL,
+      committed_at TEXT NOT NULL,
+      report_json TEXT NOT NULL
+    );
+    INSERT INTO commercial_skus__opacity (
+      sku, product_id, brand, product_name, category, retail_price, fabric_composition,
+      total_reviews, overall_fit_index, overall_verdict, grading_delta,
+      runs_small_pct, true_to_size_pct, runs_large_pct,
+      shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating,
+      source_url, scraped_at, committed_at, report_json
+    )
+    SELECT
+      sku, product_id, brand, product_name, category, retail_price, fabric_composition,
+      total_reviews, overall_fit_index, overall_verdict, grading_delta,
+      runs_small_pct, true_to_size_pct, runs_large_pct,
+      shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating,
+      source_url, scraped_at, committed_at, report_json
+    FROM commercial_skus;
+    DROP TABLE commercial_skus;
+    ALTER TABLE commercial_skus__opacity RENAME TO commercial_skus;
+    COMMIT;
+  `);
+}
 var upsertReportTransaction = db.transaction((report) => {
   const nowIso = (/* @__PURE__ */ new Date()).toISOString();
   report.committedToDbAt = nowIso;
@@ -98433,9 +98503,9 @@ var upsertReportTransaction = db.transaction((report) => {
       author, review_date, title, body
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  for (const r of report.reviews) {
+  report.reviews.forEach((r, index2) => {
     insertReviewStmt.run(
-      `${report.sku}::${r.id}`,
+      `${report.sku}::${index2}::${r.id}`,
       report.sku,
       r.normalizedSize ?? "UNKNOWN",
       r.sizePurchased,
@@ -98450,7 +98520,7 @@ var upsertReportTransaction = db.transaction((report) => {
       r.title,
       r.body
     );
-  }
+  });
   const totalRows = 1 + report.sizeSummaries.length + report.reviews.length;
   db.prepare(`
     INSERT INTO ingestion_log (sku, product_name, action, rows_affected, committed_at)
@@ -99226,6 +99296,7 @@ function createApp() {
     db.prepare(`DELETE FROM commercial_skus WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_size_metrics WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_reviews WHERE sku = ?`).run(sku);
+    db.prepare(`DELETE FROM size_chart WHERE sku = ?`).run(sku);
     db.prepare(`
       INSERT INTO ingestion_log (sku, product_name, action, rows_affected, committed_at)
       VALUES (?, ?, 'DELETE_SKU', 1, ?)
@@ -99247,6 +99318,7 @@ function createApp() {
     const skus = db.prepare(`SELECT sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at FROM commercial_skus`).all();
     const sizeMetrics = db.prepare(`SELECT * FROM sku_size_metrics`).all();
     const reviews = db.prepare(`SELECT * FROM sku_reviews`).all();
+    const sizeChart = db.prepare(`SELECT * FROM size_chart ORDER BY sku, sort_order`).all();
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
@@ -99260,7 +99332,8 @@ function createApp() {
           tables: {
             commercial_skus: skus,
             sku_size_metrics: sizeMetrics,
-            sku_reviews: reviews
+            sku_reviews: reviews,
+            size_chart: sizeChart
           }
         },
         null,
@@ -99308,7 +99381,12 @@ function createApp() {
       const overrides = { productName, brand, sku, category };
       let scraped = targetHtml ? scrapeHtmlWithCheerio(targetHtml, sourceUrl, overrides) : null;
       let headlessNote = null;
-      const needsRender = isRemoteUrl && renderMode !== "never" && !staticError?.blocked && (renderMode === "always" || !scraped || scraped.reviews.length === 0);
+      const needsRender = shouldUseHeadlessRender({
+        isRemoteUrl,
+        renderMode,
+        staticFailed: staticError !== null,
+        reviewCount: scraped ? scraped.reviews.length : null
+      });
       if (needsRender) {
         try {
           const rendered = await renderPageHtml(url);
@@ -99342,8 +99420,21 @@ function createApp() {
       const { meta, reviews } = scraped;
       if (reviews.length === 0) {
         const sizeChart2 = targetHtml ? parseSizeChart(targetHtml) : [];
-        const chartNote = commitToDb && sizeChart2.length > 0 && scraped ? ` Size chart saved for ${scraped.meta.sku}: ${sizeChart2.length} sizes in size_chart.` : "";
-        if (commitToDb && scraped && sizeChart2.length > 0) saveSizeChart(scraped.meta.sku, sizeChart2);
+        if (commitToDb && sizeChart2.length > 0) {
+          const report2 = aggregateProductFitReport(meta, []);
+          upsertReportTransaction(report2);
+          saveSizeChart(report2.sku, sizeChart2);
+          const supabase2 = await pushFitReports([report2], { [report2.sku]: sizeChart2 });
+          res.json({
+            report: report2,
+            sizeChart: sizeChart2,
+            committedToDb: true,
+            supabase: supabase2,
+            dbState: getDatabaseSummary()
+          });
+          return;
+        }
+        const chartNote = sizeChart2.length > 0 ? ` A size chart with ${sizeChart2.length} sizes was read and not stored.` : "";
         res.status(422).json({
           error: `${isRemoteUrl || looksLikeFullHtmlDocument(targetHtml) ? `No reviews found on the page.${headlessNote ? ` ${headlessNote}` : ""}${PASTE_HINT}` : "No recognizable clothing reviews were found in the pasted content."}${chartNote}`,
           sizeChart: sizeChart2

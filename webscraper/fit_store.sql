@@ -18,7 +18,7 @@ create table if not exists public.commercial_skus (
   true_to_size_pct integer not null,
   runs_large_pct integer not null,
   shrinkage_mention_pct integer not null,
-  fabric_opacity_pct integer not null,
+  fabric_opacity_pct integer,
   sentiment_score integer not null,
   avg_rating double precision not null,
   source_url text,
@@ -55,6 +55,9 @@ create table if not exists public.sku_size_chart (
   sleeve_cm double precision,
   primary key (sku, size_code)
 );
+
+-- Existing projects created this column as NOT NULL. Re-run this script so an unknown opacity can be null.
+alter table public.commercial_skus alter column fabric_opacity_pct drop not null;
 
 alter table public.commercial_skus enable row level security;
 alter table public.sku_size_metrics enable row level security;
@@ -231,7 +234,16 @@ as $$
                 'fitSkew', m.fit_skew,
                 'verdict', m.fit_verdict
               )
-              order by m.size_code
+              order by case m.size_code
+                when 'XS' then 1
+                when 'S' then 2
+                when 'M' then 3
+                when 'L' then 4
+                when 'XL' then 5
+                when 'XXL' then 6
+                else 100
+              end,
+              m.size_code
             ),
             '[]'::jsonb
           )

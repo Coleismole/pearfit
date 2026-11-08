@@ -58,6 +58,42 @@ test('extractStructuredProduct reads Product + reviews from a JSON-LD @graph', (
   assert.equal(p.reviews[1].sizePurchased, '');
 });
 
+test('reviews of a different product are not mixed into this one', () => {
+  const product = extractStructuredProduct([
+    {
+      '@type': 'Product',
+      name: 'Oxford Shirt',
+      sku: 'OX-1',
+      review: {
+        '@type': 'Review',
+        reviewBody: 'Size: M. Runs small in the chest.',
+      },
+    },
+    {
+      '@type': 'Product',
+      name: 'Other Jacket',
+      sku: 'JK-9',
+      review: {
+        '@type': 'Review',
+        reviewBody: 'This jacket runs large and is a completely different product review.',
+      },
+    },
+    {
+      '@type': 'Review',
+      itemReviewed: { '@type': 'Product', sku: 'JK-9', name: 'Other Jacket' },
+      reviewBody: 'Another jacket review that should stay with the jacket.',
+    },
+    {
+      '@type': 'Review',
+      reviewBody: 'Unlinked note: true to size in the sleeves.',
+    },
+  ])!;
+  assert.deepEqual(
+    product.reviews.map((review) => review.body),
+    ['Size: M. Runs small in the chest.', 'Unlinked note: true to size in the sleeves.']
+  );
+});
+
 test('extractStructuredProduct returns null when there is no Product node', () => {
   assert.equal(extractStructuredProduct(parseJsonLdScripts(['{"@type":"WebSite","name":"x"}'])), null);
 });

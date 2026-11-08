@@ -18,7 +18,7 @@ import {
   extractStructuredProduct,
   parseJsonLdScripts,
 } from './structuredData.ts';
-import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR } from './headlessFetch.ts';
+import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR, shouldUseHeadlessRender } from './headlessFetch.ts';
 import { parseSizeChart, type SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
@@ -71,7 +71,7 @@ db.exec(`
     true_to_size_pct INTEGER NOT NULL,
     runs_large_pct INTEGER NOT NULL,
     shrinkage_mention_pct INTEGER NOT NULL,
-    fabric_opacity_pct INTEGER NOT NULL,
+    fabric_opacity_pct INTEGER,
     sentiment_score INTEGER NOT NULL,
     avg_rating REAL NOT NULL,
     source_url TEXT,
@@ -144,6 +144,57 @@ db.exec(`
     sleeve_cm REAL
   );
 `);
+
+// Databases created when fabric_opacity_pct was NOT NULL cannot store "not stated".
+const opacityColumn = (
+  db.prepare(`PRAGMA table_info(commercial_skus)`).all() as { name: string; notnull: number }[]
+).find((column) => column.name === 'fabric_opacity_pct');
+if (opacityColumn?.notnull === 1) {
+  db.exec(`
+    BEGIN;
+    CREATE TABLE commercial_skus__opacity (
+      sku TEXT PRIMARY KEY,
+      product_id TEXT NOT NULL,
+      brand TEXT NOT NULL,
+      product_name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      retail_price TEXT,
+      fabric_composition TEXT,
+      total_reviews INTEGER NOT NULL,
+      overall_fit_index REAL NOT NULL,
+      overall_verdict TEXT NOT NULL,
+      grading_delta REAL NOT NULL,
+      runs_small_pct INTEGER NOT NULL,
+      true_to_size_pct INTEGER NOT NULL,
+      runs_large_pct INTEGER NOT NULL,
+      shrinkage_mention_pct INTEGER NOT NULL,
+      fabric_opacity_pct INTEGER,
+      sentiment_score INTEGER NOT NULL,
+      avg_rating REAL NOT NULL,
+      source_url TEXT,
+      scraped_at TEXT NOT NULL,
+      committed_at TEXT NOT NULL,
+      report_json TEXT NOT NULL
+    );
+    INSERT INTO commercial_skus__opacity (
+      sku, product_id, brand, product_name, category, retail_price, fabric_composition,
+      total_reviews, overall_fit_index, overall_verdict, grading_delta,
+      runs_small_pct, true_to_size_pct, runs_large_pct,
+      shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating,
+      source_url, scraped_at, committed_at, report_json
+    )
+    SELECT
+      sku, product_id, brand, product_name, category, retail_price, fabric_composition,
+      total_reviews, overall_fit_index, overall_verdict, grading_delta,
+      runs_small_pct, true_to_size_pct, runs_large_pct,
+      shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating,
+      source_url, scraped_at, committed_at, report_json
+    FROM commercial_skus;
+    DROP TABLE commercial_skus;
+    ALTER TABLE commercial_skus__opacity RENAME TO commercial_skus;
+    COMMIT;
+  `);
+}
 
 const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
   const nowIso = new Date().toISOString();
@@ -218,9 +269,9 @@ const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  for (const r of report.reviews) {
+  report.reviews.forEach((r, index) => {
     insertReviewStmt.run(
-      `${report.sku}::${r.id}`,
+      `${report.sku}::${index}::${r.id}`,
       report.sku,
       r.normalizedSize ?? 'UNKNOWN',
       r.sizePurchased,
@@ -235,7 +286,7 @@ const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
       r.title,
       r.body
     );
-  }
+  });
 
   const totalRows = 1 + report.sizeSummaries.length + report.reviews.length;
   db.prepare(`
@@ -1186,6 +1237,7 @@ export function createApp() {
     db.prepare(`DELETE FROM commercial_skus WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_size_metrics WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_reviews WHERE sku = ?`).run(sku);
+    db.prepare(`DELETE FROM size_chart WHERE sku = ?`).run(sku);
     db.prepare(`
       INSERT INTO ingestion_log (sku, product_name, action, rows_affected, committed_at)
       VALUES (?, ?, 'DELETE_SKU', 1, ?)
@@ -1210,6 +1262,7 @@ export function createApp() {
     const skus = db.prepare(`SELECT sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at FROM commercial_skus`).all();
     const sizeMetrics = db.prepare(`SELECT * FROM sku_size_metrics`).all();
     const reviews = db.prepare(`SELECT * FROM sku_reviews`).all();
+    const sizeChart = db.prepare(`SELECT * FROM size_chart ORDER BY sku, sort_order`).all();
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
@@ -1224,6 +1277,7 @@ export function createApp() {
             commercial_skus: skus,
             sku_size_metrics: sizeMetrics,
             sku_reviews: reviews,
+            size_chart: sizeChart,
           },
         },
         null,
@@ -1287,13 +1341,14 @@ export function createApp() {
       let scraped = targetHtml ? scrapeHtmlWithCheerio(targetHtml, sourceUrl, overrides) : null;
       let headlessNote: string | null = null;
 
-      // Headless fallback for reviews loaded by JavaScript. Not used when the store refused
-      // the request (403/429/503): that refusal is respected, not worked around.
-      const needsRender =
-        isRemoteUrl &&
-        renderMode !== 'never' &&
-        !staticError?.blocked &&
-        (renderMode === 'always' || !scraped || scraped.reviews.length === 0);
+      // Headless fallback for reviews loaded by JavaScript. A failed fetch is reported as
+      // that failure. A refusal (403/429/503) is not retried in a browser.
+      const needsRender = shouldUseHeadlessRender({
+        isRemoteUrl,
+        renderMode,
+        staticFailed: staticError !== null,
+        reviewCount: scraped ? scraped.reviews.length : null,
+      });
       if (needsRender) {
         try {
           const rendered = await renderPageHtml(url!);
@@ -1334,11 +1389,26 @@ export function createApp() {
 
       if (reviews.length === 0) {
         const sizeChart = targetHtml ? parseSizeChart(targetHtml) : [];
+        // A chart with no parent SKU never shows up and never reaches Supabase.
+        // Store an empty fit report so the chart has a row to hang on.
+        if (commitToDb && sizeChart.length > 0) {
+          const report = aggregateProductFitReport(meta, []);
+          upsertReportTransaction(report);
+          saveSizeChart(report.sku, sizeChart);
+          const supabase = await pushFitReports([report], { [report.sku]: sizeChart });
+          res.json({
+            report,
+            sizeChart,
+            committedToDb: true,
+            supabase,
+            dbState: getDatabaseSummary(),
+          });
+          return;
+        }
         const chartNote =
-          commitToDb && sizeChart.length > 0 && scraped
-            ? ` Size chart saved for ${scraped.meta.sku}: ${sizeChart.length} sizes in size_chart.`
+          sizeChart.length > 0
+            ? ` A size chart with ${sizeChart.length} sizes was read and not stored.`
             : '';
-        if (commitToDb && scraped && sizeChart.length > 0) saveSizeChart(scraped.meta.sku, sizeChart);
         res.status(422).json({
           error: `${
             isRemoteUrl || looksLikeFullHtmlDocument(targetHtml)

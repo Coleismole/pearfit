@@ -193,7 +193,7 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
               brand: customBrand.trim() || 'Custom Label',
               category: customCategory,
               sku: customSku.trim() || 'BAT-101',
-              price: '$24.99',
+              price: 'Unknown',
               fabricComposition: 'Custom Scraped Batch',
               sourceUrl: 'batch://direct-html-parser',
             },

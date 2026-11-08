@@ -7,6 +7,7 @@ import {
   parseRawReviewBatch,
   aggregateProductFitReport,
   generateSqlInsertDump,
+  formatSigned,
 } from './fitAnalyzer';
 
 test('normalizeSize maps diverse size strings and numeric sizes into canonical XS-XXL', () => {
@@ -181,6 +182,91 @@ test('parseRawReviewBatch leaves size empty when the text does not state one', (
   assert.equal(parsed.length, 2);
   assert.equal(parsed[0].sizePurchased, '');
   assert.equal(parsed[1].sizePurchased, '');
+});
+
+test('care instructions are not counted as shrinkage, and a drop-shoulder name is not looseness', () => {
+  const hangDry = classifyReviewFitAndSentiment(
+    'True to size. I hang dry it after a cold wash and it fits perfectly.',
+    5
+  );
+  assert.equal(hangDry.mentionsShrinkage, false);
+  assert.equal(hangDry.fitDirection, 'true_to_size');
+
+  const shrunk = classifyReviewFitAndSentiment('It shrunk in the dryer after the first wash.', 2);
+  assert.equal(shrunk.mentionsShrinkage, true);
+
+  const dropShoulder = classifyReviewFitAndSentiment('True to size drop-shoulder tee.', 5);
+  assert.equal(
+    dropShoulder.anatomicalMentions.find((mention) => mention.zone === 'shoulders')?.tension,
+    'optimal'
+  );
+});
+
+test('missing opacity, weight, and reviews stay unstated', () => {
+  const report = aggregateProductFitReport(
+    {
+      id: 'plain',
+      name: 'Plain Tee',
+      brand: 'Example',
+      category: 'T-Shirts & Tops',
+      sku: 'EX-1',
+      price: 'Unknown',
+      fabricComposition: '100% cotton',
+      sourceUrl: 'https://example.test/plain',
+    },
+    [
+      {
+        id: '1',
+        author: 'A',
+        sizePurchased: 'M',
+        rating: 4,
+        title: '',
+        body: 'True to size and fits perfectly.',
+        date: '',
+        verifiedPurchase: false,
+      },
+    ]
+  );
+  assert.equal(report.tshirtSignals.fabricOpacityPct, null);
+  assert.equal(report.tshirtSignals.gsmSpec, null);
+  assert.equal(report.tshirtSignals.fabricWeightConsensus, 'Reviews do not mention fabric weight or opacity.');
+  assert.equal(report.tshirtSignals.washCareAdvisory, 'No reviewer mentioned shrinkage.');
+
+  const empty = aggregateProductFitReport(
+    {
+      id: 'empty',
+      name: 'Chart Only',
+      brand: 'Example',
+      category: 'Shirting',
+      sku: 'EX-2',
+      price: 'Unknown',
+      fabricComposition: 'Unknown',
+      sourceUrl: 'https://example.test/chart',
+    },
+    []
+  );
+  assert.equal(empty.totalReviews, 0);
+  assert.equal(empty.overallVerdict, 'Insufficient Data');
+  assert.equal(empty.merchandisingTakeaway, 'No reviews were found, so there is no fit verdict.');
+  assert.equal(empty.sizingGradingAlert, 'No reviews, so grading was not compared.');
+  assert.equal(empty.tshirtSignals.fabricOpacityPct, null);
+  assert.equal(empty.scraperTelemetry.domNodesScanned, 0);
+  assert.equal(empty.scraperTelemetry.parseDurationMs, 0);
+  assert.deepEqual(empty.scraperTelemetry.selectorsUsed, []);
+});
+
+test('pasted reviews do not invent a date, a verified flag, or a star rating', () => {
+  const parsed = parseRawReviewBatch('Lovely shirt, great colour and soft fabric.');
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0].date, '');
+  assert.equal(parsed[0].verifiedPurchase, false);
+  assert.equal(parsed[0].rating, 3);
+});
+
+test('formatSigned keeps a minus and adds a plus', () => {
+  assert.equal(formatSigned(-0.4), '-0.40');
+  assert.equal(formatSigned(0.25), '+0.25');
+  assert.equal(formatSigned(0), '0.00');
 });
 
 test('mild fit answers ("A bit loose", "A little tight") skew less than "Runs large/small"', () => {

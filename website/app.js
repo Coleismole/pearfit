@@ -366,7 +366,15 @@ function setInquiryMode(mode) {
       : 'Connect with the Pearfit founding team';
 
   document.getElementById('store-label-text').textContent =
-    mode === 'pilot' ? 'Storefront URL' : 'Firm or Organization URL';
+    mode === 'pilot' ? 'Storefront URL' : 'Firm or Organization';
+  const storeInput = document.getElementById('pilot-store-input');
+  if (mode === 'pilot') {
+    storeInput.type = 'url';
+    storeInput.placeholder = 'https://';
+  } else {
+    storeInput.type = 'text';
+    storeInput.placeholder = 'Firm name or https://';
+  }
   document.getElementById('volume-label-text').textContent =
     mode === 'pilot' ? 'Monthly order volume' : 'Primary interest';
 

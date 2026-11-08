@@ -107,10 +107,12 @@ export interface ScraperTelemetry {
 export interface GarmentFabricAndWashSignals {
   overallShrinkagePct: number;
   shrinkageReviewCount: number;
-  fabricOpacityPct: number;
+  /** Null when no review mentions opacity. Never a stand-in percentage. */
+  fabricOpacityPct: number | null;
   opaqueReviewCount: number;
   sheerReviewCount: number;
-  gsmSpec: string;
+  /** Null when the fabric text does not state GSM or ounces. */
+  gsmSpec: string | null;
   washCareAdvisory: string;
   fabricWeightConsensus: string;
 }
@@ -270,8 +272,9 @@ const TRUE_TO_SIZE_CUES: CueRule[] = [
   { pattern: /\bperfect\s+(tailored\s+|relaxed\s+|boxy\s+)?fit\b/i, label: 'perfect fit', weight: 0 },
 ];
 
+// Care instructions ("hang dry", "cold wash", "dryer") are not shrinkage reports.
 const SHRINKAGE_REGEX =
-  /\b(shrunk|shrank|shrinks?|shrinkage|tumble\s+dr(y|ied)|dryer|shortened\s+in\s+the\s+wash|after\s+(the\s+)?first\s+wash|cold\s+wash|hang\s+dry|air\s+dry)\b/i;
+  /\b(shrunk|shrank|shrinks?|shrinkage|shortened\s+in\s+the\s+wash)\b/i;
 
 const OPAQUE_HEAVY_REGEX =
   /\b(not\s+see[- ]?through|non[- ]?see[- ]?through|zero\s+transparency|opaque|thick\s+(cotton|jersey|fabric|weight|collar)|heavyweight|220\s*gsm|240\s*gsm|260\s*gsm|280\s*gsm|substantial\s+(cotton|weight|feel)|sturdy\s+cotton)\b/i;
@@ -408,7 +411,7 @@ export function classifyReviewFitAndSentiment(
           joined
         );
       const isLoose =
-        /\b(loose|baggy|wide|long|large|big|roomy|boxy|drop|gap|excess|swimming|relaxed|generous)\b/i.test(
+        /\b(loose|baggy|wide|long|large|big|roomy|boxy|gap|excess|swimming|relaxed|generous)\b/i.test(
           joined
         );
 
@@ -503,6 +506,12 @@ export function skewToVerdict(fitSkew: number, count: number): FitVerdictLabel {
   return 'True to Size';
 }
 
+/** Positive numbers get a leading plus. Negative numbers keep their minus. Zero stays "0.00". */
+export function formatSigned(n: number, digits = 2): string {
+  const text = n.toFixed(digits);
+  return n > 0 ? `+${text}` : text;
+}
+
 /**
  * Parses either raw HTML containing review nodes OR plain-text multi-review pastes
  * into structured RawScrapedReview objects.
@@ -532,7 +541,7 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
     const attrRating =
       fullTag.match(/data-rating=["'](\d(?:\.\d)?)["']/i)?.[1] ||
       innerHtml.match(/(\d(?:\.\d)?)\s*\/\s*5/i)?.[1] ||
-      '4';
+      '';
 
     const attrFit =
       fullTag.match(/data-fit=["']([^"']+)["']/i)?.[1] ||
@@ -559,11 +568,11 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
         id: `scraped-html-${index}`,
         author: author.trim(),
         sizePurchased: attrSize.trim(),
-        rating: Math.min(5, Math.max(1, Math.round(parseFloat(attrRating) || 4))),
+        rating: Math.min(5, Math.max(1, Math.round(parseFloat(attrRating) || 3))),
         title: title.trim(),
         body: bodyText,
-        date: '2026-10-25',
-        verifiedPurchase: true,
+        date: '',
+        verifiedPurchase: false,
         declaredFitTag: attrFit?.trim(),
       });
     }
@@ -593,17 +602,14 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
       block.match(/\b(\d)\s*\/\s*5\s*stars?\b/i) ||
       block.match(/★{1,5}/);
 
-    let rating = 4;
+    // 3 is the neutral midpoint when the paste does not state a rating.
+    let rating = 3;
     if (ratingMatch) {
       if (ratingMatch[0].includes('★')) {
         rating = ratingMatch[0].length;
       } else if (ratingMatch[1]) {
         rating = Math.min(5, Math.max(1, Math.round(parseFloat(ratingMatch[1]))));
       }
-    } else if (/\b(returned|unwearable|disappointed|terrible)\b/i.test(block)) {
-      rating = 2;
-    } else if (/\b(perfect|love|favorite|flattering|best)\b/i.test(block)) {
-      rating = 5;
     }
 
     const cleanBody = block
@@ -618,8 +624,8 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
       rating,
       title: cleanBody.slice(0, 48) + (cleanBody.length > 48 ? '...' : ''),
       body: cleanBody,
-      date: '2026-10-20',
-      verifiedPurchase: true,
+      date: '',
+      verifiedPurchase: false,
     });
   });
 
@@ -694,26 +700,26 @@ export function aggregateProductFitReport(
   ).length;
   const opacityTotalMentions = opaqueReviewCount + sheerReviewCount;
   const fabricOpacityPct =
-    opacityTotalMentions > 0
-      ? Math.round((opaqueReviewCount / opacityTotalMentions) * 100)
-      : 92;
+    opacityTotalMentions > 0 ? Math.round((opaqueReviewCount / opacityTotalMentions) * 100) : null;
 
   const gsmMatch = meta.fabricComposition.match(/(\d{3}\s*gsm|\d{1,2}(?:\.\d)?\s*oz)/i);
-  const gsmSpec = gsmMatch ? gsmMatch[1].toUpperCase() : '240 GSM Standard';
+  const gsmSpec = gsmMatch ? gsmMatch[1].toUpperCase() : null;
 
   const washCareAdvisory =
     overallShrinkagePct >= 25
-      ? `${overallShrinkagePct}% of reviewers report post-wash shrinkage (0.5"–1" in torso length when tumble-dried). Cold wash & hang dry recommended.`
+      ? `${overallShrinkagePct}% of reviewers mention shrinkage. Cold wash and hang dry.`
       : overallShrinkagePct > 0
-      ? `Minor wash shrinkage noted (${overallShrinkagePct}% of reviews). Cold wash preserves initial drape.`
-      : 'Minimal shrinkage reported across customer wash cycles.';
+      ? `${overallShrinkagePct}% of reviews mention shrinkage.`
+      : 'No reviewer mentioned shrinkage.';
 
   const fabricWeightConsensus =
-    opaqueReviewCount >= sheerReviewCount && opaqueReviewCount > 0
-      ? `${fabricOpacityPct}% of fabric mentions praise substantial, non-see-through opacity (${gsmSpec}).`
+    fabricOpacityPct !== null && opaqueReviewCount >= sheerReviewCount && opaqueReviewCount > 0
+      ? `${fabricOpacityPct}% of fabric mentions describe it as opaque${gsmSpec ? ` (${gsmSpec})` : ''}.`
       : sheerReviewCount > opaqueReviewCount
-      ? `Reviewers flag lightweight/sheer transparency in lighter colorways.`
-      : `Structured ${gsmSpec} weave holds shape cleanly across sizes.`;
+      ? 'Reviewers describe the fabric as lightweight or sheer.'
+      : gsmSpec
+      ? `The page states ${gsmSpec}. Reviews do not mention opacity.`
+      : 'Reviews do not mention fabric weight or opacity.';
 
   // Build per-size summaries for XS - XXL
   const sizeSummaries: SizeSentimentSummary[] = GARMENT_SIZES.map((size) => {
@@ -833,13 +839,13 @@ export function aggregateProductFitReport(
 
     if (verdict === 'Runs Small' || verdict === 'Slightly Small') {
       primaryFitNote = `${sSmallPct}% report small fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews small (Fit Index ${fitSkew > 0 ? `+${fitSkew}` : fitSkew}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ''}Sentiment is ${sentimentScore}/100 (${avgRating}★).`;
+      trendSummary = `Size ${size} skews small (Fit Index ${formatSigned(fitSkew)}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ''}Sentiment is ${sentimentScore}/100 (${avgRating}★).`;
     } else if (verdict === 'Runs Large' || verdict === 'Slightly Large') {
       primaryFitNote = `${sLargePct}% report relaxed/large fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews roomy/large (Fit Index +${fitSkew}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% note slight tightening after first wash. ` : ''}Sentiment is ${sentimentScore}/100 (${avgRating}★).`;
+      trendSummary = `Size ${size} skews roomy/large (Fit Index ${formatSigned(fitSkew)}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention shrinkage. ` : ''}Sentiment is ${sentimentScore}/100 (${avgRating}★).`;
     } else {
       primaryFitNote = `${sTtsPct}% confirm true-to-size fit`;
-      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${fitSkew >= 0 ? `+${fitSkew}` : fitSkew}): ${sTtsPct}% of reviewers report accurate proportions with ${sentimentScore}/100 positive sentiment.`;
+      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${formatSigned(fitSkew)}): ${sTtsPct}% of reviewers report accurate proportions with ${sentimentScore}/100 positive sentiment.`;
     }
 
     const bestSample = group.find((r) => r.fitDirection !== 'true_to_size') || group[0];
@@ -880,10 +886,10 @@ export function aggregateProductFitReport(
         label: ZONE_LABELS[zone],
         mentionCount: 0,
         tightPct: 0,
-        optimalPct: 100,
+        optimalPct: totalReviews === 0 ? 0 : 100,
         loosePct: 0,
         netTensionScore: 0,
-        statusLabel: 'Standard fit',
+        statusLabel: totalReviews === 0 ? 'No reviews' : 'Standard fit',
       };
     }
     const tightC = mentions.filter((m) => m.tension === 'tight').length;
@@ -930,12 +936,14 @@ export function aggregateProductFitReport(
   const gradingDelta = Number((plusAvgSkew - coreAvgSkew).toFixed(2));
 
   let sizingGradingAlert = '';
-  if (gradingDelta <= -0.22) {
-    sizingGradingAlert = `Grading Compression in Upper Sizes (Delta ${gradingDelta}): Sizes L–XXL skew tighter (${plusAvgSkew.toFixed(2)}) than XS–M (+${coreAvgSkew.toFixed(2)}).`;
+  if (totalReviews === 0) {
+    sizingGradingAlert = 'No reviews, so grading was not compared.';
+  } else if (gradingDelta <= -0.22) {
+    sizingGradingAlert = `Grading Compression in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L–XXL skew tighter (${formatSigned(plusAvgSkew)}) than XS–M (${formatSigned(coreAvgSkew)}).`;
   } else if (gradingDelta >= 0.25) {
-    sizingGradingAlert = `Grading Flare in Upper Sizes (Delta +${gradingDelta}): Sizes L–XXL skew looser (+${plusAvgSkew.toFixed(2)}) than XS–M (${coreAvgSkew.toFixed(2)}).`;
+    sizingGradingAlert = `Grading Flare in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L–XXL skew looser (${formatSigned(plusAvgSkew)}) than XS–M (${formatSigned(coreAvgSkew)}).`;
   } else {
-    sizingGradingAlert = `Linear Spec Grading (Delta ${gradingDelta >= 0 ? `+${gradingDelta}` : gradingDelta}): Fit skew tracks evenly across XS–M (${coreAvgSkew.toFixed(2)}) and L–XXL (${plusAvgSkew.toFixed(2)}).`;
+    sizingGradingAlert = `Linear Spec Grading (Delta ${formatSigned(gradingDelta)}): Fit skew tracks evenly across XS–M (${formatSigned(coreAvgSkew)}) and L–XXL (${formatSigned(plusAvgSkew)}).`;
   }
 
   const mostMentionedZone = [...anatomicalBreakdown].sort(
@@ -943,11 +951,13 @@ export function aggregateProductFitReport(
   )[0];
 
   const merchandisingTakeaway =
-    overallVerdict === 'Runs Small' || overallVerdict === 'Slightly Small'
-      ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${overallFitIndex}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}.`
+    totalReviews === 0
+      ? 'No reviews were found, so there is no fit verdict.'
+      : overallVerdict === 'Runs Small' || overallVerdict === 'Slightly Small'
+      ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}.`
       : overallVerdict === 'Runs Large' || overallVerdict === 'Slightly Large'
-      ? `Runs Large (${runsLargePct}% of reviews, Fit Index +${overallFitIndex}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.`
-      : `True to Size (${trueToSizePct}% of reviews, Fit Index ${overallFitIndex >= 0 ? `+${overallFitIndex}` : overallFitIndex}). Mean sentiment score: ${overallSentimentScore}/100.`;
+      ? `Runs Large (${runsLargePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.`
+      : `True to Size (${trueToSizePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Mean sentiment score: ${overallSentimentScore}/100.`;
 
   return {
     id: meta.id,
@@ -990,15 +1000,10 @@ export function aggregateProductFitReport(
     scraperTelemetry: {
       sourceUrl: meta.sourceUrl,
       scrapedAt: meta.scraperTelemetry?.scrapedAt || new Date().toISOString(),
-      domNodesScanned: meta.scraperTelemetry?.domNodesScanned || totalReviews * 19 + 140,
+      domNodesScanned: meta.scraperTelemetry?.domNodesScanned ?? 0,
       reviewNodesMatched: totalReviews,
-      selectorsUsed: meta.scraperTelemetry?.selectorsUsed || [
-        '[data-review-card]',
-        '.review-size-tag',
-        '.review-body-copy',
-        'script[type="application/ld+json"]',
-      ],
-      parseDurationMs: meta.scraperTelemetry?.parseDurationMs || 164,
+      selectorsUsed: meta.scraperTelemetry?.selectorsUsed ?? [],
+      parseDurationMs: meta.scraperTelemetry?.parseDurationMs ?? 0,
       engineMode: meta.scraperTelemetry?.engineMode || 'cheerio-dom+deterministic-nlp',
     },
     committedToDbAt: new Date().toISOString(),

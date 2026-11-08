@@ -1,6 +1,10 @@
 -- Fit values only. Review text has no column.
 -- The scraper calls these functions with the publishable key, which is the anon role.
 -- The functions run as the database owner, so anon cannot write the tables directly.
+--
+-- Run this whole file in the Supabase SQL editor with nothing selected.
+-- "Run selected" on one line fails. The line
+-- `source_url, scraped_at, committed_at` is not a statement by itself.
 
 create table if not exists public.commercial_skus (
   sku text primary key,
@@ -94,11 +98,7 @@ begin
   end if;
 
   insert into public.commercial_skus (
-    sku, product_id, brand, product_name, category, retail_price, fabric_composition,
-    total_reviews, overall_fit_index, overall_verdict, grading_delta,
-    runs_small_pct, true_to_size_pct, runs_large_pct,
-    shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating,
-    source_url, scraped_at, committed_at
+    sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at
   ) values (
     payload->>'sku',
     payload->>'productId',
@@ -234,16 +234,7 @@ as $$
                 'fitSkew', m.fit_skew,
                 'verdict', m.fit_verdict
               )
-              order by case m.size_code
-                when 'XS' then 1
-                when 'S' then 2
-                when 'M' then 3
-                when 'L' then 4
-                when 'XL' then 5
-                when 'XXL' then 6
-                else 100
-              end,
-              m.size_code
+              order by array_position(array['XS','S','M','L','XL','XXL'], m.size_code), m.size_code
             ),
             '[]'::jsonb
           )

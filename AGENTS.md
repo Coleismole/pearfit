@@ -19,7 +19,11 @@ Out of scope: avatars, 3D, Unity, SMPL-X, MediaPipe, cloth simulation. Do not ad
 - `webscraper/` is a separate app with its own `package.json`. Don't mix its code into `engine/`.
 - Later, when there is an API: endpoints exist only where there is a secret or real logic
   (`/recommend`, `/parse-product`, `/ingest-gmail`), and they import types from the engine.
-- Supabase (auth, DB) is planned but not in use yet. Do not add it until the team decides to.
+- Supabase is the team's shared fit store (adopted Nov 2026). The scraper pushes fit values to
+  the shared Supabase project via the `commit_fit_report` RPC. Review text and the engine's source
+  data stay in SQLite (`webscraper/commercial_fit.db`); the engine stays pure and never touches
+  Supabase. The publishable/anon key is safe to commit — tables have RLS and anon can only call the
+  commit function; `SUPABASE_SECRET_KEY` goes in `.env.local`, never committed. Auth is not in use yet.
 
 ## Core design rule
 LLMs do language only (messy text -> structured numbers). Code makes every decision and does all math.

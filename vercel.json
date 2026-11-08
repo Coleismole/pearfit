@@ -10,6 +10,7 @@
   "functions": {
     "api/scraper/[[...path]].js": {
       "maxDuration": 60,
+      "memory": 2048,
       "includeFiles": "webscraper/.env.example"
     }
   }

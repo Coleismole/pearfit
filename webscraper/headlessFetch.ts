@@ -34,23 +34,48 @@ export interface RenderedPage {
   reviewSelectorFound: boolean;
 }
 
-let browserPromise: Promise<Browser> | null = null;
+let browserPromise: Promise<{ close(): Promise<void> }> | null = null;
 let renderTail: Promise<void> = Promise.resolve();
 
-async function getBrowser(): Promise<Browser> {
+/** Chromium pack for Vercel. The full Playwright browser does not fit in that function. */
+const SERVERLESS_CHROMIUM_PACK =
+  'https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar';
+
+function renderBudgetMs(): number {
+  // The hosted function is capped at 60s, including the Chromium download on a cold start.
+  return process.env.VERCEL ? 50_000 : RENDER_DEADLINE_MS;
+}
+
+async function getBrowser(): Promise<{ close(): Promise<void> }> {
   if (!browserPromise) {
-    browserPromise = (async () => {
-      const { chromium } = await import('playwright');
-      return chromium.launch({
-        headless: true,
-        args: ['--no-sandbox'],
-      });
-    })().catch((err) => {
+    browserPromise = (process.env.VERCEL ? launchServerlessBrowser() : launchPlaywrightBrowser()).catch((err) => {
       browserPromise = null;
       throw err;
     });
   }
   return browserPromise;
+}
+
+async function launchPlaywrightBrowser(): Promise<Browser> {
+  const { chromium } = await import('playwright');
+  return chromium.launch({
+    headless: true,
+    args: ['--no-sandbox'],
+  });
+}
+
+async function launchServerlessBrowser(): Promise<{ close(): Promise<void> }> {
+  const chromiumMod = await import('@sparticuz/chromium-min');
+  const puppeteerMod = await import('puppeteer-core');
+  const chromium = chromiumMod.default ?? chromiumMod;
+  const puppeteer = puppeteerMod.default ?? puppeteerMod;
+  chromium.setGraphicsMode = false;
+  return puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(SERVERLESS_CHROMIUM_PACK),
+    headless: true,
+    defaultViewport: { width: 1366, height: 900 },
+  });
 }
 
 export async function closeHeadlessBrowser(): Promise<void> {
@@ -135,7 +160,12 @@ export async function renderPageHtml(url: string): Promise<RenderedPage> {
 }
 
 async function renderPageHtmlOnce(url: string): Promise<RenderedPage> {
-  const browser = await getBrowser();
+  if (process.env.VERCEL) return renderWithServerlessChromium(url);
+  return renderWithPlaywright(url);
+}
+
+async function renderWithPlaywright(url: string): Promise<RenderedPage> {
+  const browser = (await getBrowser()) as Browser;
   const context = await browser.newContext({
     userAgent: USER_AGENT,
     locale: 'en-US',
@@ -152,7 +182,7 @@ async function renderPageHtmlOnce(url: string): Promise<RenderedPage> {
   const deadline = setTimeout(() => {
     timedOut = true;
     context.close().catch(() => {});
-  }, RENDER_DEADLINE_MS);
+  }, renderBudgetMs());
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
@@ -211,11 +241,134 @@ async function renderPageHtmlOnce(url: string): Promise<RenderedPage> {
     };
   } catch (err) {
     if (timedOut) {
-      throw new Error(`Headless render timed out after ${RENDER_DEADLINE_MS / 1000}s`);
+      throw new Error(`Headless render timed out after ${renderBudgetMs() / 1000}s`);
     }
     throw err;
   } finally {
     clearTimeout(deadline);
     await context.close().catch(() => {});
+  }
+}
+
+interface ServerlessPage {
+  goto(url: string, opts: { waitUntil: 'domcontentloaded'; timeout: number }): Promise<{ status(): number } | null>;
+  url(): string;
+  setUserAgent(ua: string): Promise<void>;
+  setRequestInterception(enabled: boolean): Promise<void>;
+  on(event: 'request', handler: (req: { resourceType(): string; abort(): Promise<void>; continue(): Promise<void> }) => void): void;
+  evaluate(pageFunction: string): Promise<unknown>;
+  waitForNetworkIdle(opts: { timeout: number }): Promise<void>;
+  waitForSelector(selector: string, opts: { timeout: number }): Promise<unknown>;
+  close(): Promise<void>;
+}
+
+const SCROLL_PAGE = `(async () => {
+  const step = Math.max(400, Math.floor(window.innerHeight * 0.8));
+  for (let y = 0; y < document.body.scrollHeight && y < 40000; y += step) {
+    window.scrollTo(0, y);
+    await new Promise((r) => setTimeout(r, 150));
+  }
+})()`;
+
+const CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
+  const re = new RegExp(source, flags);
+  const roleOf = (el) => {
+    const explicit = el.getAttribute('role');
+    if (explicit) return explicit;
+    if (el.tagName === 'BUTTON') return 'button';
+    if (el.tagName === 'A') return 'link';
+    return '';
+  };
+  for (const el of document.querySelectorAll('button, a, [role]')) {
+    if (roleOf(el) !== role) continue;
+    const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!re.test(label)) continue;
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    if (style.visibility === 'hidden' || style.display === 'none' || rect.width === 0 || rect.height === 0) continue;
+    el.click();
+    return true;
+  }
+  return false;
+}`;
+
+async function renderWithServerlessChromium(url: string): Promise<RenderedPage> {
+  const browser = (await getBrowser()) as unknown as { newPage(): Promise<ServerlessPage> };
+  const page = await browser.newPage();
+  await page.setUserAgent(USER_AGENT);
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const type = req.resourceType();
+    if (type === 'image' || type === 'media' || type === 'font') void req.abort();
+    else void req.continue();
+  });
+
+  let timedOut = false;
+  const deadline = setTimeout(() => {
+    timedOut = true;
+    page.evaluate('window.stop()').catch(() => {});
+  }, renderBudgetMs());
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const countReviews = () => page.evaluate(`document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)}).length`) as Promise<number>;
+  const clickRole = (role: 'button' | 'link' | 'tab', name: RegExp) =>
+    page.evaluate(`(${CLICK_ROLE_IN_PAGE})(${JSON.stringify(role)}, ${JSON.stringify(name.source)}, ${JSON.stringify(name.flags)})`) as Promise<boolean>;
+  const waitForMore = async (before: number, timeoutMs: number) => {
+    const until = Date.now() + timeoutMs;
+    while (Date.now() < until) {
+      if ((await countReviews()) > before) return true;
+      await sleep(250);
+    }
+    return false;
+  };
+
+  try {
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
+    const status = response?.status() ?? null;
+    if (status !== null && status >= 400) {
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false };
+    }
+    await page.waitForNetworkIdle({ timeout: 8000 }).catch(() => {});
+    await clickRole('button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
+    await page.evaluate(SCROLL_PAGE);
+
+    const reviewsBeforeOpening = await countReviews();
+    const openedSection =
+      (await clickRole('tab', /reviews?/i)) ||
+      (await clickRole('button', /^(customer )?reviews?\b/i)) ||
+      ((await countReviews()) === 0 && (await clickRole('link', /^(read |see |customer )?(all )?reviews?\b/i)));
+    if (openedSection) {
+      await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => {});
+      await waitForMore(reviewsBeforeOpening, REVIEW_WAIT_MS);
+      await page.evaluate(SCROLL_PAGE);
+    }
+
+    const reviewSelectorFound = await page
+      .waitForSelector(REVIEW_CARD_SELECTOR, { timeout: REVIEW_WAIT_MS })
+      .then(() => true)
+      .catch(() => false);
+
+    if (reviewSelectorFound) {
+      for (let i = 0; i < MAX_LOAD_MORE_CLICKS; i++) {
+        const before = await countReviews();
+        const clicked = await clickRole('button', /^(load|show|see|view) more( reviews)?$/i);
+        if (!clicked) break;
+        if (!(await waitForMore(before, 5000))) break;
+      }
+      for (let i = 0; i < MAX_INFINITE_SCROLL_ROUNDS; i++) {
+        const before = await countReviews();
+        if (before >= MAX_REVIEWS) break;
+        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+        if (!(await waitForMore(before, 4000))) break;
+      }
+    }
+
+    const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    return { html, status, finalUrl: page.url(), reviewSelectorFound };
+  } catch (err) {
+    if (timedOut) throw new Error(`Headless render timed out after ${renderBudgetMs() / 1000}s`);
+    throw err;
+  } finally {
+    clearTimeout(deadline);
+    await page.close().catch(() => {});
   }
 }

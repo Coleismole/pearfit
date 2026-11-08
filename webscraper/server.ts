@@ -1286,7 +1286,10 @@ export function createApp() {
           }
         } catch (renderErr) {
           const reason = renderErr instanceof Error ? renderErr.message.split('\n')[0] : String(renderErr);
-          headlessNote = /Executable doesn't exist|browserType\.launch|Cannot find (module|package) 'playwright'/i.test(reason)
+          const missingLocalBrowser =
+            !process.env.VERCEL &&
+            /Executable doesn't exist|browserType\.launch|Cannot find (module|package) 'playwright'/i.test(reason);
+          headlessNote = missingLocalBrowser
             ? 'Headless browser is not installed (run `npx playwright install chromium`).'
             : `Headless browser render failed: ${reason}`;
         }

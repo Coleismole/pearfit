@@ -26,7 +26,7 @@ await esbuild.build({
   target: 'node22',
   format: 'cjs',
   outfile,
-  external: ['better-sqlite3', 'playwright', 'vite'],
+  external: ['better-sqlite3', 'playwright', 'vite', 'puppeteer-core', '@sparticuz/chromium-min'],
   logLevel: 'info',
 });
 await cp(path.join(root, 'webscraper', '.env.example'), path.join(path.dirname(outfile), '.env.example'));

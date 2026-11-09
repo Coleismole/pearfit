@@ -91203,6 +91203,17 @@ function blockPageTitle(html3) {
   const pattern = /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
   return pattern.test(title) ? title : null;
 }
+function blockPageText(html3) {
+  const text4 = html3.replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/\s+/g, " ").trim();
+  if (text4.length > 1500) return null;
+  if (/automated (traffic|requests|access)|unusual (activity|traffic)|verify (that )?you are (a )?human|not a robot|enable javascript and cookies to continue/i.test(text4)) {
+    return "refused";
+  }
+  if (/system maintenance is in progress|(down|closed) for (scheduled )?maintenance|be right back|we.ll be back (soon|shortly)/i.test(text4)) {
+    return "maintenance";
+  }
+  return null;
+}
 
 // webscraper/node_modules/@supabase/supabase-js/dist/index.mjs
 var dist_exports = {};
@@ -100636,6 +100647,12 @@ function pageProductKeys($2, html3, sourceUrl, structuredIds, sku) {
   $2('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
     add2($2(el).attr("value"));
   });
+  const widgetIds = /* @__PURE__ */ new Set();
+  $2("[data-yotpo-product-id], [data-oke-reviews-product-id]").each((_i, el) => {
+    const id = ($2(el).attr("data-yotpo-product-id") ?? $2(el).attr("data-oke-reviews-product-id") ?? "").trim().replace(/^shopify-/, "");
+    if (/^\d{5,}$/.test(id)) widgetIds.add(id);
+  });
+  if (widgetIds.size === 1) widgetIds.forEach(add2);
   try {
     const url = new URL(sourceUrl);
     const segments = url.pathname.split("/").filter(Boolean);
@@ -100693,6 +100710,13 @@ async function fetchStaticHtml(url) {
     const blockedBy = blockPageTitle(html3);
     if (blockedBy) {
       return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };
+    }
+    const shortPage = blockPageText(html3);
+    if (shortPage === "refused") {
+      return { status: 400, message: `${url} says it does not allow automated traffic: the store refuses automated requests.`, blocked: true };
+    }
+    if (shortPage === "maintenance") {
+      return { status: 400, message: `${url} is showing a maintenance page. The store's site is down; try again later.`, blocked: false };
     }
     return { html: html3 };
   }
@@ -100919,6 +100943,10 @@ function createApp() {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
           } else if (blockedBy) {
             headlessNote = `The store showed the headless browser a block page ("${blockedBy}"): it refuses automated requests.`;
+          } else if (blockPageText(rendered.html) === "refused") {
+            headlessNote = "The store told the headless browser it does not allow automated traffic: it refuses automated requests.";
+          } else if (blockPageText(rendered.html) === "maintenance") {
+            headlessNote = "The store's site is showing a maintenance page. It is down; try again later.";
           } else {
             const leftProductPage = rendered.chartHtml !== null && new URL(rendered.finalUrl).pathname !== new URL(url).pathname;
             const renderedScrape = scrapeHtmlWithCheerio(

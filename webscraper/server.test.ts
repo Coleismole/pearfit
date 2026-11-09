@@ -444,3 +444,20 @@ test('a Shopify page with no SKU uses the product id from its analytics object',
     server.close();
   }
 });
+
+test('cards by a placeholder reviewer, or with a short text inside another word, are not merged into a review', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = { props: { reviews: { total: 1, items: [{ id: 'r1', rating: 5, title: 'Great shirt', body: 'Ok', author: 'Verified Buyer' }] } } };
+    const html = `<!DOCTYPE html><html><head><title>Tee</title></head><body><h1>Tee</h1>
+      <div class="review-card" data-author="Verified Buyer" data-rating="4"><p class="review-body-copy">Great shirt! Looks good, runs a bit small.</p></div>
+      <div class="review-card" data-author="Dana" data-rating="4"><p class="review-body-copy">Looks good on me, fits well.</p></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { reviews: { total: 2, items: [...nextData.props.reviews.items, { id: 'r2', rating: 4, title: 'x', body: 'Ok', author: 'Dana' }] } } })}</script></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'PH-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    // Two page-data reviews plus both cards: "Verified Buyer" identifies no one, and "ok" inside "Looks" is not a match.
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 4);
+  } finally {
+    server.close();
+  }
+});

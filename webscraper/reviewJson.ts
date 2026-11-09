@@ -393,6 +393,12 @@ function fieldsFromAnswers(answers: ReviewAnswer[]): Partial<RawScrapedReview> {
     }
     if (!out.usualSize && USUAL_SIZE_LABEL.test(a.label) && a.value) {
       out.usualSize = a.value;
+    } else if (/\bfits?\b/i.test(a.label) && FIT_LABEL.test(a.label)) {
+      // "How did the size you ordered fit?" is a fit question, not the size bought.
+      if (!out.declaredFitTag) {
+        const tag = fitTagFromAnswer(a);
+        if (tag) out.declaredFitTag = tag;
+      }
     } else if (SIZE_BOUGHT_LABEL.test(a.label) && a.value) {
       // An exact size ("XXL") beats free text ("XXL only size available") from another answer.
       const exact = sizeFromVariantTitle(a.value);

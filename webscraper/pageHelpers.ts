@@ -86,10 +86,11 @@ export function productIdFromUrl(url: string): string | null {
     url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) ||
     url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i);
   if (m) return m[1];
-  // A bare number of five or more digits as a path segment: /llb/shop/40651.
+  if (param) return param[1];
+  // Last, a bare number of five or more digits as a path segment: /llb/shop/40651. It could also be a
+  // category number, so a product parameter wins over it.
   const numericSegment = url.match(/^[^?#]*\/(\d{5,})(?:[/?#]|$)/);
-  if (numericSegment) return numericSegment[1];
-  return param ? param[1] : null;
+  return numericSegment ? numericSegment[1] : null;
 }
 
 /** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */

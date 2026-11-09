@@ -918,6 +918,18 @@ function looksLikeFullHtmlDocument(input: string): boolean {
 }
 
 /** JSON-LD stays the base. DOM cards fill a blank size and add reviews that were not in the script. */
+const PLACEHOLDER_AUTHOR = /^(anonymous|verified (buyer|purchaser|customer|reviewer)|customer|guest|a customer|shopper)$/i;
+
+/** True when `text` contains `part` starting at a word boundary. */
+function startsAtWord(text: string, part: string): boolean {
+  let from = text.indexOf(part);
+  while (from !== -1) {
+    if (from === 0 || !/[\p{L}\p{N}]/u.test(text[from - 1])) return true;
+    from = text.indexOf(part, from + 1);
+  }
+  return false;
+}
+
 function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedReview[]): RawScrapedReview[] {
   // A card cut short by "Read more" still matches its full review: compare the first 60 characters.
   const norm = (body: string) =>
@@ -937,12 +949,16 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
       merged.find((m) => {
         // Same named reviewer, and the card contains the start of that review's text (a review can be
         // as short as "Good").
-        if (m.author === 'Anonymous' || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
+        // A placeholder name ("Verified Buyer") is shared by many reviewers and identifies no one.
+        if (PLACEHOLDER_AUTHOR.test(m.author) || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
         const card = loose(review.body);
         const start = loose(m.body).slice(0, 40);
         // A card cut short ("Read more") may hold only part of the text, but it still shows the title.
+        // Short text must start at a word ("ok" is not inside "looks"); longer text and titles can sit right
+        // after other card text, which widgets often run together ("10 months agoDecent shirt").
         const title = loose(m.title);
-        return (start.length >= 2 && card.includes(start)) || (title.length >= 8 && card.includes(title));
+        const startMatches = start.length >= 12 ? card.includes(start) : start.length >= 2 && startsAtWord(card, start);
+        return startMatches || (title.length >= 8 && card.includes(title));
       });
     if (!existing) {
       merged.push(review);
@@ -1007,6 +1023,13 @@ function scrapeHtmlWithCheerio(
     .map((_i, el) => $p(el).contents().text())
     .get();
   const structured = extractStructuredProduct(parseJsonLdScripts(jsonLdScripts));
+  // On a separate review page, that page's own JSON-LD reviews count too.
+  if (productHtml && structured) {
+    const reviewPageLd = extractStructuredProduct(
+      parseJsonLdScripts($('script[type="application/ld+json"]').map((_i, el) => $(el).contents().text()).get()),
+    );
+    if (reviewPageLd?.reviews.length) structured.reviews = mergeScrapedReviews(structured.reviews, reviewPageLd.reviews);
+  }
   if (structured) selectorsUsed.push('script[type="application/ld+json"] Product');
 
   const meta = (selector: string) => $p(selector).attr('content')?.trim() || null;

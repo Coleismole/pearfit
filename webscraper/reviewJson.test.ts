@@ -606,3 +606,11 @@ test('a size question with a prefix: L.L.Bean MensWhatSizeDidYouPurchase', () =>
   });
   assert.equal(reviews[0].sizePurchased, 'L');
 });
+
+test('a fit question that mentions the size ordered is a fit answer, not a size', () => {
+  const { reviews } = extractReviewsFromJson({
+    Results: [{ Id: '1', Rating: 4, ReviewText: 'Snug.', ContextDataValues: { q: { Value: 'Runs small', DimensionLabel: 'How Did The Size You Ordered Fit' } } }],
+  });
+  assert.equal(reviews[0].sizePurchased, '');
+  assert.equal(reviews[0].declaredFitTag, 'Runs Small');
+});

@@ -25,8 +25,12 @@ export const REVIEW_CARD_SELECTOR =
 const NAV_TIMEOUT_MS = 45_000;
 /** Whole render, including scrolling and paging. One page cannot hold the browser longer than this. */
 export const RENDER_DEADLINE_MS = 120_000;
-/** Time kept back at the end of a render for opening the size chart and serializing the page. */
-const RENDER_TAIL_MS = 12_000;
+/**
+ * Time kept back at the end of a render for opening the size chart and serializing the page. A page of
+ * several megabytes (Duer: 3 MB) takes seconds to serialize; running into the hard deadline loses
+ * everything the render recorded.
+ */
+const RENDER_TAIL_MS = 25_000;
 const REVIEW_WAIT_MS = 10_000;
 /** Most "load more" / "next page" clicks in one review widget. */
 const MAX_REVIEW_PAGES = 60;
@@ -548,8 +552,8 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
     await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
-    await capture.settle();
+    await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
+    await capture.settle(2000);
 
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     return {
@@ -764,7 +768,7 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     await clickRole('tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickRole('button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
     await sleep(500);
-    await capture.settle();
+    await capture.settle(2000);
 
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     return { html, status, finalUrl: page.url(), reviewSelectorFound, chartHtml, jsonResponses: capture.items };

@@ -1093,6 +1093,8 @@ function scrapeHtmlWithCheerio(
           // Accessible star widgets: aria-label/title like "4 out of 5 stars".
           ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr('aria-label') ?? node.find('[title*="out of 5" i]').first().attr('title')) ||
           ratingFromStarIcons($, node) ||
+          // Screen-reader text such as "Rated 5 out of 5" (Okendo and others).
+          nodeText.match(/\brated\s+(\d(?:\.\d)?)\s+out of\s+5\b/i)?.[1] ||
           '';
         const declaredFitTag =
           node.attr('data-fit') ||

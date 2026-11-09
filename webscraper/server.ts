@@ -936,17 +936,25 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
   const norm = (body: string) =>
     body.replace(/\s+/g, ' ').replace(/(\.\.\.|…)?\s*(read more|show more|more)?$/i, '').trim().toLowerCase().slice(0, 60);
   const merged = primary.map((review) => ({ ...review }));
-  const index = new Map<string, RawScrapedReview>();
-  for (const review of merged) {
-    const key = norm(review.body);
-    if (key && !index.has(key)) index.set(key, review);
-  }
+  // Reviews by text. Two shoppers can write the same words ("Love it"): the same text is the same review
+  // only when the reviewers agree, or one of them is unnamed.
+  const index = new Map<string, RawScrapedReview[]>();
+  const remember = (key: string, review: RawScrapedReview) => {
+    if (!key) return;
+    const list = index.get(key) ?? [];
+    list.push(review);
+    index.set(key, list);
+  };
+  const unnamed = (author: string) => !author || PLACEHOLDER_AUTHOR.test(author);
+  const sameReviewer = (a: RawScrapedReview, b: RawScrapedReview) =>
+    unnamed(a.author) || unnamed(b.author) || a.author.toLowerCase() === b.author.toLowerCase();
+  for (const review of merged) remember(norm(review.body), review);
   const loose = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
   for (const review of extra) {
     const key = norm(review.body);
     // A card whose text holds the whole card (stars, date, title, body) still matches its review.
     const existing =
-      (key ? index.get(key) : undefined) ??
+      (key ? index.get(key)?.find((m) => sameReviewer(m, review)) : undefined) ??
       merged.find((m) => {
         // Same named reviewer, and the card contains the start of that review's text (a review can be
         // as short as "Good").
@@ -963,7 +971,7 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
       });
     if (!existing) {
       merged.push(review);
-      if (key) index.set(key, review);
+      remember(key, review);
       continue;
     }
     if (!existing.sizePurchased && review.sizePurchased) existing.sizePurchased = review.sizePurchased;
@@ -1664,6 +1672,12 @@ export function createApp() {
               rendered.jsonResponses,
               leftProductPage ? rendered.chartHtml : null,
             );
+            // Earlier pages of a review list that pages by link each hold their own reviews.
+            for (const pageHtml of rendered.extraHtml ?? []) {
+              const earlier = scrapeHtmlWithCheerio(pageHtml, sourceUrl, overrides, [], leftProductPage ? rendered.chartHtml : null);
+              renderedScrape.reviews = mergeScrapedReviews(earlier.reviews, renderedScrape.reviews);
+              renderedScrape.meta.scraperTelemetry.reportedReviewCount ??= earlier.meta.scraperTelemetry.reportedReviewCount;
+            }
             renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
             // Keep the render when it found at least as many reviews as the page source, or when it read

@@ -37,6 +37,8 @@ const REVIEW_WAIT_MS = 10_000;
 const MAX_REVIEW_PAGES = 60;
 /** Stop paging once about this many reviews were seen; enough for fit statistics. */
 const MAX_REVIEWS = 300;
+/** Most review pages followed by link (/…/page/N). */
+const MAX_LINKED_REVIEW_PAGES = 15;
 /** Review JSON kept from one render: per response and in total. */
 const MAX_CAPTURED_BODY_BYTES = 5_000_000;
 const MAX_CAPTURED_TOTAL_BYTES = 30_000_000;
@@ -68,6 +70,11 @@ export interface RenderedPage {
   chartHtml: string | null;
   /** JSON (or JSONP) responses the page itself received that carry a rating field: review widget data. */
   jsonResponses: CapturedJson[];
+  /**
+   * Earlier pages of a review list that pages by link (Zappos /product/review/<id>/page/2), oldest first.
+   * `html` is the last page. Each holds its own reviews.
+   */
+  extraHtml?: string[];
 }
 
 export interface CapturedJson {
@@ -285,6 +292,25 @@ const ALL_REVIEWS_LINK = `(() => {
       const target = new URL(el.getAttribute('href'), location.href);
       if (target.origin === location.origin && target.pathname.startsWith(base + '/') && /review/i.test(target.pathname)) return target.href;
     } catch (e) {}
+  }
+  return '';
+})()`;
+
+/**
+ * The next page of a review list that pages by link: /…/page/3 after /…/page/2, or ?page=3. Only on a
+ * review page (its path names reviews), only within the same list, never another product or a search.
+ */
+const NEXT_REVIEW_PAGE_LINK = `(() => {
+  if (!/review/i.test(location.pathname)) return '';
+  const pageOf = (u) => Number((u.pathname.match(/\\/page\\/(\\d+)\\/?$/) || [])[1] || (u.search.match(/[?&](?:page|pg)=(\\d+)/) || [])[1] || 1);
+  const base = location.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '');
+  const current = pageOf(new URL(location.href));
+  for (const a of document.querySelectorAll('a[href]')) {
+    let target;
+    try { target = new URL(a.getAttribute('href'), location.href); } catch (e) { continue; }
+    if (target.origin !== location.origin) continue;
+    const samePath = target.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '') === base;
+    if (samePath && pageOf(target) === current + 1) return target.href;
   }
   return '';
 })()`;
@@ -634,6 +660,26 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       await pageThroughReviews(pagingOps);
     }
 
+    // A review list that pages by link (Zappos): keep each page, then load the next, while time is left.
+    const extraHtml: string[] = [];
+    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8_000; i++) {
+      const known = capture.reportedTotal();
+      if (known !== null && capture.reviewCount() >= known) break;
+      const next = (await page.evaluate(NEXT_REVIEW_PAGE_LINK)) as string;
+      if (!next) break;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next}`);
+      extraHtml.push((await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string);
+      const moved = await page
+        .goto(next, { waitUntil: 'domcontentloaded', timeout: Math.max(3_000, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3_000)) })
+        .then(() => true, () => false);
+      if (!moved) {
+        extraHtml.pop();
+        break;
+      }
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+      await capture.settle(1500);
+    }
+
     // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
     await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
@@ -648,6 +694,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       reviewSelectorFound,
       chartHtml,
       jsonResponses: capture.items,
+      extraHtml,
     };
   } catch (err) {
     if (timedOut) {

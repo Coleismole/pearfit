@@ -461,3 +461,28 @@ test('cards by a placeholder reviewer, or with a short text inside another word,
     server.close();
   }
 });
+
+test('two shoppers who wrote the same words are two reviews; the same text by one shopper is one', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Essential Tee',
+      sku: 'Z-1',
+      review: [
+        { '@type': 'Review', author: 'Ann', reviewBody: 'Love it, fits great.', reviewRating: { ratingValue: 5 } },
+        { '@type': 'Review', author: 'Bob', reviewBody: 'Love it, fits great.', reviewRating: { ratingValue: 4 } },
+      ],
+    };
+    const html = `<!DOCTYPE html><html><head><title>Essential Tee</title>
+      <script type="application/ld+json">${JSON.stringify(ld)}</script></head><body><h1>Essential Tee</h1>
+      <div class="review-card" data-author="Ann" data-rating="5"><p class="review-body-copy">Love it, fits great.</p></div></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    // Ann and Bob are two reviews; Ann's card is Ann's review again.
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 2);
+  } finally {
+    server.close();
+  }
+});

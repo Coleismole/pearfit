@@ -106,13 +106,15 @@ export function extractSizeFromReviewText(body: string): string {
   );
   // "Wear" and "wearing" usually name the reviewer's usual size, and "got a small stain" is not a size.
   // Only verbs of buying count.
+  // A bare number after a buying verb is a quantity ("bought 2 of these"). It is a size only after "size".
+  const letterSize = REVIEW_SIZE_TOKEN.replace('|\\d{1,2}', '');
   const bought = new RegExp(
-    `\\b(?:bought|ordered|purchased)\\s+(?:a|an|the|my|size)?\\s*(${REVIEW_SIZE_TOKEN})\\b`,
+    `\\b(?:bought|ordered|purchased)\\s+(?:(?:a|an|the|my)\\s+)?(?:size\\s+(${REVIEW_SIZE_TOKEN})|(${letterSize}))\\b`,
     'i',
   );
   const wornIn = new RegExp(`\\bin\\s+(?:a\\s+|size\\s+)(${REVIEW_SIZE_TOKEN})\\b`, 'i');
   const match = body.match(labeled) || body.match(sizedTo) || body.match(bought) || body.match(wornIn);
-  return match ? match[1] : '';
+  return match ? (match[1] ?? match[2] ?? '') : '';
 }
 
 const FIT_TAG_REGEX = /\b(runs\s+small|true\s+to\s+size|runs\s+large|slightly\s+small|slightly\s+large)\b/i;

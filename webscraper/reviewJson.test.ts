@@ -614,3 +614,19 @@ test('a fit question that mentions the size ordered is a fit answer, not a size'
   assert.equal(reviews[0].sizePurchased, '');
   assert.equal(reviews[0].declaredFitTag, 'Runs Small');
 });
+
+test('BayEngage: score, content, user display name, reviewed_at and the reviewed product', () => {
+  const { reviews } = extractReviewsFromJson({
+    data: [{
+      id: '6949206494e15acae2075b68', score: 2, title: 'MASSIVE SHRINKAGE', content: 'These shrink a lot.',
+      user: { name: 'AltemosePrime', display_name: 'AltemosePrime' }, reviewed_at: '2025-06-24T12:01:00.000000Z',
+      reviewed_product: { product_id: '2828', title: "Men's Short Sleeve Crew T-Shirt, White 3 Pack" },
+    }],
+  });
+  const [r] = reviews;
+  assert.equal(r.rating, 2);
+  assert.equal(r.author, 'AltemosePrime');
+  assert.equal(r.date, '2025-06-24T12:01:00.000000Z');
+  assert.deepEqual(r.productKeys, ['2828']);
+  assert.equal(r.productName, "Men's Short Sleeve Crew T-Shirt, White 3 Pack");
+});

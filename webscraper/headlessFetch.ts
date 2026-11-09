@@ -370,7 +370,7 @@ const CLICK_NEXT_REVIEWS = `(() => {
  */
 const SORT_NEWEST = `((step) => {
   ${DEEP_QUERY}
-  const NEWEST = /^(sort( by)?:?\\s*)?(most recent|newest( first)?|date,? newest|recent|latest)$/i;
+  const NEWEST = /^(sort( by)?:?\\s*)?(most recent|newest( first| to oldest)?|date,? newest( first)?|date \\(newest\\)|recent|latest)$/i;
   const boxes = deepAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)});
   const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   const text = (el) => (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
@@ -532,7 +532,8 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
 
     if (process.env.SCRAPER_DEBUG) console.error(`[render] reviewSelectorFound=${reviewSelectorFound} hasReviewWidget=${hasReviewWidget} json=${capture.items.length}`);
     if (reviewSelectorFound || hasReviewWidget) {
-      const sorted = await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms));
+      let sorted = await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms));
+      if (!sorted) sorted = await sortNewestByRealClick(page);
       if (process.env.SCRAPER_DEBUG) console.error(`[render] sort=${JSON.stringify(sorted)}`);
       if (sorted) {
         await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {});
@@ -572,6 +573,28 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
   } finally {
     clearTimeout(deadline);
     await context.close().catch(() => {});
+  }
+}
+
+/**
+ * Some sort menus (Material UI on Vuori) open only on a real pointer click, and a sign-up pop-up can sit
+ * over them. Escape closes the pop-up; then the "Sort by" menu button is clicked and newest is picked.
+ */
+async function sortNewestByRealClick(page: Page): Promise<string> {
+  const button = page
+    .locator('[aria-haspopup="menu"], [aria-haspopup="listbox"], [aria-haspopup="true"], [role="combobox"]')
+    .filter({ hasText: /^\s*sort\b/i })
+    .or(page.locator('[aria-haspopup][aria-label^="sort" i]'))
+    .first();
+  try {
+    if (!(await button.isVisible({ timeout: 500 }))) return '';
+    await page.keyboard.press('Escape');
+    await button.scrollIntoViewIfNeeded({ timeout: 2000 });
+    await button.click({ timeout: 3000 });
+    await page.waitForTimeout(600);
+    return ((await page.evaluate(`${SORT_NEWEST}('pick')`)) as string) || '';
+  } catch {
+    return '';
   }
 }
 

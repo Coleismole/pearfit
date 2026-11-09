@@ -1364,7 +1364,8 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
       continue;
     }
     if (!response.ok) {
-      const refused = response.status === 403 || response.status === 429 || response.status === 503;
+      // 418 is what some stores (Under Armour) answer an automated request with; it is a refusal too.
+      const refused = [403, 418, 429, 503].includes(response.status);
       return {
         status: 400,
         message: refused

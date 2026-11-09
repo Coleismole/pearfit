@@ -1,7 +1,7 @@
 /**
  * Headless Chromium fallback for product pages whose reviews are loaded by JavaScript
  * (Bazaarvoice, Yotpo, PowerReviews, ...). It is NOT used to get around stores that refuse
- * automated requests (403/429): those are respected and reported.
+ * automated requests (403/418/429/503): those are respected and reported.
  *
  * Renders the page, dismisses cookie banners, scrolls to trigger lazy-loaded review
  * widgets, opens the reviews section, clicks "load more" a few times, then returns the
@@ -144,7 +144,7 @@ export class JsonCapture {
 /**
  * Headless is for pages whose reviews are added by JavaScript.
  * A failed static fetch (including 404 and "could not reach") is reported as that failure.
- * A store that refused the request (403/429/503) is not retried in a browser.
+ * A store that refused the request (403/418/429/503) is not retried in a browser.
  */
 export function shouldUseHeadlessRender(input: {
   isRemoteUrl: boolean;

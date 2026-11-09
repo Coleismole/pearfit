@@ -918,6 +918,18 @@ function looksLikeFullHtmlDocument(input: string): boolean {
 }
 
 /** JSON-LD stays the base. DOM cards fill a blank size and add reviews that were not in the script. */
+const PLACEHOLDER_AUTHOR = /^(anonymous|verified (buyer|purchaser|customer|reviewer)|customer|guest|a customer|shopper)$/i;
+
+/** True when `text` contains `part` starting at a word boundary. */
+function startsAtWord(text: string, part: string): boolean {
+  let from = text.indexOf(part);
+  while (from !== -1) {
+    if (from === 0 || !/[\p{L}\p{N}]/u.test(text[from - 1])) return true;
+    from = text.indexOf(part, from + 1);
+  }
+  return false;
+}
+
 function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedReview[]): RawScrapedReview[] {
   // A card cut short by "Read more" still matches its full review: compare the first 60 characters.
   const norm = (body: string) =>
@@ -935,9 +947,18 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
     const existing =
       (key ? index.get(key) : undefined) ??
       merged.find((m) => {
-        if (m.author === 'Anonymous' || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
+        // Same named reviewer, and the card contains the start of that review's text (a review can be
+        // as short as "Good").
+        // A placeholder name ("Verified Buyer") is shared by many reviewers and identifies no one.
+        if (PLACEHOLDER_AUTHOR.test(m.author) || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
+        const card = loose(review.body);
         const start = loose(m.body).slice(0, 40);
-        return start.length >= 15 && loose(review.body).includes(start);
+        // A card cut short ("Read more") may hold only part of the text, but it still shows the title.
+        // Short text must start at a word ("ok" is not inside "looks"); longer text and titles can sit right
+        // after other card text, which widgets often run together ("10 months agoDecent shirt").
+        const title = loose(m.title);
+        const startMatches = start.length >= 12 ? card.includes(start) : start.length >= 2 && startsAtWord(card, start);
+        return startMatches || (title.length >= 8 && card.includes(title));
       });
     if (!existing) {
       merged.push(review);
@@ -984,28 +1005,42 @@ function scrapeHtmlWithCheerio(
     category?: ProductFitReport['category'];
   },
   jsonResponses: CapturedJson[] = [],
+  /**
+   * The product page, when the reviews were read on another page of the same product (Nike's
+   * /t/<product>/reviews). Product details and ids come from it; reviews come from `html`.
+   */
+  productHtml: string | null = null,
 ) {
   const startTime = Date.now();
   const $ = cheerio.load(html);
+  const $p = productHtml ? cheerio.load(productHtml) : $;
+  const productPageHtml = productHtml ?? html;
   const domNodesScanned = $('*').length;
   const selectorsUsed: string[] = [];
 
   // 1. schema.org JSON-LD: the most reliable source on real storefronts.
-  const jsonLdScripts = $('script[type="application/ld+json"]')
-    .map((_i, el) => $(el).contents().text())
+  const jsonLdScripts = $p('script[type="application/ld+json"]')
+    .map((_i, el) => $p(el).contents().text())
     .get();
   const structured = extractStructuredProduct(parseJsonLdScripts(jsonLdScripts));
+  // On a separate review page, that page's own JSON-LD reviews count too.
+  if (productHtml && structured) {
+    const reviewPageLd = extractStructuredProduct(
+      parseJsonLdScripts($('script[type="application/ld+json"]').map((_i, el) => $(el).contents().text()).get()),
+    );
+    if (reviewPageLd?.reviews.length) structured.reviews = mergeScrapedReviews(structured.reviews, reviewPageLd.reviews);
+  }
   if (structured) selectorsUsed.push('script[type="application/ld+json"] Product');
 
-  const meta = (selector: string) => $(selector).attr('content')?.trim() || null;
-  const firstText = (selector: string) => $(selector).first().text().replace(/\s+/g, ' ').trim() || null;
+  const meta = (selector: string) => $p(selector).attr('content')?.trim() || null;
+  const firstText = (selector: string) => $p(selector).first().text().replace(/\s+/g, ' ').trim() || null;
 
   const extractedName =
     overrides?.productName ||
     structured?.name ||
     cleanProductTitle(meta('meta[property="og:title"]')) ||
     firstText('h1.product-title') ||
-    cleanProductTitle($('title').first().text()) ||
+    cleanProductTitle($p('title').first().text()) ||
     firstText('h1') ||
     'Unknown product';
 
@@ -1016,6 +1051,8 @@ function scrapeHtmlWithCheerio(
     meta('meta[property="product:brand"]') ||
     meta('meta[property="og:site_name"]') ||
     firstText('.product-brand') ||
+    // A single-brand store names itself; used only when nothing names the product's brand.
+    structured?.organizationName ||
     'Unknown brand';
 
   const category =
@@ -1032,9 +1069,11 @@ function scrapeHtmlWithCheerio(
     structured?.sku ||
     meta('meta[name="product:sku"]') ||
     meta('meta[property="product:retailer_item_id"]') ||
-    $('[data-sku]').attr('data-sku') ||
+    $p('[data-sku]').attr('data-sku') ||
     // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
     productIdFromUrl(sourceUrl) ||
+    // Shopify names its product in the analytics object: var meta = {"product":{"id":123,...
+    shopifyProductId(productPageHtml) ||
     `URL-${stableHash(sourceUrl)}`;
 
   const priceAmount = meta('meta[property="product:price:amount"]') || meta('meta[property="og:price:amount"]');
@@ -1043,13 +1082,13 @@ function scrapeHtmlWithCheerio(
     structured?.price ||
     meta('meta[name="product:price"]') ||
     (priceAmount ? [priceAmount, priceCurrency].filter(Boolean).join(' ') : null) ||
-    $('[data-price]').attr('data-price') ||
+    $p('[data-price]').attr('data-price') ||
     'Unknown';
 
   const fabricComposition =
     structured?.material ||
     meta('meta[name="product:fabric"]') ||
-    $('[data-fabric]').attr('data-fabric') ||
+    $p('[data-fabric]').attr('data-fabric') ||
     'Unknown';
 
   const domReviews: RawScrapedReview[] = [];
@@ -1160,7 +1199,7 @@ function scrapeHtmlWithCheerio(
   });
   const fromJson = collectJsonReviews(
     jsonSources.filter((source) => source.value !== null),
-    { keys: pageProductKeys($, html, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
+    { keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
   );
   if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
   const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
@@ -1229,6 +1268,17 @@ function scrapeHtmlWithCheerio(
 }
 
 /**
+ * The product id in Shopify's analytics object (var meta = {"product":{"id":123,...), or else the first
+ * such id on the page: later ones belong to recommendation blocks.
+ */
+function shopifyProductId(html: string): string | null {
+  const match =
+    html.match(/(?:var meta|ShopifyAnalytics\.meta)\s*=\s*\{\s*"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/) ??
+    html.match(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/);
+  return match ? match[1] : null;
+}
+
+/**
  * Ids, SKUs and handles that name this page's product, lowercased. Used to keep only this product's
  * reviews from review JSON. Product cards elsewhere on the page are not read: their ids would let
  * a "you may also like" carousel's reviews through.
@@ -1248,12 +1298,7 @@ function pageProductKeys(
   structuredIds.forEach(add);
   add(sku);
   add($('meta[property="product:retailer_item_id"]').attr('content'));
-  // Shopify's analytics object names the product on its own page: var meta = {"product":{"id":123,...
-  // Only that object, or else the first such id: later ones belong to recommendation blocks.
-  const shopifyMeta =
-    html.match(/(?:var meta|ShopifyAnalytics\.meta)\s*=\s*\{\s*"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/) ??
-    html.match(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/);
-  if (shopifyMeta) add(shopifyMeta[1]);
+  add(shopifyProductId(html));
   $('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
     add($(el).attr('value'));
   });
@@ -1603,7 +1648,16 @@ export function createApp() {
           if (rendered.status !== null && rendered.status >= 400) {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
           } else {
-            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides, rendered.jsonResponses);
+            // The render may end on the product's own review page; product details come from the
+            // product page snapshot then.
+            const leftProductPage = rendered.chartHtml !== null && new URL(rendered.finalUrl).pathname !== new URL(url!).pathname;
+            const renderedScrape = scrapeHtmlWithCheerio(
+              rendered.html,
+              sourceUrl,
+              overrides,
+              rendered.jsonResponses,
+              leftProductPage ? rendered.chartHtml : null,
+            );
             renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
             // Keep the render when it found at least as many reviews as the page source, or when it read

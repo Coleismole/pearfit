@@ -75,4 +75,10 @@ test('productIdFromUrl finds product codes in common URL shapes', () => {
   assert.equal(productIdFromUrl('https://shop.example/item?color=red&productId=AB123'), 'AB123');
   // A path id wins over a query parameter, which may be an affiliate code.
   assert.equal(productIdFromUrl('https://shop.example/products/E487396-000?pid=aff123'), 'E487396-000');
+  assert.equal(productIdFromUrl('https://www.llbean.com/llb/shop/40651?page=carefree-unshrinkable-tee'), '40651');
+  // A product parameter wins over a bare number in the path, which may be a category.
+  assert.equal(productIdFromUrl('https://shop.example/c/10001/oxford-shirt?pid=AB123'), 'AB123');
+  assert.equal(productIdFromUrl('https://www.vineyardvines.com/product/mens-t-shirts/edgartown-short-sleeve-pocket-tee/1V011322.html'), '1V011322');
+  // A word page name is not a code.
+  assert.equal(productIdFromUrl('https://example.com/about-us.html'), null);
 });

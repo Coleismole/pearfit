@@ -133,3 +133,13 @@ test('extractSizeFromReviewText does not read a quantity as a size', () => {
   assert.equal(extractSizeFromReviewText('Ordered size 8 and it fits'), '8');
   assert.equal(extractSizeFromReviewText('Ordered a large, way too big'), 'large');
 });
+
+test('the Organization name is offered as a brand fallback', () => {
+  const blocks = parseJsonLdScripts([
+    JSON.stringify({ '@context': 'https://schema.org', '@type': 'Organization', name: 'vineyard vines' }),
+    JSON.stringify({ '@context': 'https://schema.org', '@type': 'Product', name: 'Edgartown Pocket Tee', sku: '1V011322' }),
+  ]);
+  const product = extractStructuredProduct(blocks)!;
+  assert.equal(product.brand, null);
+  assert.equal(product.organizationName, 'vineyard vines');
+});

@@ -12,6 +12,7 @@
 import type { Browser, Page } from 'playwright';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 import { extractReviewsFromJson, parseJsonBody, reviewIdentity } from './reviewJson.ts';
+import { parseSizeChart } from './sizeChart.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
@@ -112,13 +113,27 @@ export class JsonCapture {
   private readonly counted = new Set<string>();
   private countedItems = 0;
 
+  private statedTotal: number | null = null;
+  private statedTotalFrom = 0;
+
   /** Distinct reviews in the JSON kept so far (by id, else by the start of the text). */
   reviewCount(): number {
     for (; this.countedItems < this.items.length; this.countedItems++) {
       const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
       for (const r of set.reviews) this.counted.add(reviewIdentity(r));
+      // The total stated beside the largest review list: a recommendations response can carry its own totals.
+      if (set.reportedTotal !== null && set.reviews.length >= this.statedTotalFrom) {
+        this.statedTotal = set.reportedTotal;
+        this.statedTotalFrom = set.reviews.length;
+      }
     }
     return this.counted.size;
+  }
+
+  /** The largest product review total the kept JSON states, or null. */
+  reportedTotal(): number | null {
+    this.reviewCount();
+    return this.statedTotal;
   }
 
   async settle(timeoutMs = 3000): Promise<void> {
@@ -245,13 +260,31 @@ const OPEN_RATING_SUMMARY = `(() => {
   ${DEEP_QUERY}
   for (const el of deepAll('a, button, [role="button"]')) {
     const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
-    if (label.length > 90 || !/out of 5[^a-z]*\\(?\\d|\\(\\d[\\d,]*\\)|^\\d[\\d,]* reviews?\\b/i.test(label)) continue;
+    if (label.length > 90 || !/out of 5[^a-z]*\\(?\\d|out of 5\\b.*\\b\\d[\\d,]* (reviews?|ratings?)\\b|\\(\\d[\\d,]*\\)|^\\d[\\d,]* (reviews?|ratings?)\\b/i.test(label)) continue;
     const href = el.getAttribute('href') || '';
     if (el.tagName === 'A' && href && !/^(#|javascript:)/i.test(href)) continue;
     const r = el.getBoundingClientRect();
     if (!r.width || !r.height) continue;
     el.click();
     return label.slice(0, 40);
+  }
+  return '';
+})()`;
+
+/**
+ * The address of this product's own review page ("See Reviews" → /t/product/reviews): a link whose path
+ * extends the product page's path. Never another product or section of the site.
+ */
+const ALL_REVIEWS_LINK = `(() => {
+  ${DEEP_QUERY}
+  const base = location.pathname.replace(/\\/$/, '');
+  for (const el of deepAll('a[href]')) {
+    const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!/^(see|view|read|show)( all)?( \\d[\\d,]*)? reviews?\\b|^all reviews\\b/i.test(label)) continue;
+    try {
+      const target = new URL(el.getAttribute('href'), location.href);
+      if (target.origin === location.origin && target.pathname.startsWith(base + '/') && /review/i.test(target.pathname)) return target.href;
+    } catch (e) {}
   }
   return '';
 })()`;
@@ -299,7 +332,7 @@ const REVIEW_WIDGETS_INTO_VIEW = `(async () => {
  * Clicks one "load more" or "next page" control inside a review widget. Never a link that would
  * leave the page. Returns the control's label, or '' when there is none.
  */
-const CLICK_NEXT_REVIEWS = `(() => {
+const CLICK_NEXT_REVIEWS = `((skip) => {
   ${DEEP_QUERY}
   // "Read more" expands one review's text; it never loads more reviews.
   const MORE = /^(load|show|see|view) (more|all|\\d+ more)( reviews?)?$|^more reviews$/i;
@@ -318,7 +351,8 @@ const CLICK_NEXT_REVIEWS = `(() => {
       if (seen.has(el)) continue;
       seen.add(el);
       const aria = el.getAttribute('aria-label') || '';
-      const label = (aria || el.textContent || el.getAttribute('title') || '').replace(/\\s+/g, ' ').trim();
+      // Leading symbols are decoration: "+ Load More Reviews".
+      const label = (aria || el.textContent || el.getAttribute('title') || '').replace(/\\s+/g, ' ').trim().replace(/^[^a-z0-9›»→>]+/i, '');
       if (/about this review|this review'?s? (text|content)/i.test(aria)) continue;
       const isMore = MORE.test(label);
       const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);
@@ -355,12 +389,16 @@ const CLICK_NEXT_REVIEWS = `(() => {
       }
     }
   }
-  const pick = found.sort((a, b) => b.rank - a.rank)[0];
+  // A control that loaded nothing last time is skipped, so the next candidate gets a turn.
+  const pick = found.filter((f) => !skip.includes(f.label.slice(0, 40) || 'next')).sort((a, b) => b.rank - a.rank)[0];
   if (!pick) return '';
+  // Mark it, so a real pointer click can be sent to the same control if this script click does nothing.
+  for (const el of deepAll('[data-pearfit-paging]')) el.removeAttribute('data-pearfit-paging');
+  pick.el.setAttribute('data-pearfit-paging', '1');
   pick.el.scrollIntoView({ block: 'center' });
   pick.el.click();
   return pick.label.slice(0, 40) || 'next';
-})()`;
+})`;
 
 /**
  * Sorts a review widget by newest first, when it offers that. Widgets often open on "most helpful"
@@ -493,7 +531,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     await page.evaluate(SCROLL_TO_END);
 
     // Snapshot before touching reviews: a review click may leave the product view.
-    const chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    let chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
 
     // The full review list is often behind a tab or accordion, even when a few highlight
     // reviews are already visible. A link may navigate away, so only use it as a last resort.
@@ -530,6 +568,37 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     // A review widget whose first reviews came embedded in the page (Okendo) still pages by JavaScript.
     const hasReviewWidget = (await page.locator(REVIEW_WIDGET_SELECTOR).count()) > 0;
 
+    const pagingOps: Parameters<typeof pageThroughReviews>[0] = {
+      click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
+      progress: async () => ({ json: capture.reviewCount(), cards: await countReviews(page) }),
+      enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
+      settle: () => capture.settle(1500),
+      sleep: (ms) => page.waitForTimeout(ms),
+      scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
+      realClick: async () => {
+        try {
+          const control = page.locator('[data-pearfit-paging="1"]').first();
+          // A link with an address would load a page and lose what this one rendered; buttons only.
+          const isLink = await control.evaluate(
+            (el) => el.tagName === 'A' && !!el.getAttribute('href') && !/^(#|javascript:)/i.test(el.getAttribute('href') || ''),
+          );
+          if (isLink) return false;
+          await control.scrollIntoViewIfNeeded({ timeout: 2000 });
+          try {
+            await control.click({ timeout: 3000 });
+          } catch {
+            // Something sits over the control (a sign-up pop-up): Escape closes it, then one more try.
+            // Escape is not pressed first, so a review drawer that the click reaches stays open.
+            await page.keyboard.press('Escape');
+            await control.click({ timeout: 3000 });
+          }
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      stopAt: stopPagingAt,
+    };
     if (process.env.SCRAPER_DEBUG) console.error(`[render] reviewSelectorFound=${reviewSelectorFound} hasReviewWidget=${hasReviewWidget} json=${capture.items.length}`);
     if (reviewSelectorFound || hasReviewWidget) {
       let sorted = await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms));
@@ -539,15 +608,30 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
         await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {});
         await capture.settle();
       }
-      await pageThroughReviews({
-        click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
-        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)),
-        enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
-        settle: () => capture.settle(1500),
-        sleep: (ms) => page.waitForTimeout(ms),
-        scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
-        stopAt: stopPagingAt,
-      });
+      await pageThroughReviews(pagingOps);
+    }
+
+    // The product page shows only some reviews and links to its own review page (Nike: /t/product/reviews).
+    // Follow it when fewer reviews were read than the store states and enough time is left, and page
+    // through there. The size guide is opened first, while the product page is still showing.
+    const stated = capture.reportedTotal();
+    const reviewPage = (await page.evaluate(ALL_REVIEWS_LINK)) as string;
+    const timeLeft = stopPagingAt - Date.now();
+    if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25_000) {
+      await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
+      await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+      // Keep the earlier snapshot unless this one holds a chart (the view may already show reviews only).
+      const withGuide = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+      if (parseSizeChart(withGuide).length > 0) chartHtml = withGuide;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
+      // Navigation may not run past the paging stop, so a slow review page cannot hit the hard deadline.
+      await page
+        .goto(reviewPage, { waitUntil: 'domcontentloaded', timeout: Math.min(NAV_TIMEOUT_MS, timeLeft - 10_000) })
+        .catch(() => null);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      await page.evaluate(REVIEW_WIDGETS_INTO_VIEW).catch(() => {});
+      await capture.settle();
+      await pageThroughReviews(pagingOps);
     }
 
     // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
@@ -614,40 +698,74 @@ async function sortReviewsNewest(evaluate: (script: string) => Promise<unknown>,
  * enough reviews were seen, or time runs out.
  */
 export async function pageThroughReviews(ops: {
-  click: () => Promise<string>;
-  progress: () => Promise<number>;
+  /** Clicks a paging control whose label is not in `skip`; returns its label, or '' when none is left. */
+  click: (skip: string[]) => Promise<string>;
+  /**
+   * Reviews read from JSON and review cards on the page, counted separately: a click made progress when
+   * either grew. (A pager can replace the cards while the JSON grows; the first JSON page can hold fewer
+   * reviews than the cards the page rendered.)
+   */
+  progress: () => Promise<{ json: number; cards: number }>;
   enough: () => Promise<boolean>;
   settle: () => Promise<void>;
   sleep: (ms: number) => Promise<void>;
   /** Scrolls to the end of the page; returns 'scroll'. */
   scroll?: () => Promise<string>;
+  /**
+   * Sends a real pointer click to the control the last click marked. Some stores (L.L.Bean) ignore a
+   * script click on their "load more" button and answer only a real one.
+   */
+  realClick?: () => Promise<boolean>;
   stopAt: number;
 }): Promise<number> {
   let pages = 0;
   let idle = 0;
+  const skip = new Set<string>();
+  const needsRealClick = new Set<string>();
+  const fruitless = new Map<string, number>();
   if (process.env.SCRAPER_DEBUG) console.error(`[paging] start: msLeft=${ops.stopAt - Date.now()} enough=${await ops.enough()}`);
   for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < ops.stopAt; i++) {
     if (await ops.enough()) break;
     const before = await ops.progress();
     // No control left: infinite-scroll lists load the next reviews when the end comes into view.
-    const clicked = (await ops.click()) || (ops.scroll ? await ops.scroll() : '');
-    if (process.env.SCRAPER_DEBUG) console.error(`[paging] ${i}: clicked=${JSON.stringify(clicked)} before=${before}`);
+    const clicked = (await ops.click([...skip])) || (ops.scroll ? await ops.scroll() : '');
+    if (process.env.SCRAPER_DEBUG) console.error(`[paging] ${i}: clicked=${JSON.stringify(clicked)} json=${before.json} cards=${before.cards}`);
     if (!clicked) break;
+    const waitForGrowth = async () => {
+      const until = Math.min(Date.now() + 5000, ops.stopAt);
+      while (Date.now() < until) {
+        await ops.sleep(300);
+        await ops.settle();
+        const now = await ops.progress();
+        if (now.json > before.json || now.cards > before.cards) return true;
+      }
+      return false;
+    };
+    // The real-click retry is for "load more" controls only: a second click on a slow "next" pager would
+    // skip a page.
+    const loadsMore = /more/i.test(clicked);
     let grew = false;
-    const until = Math.min(Date.now() + 5000, ops.stopAt);
-    while (Date.now() < until) {
-      await ops.sleep(300);
-      await ops.settle();
-      if ((await ops.progress()) > before) {
-        grew = true;
-        break;
+    if (loadsMore && needsRealClick.has(clicked) && ops.realClick) {
+      grew = (await ops.realClick()) && (await waitForGrowth());
+    } else {
+      grew = await waitForGrowth();
+      if (!grew && loadsMore && ops.realClick && (await ops.realClick())) {
+        grew = await waitForGrowth();
+        if (grew) needsRealClick.add(clicked);
       }
     }
     if (grew) {
       pages++;
       idle = 0;
-    } else if (++idle >= 2) {
-      break;
+    } else {
+      // That control loaded nothing. After a second try (a response can just be slow) the next candidate
+      // gets a turn. Stop after three fruitless clicks in a row.
+      if (clicked !== 'scroll') {
+        const misses = (fruitless.get(clicked) ?? 0) + 1;
+        fruitless.set(clicked, misses);
+        if (misses >= 2) skip.add(clicked);
+      }
+      if (++idle >= 3) break;
     }
   }
   return pages;
@@ -778,8 +896,8 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
         await capture.settle();
       }
       await pageThroughReviews({
-        click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
-        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()),
+        click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
+        progress: async () => ({ json: capture.reviewCount(), cards: await countReviews() }),
         enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep,

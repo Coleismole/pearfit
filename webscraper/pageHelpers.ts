@@ -80,11 +80,17 @@ export function productIdFromUrl(url: string): string | null {
   const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
   const m =
     url.match(/\/(\d{4,})\.html/) ||
+    // A product code with letters and digits as the page name: /edgartown-pocket-tee/1V011322.html.
+    url.match(/\/([A-Z0-9]*\d[A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z][A-Z0-9]*\d[A-Z0-9]*)\.html(?:[?#]|$)/i) ||
     // A code contains a digit. A slug such as /product/mens-shirt/ must not win over the id after it.
     url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) ||
     url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i);
   if (m) return m[1];
-  return param ? param[1] : null;
+  if (param) return param[1];
+  // Last, a bare number of five or more digits as a path segment: /llb/shop/40651. It could also be a
+  // category number, so a product parameter wins over it.
+  const numericSegment = url.match(/^[^?#]*\/(\d{5,})(?:[/?#]|$)/);
+  return numericSegment ? numericSegment[1] : null;
 }
 
 /** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */

@@ -1,6 +1,6 @@
 # Stores confirmed scrapeable
 
-Tested on 2026-11-09 with one live product page per store, through `POST /api/scrape`. "Read / stated" is the
+Tested on 2026-11-09 in two rounds with one live product page per store, through `POST /api/scrape`. "Read / stated" is the
 number of reviews the scraper read against the total the store states for that product. Paging stops at about
 300 reviews or when the render's time runs out (120 s locally, 50 s on Vercel), so a large total is sampled,
 newest first where the store offers that sort.
@@ -21,6 +21,17 @@ newest first where the store offers that sort.
 | Marine Layer | Tahoe Fresh Tracks Flannel Shirt | Klaviyo Reviews (colourways grouped) | 15 / 15 | yes (variant) | yes |
 | Vuori | Strato Tech Tee | Vuori's own endpoint (Reviews.io data) | 274 / 14715 | yes | yes |
 | Quince | Organic Cotton Heavyweight Tee | Quince's own review service | 157 / 610 | yes | yes (worded) |
+| Nike | Sportswear Club Men's T-Shirt | TurnTo, on the product's own review page (followed from "See Reviews") | 311 / 2008 | rarely stated | some |
+| L.L.Bean | Carefree Unshrinkable Tee | Bazaarvoice data through L.L.Bean's own endpoint ("Load 10 more" needs a real click) | 304 / 4402 | yes | yes |
+| Vineyard Vines | Edgartown Short-Sleeve Pocket Tee | PowerReviews through Vineyard Vines' own endpoint | 16 / 16 | no field | yes |
+| Eddie Bauer | Legend Wash Pocket T-Shirt | Yotpo | 200 / 341 | from review text only | few answer it |
+| Faherty | The Movement Shirt | Yotpo | 21 / 1343 | yes | yes |
+| Ten Thousand | Core Tee | Yotpo | 98 / 98 | yes | yes |
+| Organic Basics | Waffle Raglan Long Sleeve | Yotpo | 14 / 14 | yes | yes |
+| True Classic | White Stretch Oxford 2.0 | Okendo | 111 / 111 | yes | yes |
+| Unbound Merino | Merino Knit Long Sleeve Polo | Okendo (first page in the HTML, rest as data) | 40 / 40 | yes | yes |
+| NOBULL | Adapt Polo | Okendo | 129 / 129 | yes | no field |
+| Alex Mill | Mill Shirt in Oxford | Klaviyo Reviews | 13 / 13 | yes | yes |
 
 Known limits:
 
@@ -31,6 +42,11 @@ Known limits:
   ("I ordered a large").
 - **Frank And Oak** labels its own products with the brand "ThreadC" in its page data, and the scraper reports
   what the page states.
+- **Faherty**'s "Load More Reviews" button loads nothing for the headless browser (script or real click), so a
+  large product is read from its first page only.
+- **Vineyard Vines** states no brand anywhere in its page, so the brand is reported as unknown.
+- **Nike** shows a few reviews on the product page; the scraper follows the product's own review page
+  (`/t/<product>/reviews`) and takes the product details from the product page.
 
 ## Size chart only
 
@@ -42,6 +58,9 @@ Known limits:
 
 | Store | What happened |
 |---|---|
+| Old Navy | The page shows "1975 ratings", but no review data loads for the headless browser (Gap, on the same platform, works). |
+| Duluth Trading, Lucky Brand | HTTP 403 ("Access Denied"). |
+| Huckberry, Columbia, J.Crew, Rhone, The North Face | HTTP 403 to the page request. |
 | Lululemon | HTTP 403 to the page request. |
 | Carhartt | HTTP 403 to the page request (reviews would come from TurnTo, which the reader supports). |
 | Lands' End, Bombas, MEC, Todd Snyder | HTTP 403 or 429. |
@@ -53,8 +72,8 @@ get around it.
 
 ## Review platforms the reader understands
 
-Tested live: Yotpo, Okendo, Stamped, Klaviyo Reviews, Bazaarvoice (both API styles), Reviews.io data through a
-store's own endpoint, and the first-party review services of Uniqlo and Quince. TurnTo's data shape is covered by a
-unit test (Carhartt refused the page). Junip, Judge.me and Loox have card selectors but no store tested here showed
-their reviews. Any store's own review JSON with a star rating and review text is read by shape; review cards in
+Tested live: Yotpo, Okendo, Stamped, Klaviyo Reviews, Bazaarvoice (both API styles, and through a store's own
+endpoint at L.L.Bean), PowerReviews (through Vineyard Vines' endpoint), TurnTo (Nike), Reviews.io data through a
+store's own endpoint (Vuori), and the first-party review services of Uniqlo and Quince. Junip, Judge.me and Loox
+have card selectors but no store tested here showed their reviews. Any store's own review JSON with a star rating and review text is read by shape; review cards in
 plain HTML and schema.org JSON-LD reviews are read too.

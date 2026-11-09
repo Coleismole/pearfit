@@ -75,8 +75,8 @@ function firstPath(obj: Json, paths: string[]): unknown {
 const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore', 'rate'];
 const BODY_KEYS = ['body', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
 const TITLE_KEYS = ['title', 'Title', 'reviewTitle', 'review_title', 'headline'];
-const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'dateCreatedMillis', 'createdDate', 'date', 'created'];
-const ID_KEYS = ['id', 'Id', 'reviewId', 'review_id', 'ReviewId', 'uuid'];
+const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'dateCreatedMillis', 'createdDate', 'created_date', 'date', 'created'];
+const ID_KEYS = ['id', 'Id', 'reviewId', 'review_id', 'ReviewId', 'ugc_id', 'uuid'];
 const AUTHOR_PATHS = [
   'user.displayName', 'user.display_name', 'user.name', 'author.name', 'author.displayName', 'author.display_name',
   'reviewer.displayName', 'reviewer.display_name', 'reviewer.name', 'customer.name', 'UserNickname', 'userNickname',
@@ -117,8 +117,19 @@ function bodyOf(obj: Json): string | null {
   return null;
 }
 
+/**
+ * PowerReviews nests one review's fields: { review_id, details: { comments, headline, nickname, properties },
+ * metrics: { rating }, badges: { is_verified_buyer } }. Those are lifted into one object; other shapes pass through.
+ */
+function flattenReview(obj: Json): Json {
+  if (!isObject(obj.details) || !isObject(obj.metrics)) return obj;
+  const badges = isObject(obj.badges) ? obj.badges : {};
+  return { ...obj, ...obj.details, ...obj.metrics, verifiedBuyer: badges.is_verified_buyer === true };
+}
+
 /** True when this object is one review: a rating plus text or a title, and not a product total. */
-export function looksLikeReview(obj: Json): boolean {
+export function looksLikeReview(raw: Json): boolean {
+  const obj = flattenReview(raw);
   if (AGGREGATE_KEYS.some((key) => key in obj)) return false;
   const rating = normalizeRating(first(obj, RATING_KEYS), obj.bestRating);
   if (rating === null) return false;
@@ -314,12 +325,12 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
   }
 
   // Stamped and others: arrays of { k, v } / { key, value } / { question, answer } pairs.
-  for (const key of ['reviewOptionsList', 'options', 'survey_answers', 'surveyAnswers', 'answers', 'customQuestions']) {
+  for (const key of ['reviewOptionsList', 'options', 'survey_answers', 'surveyAnswers', 'answers', 'customQuestions', 'properties']) {
     const list = review[key];
     if (!Array.isArray(list)) continue;
     for (const item of list) {
       if (!isObject(item)) continue;
-      const label = first(item, ['k', 'key', 'question', 'label', 'title', 'name']) ?? at(item, 'survey_question.title') ?? at(item, 'question.title');
+      const label = first(item, ['label', 'k', 'question', 'title', 'name', 'key']) ?? at(item, 'survey_question.title') ?? at(item, 'question.title');
       push(answer(label, first(item, ['v', 'value', 'answer', 'response'])));
     }
   }
@@ -330,8 +341,9 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
 // Turning answers into fields
 // ---------------------------------------------------------------------------------------------
 
+/** "Size", or a question about the size bought, with or without a prefix ("Mens What Size Did You Purchase"). */
 const SIZE_BOUGHT_LABEL =
-  /^(size|sizes?|size (purchased|ordered|bought|worn|selected|chosen|received)|purchased size|ordered size|what size did you (buy|order|purchase|get|choose)|which size did you (buy|order|purchase|get|choose)|size you (bought|ordered|purchased))\??$/i;
+  /^(size|sizes?)\??$|\b(size (purchased|ordered|bought|worn|selected|chosen|received)|purchased size|ordered size|what size did you (buy|order|purchase|get|choose)|which size did you (buy|order|purchase|get|choose)|size you (bought|ordered|purchased))\b/i;
 const USUAL_SIZE_LABEL = /usual(ly)? (wear|size)|normally wear|typical(ly)? (wear|size)|what size do you (usually|normally|typically)/i;
 const FIT_LABEL = /\bfits?\b|sizing|true to size|how (did|does|do) (it|they|this|the \w+) fit|runs? (small|large|big)|size rating/i;
 const HEIGHT_LABEL = /\bheight\b|how tall/i;
@@ -361,7 +373,7 @@ export function fitTagFromAnswer(a: ReviewAnswer): string | null {
   const text = a.value ?? '';
   if (!text || /^\d+(\.\d+)?$/.test(text)) return null; // a bare number on an unknown scale
   if (/true to size|just right|perfect|as expected|fits? (as expected|well|great)|accurate/i.test(text)) return 'True to Size';
-  const mild = /slightly|a bit|a little|somewhat/i.test(text);
+  const mild = /slightly|a bit|a little|somewhat|kind of|sort of/i.test(text);
   if (SMALL_WORDS.test(text) && !LARGE_WORDS.test(text)) return `${mild ? 'Slightly' : 'Runs'} Small`;
   if (LARGE_WORDS.test(text) && !SMALL_WORDS.test(text)) return `${mild ? 'Slightly' : 'Runs'} Large`;
   return null;
@@ -381,6 +393,12 @@ function fieldsFromAnswers(answers: ReviewAnswer[]): Partial<RawScrapedReview> {
     }
     if (!out.usualSize && USUAL_SIZE_LABEL.test(a.label) && a.value) {
       out.usualSize = a.value;
+    } else if (/\bfits?\b/i.test(a.label) && FIT_LABEL.test(a.label)) {
+      // "How did the size you ordered fit?" is a fit question, not the size bought.
+      if (!out.declaredFitTag) {
+        const tag = fitTagFromAnswer(a);
+        if (tag) out.declaredFitTag = tag;
+      }
     } else if (SIZE_BOUGHT_LABEL.test(a.label) && a.value) {
       // An exact size ("XXL") beats free text ("XXL only size available") from another answer.
       const exact = sizeFromVariantTitle(a.value);
@@ -400,7 +418,7 @@ function fieldsFromAnswers(answers: ReviewAnswer[]): Partial<RawScrapedReview> {
 const PRODUCT_KEY_PATHS = [
   'productId', 'product_id', 'ProductId', 'productExternalId', 'product_external_id', 'productSKU', 'productHandle',
   'product_handle', 'product.shopify_id', 'product.external_id', 'product.shopify_handle', 'product.handle', 'product.id',
-  'product_variant.product_external_id', 'shopProductId', 'catItem.sku',
+  'product_variant.product_external_id', 'shopProductId', 'catItem.sku', 'product_page_id',
 ];
 const PRODUCT_NAME_PATHS = ['productName', 'product_name', 'OriginalProductName', 'product.name', 'product.title', 'groupingData.productName', 'catItem.title'];
 
@@ -435,8 +453,9 @@ function dateOf(v: unknown): string {
 }
 
 /** One review object to a scraped review. */
-export function reviewFromJson(obj: Json, index: number): JsonReview | null {
-  if (!looksLikeReview(obj)) return null;
+export function reviewFromJson(raw: Json, index: number): JsonReview | null {
+  if (!looksLikeReview(raw)) return null;
+  const obj = flattenReview(raw);
   const rating = normalizeRating(first(obj, RATING_KEYS), obj.bestRating)!;
   const fields = fieldsFromAnswers(reviewAnswers(obj));
   const variantTitle = str(firstPath(obj, ['product_variant.title', 'productVariantName', 'variantName', 'variant_title', 'variant.title']));
@@ -465,6 +484,7 @@ export function reviewFromJson(obj: Json, index: number): JsonReview | null {
 /** The product review total a response states. Shop-wide totals (Stamped totalAll) are ignored. */
 const TOTAL_PATHS = [
   'bottomline.totalReview', 'bottomline.total_review', 'TotalResults', 'response.TotalResults', 'pagination.total',
+  'rollup.review_count', 'data.rollup.review_count', 'results.0.rollup.review_count',
   'summary.review_count', 'reviewAggregate.reviewCount', 'aggregate.reviewCount', 'total_reviews', 'totalReviews',
   'reviewCount', 'review_count', 'total',
 ];

@@ -198,6 +198,14 @@ if (opacityColumn?.notnull === 1) {
   `);
 }
 
+/** True when this SKU is stored locally with at least one review. */
+function hasStoredReviews(sku: string): boolean {
+  const row = db.prepare(`SELECT total_reviews FROM commercial_skus WHERE sku = ?`).get(sku) as
+    | { total_reviews: number }
+    | undefined;
+  return (row?.total_reviews ?? 0) > 0;
+}
+
 const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
   const nowIso = new Date().toISOString();
   report.committedToDbAt = nowIso;
@@ -1501,9 +1509,10 @@ export function createApp() {
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
           const report = aggregateProductFitReport(meta, []);
-          upsertReportTransaction(report);
+          // The reviews may have failed to load this time. Keep the ones an earlier scrape stored.
+          if (!hasStoredReviews(report.sku)) upsertReportTransaction(report);
           saveSizeChart(report.sku, sizeChart);
-          const supabase = await pushFitReports([report], { [report.sku]: sizeChart });
+          const supabase = await pushFitReports([report], { [report.sku]: sizeChart }, { chartOnly: true });
           res.json({
             report,
             sizeChart,

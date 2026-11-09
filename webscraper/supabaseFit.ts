@@ -54,6 +54,7 @@ export async function checkFitStore(): Promise<SupabaseSync> {
 export async function pushFitReports(
   reports: ProductFitReport[],
   charts: Record<string, SizeChartRow[]> = {},
+  options: { chartOnly?: boolean } = {},
 ): Promise<SupabaseSync> {
   const env = readSupabaseEnv();
   if (!env) {
@@ -62,7 +63,7 @@ export async function pushFitReports(
   const db = getClient(env);
   for (const report of reports) {
     const { error } = await db.rpc('commit_fit_report', {
-      payload: fitPayloadFromReport(report, charts[report.sku] ?? []),
+      payload: fitPayloadFromReport(report, charts[report.sku] ?? [], options),
     });
     if (error) return { ok: false, error: error.message };
   }
@@ -133,6 +134,14 @@ export async function deleteRemoteFitSku(sku: string): Promise<SupabaseSync> {
   const env = readSupabaseEnv();
   if (!env) {
     return { ok: false, skipped: true, reason: 'SUPABASE_URL or a Supabase key is not set' };
+  }
+  // The publishable key cannot delete from the shared store (see fit_store.sql).
+  if (!process.env.SUPABASE_SECRET_KEY?.trim()) {
+    return {
+      ok: false,
+      skipped: true,
+      reason: 'Deleting from the shared fit store needs SUPABASE_SECRET_KEY in .env.local. The local copy was deleted.',
+    };
   }
   const { error } = await getClient(env).rpc('delete_fit_sku', { target_sku: sku });
   if (error) return { ok: false, error: error.message };

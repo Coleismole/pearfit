@@ -126,22 +126,30 @@ const UNICODE_FRACTIONS: Record<string, number> = {
   '⅞': 0.875,
 };
 
-/** Reads one stated measurement. "21 1/2" is 21.5. A truncated 21 would be a different size. */
-function readMeasurement(text: string): number | null {
+/** A tape-measure fraction: 1/2, 3/4, 5/8, 7/16. Anything else around a slash is not a fraction. */
+function tapeFraction(num: string, den: string): number | null {
+  const n = Number(num);
+  const d = Number(den);
+  if (![2, 4, 8, 16].includes(d) || n <= 0 || n >= d) return null;
+  return n / d;
+}
+
+/**
+ * Reads one stated measurement. "21 1/2" is 21.5. A truncated 21 would be a different size.
+ * "56 / 22" is two values (often cm and inches side by side), not 56 divided by 22, so it is null.
+ * A decimal comma is a decimal point: "55,5" is 55.5.
+ */
+function readMeasurement(raw: string): number | null {
+  const text = raw.replace(/(\d),(\d{1,2})(?!\d)/g, '$1.$2');
   const mixed = text.match(/(\d+)\s+(\d+)\s*\/\s*(\d+)/);
   if (mixed) {
-    const den = Number(mixed[3]);
-    if (den === 0) return null;
-    return Number(mixed[1]) + Number(mixed[2]) / den;
+    const fraction = tapeFraction(mixed[2], mixed[3]);
+    return fraction === null ? null : Number(mixed[1]) + fraction;
   }
   const unicode = text.match(/(\d+(?:\.\d+)?)\s*([½¼¾⅛⅜⅝⅞])/);
   if (unicode) return Number(unicode[1]) + UNICODE_FRACTIONS[unicode[2]];
-  const bare = text.match(/(\d+)\s*\/\s*(\d+)/);
-  if (bare) {
-    const den = Number(bare[2]);
-    if (den === 0) return null;
-    return Number(bare[1]) / den;
-  }
+  const bare = text.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  if (bare) return tapeFraction(bare[1], bare[2]);
   const match = text.match(/(\d+(?:\.\d+)?)/);
   if (!match) return null;
   const value = Number(match[1]);
@@ -250,7 +258,15 @@ function parseTransposedTable(
   body: string[][],
   tableUnit: Unit | null,
 ): ParsedTable | null {
-  const sizes = headers.slice(1).map((cell) => chartSizeCode(cell));
+  // A size that repeats (XL and 1XL) keeps its first column only, as the row layout does.
+  // Two rows with one size would fail the (sku, size) key in the shared store.
+  const seen = new Set<string>();
+  const sizes = headers.slice(1).map((cell) => {
+    const size = chartSizeCode(cell);
+    if (!size || seen.has(size)) return null;
+    seen.add(size);
+    return size;
+  });
   if (sizes.filter(Boolean).length < 2) return null;
   const rows: SizeChartRow[] = [];
   sizes.forEach((size, index) => {

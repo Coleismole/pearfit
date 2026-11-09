@@ -114,3 +114,11 @@ test('extractSizeFromReviewText finds the stated size or returns empty', () => {
   assert.equal(extractSizeFromReviewText('Size: X-Large'), 'X-Large');
   assert.equal(extractSizeFromReviewText('I ordered a 3XL'), '3XL');
 });
+
+test('extractSizeFromReviewText ignores the usual size and words that are not sizes', () => {
+  assert.equal(extractSizeFromReviewText('I usually wear L but sized down to M and it fits great'), 'M');
+  assert.equal(extractSizeFromReviewText('Got a small stain on it after one wash, otherwise fine'), '');
+  assert.equal(extractSizeFromReviewText('Fits well in a medium. I normally wear a small.'), 'medium');
+  assert.equal(extractSizeFromReviewText('I wear an XL in most brands'), '');
+  assert.equal(extractSizeFromReviewText('Went up a size to XL after reading reviews'), 'XL');
+});

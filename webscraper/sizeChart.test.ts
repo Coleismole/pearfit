@@ -228,3 +228,46 @@ test('parseSizeChartFirst returns no rows when no page has a chart', () => {
   assert.deepEqual(parseSizeChartFirst('<p>nothing</p>', null), []);
   assert.deepEqual(parseSizeChartFirst(), []);
 });
+
+test('a cell with two numbers around a slash is null, not a division', () => {
+  const html = `
+    <table>
+      <caption>Size chart (cm)</caption>
+      <tr><th>Size</th><th>Body width</th><th>Body length</th><th>Sleeve length</th></tr>
+      <tr><td>M</td><td>56 / 22</td><td>71/28</td><td>21 1/2 in</td></tr>
+      <tr><td>L</td><td>59</td><td>74</td><td>3/4</td></tr>
+    </table>`;
+  // 56 / 22 and 71/28 are two values side by side: null. 21 1/2 in = 21.5 × 2.54 = 54.61 → 54.6.
+  // A lone 3/4 cm is a real tape fraction: 0.75 → 0.8.
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: null, sleeve_cm: 54.6 },
+    { size: 'L', sortOrder: 3, chest_cm: 59, length_cm: 74, sleeve_cm: 0.8 },
+  ]);
+});
+
+test('a decimal comma is read as a decimal point', () => {
+  const html = `
+    <table>
+      <caption>cm</caption>
+      <tr><th>Size</th><th>Body width</th><th>Length</th></tr>
+      <tr><td>M</td><td>55,5</td><td>71,25</td></tr>
+    </table>`;
+  // 55,5 → 55.5; 71,25 → 71.25 → 71.3
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'M', sortOrder: 2, chest_cm: 55.5, length_cm: 71.3, sleeve_cm: null },
+  ]);
+});
+
+test('a transposed chart that repeats a size keeps the first column only', () => {
+  const html = `
+    <table>
+      <caption>cm</caption>
+      <tr><th>Size</th><th>XL</th><th>1XL</th><th>XXL</th></tr>
+      <tr><td>Body width</td><td>60</td><td>61</td><td>64</td></tr>
+    </table>`;
+  // XL and 1XL both mean XL. The first column (60) wins; 1XL (61) is dropped.
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'XL', sortOrder: 4, chest_cm: 60, length_cm: null, sleeve_cm: null },
+    { size: 'XXL', sortOrder: 5, chest_cm: 64, length_cm: null, sleeve_cm: null },
+  ]);
+});

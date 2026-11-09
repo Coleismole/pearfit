@@ -20,7 +20,7 @@ import {
   parseJsonLdScripts,
 } from './structuredData.ts';
 import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR, shouldUseHeadlessRender } from './headlessFetch.ts';
-import { parseSizeChart, type SizeChartRow } from './sizeChart.ts';
+import { parseSizeChartFirst, type SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
   labelledValue,
@@ -1412,6 +1412,7 @@ export function createApp() {
 
       const renderMode: RenderMode = render === 'always' || render === 'never' ? render : 'auto';
       let targetHtml = (rawHtml || '').trim();
+      let renderedChartHtml: string | null = null; // headless snapshot from before the review steps
       let sourceUrl = (url || 'batch://direct-review-payload').trim();
       let isRemoteUrl = false;
       let staticError: StaticFetchError | null = null;
@@ -1467,6 +1468,7 @@ export function createApp() {
             if (!scraped || renderedScrape.reviews.length > 0 || scraped.reviews.length === 0) {
               scraped = renderedScrape;
               targetHtml = rendered.html;
+              renderedChartHtml = rendered.chartHtml;
             }
             if (renderedScrape.reviews.length === 0) {
               headlessNote = 'Rendered the page in a headless browser but still found no reviews.';
@@ -1494,7 +1496,7 @@ export function createApp() {
       const { meta, reviews } = scraped;
 
       if (reviews.length === 0) {
-        const sizeChart = targetHtml ? parseSizeChart(targetHtml) : [];
+        const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml);
         // A chart with no parent SKU never shows up and never reaches Supabase.
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
@@ -1527,7 +1529,7 @@ export function createApp() {
       }
 
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = targetHtml ? parseSizeChart(targetHtml) : [];
+      const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml);
 
       let supabase: SupabaseSync | null = null;
       if (commitToDb) {

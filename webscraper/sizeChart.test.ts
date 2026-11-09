@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseSizeChart } from './sizeChart.ts';
+import { parseSizeChart, parseSizeChartFirst } from './sizeChart.ts';
 
 test('an inch chest chart is stored as pit-to-pit centimeters', () => {
   const html = `
@@ -136,4 +136,27 @@ test('a chart whose only numbers are an unspecified chest yields no rows', () =>
       <tr><td>M</td><td>54</td></tr>
     </table>`;
   assert.deepEqual(parseSizeChart(html), []);
+});
+
+const CM_CHART = `
+  <table>
+    <caption>Size guide (cm)</caption>
+    <tr><th>Size</th><th>Body width</th><th>Body length</th></tr>
+    <tr><td>M</td><td>52</td><td>70</td></tr>
+  </table>`;
+const CM_CHART_ROWS = [{ size: 'M', sortOrder: 2, chest_cm: 52, length_cm: 70, sleeve_cm: null }];
+
+test('parseSizeChartFirst uses the first page that has a chart', () => {
+  const other = CM_CHART.replace('52', '99');
+  assert.deepEqual(parseSizeChartFirst(CM_CHART, other), CM_CHART_ROWS);
+});
+
+test('parseSizeChartFirst falls back when the first page has no chart, and skips missing pages', () => {
+  const reviewsOnly = '<html><body><article class="review-card">Runs small</article></body></html>';
+  assert.deepEqual(parseSizeChartFirst(reviewsOnly, null, undefined, '', CM_CHART), CM_CHART_ROWS);
+});
+
+test('parseSizeChartFirst returns no rows when no page has a chart', () => {
+  assert.deepEqual(parseSizeChartFirst('<p>nothing</p>', null), []);
+  assert.deepEqual(parseSizeChartFirst(), []);
 });

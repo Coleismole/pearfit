@@ -111,4 +111,6 @@ test('extractSizeFromReviewText finds the stated size or returns empty', () => {
   assert.equal(extractSizeFromReviewText('Size: XL'), 'XL');
   assert.equal(extractSizeFromReviewText('Bought it in size L, perfect'), 'L');
   assert.equal(extractSizeFromReviewText('Great shirt overall'), '');
+  assert.equal(extractSizeFromReviewText('Size: X-Large'), 'X-Large');
+  assert.equal(extractSizeFromReviewText('I ordered a 3XL'), '3XL');
 });

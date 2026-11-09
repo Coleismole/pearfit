@@ -296,7 +296,7 @@ function renderMatrix() {
   ).join('');
 
   host.querySelectorAll('.mrow').forEach((rowEl) => {
-    rowEl.addEventListener('click', () => {
+    const selectRow = () => {
       activeIdx = Number(rowEl.dataset.i);
       capture('fit_recommendation_explored', {
         interaction: 'fit_matrix',
@@ -306,6 +306,12 @@ function renderMatrix() {
       renderUsual();
       renderMatrix();
       renderReco();
+    };
+    rowEl.addEventListener('click', selectRow);
+    rowEl.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      selectRow();
     });
   });
 }

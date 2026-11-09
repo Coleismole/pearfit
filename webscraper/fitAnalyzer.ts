@@ -1,4 +1,11 @@
 export const GARMENT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const;
+
+/**
+ * Size words, longest first, so "X-Large" is not read as "Large" and "3XL" is not dropped.
+ * Shared by the paste parser and the JSON-LD review reader.
+ */
+export const REVIEW_SIZE_TOKEN =
+  'XXXL|3XL|XXL|2XL|XXS|X-LARGE|X-SMALL|EXTRA LARGE|EXTRA SMALL|XLARGE|XSMALL|SMALL|MEDIUM|LARGE|XL|XS|S|M|L|\\d{1,2}';
 export type GarmentSize = (typeof GARMENT_SIZES)[number];
 
 export const ANATOMICAL_ZONES = [
@@ -590,11 +597,11 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
   blocks.forEach((block, idx) => {
     const sizeMatch =
       block.match(
-        /\bSize(?:\s+Purchased|\s+Ordered)?\s*[:=-]\s*(XXL|2XL|XL|XS|S|M|L|Small|Medium|Large|\d{1,2})\b/i
+        new RegExp(`\\bSize(?:\\s+Purchased|\\s+Ordered)?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`, 'i')
       ) ||
-      block.match(/\[\s*(XXL|2XL|XL|XS|S|M|L)\s*\]/i) ||
+      block.match(new RegExp(`\\[\\s*(${REVIEW_SIZE_TOKEN})\\s*\\]`, 'i')) ||
       block.match(
-        /\b(?:bought|ordered|wearing|got)\s+(?:a\s+|an\s+|size\s+)?(XXL|2XL|XL|XS|S|M|L|Small|Medium|Large)\b/i
+        new RegExp(`\\b(?:bought|ordered|wearing|got)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`, 'i')
       );
 
     const ratingMatch =
@@ -633,6 +640,27 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
 }
 
 /**
+ * Turns three counts into percentages that add up to 100.
+ * The middle share keeps the rounding remainder, matching the previous fit split.
+ * When the two ends round up past 100, the extra point comes off the larger end
+ * so a chart never shows 101%.
+ */
+export function roundedShares(left: number, middle: number, right: number): [number, number, number] {
+  const total = left + middle + right;
+  if (total <= 0) return [0, 0, 0];
+  let leftPct = Math.round((left / total) * 100);
+  let rightPct = Math.round((right / total) * 100);
+  let middlePct = 100 - leftPct - rightPct;
+  if (middlePct < 0) {
+    const excess = -middlePct;
+    if (leftPct >= rightPct) leftPct -= excess;
+    else rightPct -= excess;
+    middlePct = 0;
+  }
+  return [leftPct, middlePct, rightPct];
+}
+
+/**
  * Synthesizes a complete ProductFitReport across all sizes XS-XXL from raw scraped reviews.
  */
 export function aggregateProductFitReport(
@@ -664,9 +692,10 @@ export function aggregateProductFitReport(
   const trueToSizeCount = analyzedReviews.filter((r) => r.fitDirection === 'true_to_size').length;
   const runsLargeCount = analyzedReviews.filter((r) => r.fitDirection === 'runs_large').length;
 
-  const runsSmallPct = totalReviews > 0 ? Math.round((runsSmallCount / totalReviews) * 100) : 0;
-  const runsLargePct = totalReviews > 0 ? Math.round((runsLargeCount / totalReviews) * 100) : 0;
-  const trueToSizePct = totalReviews > 0 ? Math.max(0, 100 - runsSmallPct - runsLargePct) : 0;
+  const overallShares = roundedShares(runsSmallCount, trueToSizeCount, runsLargeCount);
+  const runsSmallPct = overallShares[0];
+  const trueToSizePct = overallShares[1];
+  const runsLargePct = overallShares[2];
 
   const overallFitIndex =
     totalReviews > 0
@@ -755,9 +784,7 @@ export function aggregateProductFitReport(
     const sTts = group.filter((r) => r.fitDirection === 'true_to_size').length;
     const sLarge = group.filter((r) => r.fitDirection === 'runs_large').length;
 
-    const sSmallPct = Math.round((sSmall / count) * 100);
-    const sLargePct = Math.round((sLarge / count) * 100);
-    const sTtsPct = Math.max(0, 100 - sSmallPct - sLargePct);
+    const [sSmallPct, sTtsPct, sLargePct] = roundedShares(sSmall, sTts, sLarge);
 
     const fitSkew = Number(
       (group.reduce((acc, r) => acc + r.fitSkew, 0) / count).toFixed(2)
@@ -894,9 +921,7 @@ export function aggregateProductFitReport(
     }
     const tightC = mentions.filter((m) => m.tension === 'tight').length;
     const looseC = mentions.filter((m) => m.tension === 'loose').length;
-    const tightPct = Math.round((tightC / mCount) * 100);
-    const loosePct = Math.round((looseC / mCount) * 100);
-    const optimalPct = Math.max(0, 100 - tightPct - loosePct);
+    const [tightPct, optimalPct, loosePct] = roundedShares(tightC, mCount - tightC - looseC, looseC);
     const netTensionScore = Number(((looseC - tightC) / mCount).toFixed(2));
 
     let statusLabel = 'Balanced Drape';
@@ -1010,12 +1035,23 @@ export function aggregateProductFitReport(
   };
 }
 
+export interface DumpSizeChartRow {
+  sku: string;
+  size: string;
+  sortOrder: number;
+  chest_cm: number | null;
+  length_cm: number | null;
+  sleeve_cm: number | null;
+}
+
 /**
  * Generates deterministic relational SQL DDL + INSERT statements for dumping scraped SKU reports
  * into an external commercial PostgreSQL / SQLite / MySQL data warehouse.
+ * fabric_opacity_pct is nullable: an unknown opacity is NULL, never a made-up number.
  */
-export function generateSqlInsertDump(reports: ProductFitReport[]): string {
+export function generateSqlInsertDump(reports: ProductFitReport[], charts: DumpSizeChartRow[] = []): string {
   const esc = (val: string) => (val || '').replace(/'/g, "''");
+  const num = (value: number | null) => (value === null || !Number.isFinite(value) ? 'NULL' : String(value));
   const lines: string[] = [
     '-- Pearfit Scraper Commercial Apparel Fit Database Dump',
     `-- Generated At: ${new Date().toISOString()}`,
@@ -1037,7 +1073,7 @@ export function generateSqlInsertDump(reports: ProductFitReport[]): string {
     '  true_to_size_pct INT NOT NULL,',
     '  runs_large_pct INT NOT NULL,',
     '  shrinkage_mention_pct INT NOT NULL,',
-    '  fabric_opacity_pct INT NOT NULL,',
+    '  fabric_opacity_pct INT,',
     '  sentiment_score INT NOT NULL,',
     '  avg_rating DECIMAL(3,1) NOT NULL,',
     '  source_url TEXT,',
@@ -1061,11 +1097,21 @@ export function generateSqlInsertDump(reports: ProductFitReport[]): string {
     '  PRIMARY KEY (sku, size_code)',
     ');',
     '',
+    'CREATE TABLE IF NOT EXISTS sku_size_chart (',
+    '  sku VARCHAR(128) NOT NULL,',
+    '  size_code VARCHAR(16) NOT NULL,',
+    '  sort_order INT NOT NULL,',
+    '  chest_cm DECIMAL(6,1),',
+    '  length_cm DECIMAL(6,1),',
+    '  sleeve_cm DECIMAL(6,1),',
+    '  PRIMARY KEY (sku, size_code)',
+    ');',
+    '',
   ];
 
   for (const r of reports) {
     lines.push(
-      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${r.overallFitIndex}, '${esc(r.overallVerdict)}', ${r.gradingDelta}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${r.tshirtSignals.fabricOpacityPct}, ${r.overallSentimentScore}, ${r.overallAvgRating}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
+      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${num(r.overallFitIndex)}, '${esc(r.overallVerdict)}', ${num(r.gradingDelta)}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${num(r.tshirtSignals.fabricOpacityPct)}, ${r.overallSentimentScore}, ${num(r.overallAvgRating)}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
     );
     for (const s of r.sizeSummaries) {
       if (s.reviewCount > 0) {
@@ -1076,6 +1122,15 @@ export function generateSqlInsertDump(reports: ProductFitReport[]): string {
     }
     lines.push('');
   }
+
+  const chartRows = [...charts].sort((a, b) => a.sku.localeCompare(b.sku) || a.sortOrder - b.sortOrder || a.size.localeCompare(b.size));
+  for (const row of chartRows) {
+    if (!row.sku || !row.size) continue;
+    lines.push(
+      `INSERT INTO sku_size_chart (sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm) VALUES ('${esc(row.sku)}', '${esc(row.size)}', ${Math.round(row.sortOrder) || 0}, ${num(row.chest_cm)}, ${num(row.length_cm)}, ${num(row.sleeve_cm)});`
+    );
+  }
+  if (chartRows.length > 0) lines.push('');
 
   return lines.join('\n');
 }

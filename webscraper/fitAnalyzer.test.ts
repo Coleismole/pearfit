@@ -8,6 +8,7 @@ import {
   aggregateProductFitReport,
   generateSqlInsertDump,
   formatSigned,
+  roundedShares,
 } from './fitAnalyzer';
 
 test('normalizeSize maps diverse size strings and numeric sizes into canonical XS-XXL', () => {
@@ -261,6 +262,58 @@ test('pasted reviews do not invent a date, a verified flag, or a star rating', (
   assert.equal(parsed[0].date, '');
   assert.equal(parsed[0].verifiedPurchase, false);
   assert.equal(parsed[0].rating, 3);
+});
+
+test('rounded shares add to 100 when both ends round up', () => {
+  assert.deepEqual(roundedShares(1, 1, 1), [33, 34, 33]);
+  // 3/8 = 37.5 → 38 and 5/8 = 62.5 → 63 would print 101. The extra point comes off the larger end.
+  assert.deepEqual(roundedShares(3, 0, 5), [38, 0, 62]);
+});
+
+test('pasted review sizes keep X-Large and 3XL instead of dropping them', () => {
+  const parsed = parseRawReviewBatch(
+    'Size: X-Large | Rating: 4/5\nRoomy through the chest but wearable.\n\nSize: 3XL | Rating: 3/5\nOrdered my usual 3XL.'
+  );
+  assert.equal(parsed.length, 2);
+  assert.equal(parsed[0].sizePurchased, 'X-Large');
+  assert.equal(parsed[1].sizePurchased, '3XL');
+  assert.equal(normalizeSizeOrNull(parsed[0].sizePurchased), 'XL');
+  assert.equal(normalizeSizeOrNull(parsed[1].sizePurchased), 'XXL');
+});
+
+test('sql dump stores unknown opacity as NULL and includes the size chart', () => {
+  const report = aggregateProductFitReport(
+    {
+      id: 'plain',
+      name: 'Plain Tee',
+      brand: 'Example',
+      category: 'T-Shirts & Tops',
+      sku: 'EX-1',
+      price: 'Unknown',
+      fabricComposition: '100% cotton',
+      sourceUrl: 'https://example.test/plain',
+    },
+    [
+      {
+        id: '1',
+        author: 'A',
+        sizePurchased: 'M',
+        rating: 4,
+        title: '',
+        body: 'True to size and fits perfectly.',
+        date: '',
+        verifiedPurchase: false,
+      },
+    ]
+  );
+  assert.equal(report.tshirtSignals.fabricOpacityPct, null);
+  const sql = generateSqlInsertDump(
+    [report],
+    [{ sku: 'EX-1', size: 'M', sortOrder: 2, chest_cm: 54, length_cm: null, sleeve_cm: 63.5 }]
+  );
+  assert.match(sql, /fabric_opacity_pct INT,/);
+  assert.equal(sql.includes('fabric_opacity_pct INT NOT NULL'), false);
+  assert.match(sql, /INSERT INTO sku_size_chart \(sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm\) VALUES \('EX-1', 'M', 2, 54, NULL, 63\.5\);/);
 });
 
 test('formatSigned keeps a minus and adds a plus', () => {

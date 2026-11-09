@@ -10,6 +10,7 @@
  * Playwright is imported lazily so the server still starts when no browser is installed.
  */
 import type { Browser, Page } from 'playwright';
+import { isBlockedHostname } from './publicUrl.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
@@ -32,6 +33,12 @@ export interface RenderedPage {
   status: number | null;
   finalUrl: string;
   reviewSelectorFound: boolean;
+  /**
+   * The page as serialized once it settled and was scrolled, before any review step.
+   * A review click can navigate away from the product view (Uniqlo goes to /reviews) and take the
+   * size chart with it, so the chart is read from here when the final html has none.
+   */
+  chartHtml: string | null;
 }
 
 /**
@@ -56,6 +63,23 @@ let renderTail: Promise<void> = Promise.resolve();
 /** Chromium pack for Vercel. The full Playwright browser does not fit in that function. */
 const SERVERLESS_CHROMIUM_PACK =
   'https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar';
+
+/** A test page on localhost may load private hosts. A public product page may not. */
+function startUrlAllowsPrivate(raw: string): boolean {
+  try {
+    return isBlockedHostname(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
+}
+
+function requestHostIsBlocked(raw: string): boolean {
+  try {
+    return isBlockedHostname(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
+}
 
 function renderBudgetMs(): number {
   // The hosted function is capped at 60s, including the Chromium download on a cold start.
@@ -187,10 +211,13 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     locale: 'en-US',
     viewport: { width: 1366, height: 900 },
   });
+  const allowPrivate = startUrlAllowsPrivate(url);
   // Images, video and fonts are irrelevant to review text; skipping them makes renders faster.
   await context.route('**/*', (route) => {
     const type = route.request().resourceType();
-    return type === 'image' || type === 'media' || type === 'font' ? route.abort() : route.continue();
+    if (type === 'image' || type === 'media' || type === 'font') return route.abort();
+    if (!allowPrivate && requestHostIsBlocked(route.request().url())) return route.abort();
+    return route.continue();
   });
 
   const page = await context.newPage();
@@ -203,13 +230,16 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false };
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null };
     }
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
 
     await clickFirst(page, 'button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
 
     await scrollThroughPage(page);
+
+    // Snapshot before touching reviews: a review click may leave the product view.
+    const chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
 
     // The full review list is often behind a tab or accordion, even when a few highlight
     // reviews are already visible. A link may navigate away, so only use it as a last resort.
@@ -259,6 +289,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       status,
       finalUrl: page.url(),
       reviewSelectorFound,
+      chartHtml,
     };
   } catch (err) {
     if (timedOut) {
@@ -276,7 +307,7 @@ interface ServerlessPage {
   url(): string;
   setUserAgent(ua: string): Promise<void>;
   setRequestInterception(enabled: boolean): Promise<void>;
-  on(event: 'request', handler: (req: { resourceType(): string; abort(): Promise<void>; continue(): Promise<void> }) => void): void;
+  on(event: 'request', handler: (req: { url(): string; resourceType(): string; abort(): Promise<void>; continue(): Promise<void> }) => void): void;
   evaluate(pageFunction: string): Promise<unknown>;
   waitForNetworkIdle(opts: { timeout: number }): Promise<void>;
   waitForSelector(selector: string, opts: { timeout: number }): Promise<unknown>;
@@ -316,12 +347,16 @@ const CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
 async function renderWithServerlessChromium(url: string): Promise<RenderedPage> {
   const browser = (await getBrowser()) as unknown as { newPage(): Promise<ServerlessPage> };
   const page = await browser.newPage();
+  const allowPrivate = startUrlAllowsPrivate(url);
   await page.setUserAgent(USER_AGENT);
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const type = req.resourceType();
-    if (type === 'image' || type === 'media' || type === 'font') void req.abort();
-    else void req.continue();
+    if (type === 'image' || type === 'media' || type === 'font' || (!allowPrivate && requestHostIsBlocked(req.url()))) {
+      void req.abort();
+    } else {
+      void req.continue();
+    }
   });
 
   let timedOut = false;
@@ -346,11 +381,14 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false };
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null };
     }
     await page.waitForNetworkIdle({ timeout: 8000 }).catch(() => {});
     await clickRole('button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
     await page.evaluate(SCROLL_PAGE);
+
+    // Snapshot before touching reviews: a review click may leave the product view.
+    const chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
 
     const reviewsBeforeOpening = await countReviews();
     const openedSection =
@@ -388,7 +426,7 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     await sleep(500);
 
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
-    return { html, status, finalUrl: page.url(), reviewSelectorFound };
+    return { html, status, finalUrl: page.url(), reviewSelectorFound, chartHtml };
   } catch (err) {
     if (timedOut) throw new Error(`Headless render timed out after ${renderBudgetMs() / 1000}s`);
     throw err;

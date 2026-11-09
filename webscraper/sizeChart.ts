@@ -59,15 +59,19 @@ export function chartSizeCode(raw: string): string | null {
   if (letters[cleaned]) return letters[cleaned];
   const word = cleaned.match(/\b(XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
   if (word && letters[word[1]]) return letters[word[1]];
-  if (/^\d{2,3}$/.test(cleaned)) return cleaned;
+  // US women's sizes are one digit (2, 4, 6, 8). A chart that only kept 10+ dropped them.
+  const numeric = cleaned.match(/^(?:US|UK|EU|IT|FR|JP)?\s*(\d{1,3})(?:\s*\((?:US|UK|EU|IT|FR|JP)\))?$/);
+  if (numeric) return numeric[1];
   return null;
 }
 
 function sortOrder(size: string, index: number): number {
   const letter = LETTERS.indexOf(size as (typeof LETTERS)[number]);
   if (letter >= 0) return letter;
+  // 00 is smaller than 0. Number("00") is 0, so it needs its own rank.
+  if (size === '00') return 999;
   const numeric = Number(size);
-  if (Number.isFinite(numeric)) return 1000 + numeric;
+  if (/^\d+$/.test(size) && Number.isFinite(numeric)) return 1000 + numeric;
   return 2000 + index;
 }
 
@@ -78,15 +82,80 @@ function unitInText(text: string): Unit | null {
   return null;
 }
 
-function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: Unit } | null {
-  const text = raw.replace(/\s+/g, ' ').trim();
-  if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
-  // A range is not one measurement. Leave it null instead of picking an end.
-  if (/\d\s*[-–—]\s*\d/.test(text)) return null;
+/**
+ * The unit a chart shows when its own text states none: the checked radio of its cm/inch toggle.
+ * Looks only at radios whose name or id says they are a unit control, in the nearest enclosing
+ * element that has one. If none is checked, or the checked ones disagree, the unit stays unknown.
+ */
+function unitFromToggle($: cheerio.CheerioAPI, node: unknown): Unit | null {
+  for (const box of $(node as never).parents().toArray()) {
+    const checked = new Set<Unit>();
+    let found = false;
+    $(box)
+      .find('input[type="radio"]')
+      .each((_i, radio) => {
+        const el = $(radio);
+        const id = el.attr('id') ?? '';
+        if (!/unit|measure/i.test(`${el.attr('name') ?? ''} ${id}`)) return;
+        const label = [
+          id,
+          el.attr('value') ?? '',
+          el.attr('aria-label') ?? '',
+          id ? $(`label[for="${id}"]`).text() : '',
+          el.closest('label').text(),
+        ].join(' ');
+        const isCm = /\b(cm|centimet(?:er|re)s?)\b/i.test(label);
+        const isIn = /\b(in|inch|inches)\b/i.test(label);
+        if (isCm === isIn) return; // neither, or both: not a usable unit radio
+        found = true;
+        const aria = el.attr('aria-checked');
+        if (aria === undefined ? el.is('[checked]') : aria === 'true') checked.add(isCm ? 'cm' : 'in');
+      });
+    if (found) return checked.size === 1 ? [...checked][0] : null;
+  }
+  return null;
+}
+
+const UNICODE_FRACTIONS: Record<string, number> = {
+  '½': 0.5,
+  '¼': 0.25,
+  '¾': 0.75,
+  '⅛': 0.125,
+  '⅜': 0.375,
+  '⅝': 0.625,
+  '⅞': 0.875,
+};
+
+/** Reads one stated measurement. "21 1/2" is 21.5. A truncated 21 would be a different size. */
+function readMeasurement(text: string): number | null {
+  const mixed = text.match(/(\d+)\s+(\d+)\s*\/\s*(\d+)/);
+  if (mixed) {
+    const den = Number(mixed[3]);
+    if (den === 0) return null;
+    return Number(mixed[1]) + Number(mixed[2]) / den;
+  }
+  const unicode = text.match(/(\d+(?:\.\d+)?)\s*([½¼¾⅛⅜⅝⅞])/);
+  if (unicode) return Number(unicode[1]) + UNICODE_FRACTIONS[unicode[2]];
+  const bare = text.match(/(\d+)\s*\/\s*(\d+)/);
+  if (bare) {
+    const den = Number(bare[2]);
+    if (den === 0) return null;
+    return Number(bare[1]) / den;
+  }
   const match = text.match(/(\d+(?:\.\d+)?)/);
   if (!match) return null;
   const value = Number(match[1]);
   if (!Number.isFinite(value) || value <= 0) return null;
+  return value;
+}
+
+function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: Unit } | null {
+  const text = raw.replace(/\s+/g, ' ').trim();
+  if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
+  // A range is not one measurement. Leave it null instead of picking an end.
+  if (/[\d½¼¾⅛⅜⅝⅞]\s*[-–—]\s*\d/.test(text)) return null;
+  const value = readMeasurement(text);
+  if (value === null || value <= 0) return null;
   const unit = /cm\b/i.test(text)
     ? 'cm'
     : /in(?:ch(?:es)?)?\b|"|″/.test(text)
@@ -241,7 +310,7 @@ function rowsFromTables(html: string): SizeChartRow[] {
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
     const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
-    const unit = unitInText(context);
+    const unit = unitInText(context) ?? unitFromToggle($, table);
     const parsed = preferChart(
       parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
       parseTransposedTable(grid[0], grid.slice(1), unit),
@@ -290,7 +359,7 @@ function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
       });
     if (grid.length < 2) return;
     const context = [$(box).attr('class') ?? '', $(box).attr('id') ?? '', grid[0].join(' ')].join(' ');
-    const unit = unitInText(context);
+    const unit = unitInText(context) ?? unitFromToggle($, box);
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
     const parsed = preferChart(
@@ -306,4 +375,14 @@ function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
 export function parseSizeChart(html: string): SizeChartRow[] {
   const rows = rowsFromTables(html);
   return rows.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** The chart from the first page that has one. Later pages are fallbacks, e.g. a snapshot from before navigation. */
+export function parseSizeChartFirst(...pages: (string | null | undefined)[]): SizeChartRow[] {
+  for (const html of pages) {
+    if (!html) continue;
+    const rows = parseSizeChart(html);
+    if (rows.length > 0) return rows;
+  }
+  return [];
 }

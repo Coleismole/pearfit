@@ -79,6 +79,8 @@ export function productIdFromUrl(url: string): string | null {
   // An id in the path wins; a query parameter (which may be a tracking code) is the fallback.
   const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
   const m =
+    // Target: /p/<name>/-/A-93249836 (the A- number is Target's item id).
+    url.match(/\/-\/(A-\d{5,})(?:[/?#]|$)/) ||
     url.match(/\/(\d{4,})\.html/) ||
     // A product code with letters and digits as the page name: /edgartown-pocket-tee/1V011322.html.
     url.match(/\/([A-Z0-9]*\d[A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z][A-Z0-9]*\d[A-Z0-9]*)\.html(?:[?#]|$)/i) ||
@@ -103,3 +105,18 @@ export function ratingFromLabel(label: string | undefined): string {
   return best === 5 ? String(value) : String(1 + ((value - 1) / (best - 1)) * 4);
 }
 
+
+/**
+ * The title of a page a store shows automated visitors instead of the product: a bot check or an
+ * access-denied page. Returns the matched text, or null for an ordinary page.
+ */
+export function blockPageTitle(html: string): string | null {
+  // The document's own title (in <head>), not an SVG or product <title> further down the page.
+  const head = html.match(/<head[\s>][\s\S]*?<\/head>/i)?.[0] ?? html.slice(0, 5000);
+  const title = (head.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').replace(/\s+/g, ' ').trim();
+  // The whole title is the block phrase, at most followed by a "| Cloudflare"-style suffix, so a product
+  // named "Access Denied Graphic Tee" is not a block page.
+  const pattern =
+    /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
+  return pattern.test(title) ? title : null;
+}

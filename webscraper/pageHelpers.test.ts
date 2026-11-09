@@ -8,6 +8,7 @@ import {
   leafTexts,
   longestFreeText,
   productIdFromUrl,
+  blockPageTitle,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -78,7 +79,19 @@ test('productIdFromUrl finds product codes in common URL shapes', () => {
   assert.equal(productIdFromUrl('https://www.llbean.com/llb/shop/40651?page=carefree-unshrinkable-tee'), '40651');
   // A product parameter wins over a bare number in the path, which may be a category.
   assert.equal(productIdFromUrl('https://shop.example/c/10001/oxford-shirt?pid=AB123'), 'AB123');
+  assert.equal(productIdFromUrl('https://www.target.com/p/men-s-crew-neck-t-shirt-goodfellow/-/A-93249836'), 'A-93249836');
   assert.equal(productIdFromUrl('https://www.vineyardvines.com/product/mens-t-shirts/edgartown-short-sleeve-pocket-tee/1V011322.html'), '1V011322');
   // A word page name is not a code.
   assert.equal(productIdFromUrl('https://example.com/about-us.html'), null);
+});
+
+test('blockPageTitle recognises bot checks and access-denied pages', () => {
+  assert.equal(blockPageTitle('<html><head><title>Client Challenge</title></head></html>'), 'Client Challenge');
+  assert.equal(blockPageTitle('<title>Access to this page has been denied</title>'), 'Access to this page has been denied');
+  assert.equal(blockPageTitle('<title>Just a moment...</title>'), 'Just a moment...');
+  assert.equal(blockPageTitle('<title>Essentials No. 1 Logo Men\'s Tee | PUMA</title>'), null);
+  assert.equal(blockPageTitle('<title>Attention Required! | Cloudflare</title>'), 'Attention Required! | Cloudflare');
+  // A product named like a block page, and an SVG title in the body, are not block pages.
+  assert.equal(blockPageTitle('<title>Access Denied Graphic Tee | Store</title>'), null);
+  assert.equal(blockPageTitle('<html><head><title>Logo Tee</title></head><body><svg><title>Security Check</title></svg></body></html>'), null);
 });

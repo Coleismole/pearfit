@@ -357,11 +357,14 @@ test('Bazaarvoice search-engine debug text in review markup is not counted as re
       ${card('y_2026, m_11, d_8, h_6')}
       ${card('bvseo_bulk, prod_bvrr, vn_bulk_3.0.50')}
       ${card('loc_en_CA, sid_39031035, prod, sort_default')}
+      ${card('facebook Share Review by Anonymous User')}
+      ${card("Saw this on Facebook and it fits true to size, I'm 6'1 and got the L")}
       </body></html>`;
     const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'ROOTS-T', commitToDb: false, render: 'never' });
     assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
-    const report = scraped.json.report as { reviews: { author: string }[] };
-    assert.deepEqual(report.reviews.map((r) => r.author), ['LisaKH']);
+    const report = scraped.json.report as { reviews: { author: string; text: string }[] };
+    // The share line is dropped; a real review that mentions Facebook is kept.
+    assert.deepEqual(report.reviews.map((r) => r.author), ['LisaKH', 'Anonymous']);
   } finally {
     server.close();
   }
@@ -457,6 +460,46 @@ test('cards by a placeholder reviewer, or with a short text inside another word,
     assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
     // Two page-data reviews plus both cards: "Verified Buyer" identifies no one, and "ok" inside "Looks" is not a match.
     assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 4);
+  } finally {
+    server.close();
+  }
+});
+
+test('two shoppers who wrote the same words are two reviews; the same text by one shopper is one', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Essential Tee',
+      sku: 'Z-1',
+      review: [
+        { '@type': 'Review', author: 'Ann', reviewBody: 'Love it, fits great.', reviewRating: { ratingValue: 5 } },
+        { '@type': 'Review', author: 'Bob', reviewBody: 'Love it, fits great.', reviewRating: { ratingValue: 4 } },
+      ],
+    };
+    const html = `<!DOCTYPE html><html><head><title>Essential Tee</title>
+      <script type="application/ld+json">${JSON.stringify(ld)}</script></head><body><h1>Essential Tee</h1>
+      <div class="review-card" data-author="Ann" data-rating="5"><p class="review-body-copy">Love it, fits great.</p></div></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    // Ann and Bob are two reviews; Ann's card is Ann's review again.
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 2);
+
+    // The same reviewer written "Eddie K." in one source and "Eddie K" in another is one review.
+    const ld2 = { '@context': 'https://schema.org', '@type': 'Product', name: 'Logo Tee', sku: 'P-1',
+      review: [{ '@type': 'Review', author: 'Eddie K', reviewBody: 'Nice T-shirt, delivered on time.', reviewRating: { ratingValue: 5 } }] };
+    const next = { props: { reviews: { total: 1, items: [{ id: 'r1', rating: 5, body: 'Nice T-shirt, delivered on time.', author: 'Eddie K.' }] } } };
+    const html2 = `<!DOCTYPE html><html><head><title>Logo Tee</title><script type="application/ld+json">${JSON.stringify(ld2)}</script></head>
+      <body><h1>Logo Tee</h1><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(next)}</script></body></html>`;
+    const scraped2 = await request(port, 'POST', '/api/scrape', { rawHtml: html2, commitToDb: false, render: 'never' });
+    assert.equal((scraped2.json.report as { totalReviews: number }).totalReviews, 1);
+
+    // A full name in one source and the short form in another ("Eddie Kowalski", "Eddie K.") is one reviewer.
+    const ld3 = { ...ld2, review: [{ ...ld2.review[0], author: 'Eddie Kowalski' }] };
+    const html3 = html2.replace(JSON.stringify(ld2), JSON.stringify(ld3));
+    const scraped3 = await request(port, 'POST', '/api/scrape', { rawHtml: html3, commitToDb: false, render: 'never' });
+    assert.equal((scraped3.json.report as { totalReviews: number }).totalReviews, 1);
   } finally {
     server.close();
   }

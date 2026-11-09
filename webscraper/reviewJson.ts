@@ -75,7 +75,7 @@ function firstPath(obj: Json, paths: string[]): unknown {
 const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore', 'rate'];
 const BODY_KEYS = ['body', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
 const TITLE_KEYS = ['title', 'Title', 'reviewTitle', 'review_title', 'headline'];
-const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'dateCreatedMillis', 'createdDate', 'created_date', 'date', 'created'];
+const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'dateCreatedMillis', 'createdDate', 'created_date', 'reviewed_at', 'reviewedAt', 'date', 'created'];
 const ID_KEYS = ['id', 'Id', 'reviewId', 'review_id', 'ReviewId', 'ugc_id', 'uuid'];
 const AUTHOR_PATHS = [
   'user.displayName', 'user.display_name', 'user.name', 'author.name', 'author.displayName', 'author.display_name',
@@ -418,9 +418,9 @@ function fieldsFromAnswers(answers: ReviewAnswer[]): Partial<RawScrapedReview> {
 const PRODUCT_KEY_PATHS = [
   'productId', 'product_id', 'ProductId', 'productExternalId', 'product_external_id', 'productSKU', 'productHandle',
   'product_handle', 'product.shopify_id', 'product.external_id', 'product.shopify_handle', 'product.handle', 'product.id',
-  'product_variant.product_external_id', 'shopProductId', 'catItem.sku', 'product_page_id',
+  'product_variant.product_external_id', 'shopProductId', 'catItem.sku', 'product_page_id', 'reviewed_product.product_id',
 ];
-const PRODUCT_NAME_PATHS = ['productName', 'product_name', 'OriginalProductName', 'product.name', 'product.title', 'groupingData.productName', 'catItem.title'];
+const PRODUCT_NAME_PATHS = ['productName', 'product_name', 'OriginalProductName', 'product.name', 'product.title', 'groupingData.productName', 'catItem.title', 'reviewed_product.title'];
 
 function authorOf(obj: Json): string {
   for (const path of AUTHOR_PATHS) {

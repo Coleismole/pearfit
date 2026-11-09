@@ -1,7 +1,7 @@
 /**
  * Headless Chromium fallback for product pages whose reviews are loaded by JavaScript
  * (Bazaarvoice, Yotpo, PowerReviews, ...). It is NOT used to get around stores that refuse
- * automated requests (403/429): those are respected and reported.
+ * automated requests (403/418/429/503): those are respected and reported.
  *
  * Renders the page, dismisses cookie banners, scrolls to trigger lazy-loaded review
  * widgets, opens the reviews section, clicks "load more" a few times, then returns the
@@ -37,6 +37,8 @@ const REVIEW_WAIT_MS = 10_000;
 const MAX_REVIEW_PAGES = 60;
 /** Stop paging once about this many reviews were seen; enough for fit statistics. */
 const MAX_REVIEWS = 300;
+/** Most review pages followed by link (/…/page/N). */
+const MAX_LINKED_REVIEW_PAGES = 15;
 /** Review JSON kept from one render: per response and in total. */
 const MAX_CAPTURED_BODY_BYTES = 5_000_000;
 const MAX_CAPTURED_TOTAL_BYTES = 30_000_000;
@@ -68,6 +70,11 @@ export interface RenderedPage {
   chartHtml: string | null;
   /** JSON (or JSONP) responses the page itself received that carry a rating field: review widget data. */
   jsonResponses: CapturedJson[];
+  /**
+   * Earlier pages of a review list that pages by link (Zappos /product/review/<id>/page/2), oldest first.
+   * `html` is the last page. Each holds its own reviews.
+   */
+  extraHtml?: string[];
 }
 
 export interface CapturedJson {
@@ -144,7 +151,7 @@ export class JsonCapture {
 /**
  * Headless is for pages whose reviews are added by JavaScript.
  * A failed static fetch (including 404 and "could not reach") is reported as that failure.
- * A store that refused the request (403/429/503) is not retried in a browser.
+ * A store that refused the request (403/418/429/503) is not retried in a browser.
  */
 export function shouldUseHeadlessRender(input: {
   isRemoteUrl: boolean;
@@ -289,6 +296,34 @@ const ALL_REVIEWS_LINK = `(() => {
   return '';
 })()`;
 
+/**
+ * The next page of a review list that pages by link: /…/page/3 after /…/page/2, or ?page=3. Only on a
+ * review page (its path names reviews), only within the same list, never another product or a search.
+ */
+const NEXT_REVIEW_PAGE_LINK = `(() => {
+  if (!/review/i.test(location.pathname)) return '';
+  const pageOf = (u) => Number((u.pathname.match(/\\/page\\/(\\d+)\\/?$/) || [])[1] || (u.search.match(/[?&](?:page|pg)=(\\d+)/) || [])[1] || 1);
+  const base = location.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '');
+  // The other query parameters (a star filter, another sort) must match, or the link is another list.
+  const otherParams = (u) => {
+    const params = new URLSearchParams(u.search);
+    params.delete('page');
+    params.delete('pg');
+    params.sort();
+    return params.toString();
+  };
+  const here = new URL(location.href);
+  const current = pageOf(here);
+  for (const a of document.querySelectorAll('a[href]')) {
+    let target;
+    try { target = new URL(a.getAttribute('href'), location.href); } catch (e) { continue; }
+    if (target.origin !== location.origin) continue;
+    const samePath = target.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '') === base;
+    if (samePath && otherParams(target) === otherParams(here) && pageOf(target) === current + 1) return target.href;
+  }
+  return '';
+})()`;
+
 /** Scrolls down until the page stops growing (lazy sections load as they come into view). */
 const SCROLL_TO_END = `(async () => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -351,8 +386,13 @@ const CLICK_NEXT_REVIEWS = `((skip) => {
       if (seen.has(el)) continue;
       seen.add(el);
       const aria = el.getAttribute('aria-label') || '';
-      // Leading symbols are decoration: "+ Load More Reviews".
-      const label = (aria || el.textContent || el.getAttribute('title') || '').replace(/\\s+/g, ' ').trim().replace(/^[^a-z0-9›»→>]+/i, '');
+      // Decoration around the words: "+ Load More Reviews", "Load More Reviews (73 remaining)".
+      const label = (aria || el.textContent || el.getAttribute('title') || '')
+        .replace(/\\s+/g, ' ')
+        .trim()
+        .replace(/^[^a-z0-9›»→>]+/i, '')
+        // Only a count of what is left: "See all (12)" (customer photos) must not become "See all".
+        .replace(/\\s*\\(\\d[\\d,]* (remaining|more|left)\\)$/i, '');
       if (/about this review|this review'?s? (text|content)/i.test(aria)) continue;
       const isMore = MORE.test(label);
       const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);
@@ -634,6 +674,34 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       await pageThroughReviews(pagingOps);
     }
 
+    // A review list that pages by link (Zappos): keep each page, then load the next, while time is left.
+    // Review cards on the pages kept so far count toward the same cap as the other paging.
+    const extraHtml: string[] = [];
+    let cardsKept = 0;
+    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8_000; i++) {
+      const known = capture.reportedTotal();
+      if (known !== null && capture.reviewCount() >= known) break;
+      const cardsHere = await countReviews(page).catch(() => 0);
+      if (capture.reviewCount() + cardsKept + cardsHere >= MAX_REVIEWS) break;
+      const next = (await page.evaluate(NEXT_REVIEW_PAGE_LINK)) as string;
+      if (!next) break;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next}`);
+      const here = page.url();
+      extraHtml.push((await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string);
+      cardsKept += cardsHere;
+      const moved = await page
+        .goto(next, { waitUntil: 'domcontentloaded', timeout: Math.max(3_000, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3_000)) })
+        .then(() => true, () => false);
+      if (!moved) {
+        // Still on this page: the final snapshot holds it, so drop the copy. If the browser had already
+        // moved on, the copy is the only record of this page's reviews and stays.
+        if (page.url() === here) extraHtml.pop();
+        break;
+      }
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+      await capture.settle(1500);
+    }
+
     // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
     await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
@@ -648,6 +716,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       reviewSelectorFound,
       chartHtml,
       jsonResponses: capture.items,
+      extraHtml,
     };
   } catch (err) {
     if (timedOut) {

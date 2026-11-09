@@ -35,12 +35,22 @@ test('headless render runs only for a remote page that still needs JavaScript', 
     shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: false, reviewCount: 0 }),
     true
   );
+  // 4 reviews in the source and no stated total: a review widget may hold more, so render.
   assert.equal(
     shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: false, reviewCount: 4 }),
-    false
+    true
   );
   assert.equal(
     shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: true, reviewCount: null }),
+    false
+  );
+  // 8 reviews in the page source, 120 stated: the rest load by JavaScript.
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: false, reviewCount: 8, reportedReviewCount: 120 }),
+    true
+  );
+  assert.equal(
+    shouldUseHeadlessRender({ isRemoteUrl: true, renderMode: 'auto', staticFailed: false, reviewCount: 8, reportedReviewCount: 8 }),
     false
   );
   assert.equal(

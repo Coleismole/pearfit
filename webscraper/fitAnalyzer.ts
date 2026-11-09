@@ -109,6 +109,10 @@ export interface ScraperTelemetry {
   selectorsUsed: string[];
   parseDurationMs: number;
   engineMode: 'cheerio-dom+deterministic-nlp' | 'headless-chromium+cheerio-dom' | 'batch-parser';
+  /** The review count the store states for this product, when it states one. Compare with reviewNodesMatched. */
+  reportedReviewCount?: number | null;
+  /** Where the reviews came from: "page", "dom", or the review service's host. */
+  reviewSources?: string[];
 }
 
 export interface GarmentFabricAndWashSignals {
@@ -1030,6 +1034,8 @@ export function aggregateProductFitReport(
       selectorsUsed: meta.scraperTelemetry?.selectorsUsed ?? [],
       parseDurationMs: meta.scraperTelemetry?.parseDurationMs ?? 0,
       engineMode: meta.scraperTelemetry?.engineMode || 'cheerio-dom+deterministic-nlp',
+      reportedReviewCount: meta.scraperTelemetry?.reportedReviewCount ?? null,
+      reviewSources: meta.scraperTelemetry?.reviewSources ?? [],
     },
     committedToDbAt: new Date().toISOString(),
   };

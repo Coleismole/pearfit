@@ -271,3 +271,18 @@ test('a transposed chart that repeats a size keeps the first column only', () =>
     { size: 'XXL', sortOrder: 5, chest_cm: 64, length_cm: null, sleeve_cm: null },
   ]);
 });
+
+test('a cell that shows cm and inches in separate elements is read in cm', () => {
+  // Kotn renders both units for its cm/inch toggle: <span>61.5cm</span><span>24"</span>.
+  const html = `
+    <table>
+      <tr><th>Size</th><th>Front Length</th><th>Chest Width</th></tr>
+      <tr><td>XS</td><td><span>61.5cm</span><span>24&quot;</span></td><td><span>50cm</span><span>20&quot;</span></td></tr>
+      <tr><td>M</td><td><span>64cm</span><span>25&quot;</span></td><td><span>56cm</span><span>22&quot;</span></td></tr>
+    </table>`;
+  // Chest width is flat (pit to pit): 50 and 56 cm as stated. Length 61.5 and 64 cm.
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'XS', sortOrder: 0, chest_cm: 50, length_cm: 61.5, sleeve_cm: null },
+    { size: 'M', sortOrder: 2, chest_cm: 56, length_cm: 64, sleeve_cm: null },
+  ]);
+});

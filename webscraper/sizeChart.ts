@@ -157,11 +157,23 @@ function readMeasurement(raw: string): number | null {
   return value;
 }
 
+/** Number-unit pairs in a cell such as "61.5cm 24\"" (a cm/inch toggle renders both). */
+const UNIT_PAIR = /(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[½¼¾⅛⅜⅝⅞])?)\s*(cm|centimet(?:er|re)s?|in(?:ch(?:es)?)?\b|"|″)/gi;
+
 function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: Unit } | null {
   const text = raw.replace(/\s+/g, ' ').trim();
   if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
   // A range is not one measurement. Leave it null instead of picking an end.
   if (/[\d½¼¾⅛⅜⅝⅞]\s*[-–—]\s*\d/.test(text)) return null;
+  // The same measurement in two units: use the centimetre one, else the inch one.
+  const pairs = [...text.matchAll(UNIT_PAIR)].map((m) => ({
+    value: readMeasurement(m[1]),
+    unit: (/^c/i.test(m[2]) ? 'cm' : 'in') as Unit,
+  }));
+  if (pairs.length > 1) {
+    const pick = pairs.find((p) => p.unit === 'cm' && p.value !== null) ?? pairs.find((p) => p.value !== null);
+    return pick && pick.value !== null && pick.value > 0 ? { value: pick.value, unit: pick.unit } : null;
+  }
   const value = readMeasurement(text);
   if (value === null || value <= 0) return null;
   const unit = /cm\b/i.test(text)
@@ -300,6 +312,21 @@ function parseTransposedTable(
   return any ? { rows } : null;
 }
 
+/** A cell's text with a space between elements, so <span>61.5cm</span><span>24"</span> stays two values. */
+function cellText($: cheerio.CheerioAPI, cell: unknown): string {
+  const parts: string[] = [];
+  const walk = (node: unknown) => {
+    $(node as never)
+      .contents()
+      .each((_i, child) => {
+        if (child.type === 'text') parts.push((child as unknown as { data: string }).data);
+        else if (child.type === 'tag') walk(child);
+      });
+  };
+  walk(cell);
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
+
 function tableGrid($: cheerio.CheerioAPI, table: unknown): string[][] {
   const grid: string[][] = [];
   $(table as never)
@@ -309,7 +336,7 @@ function tableGrid($: cheerio.CheerioAPI, table: unknown): string[][] {
       $(tr)
         .children('th, td')
         .each((_c, cell) => {
-          cells.push($(cell).text().replace(/\s+/g, ' ').trim());
+          cells.push(cellText($, cell));
         });
       if (cells.length > 0) grid.push(cells);
     });

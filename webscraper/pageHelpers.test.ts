@@ -71,4 +71,6 @@ test('productIdFromUrl finds product codes in common URL shapes', () => {
   assert.equal(productIdFromUrl('https://shop.example/products/e487396-000'), 'e487396-000');
   assert.equal(productIdFromUrl('https://www.patagonia.com/product/mens-shirt/45215.html'), '45215');
   assert.equal(productIdFromUrl('https://example.com/about'), null);
+  assert.equal(productIdFromUrl('https://www.gap.com/browse/product.do?pid=795346052'), '795346052');
+  assert.equal(productIdFromUrl('https://shop.example/item?color=red&productId=AB123'), 'AB123');
 });

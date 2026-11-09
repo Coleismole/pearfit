@@ -20,13 +20,32 @@ const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 
 const NAV_TIMEOUT_MS = 45_000;
-/** Whole render, including scrolling and load-more. One page cannot hold the browser longer than this. */
-export const RENDER_DEADLINE_MS = 90_000;
+/** Whole render, including scrolling and paging. One page cannot hold the browser longer than this. */
+export const RENDER_DEADLINE_MS = 120_000;
+/** Time kept back at the end of a render for opening the size chart and serializing the page. */
+const RENDER_TAIL_MS = 12_000;
 const REVIEW_WAIT_MS = 10_000;
-const MAX_LOAD_MORE_CLICKS = 5;
-const MAX_INFINITE_SCROLL_ROUNDS = 10;
-/** Stop paging once this many review cards are on the page; enough for fit statistics. */
-const MAX_REVIEWS = 200;
+/** Most "load more" / "next page" clicks in one review widget. */
+const MAX_REVIEW_PAGES = 60;
+/** Stop paging once about this many reviews were seen; enough for fit statistics. */
+const MAX_REVIEWS = 300;
+/** Review JSON kept from one render: per response and in total. */
+const MAX_CAPTURED_BODY_BYTES = 5_000_000;
+const MAX_CAPTURED_TOTAL_BYTES = 30_000_000;
+
+/** Containers of review widgets (vendor and first-party). Used to scroll them into view and to find their paging controls. */
+export const REVIEW_WIDGET_SELECTOR = [
+  '#yotpo-main-widget', '.yotpo-main-widget', '[class*="yotpo-reviews"]', '.yotpo-display-wrapper',
+  '.okeReviews', '[data-oke-reviews-widget]', '[data-oke-widget]',
+  '.jdgm-widget', '.jdgm-rev-widg', '#judgeme_product_reviews',
+  '#stamped-main-widget', '.stamped-main-widget', '#stamped-reviews-widget',
+  '[class*="junip"]', 'junip-product-reviews',
+  '[data-bv-show="reviews"]', '#BVRRContainer', '[data-bv-show="review_highlights"]',
+  '#pr-reviewdisplay', '.pr-review-display',
+  '.kl_reviews', '[class*="kl_reviews"]', '#klaviyo-reviews-all',
+  '.loox-reviews-default', '#looxReviews', '.reviews-io-widget', '#ReviewsWidget', '#full-page-widget',
+  '#reviews', '#Reviews', '#product-reviews', '[id*="review" i]', '[class*="review" i]',
+].join(', ');
 
 export interface RenderedPage {
   html: string;
@@ -39,6 +58,53 @@ export interface RenderedPage {
    * size chart with it, so the chart is read from here when the final html has none.
    */
   chartHtml: string | null;
+  /** JSON (or JSONP) responses the page itself received that carry a rating field: review widget data. */
+  jsonResponses: CapturedJson[];
+}
+
+export interface CapturedJson {
+  url: string;
+  body: string;
+}
+
+const RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating)"\s*:/;
+const JSONP = /^[\w$.]+\(\s*([\s\S]*?)\s*\)\s*;?\s*$/;
+
+/** Keeps the review JSON a page receives, within size limits. Script bundles are not kept. */
+export class JsonCapture {
+  readonly items: CapturedJson[] = [];
+  private bytes = 0;
+  private readonly pending = new Set<Promise<void>>();
+  /** Rough count of rating fields seen, used to stop paging once enough reviews loaded. */
+  ratingFields = 0;
+
+  offer(url: string, status: number, contentType: string, read: () => Promise<string>): void {
+    if (status < 200 || status >= 300) return;
+    const isJson = /json/i.test(contentType);
+    const maybeJsonp = /javascript|text\/plain/i.test(contentType) && /review|rating|ugc|bazaarvoice|batch/i.test(url);
+    if (!isJson && !maybeJsonp) return;
+    const job = read()
+      .then((raw) => this.add(url, raw))
+      .catch(() => {})
+      .finally(() => this.pending.delete(job));
+    this.pending.add(job);
+  }
+
+  add(url: string, raw: string): void {
+    if (raw.length > MAX_CAPTURED_BODY_BYTES || this.bytes + raw.length > MAX_CAPTURED_TOTAL_BYTES) return;
+    let body = raw.trim();
+    const wrapped = body[0] !== '{' && body[0] !== '[' ? JSONP.exec(body) : null;
+    if (wrapped) body = wrapped[1];
+    if (body[0] !== '{' && body[0] !== '[') return;
+    if (!RATING_FIELD.test(body)) return;
+    this.items.push({ url, body });
+    this.bytes += body.length;
+    this.ratingFields += (body.match(new RegExp(RATING_FIELD.source, 'g')) ?? []).length;
+  }
+
+  async settle(timeoutMs = 3000): Promise<void> {
+    await Promise.race([Promise.all([...this.pending]), new Promise((r) => setTimeout(r, timeoutMs))]);
+  }
 }
 
 /**
@@ -51,10 +117,16 @@ export function shouldUseHeadlessRender(input: {
   renderMode: 'auto' | 'always' | 'never';
   staticFailed: boolean;
   reviewCount: number | null;
+  /** The review count the page states. Fewer reviews found than this means the rest load by JavaScript. */
+  reportedReviewCount?: number | null;
 }): boolean {
   if (!input.isRemoteUrl || input.renderMode === 'never' || input.staticFailed) return false;
   if (input.renderMode === 'always') return true;
-  return input.reviewCount === null || input.reviewCount === 0;
+  if (input.reviewCount === null || input.reviewCount === 0) return true;
+  // The page source already holds every review the store says it has.
+  if (typeof input.reportedReviewCount === 'number' && input.reviewCount >= input.reportedReviewCount) return false;
+  // Fewer than stated, or no stated total to check against: review widgets usually load the rest.
+  return true;
 }
 
 let browserPromise: Promise<{ close(): Promise<void> }> | null = null;
@@ -136,16 +208,91 @@ async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: Reg
   return false;
 }
 
-async function scrollThroughPage(page: Page): Promise<void> {
-  // Passed as a string so the bundler cannot inject helpers that do not exist in the page.
-  await page.evaluate(`(async () => {
-    const step = Math.max(400, Math.floor(window.innerHeight * 0.8));
-    for (let y = 0; y < document.body.scrollHeight && y < 40000; y += step) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 150));
+/** Scrolls down until the page stops growing (lazy sections load as they come into view). */
+const SCROLL_TO_END = `(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const step = Math.max(400, Math.floor(window.innerHeight * 0.8));
+  let y = 0;
+  let stable = 0;
+  let lastHeight = 0;
+  const started = Date.now();
+  while (y < 80000 && Date.now() - started < 15000) {
+    y += step;
+    window.scrollTo(0, y);
+    await sleep(120);
+    const height = document.documentElement.scrollHeight;
+    if (y + window.innerHeight >= height) {
+      stable = height === lastHeight ? stable + 1 : 0;
+      lastHeight = height;
+      if (stable >= 3) break;
+      await sleep(400);
     }
-  })()`);
-}
+  }
+})()`;
+
+/** Brings each review widget into view so widgets that load on visibility start loading. */
+const REVIEW_WIDGETS_INTO_VIEW = `(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const seen = [];
+  for (const el of document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
+    if (seen.some((s) => s.contains(el))) continue;
+    seen.push(el);
+    el.scrollIntoView({ block: 'center' });
+    await sleep(350);
+    if (seen.length >= 12) break;
+  }
+  return seen.length;
+})()`;
+
+/**
+ * Clicks one "load more" or "next page" control inside a review widget. Never a link that would
+ * leave the page. Returns the control's label, or '' when there is none.
+ */
+const CLICK_NEXT_REVIEWS = `(() => {
+  const MORE = /^(load|show|see|view|read) (more|all|\\d+ more)( reviews?)?$|^more reviews$/i;
+  const NEXT = /^(next|next page|next reviews?|›|»|→|>|go to next page)$/i;
+  const visible = (el) => {
+    const r = el.getBoundingClientRect();
+    const st = window.getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && st.display !== 'none';
+  };
+  const disabled = (el) =>
+    el.disabled || el.getAttribute('aria-disabled') === 'true' || /(^|\\s)(is-)?disabled(\\s|$)/.test(String(el.className || ''));
+  const seen = new Set();
+  const found = [];
+  for (const box of document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
+    for (const el of box.querySelectorAll('button, a, [role="button"], [role="link"]')) {
+      if (seen.has(el)) continue;
+      seen.add(el);
+      const aria = el.getAttribute('aria-label') || '';
+      const label = (aria || el.textContent || el.getAttribute('title') || '').replace(/\\s+/g, ' ').trim();
+      const isMore = MORE.test(label);
+      const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);
+      if (!isMore && !isNext) continue;
+      if (el.tagName === 'A') {
+        const href = el.getAttribute('href') || '';
+        if (href && !href.startsWith('#') && !href.startsWith('javascript')) continue;
+      }
+      if (!visible(el) || disabled(el)) continue;
+      found.push({ el, isMore, label });
+    }
+  }
+  // Fallback: a "load more reviews" button that sits outside the widget (buttons only, never links).
+  if (found.length === 0) {
+    for (const el of document.querySelectorAll('button, [role="button"]')) {
+      const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+      if (/^(load|show|see|view) more( reviews?)?$/i.test(label) && visible(el) && !disabled(el)) {
+        found.push({ el, isMore: true, label });
+        break;
+      }
+    }
+  }
+  const pick = found.find((f) => f.isMore) || found[0];
+  if (!pick) return '';
+  pick.el.scrollIntoView({ block: 'center' });
+  pick.el.click();
+  return pick.label.slice(0, 40) || 'next';
+})()`;
 
 const SERIALIZE_WITH_SHADOW_ROOTS = `(() => {
   const parts = [];
@@ -216,6 +363,12 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
   });
 
   const page = await context.newPage();
+  const capture = new JsonCapture();
+  page.on('response', (response) => {
+    capture.offer(response.url(), response.status(), response.headers()['content-type'] ?? '', () => response.text());
+  });
+  const startedAt = Date.now();
+  const stopPagingAt = startedAt + renderBudgetMs() - RENDER_TAIL_MS;
   let timedOut = false;
   const deadline = setTimeout(() => {
     timedOut = true;
@@ -225,13 +378,13 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null };
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
     }
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
 
     await clickFirst(page, 'button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
 
-    await scrollThroughPage(page);
+    await page.evaluate(SCROLL_TO_END);
 
     // Snapshot before touching reviews: a review click may leave the product view.
     const chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
@@ -242,41 +395,44 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const openedSection =
       (await clickFirst(page, 'tab', /reviews?/i)) ||
       (await clickFirst(page, 'button', /^(customer )?reviews?\b/i)) ||
-      (!(await hasReviews(page)) && (await clickFirst(page, 'link', /^(read |see |customer )?(all )?reviews?\b/i)));
+      (!(await hasReviews(page)) &&
+        capture.ratingFields === 0 &&
+        (await clickFirst(page, 'link', /^(read |see |customer )?(all )?reviews?\b/i)));
     if (openedSection) {
       await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       await waitForMoreReviews(page, reviewsBeforeOpening, REVIEW_WAIT_MS);
-      await scrollThroughPage(page);
     }
 
-    const reviewSelectorFound = await page
-      .locator(REVIEW_CARD_SELECTOR)
-      .first()
-      .waitFor({ timeout: REVIEW_WAIT_MS, state: 'attached' })
-      .then(() => true)
-      .catch(() => false);
+    // Widgets that load when they come into view (Okendo, Junip, Bazaarvoice) need to be seen.
+    await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+    await capture.settle();
+
+    const reviewSelectorFound =
+      capture.ratingFields > 0 ||
+      (await page
+        .locator(REVIEW_CARD_SELECTOR)
+        .first()
+        .waitFor({ timeout: REVIEW_WAIT_MS, state: 'attached' })
+        .then(() => true)
+        .catch(() => false));
 
     if (reviewSelectorFound) {
-      for (let i = 0; i < MAX_LOAD_MORE_CLICKS; i++) {
-        const before = await countReviews(page);
-        const clicked = await clickFirst(page, 'button', /^(load|show|see|view) more( reviews)?$/i);
-        if (!clicked) break;
-        if (!(await waitForMoreReviews(page, before, 5000))) break;
-      }
-
-      // Infinite scroll: keep scrolling to the bottom while new review cards keep appearing.
-      for (let i = 0; i < MAX_INFINITE_SCROLL_ROUNDS; i++) {
-        const before = await countReviews(page);
-        if (before >= MAX_REVIEWS) break;
-        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
-        if (!(await waitForMoreReviews(page, before, 4000))) break;
-      }
+      await pageThroughReviews({
+        click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
+        progress: async () => capture.items.length + (await countReviews(page)),
+        enough: async () => Math.max(capture.ratingFields, await countReviews(page)) >= MAX_REVIEWS,
+        settle: () => capture.settle(1500),
+        sleep: (ms) => page.waitForTimeout(ms),
+        stopAt: stopPagingAt,
+      });
     }
 
     // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
     await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
     await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+    await capture.settle();
 
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     return {
@@ -285,6 +441,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       finalUrl: page.url(),
       reviewSelectorFound,
       chartHtml,
+      jsonResponses: capture.items,
     };
   } catch (err) {
     if (timedOut) {
@@ -297,25 +454,57 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
   }
 }
 
+/**
+ * Clicks "load more" / "next page" in the review widget until no new reviews arrive twice in a row,
+ * enough reviews were seen, or time runs out.
+ */
+export async function pageThroughReviews(ops: {
+  click: () => Promise<string>;
+  progress: () => Promise<number>;
+  enough: () => Promise<boolean>;
+  settle: () => Promise<void>;
+  sleep: (ms: number) => Promise<void>;
+  stopAt: number;
+}): Promise<number> {
+  let pages = 0;
+  let idle = 0;
+  for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < ops.stopAt; i++) {
+    if (await ops.enough()) break;
+    const before = await ops.progress();
+    const clicked = await ops.click();
+    if (!clicked) break;
+    let grew = false;
+    const until = Math.min(Date.now() + 5000, ops.stopAt);
+    while (Date.now() < until) {
+      await ops.sleep(300);
+      await ops.settle();
+      if ((await ops.progress()) > before) {
+        grew = true;
+        break;
+      }
+    }
+    if (grew) {
+      pages++;
+      idle = 0;
+    } else if (++idle >= 2) {
+      break;
+    }
+  }
+  return pages;
+}
+
 interface ServerlessPage {
   goto(url: string, opts: { waitUntil: 'domcontentloaded'; timeout: number }): Promise<{ status(): number } | null>;
   url(): string;
   setUserAgent(ua: string): Promise<void>;
   setRequestInterception(enabled: boolean): Promise<void>;
   on(event: 'request', handler: (req: { url(): string; resourceType(): string; abort(): Promise<void>; continue(): Promise<void> }) => void): void;
+  on(event: 'response', handler: (res: { url(): string; status(): number; headers(): Record<string, string>; text(): Promise<string> }) => void): void;
   evaluate(pageFunction: string): Promise<unknown>;
   waitForNetworkIdle(opts: { timeout: number }): Promise<void>;
   waitForSelector(selector: string, opts: { timeout: number }): Promise<unknown>;
   close(): Promise<void>;
 }
-
-const SCROLL_PAGE = `(async () => {
-  const step = Math.max(400, Math.floor(window.innerHeight * 0.8));
-  for (let y = 0; y < document.body.scrollHeight && y < 40000; y += step) {
-    window.scrollTo(0, y);
-    await new Promise((r) => setTimeout(r, 150));
-  }
-})()`;
 
 const CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
   const re = new RegExp(source, flags);
@@ -362,12 +551,17 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     );
   });
 
+  const capture = new JsonCapture();
+  page.on('response', (res) => {
+    capture.offer(res.url(), res.status(), res.headers()['content-type'] ?? '', () => res.text());
+  });
+  const stopPagingAt = Date.now() + renderBudgetMs() - RENDER_TAIL_MS;
   let timedOut = false;
   const deadline = setTimeout(() => {
     timedOut = true;
     page.evaluate('window.stop()').catch(() => {});
   }, renderBudgetMs());
-  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
   const countReviews = () => page.evaluate(`document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)}).length`) as Promise<number>;
   const clickRole = (role: 'button' | 'link' | 'tab', name: RegExp) =>
     page.evaluate(`(${CLICK_ROLE_IN_PAGE})(${JSON.stringify(role)}, ${JSON.stringify(name.source)}, ${JSON.stringify(name.flags)})`) as Promise<boolean>;
@@ -384,11 +578,11 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null };
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
     }
     await page.waitForNetworkIdle({ timeout: 8000 }).catch(() => {});
     await clickRole('button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
-    await page.evaluate(SCROLL_PAGE);
+    await page.evaluate(SCROLL_TO_END);
 
     // Snapshot before touching reviews: a review click may leave the product view.
     const chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
@@ -397,39 +591,43 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     const openedSection =
       (await clickRole('tab', /reviews?/i)) ||
       (await clickRole('button', /^(customer )?reviews?\b/i)) ||
-      ((await countReviews()) === 0 && (await clickRole('link', /^(read |see |customer )?(all )?reviews?\b/i)));
+      ((await countReviews()) === 0 &&
+        capture.ratingFields === 0 &&
+        (await clickRole('link', /^(read |see |customer )?(all )?reviews?\b/i)));
     if (openedSection) {
       await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => {});
       await waitForMore(reviewsBeforeOpening, REVIEW_WAIT_MS);
-      await page.evaluate(SCROLL_PAGE);
     }
 
-    const reviewSelectorFound = await page
-      .waitForSelector(REVIEW_CARD_SELECTOR, { timeout: REVIEW_WAIT_MS })
-      .then(() => true)
-      .catch(() => false);
+    await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
+    await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => {});
+    await capture.settle();
+
+    const reviewSelectorFound =
+      capture.ratingFields > 0 ||
+      (await page
+        .waitForSelector(REVIEW_CARD_SELECTOR, { timeout: REVIEW_WAIT_MS })
+        .then(() => true)
+        .catch(() => false));
 
     if (reviewSelectorFound) {
-      for (let i = 0; i < MAX_LOAD_MORE_CLICKS; i++) {
-        const before = await countReviews();
-        const clicked = await clickRole('button', /^(load|show|see|view) more( reviews)?$/i);
-        if (!clicked) break;
-        if (!(await waitForMore(before, 5000))) break;
-      }
-      for (let i = 0; i < MAX_INFINITE_SCROLL_ROUNDS; i++) {
-        const before = await countReviews();
-        if (before >= MAX_REVIEWS) break;
-        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
-        if (!(await waitForMore(before, 4000))) break;
-      }
+      await pageThroughReviews({
+        click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
+        progress: async () => capture.items.length + (await countReviews()),
+        enough: async () => Math.max(capture.ratingFields, await countReviews()) >= MAX_REVIEWS,
+        settle: () => capture.settle(1500),
+        sleep,
+        stopAt: stopPagingAt,
+      });
     }
 
     await clickRole('tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickRole('button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
     await sleep(500);
+    await capture.settle();
 
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
-    return { html, status, finalUrl: page.url(), reviewSelectorFound, chartHtml };
+    return { html, status, finalUrl: page.url(), reviewSelectorFound, chartHtml, jsonResponses: capture.items };
   } catch (err) {
     if (timedOut) throw new Error(`Headless render timed out after ${renderBudgetMs() / 1000}s`);
     throw err;

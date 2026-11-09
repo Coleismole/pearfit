@@ -74,8 +74,10 @@ export function cleanProductTitle(title: string | null | undefined): string | nu
   return t || null;
 }
 
-/** Product code from common URL shapes (/products/E487396-000, /p/AY670, /product/.../45215.html). */
+/** Product code from common URL shapes (/products/E487396-000, /p/AY670, /product/.../45215.html, ?pid=795346052). */
 export function productIdFromUrl(url: string): string | null {
+  const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
+  if (param) return param[1];
   const m =
     url.match(/\/(\d{4,})\.html/) ||
     // A code contains a digit. A slug such as /product/mens-shirt/ must not win over the id after it.

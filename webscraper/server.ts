@@ -19,7 +19,14 @@ import {
   extractStructuredProduct,
   parseJsonLdScripts,
 } from './structuredData.ts';
-import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR, shouldUseHeadlessRender } from './headlessFetch.ts';
+import {
+  closeHeadlessBrowser,
+  renderPageHtml,
+  REVIEW_CARD_SELECTOR,
+  shouldUseHeadlessRender,
+  type CapturedJson,
+} from './headlessFetch.ts';
+import { collectJsonReviews, parseJsonBody, type JsonSource } from './reviewJson.ts';
 import { parseSizeChartFirst, type SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
@@ -912,7 +919,9 @@ function looksLikeFullHtmlDocument(input: string): boolean {
 
 /** JSON-LD stays the base. DOM cards fill a blank size and add reviews that were not in the script. */
 function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedReview[]): RawScrapedReview[] {
-  const norm = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
+  // A card cut short by "Read more" still matches its full review: compare the first 60 characters.
+  const norm = (body: string) =>
+    body.replace(/\s+/g, ' ').replace(/(\.\.\.|…)?\s*(read more|show more|more)?$/i, '').trim().toLowerCase().slice(0, 60);
   const merged = primary.map((review) => ({ ...review }));
   const index = new Map<string, RawScrapedReview>();
   for (const review of merged) {
@@ -965,7 +974,8 @@ function scrapeHtmlWithCheerio(
     brand?: string;
     sku?: string;
     category?: ProductFitReport['category'];
-  }
+  },
+  jsonResponses: CapturedJson[] = [],
 ) {
   const startTime = Date.now();
   const $ = cheerio.load(html);
@@ -1120,7 +1130,28 @@ function scrapeHtmlWithCheerio(
     }
   }
 
-  const reviews = mergeScrapedReviews(structured?.reviews ?? [], domReviews);
+  // 3. Review JSON: what the page's review widget received while it rendered, and review data
+  // embedded in the page (__NEXT_DATA__, application/json). Structured, so it comes first.
+  const jsonSources: JsonSource[] = jsonResponses.map((r) => ({ url: r.url, value: parseJsonBody(r.body) }));
+  $('script#__NEXT_DATA__, script[type="application/json"]').each((i, el) => {
+    const raw = $(el).contents().text();
+    if (raw.length > 0 && /review/i.test(raw)) {
+      jsonSources.push({ url: `page:${$(el).attr('id') || `json-${i}`}`, value: parseJsonBody(raw) });
+    }
+  });
+  const fromJson = collectJsonReviews(
+    jsonSources.filter((source) => source.value !== null),
+    { keys: pageProductKeys($, html, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
+  );
+  if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
+  const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
+
+  const reviews = mergeScrapedReviews(mergeScrapedReviews(jsonReviews, structured?.reviews ?? []), domReviews);
+  const reviewSources = [
+    ...fromJson.sources,
+    ...(structured?.reviews.length ? ['json-ld'] : []),
+    ...(domReviews.length ? ['dom'] : []),
+  ];
 
   // 3. Free-text fallback, only for pasted review text/snippets. On a full fetched page it
   // would treat navigation and footer text as "reviews".
@@ -1149,10 +1180,55 @@ function scrapeHtmlWithCheerio(
         selectorsUsed,
         parseDurationMs,
         engineMode: 'cheerio-dom+deterministic-nlp' as ScraperTelemetry['engineMode'],
+        reportedReviewCount: fromJson.reportedTotal ?? structured?.reportedReviewCount ?? null,
+        reviewSources,
       },
     },
     reviews,
   };
+}
+
+/**
+ * Ids, SKUs and handles that name this page's product, lowercased. Used to keep only this product's
+ * reviews from review JSON. Product cards elsewhere on the page are not read: their ids would let
+ * a "you may also like" carousel's reviews through.
+ */
+function pageProductKeys(
+  $: cheerio.CheerioAPI,
+  html: string,
+  sourceUrl: string,
+  structuredIds: string[],
+  sku: string,
+): string[] {
+  const keys = new Set<string>();
+  const add = (value: unknown) => {
+    const t = String(value ?? '').trim().toLowerCase().replace(/^shopify-/, '');
+    if (t.length >= 3) keys.add(t);
+  };
+  structuredIds.forEach(add);
+  add(sku);
+  add($('meta[property="product:retailer_item_id"]').attr('content'));
+  // Shopify's analytics object names the product on its own page: meta = {"product":{"id":123,...
+  for (const match of html.matchAll(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/g)) add(match[1]);
+  $('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
+    add($(el).attr('value'));
+  });
+  try {
+    const url = new URL(sourceUrl);
+    const segments = url.pathname.split('/').filter(Boolean);
+    for (const segment of segments) if (/^\d{5,}$/.test(segment)) add(segment);
+    const last = segments[segments.length - 1]?.replace(/\.html?$/, '');
+    if (last) {
+      add(last);
+      // Trailing product number in a handle: "...-t-shirt-39031035" or "cormac-crew-neck-shirt-ss-0292".
+      const tail = last.match(/(\d{4,})$/);
+      if (tail) add(tail[1]);
+    }
+    for (const value of url.searchParams.values()) if (/^\d{5,}$/.test(value)) add(value);
+  } catch {
+    // not a URL (pasted HTML)
+  }
+  return [...keys];
 }
 
 type RenderMode = 'auto' | 'always' | 'never';
@@ -1474,6 +1550,7 @@ export function createApp() {
         renderMode,
         staticFailed: staticError !== null,
         reviewCount: scraped ? scraped.reviews.length : null,
+        reportedReviewCount: scraped?.meta.scraperTelemetry.reportedReviewCount ?? null,
       });
       if (needsRender) {
         try {
@@ -1481,10 +1558,11 @@ export function createApp() {
           if (rendered.status !== null && rendered.status >= 400) {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
           } else {
-            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides);
+            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides, rendered.jsonResponses);
             renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
-            if (!scraped || renderedScrape.reviews.length > 0 || scraped.reviews.length === 0) {
+            // Keep the render when it found at least as many reviews as the page source.
+            if (!scraped || renderedScrape.reviews.length >= scraped.reviews.length) {
               scraped = renderedScrape;
               targetHtml = rendered.html;
               renderedChartHtml = rendered.chartHtml;

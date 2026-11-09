@@ -286,3 +286,116 @@ test('a re-scrape that finds a chart but no reviews keeps the stored reviews', a
     server.close();
   }
 });
+
+test('when the page holds review data, widget markup is not counted as more reviews', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = {
+      props: {
+        pageProps: {
+          product: { id: 'NEXT-1', name: 'Next Tee' },
+          reviews: {
+            total: 2,
+            items: [
+              { id: 'r1', rating: 5, title: 'Great', body: 'Soft and true to size.', author: 'Ana', size: 'M' },
+              { id: 'r2', rating: 2, title: 'Small', body: 'Runs small in the chest.', author: 'Bo', size: 'L' },
+            ],
+          },
+        },
+      },
+    };
+    const html = `<!DOCTYPE html><html><head><title>Next Tee</title></head><body><h1>Next Tee</h1>
+      <div class="review-card"><p>Was this review helpful to you?</p></div>
+      <div class="review-card"><p>BobbieLynn,</p></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script>
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'NEXT-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as {
+      totalReviews: number;
+      reviews: { id: string; normalizedSize: string | null; rating: number }[];
+      scraperTelemetry: { reportedReviewCount: number | null; reviewSources: string[] };
+    };
+    // The two reviews in the page data, with their sizes and ratings; the two widget lines are not reviews.
+    assert.equal(report.totalReviews, 2);
+    assert.deepEqual(report.reviews.map((r) => [r.id, r.normalizedSize, r.rating]), [['r1', 'M', 5], ['r2', 'L', 2]]);
+    assert.equal(report.scraperTelemetry.reportedReviewCount, 2);
+    assert.deepEqual(report.scraperTelemetry.reviewSources, ['page']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a complete review card in the markup is kept next to review data, a bare widget line is not', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // Page data holds review r2 (page 2 of a widget); the first review was rendered as markup only.
+    const nextData = { props: { reviews: { total: 2, items: [{ id: 'r2', rating: 4, body: 'Second page review, fits well.', author: 'Bo', size: 'L' }] } } };
+    const html = `<!DOCTYPE html><html><head><title>Mixed Tee</title></head><body><h1>Mixed Tee</h1>
+      <article class="review-card" data-author="Ana" data-rating="5" data-size="M"><p class="review-body-copy">First page review, rendered by the store.</p></article>
+      <div class="review-card"><p>Was this review helpful to you?</p></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script>
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'MIXED-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { reviews: { author: string; normalizedSize: string | null }[] };
+    assert.deepEqual(
+      report.reviews.map((r) => [r.author, r.normalizedSize]).sort(),
+      [['Ana', 'M'], ['Bo', 'L']],
+    );
+  } finally {
+    server.close();
+  }
+});
+
+test('Bazaarvoice search-engine debug text in review markup is not counted as reviews', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const card = (body: string, attrs = '') => `<div class="review-card"${attrs}><p class="review-body-copy">${body}</p></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Roots Tee</title></head><body><h1>Roots Tee</h1>
+      ${card('Nice soft material, but runs very large.', ' data-author="LisaKH" data-rating="4"')}
+      ${card('y_2026, m_11, d_8, h_6')}
+      ${card('bvseo_bulk, prod_bvrr, vn_bulk_3.0.50')}
+      ${card('loc_en_CA, sid_39031035, prod, sort_default')}
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'ROOTS-T', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { reviews: { author: string }[] };
+    assert.deepEqual(report.reviews.map((r) => r.author), ['LisaKH']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a review card whose text is the whole card still matches its review from the page data', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = { props: { reviews: { total: 1, items: [{ id: 'r1', rating: 4, body: 'Nice quality! The fit was a little shorter than I expected', author: 'Hayley W.' }] } } };
+    const html = `<!DOCTYPE html><html><head><title>Sweater</title></head><body><h1>Sweater</h1>
+      <div class="review-card" data-author="Hayley W." data-rating="4"><span>Rated 4 out of 5 stars6 days agoGood Sweater Nice quality! The fit was a little shorter than I expected</span></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script>
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'SWEATER-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 1);
+  } finally {
+    server.close();
+  }
+});
+
+test('one featured review in the page data does not hide the review cards in the markup', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = { props: { featured: { review: { id: 'f1', rating: 5, body: 'Featured: the best tee I own.', author: 'Shop' } } } };
+    const cards = ['Soft cotton and the fit is right for me.', 'Shrank a little after the first hot wash.', 'Good weight, runs a touch long in the body.']
+      .map((t) => `<div class="review-card"><p class="review-body-copy">${t}</p></div>`).join('');
+    const html = `<!DOCTYPE html><html><head><title>Tee</title></head><body><h1>Tee</h1>${cards}
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'FEAT-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    // Three anonymous cards in the markup plus the featured review.
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 4);
+  } finally {
+    server.close();
+  }
+});

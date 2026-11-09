@@ -19,7 +19,14 @@ import {
   extractStructuredProduct,
   parseJsonLdScripts,
 } from './structuredData.ts';
-import { closeHeadlessBrowser, renderPageHtml, REVIEW_CARD_SELECTOR, shouldUseHeadlessRender } from './headlessFetch.ts';
+import {
+  closeHeadlessBrowser,
+  renderPageHtml,
+  REVIEW_CARD_SELECTOR,
+  shouldUseHeadlessRender,
+  type CapturedJson,
+} from './headlessFetch.ts';
+import { collectJsonReviews, parseJsonBody, type JsonSource } from './reviewJson.ts';
 import { parseSizeChartFirst, type SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
@@ -912,16 +919,26 @@ function looksLikeFullHtmlDocument(input: string): boolean {
 
 /** JSON-LD stays the base. DOM cards fill a blank size and add reviews that were not in the script. */
 function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedReview[]): RawScrapedReview[] {
-  const norm = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
+  // A card cut short by "Read more" still matches its full review: compare the first 60 characters.
+  const norm = (body: string) =>
+    body.replace(/\s+/g, ' ').replace(/(\.\.\.|…)?\s*(read more|show more|more)?$/i, '').trim().toLowerCase().slice(0, 60);
   const merged = primary.map((review) => ({ ...review }));
   const index = new Map<string, RawScrapedReview>();
   for (const review of merged) {
     const key = norm(review.body);
     if (key && !index.has(key)) index.set(key, review);
   }
+  const loose = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
   for (const review of extra) {
     const key = norm(review.body);
-    const existing = key ? index.get(key) : undefined;
+    // A card whose text holds the whole card (stars, date, title, body) still matches its review.
+    const existing =
+      (key ? index.get(key) : undefined) ??
+      merged.find((m) => {
+        if (m.author === 'Anonymous' || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
+        const start = loose(m.body).slice(0, 40);
+        return start.length >= 15 && loose(review.body).includes(start);
+      });
     if (!existing) {
       merged.push(review);
       if (key) index.set(key, review);
@@ -965,7 +982,8 @@ function scrapeHtmlWithCheerio(
     brand?: string;
     sku?: string;
     category?: ProductFitReport['category'];
-  }
+  },
+  jsonResponses: CapturedJson[] = [],
 ) {
   const startTime = Date.now();
   const $ = cheerio.load(html);
@@ -1035,6 +1053,7 @@ function scrapeHtmlWithCheerio(
     'Unknown';
 
   const domReviews: RawScrapedReview[] = [];
+  const completeDomCards = new Set<number>();
 
   // 2. Review cards in the DOM (microdata and common review-widget markup).
   // JSON-LD often carries only a few reviews. The cards on the page are still read.
@@ -1057,7 +1076,7 @@ function scrapeHtmlWithCheerio(
           node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
           'Anonymous';
         const body =
-          node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
+          node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
           longestFreeText(lines, [author]) ||
           nodeText;
         // Unlabelled markup: the first short free-text line before the body is the title.
@@ -1082,6 +1101,8 @@ function scrapeHtmlWithCheerio(
           // Accessible star widgets: aria-label/title like "4 out of 5 stars".
           ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr('aria-label') ?? node.find('[title*="out of 5" i]').first().attr('title')) ||
           ratingFromStarIcons($, node) ||
+          // Screen-reader text such as "Rated 5 out of 5" (Okendo and others).
+          nodeText.match(/\brated\s+(\d(?:\.\d)?)\s+out of\s+5\b/i)?.[1] ||
           '';
         const declaredFitTag =
           node.attr('data-fit') ||
@@ -1099,7 +1120,15 @@ function scrapeHtmlWithCheerio(
         const usualSize = labelledValue(lines, /^(usual size|normally wears|usually wears)$/i) || undefined;
         const parsedRating = parseFloat(ratingStr);
 
-        if (body.length > 8) {
+        // Bazaarvoice's search-engine block renders debug text ("bvseo_bulk, prod_bvrr", "y_2026, m_11")
+        // inside review markup. A card with no rating, no reviewer and mostly snake_case tokens is not a review.
+        const words = body.split(/[\s,]+/).filter(Boolean);
+        const tokenish = words.filter((w) => /_/.test(w) || /^[a-z]+\d+$/i.test(w)).length;
+        const debugText = !Number.isFinite(parsedRating) && author === 'Anonymous' && tokenish * 2 >= words.length;
+        if (body.length > 8 && !debugText) {
+          // A card with a star rating in its markup and a named reviewer is a real review. Lines a widget
+          // repeats around reviews ("Was this review helpful?") have neither.
+          if (Number.isFinite(parsedRating) && author !== 'Anonymous') completeDomCards.add(domReviews.length);
           domReviews.push({
             id: `dom-rev-${idx + 1}`,
             author,
@@ -1120,7 +1149,49 @@ function scrapeHtmlWithCheerio(
     }
   }
 
-  const reviews = mergeScrapedReviews(structured?.reviews ?? [], domReviews);
+  // 3. Review JSON: what the page's review widget received while it rendered, and review data
+  // embedded in the page (__NEXT_DATA__, application/json). Structured, so it comes first.
+  const jsonSources: JsonSource[] = jsonResponses.map((r) => ({ url: r.url, value: parseJsonBody(r.body) }));
+  $('script#__NEXT_DATA__, script[type="application/json"]').each((i, el) => {
+    const raw = $(el).contents().text();
+    if (raw.length > 0 && /review/i.test(raw)) {
+      jsonSources.push({ url: `page:${$(el).attr('id') || `json-${i}`}`, value: parseJsonBody(raw) });
+    }
+  });
+  const fromJson = collectJsonReviews(
+    jsonSources.filter((source) => source.value !== null),
+    { keys: pageProductKeys($, html, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
+  );
+  if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
+  const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
+
+  // When the review widget's own data was read, only complete markup cards are added: a widget that
+  // renders its first reviews in the page and loads the rest as JSON (Okendo) needs both, while a
+  // "Was this review helpful?" line must not pass for a review. JSON-LD still merges with all cards.
+  // Review data embedded in the page can be a single featured review; when the markup shows more
+  // reviews than all the page data holds, the markup cards are the list.
+  // Cards that read like reviews: complete, or a sentence of six words or more that is not a line the
+  // widget repeats around reviews.
+  const WIDGET_LINE = /was this (review )?helpful|write a review|report (this )?review|^[\w .'-]{1,30},$/i;
+  const substantiveDom = domReviews.filter(
+    (r, i) => completeDomCards.has(i) || (r.body.split(/\s+/).length >= 6 && !WIDGET_LINE.test(r.body)),
+  );
+  const onlyPageData = fromJson.sources.every((src) => src === 'page');
+  const markupIsTheList = onlyPageData && substantiveDom.length > jsonReviews.length;
+  const useDom = jsonReviews.length === 0 || markupIsTheList;
+  const reviews = jsonReviews.length === 0
+    ? mergeScrapedReviews(structured?.reviews ?? [], domReviews)
+    : markupIsTheList
+      ? mergeScrapedReviews(mergeScrapedReviews(structured?.reviews ?? [], substantiveDom), jsonReviews)
+      : mergeScrapedReviews(
+          mergeScrapedReviews(jsonReviews, structured?.reviews ?? []),
+          domReviews.filter((_r, i) => completeDomCards.has(i)),
+        );
+  const reviewSources = [
+    ...fromJson.sources,
+    ...(structured?.reviews.length ? ['json-ld'] : []),
+    ...((useDom ? domReviews.length : completeDomCards.size) ? ['dom'] : []),
+  ];
 
   // 3. Free-text fallback, only for pasted review text/snippets. On a full fetched page it
   // would treat navigation and footer text as "reviews".
@@ -1149,10 +1220,59 @@ function scrapeHtmlWithCheerio(
         selectorsUsed,
         parseDurationMs,
         engineMode: 'cheerio-dom+deterministic-nlp' as ScraperTelemetry['engineMode'],
+        reportedReviewCount: fromJson.reportedTotal ?? structured?.reportedReviewCount ?? null,
+        reviewSources,
       },
     },
     reviews,
   };
+}
+
+/**
+ * Ids, SKUs and handles that name this page's product, lowercased. Used to keep only this product's
+ * reviews from review JSON. Product cards elsewhere on the page are not read: their ids would let
+ * a "you may also like" carousel's reviews through.
+ */
+function pageProductKeys(
+  $: cheerio.CheerioAPI,
+  html: string,
+  sourceUrl: string,
+  structuredIds: string[],
+  sku: string,
+): string[] {
+  const keys = new Set<string>();
+  const add = (value: unknown) => {
+    const t = String(value ?? '').trim().toLowerCase().replace(/^shopify-/, '');
+    if (t.length >= 3) keys.add(t);
+  };
+  structuredIds.forEach(add);
+  add(sku);
+  add($('meta[property="product:retailer_item_id"]').attr('content'));
+  // Shopify's analytics object names the product on its own page: var meta = {"product":{"id":123,...
+  // Only that object, or else the first such id: later ones belong to recommendation blocks.
+  const shopifyMeta =
+    html.match(/(?:var meta|ShopifyAnalytics\.meta)\s*=\s*\{\s*"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/) ??
+    html.match(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/);
+  if (shopifyMeta) add(shopifyMeta[1]);
+  $('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
+    add($(el).attr('value'));
+  });
+  try {
+    const url = new URL(sourceUrl);
+    const segments = url.pathname.split('/').filter(Boolean);
+    for (const segment of segments) if (/^\d{5,}$/.test(segment)) add(segment);
+    const last = segments[segments.length - 1]?.replace(/\.html?$/, '');
+    if (last) {
+      add(last);
+      // Trailing product number in a handle: "...-t-shirt-39031035" or "cormac-crew-neck-shirt-ss-0292".
+      const tail = last.match(/(\d{4,})$/);
+      if (tail) add(tail[1]);
+    }
+    for (const value of url.searchParams.values()) if (/^\d{5,}$/.test(value)) add(value);
+  } catch {
+    // not a URL (pasted HTML)
+  }
+  return [...keys];
 }
 
 type RenderMode = 'auto' | 'always' | 'never';
@@ -1432,6 +1552,7 @@ export function createApp() {
       const renderMode: RenderMode = render === 'always' || render === 'never' ? render : 'auto';
       let targetHtml = (rawHtml || '').trim();
       let renderedChartHtml: string | null = null; // headless snapshot from before the review steps
+      let renderedFinalHtml: string | null = null; // headless page at the end, when the source page's reviews won
       let sourceUrl = (url || 'batch://direct-review-payload').trim();
       let isRemoteUrl = false;
       let staticError: StaticFetchError | null = null;
@@ -1474,6 +1595,7 @@ export function createApp() {
         renderMode,
         staticFailed: staticError !== null,
         reviewCount: scraped ? scraped.reviews.length : null,
+        reportedReviewCount: scraped?.meta.scraperTelemetry.reportedReviewCount ?? null,
       });
       if (needsRender) {
         try {
@@ -1481,13 +1603,23 @@ export function createApp() {
           if (rendered.status !== null && rendered.status >= 400) {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
           } else {
-            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides);
+            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides, rendered.jsonResponses);
             renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
-            if (!scraped || renderedScrape.reviews.length > 0 || scraped.reviews.length === 0) {
+            // Keep the render when it found at least as many reviews as the page source, or when it read
+            // the review widget's own data and the page source had only markup cards.
+            const renderedHasData = renderedScrape.meta.scraperTelemetry.reviewSources.some((src) => src !== 'dom' && src !== 'json-ld');
+            const staticHasData = (scraped?.meta.scraperTelemetry.reviewSources ?? []).some((src) => src !== 'dom' && src !== 'json-ld');
+            // The render's size chart is kept whichever review set wins.
+            renderedChartHtml = rendered.chartHtml;
+            renderedFinalHtml = rendered.html;
+            if (
+              !scraped ||
+              renderedScrape.reviews.length >= scraped.reviews.length ||
+              (renderedHasData && !staticHasData && renderedScrape.reviews.length > 0)
+            ) {
               scraped = renderedScrape;
               targetHtml = rendered.html;
-              renderedChartHtml = rendered.chartHtml;
             }
             if (renderedScrape.reviews.length === 0) {
               headlessNote = 'Rendered the page in a headless browser but still found no reviews.';
@@ -1515,7 +1647,7 @@ export function createApp() {
       const { meta, reviews } = scraped;
 
       if (reviews.length === 0) {
-        const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml);
+        const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
         // A chart with no parent SKU never shows up and never reaches Supabase.
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
@@ -1552,7 +1684,7 @@ export function createApp() {
       }
 
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml);
+      const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
 
       let supabase: SupabaseSync | null = null;
       if (commitToDb) {

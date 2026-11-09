@@ -14,6 +14,10 @@ export interface StructuredProduct {
   material: string | null;
   category: string | null;
   reviews: RawScrapedReview[];
+  /** productID, sku, mpn, gtin and productGroupID values, plus each offer's sku. Lowercased. */
+  identifiers: string[];
+  /** The review count the page states (aggregateRating.reviewCount, else ratingCount), or null. */
+  reportedReviewCount: number | null;
 }
 
 type Json = Record<string, unknown>;
@@ -166,7 +170,21 @@ export function extractStructuredProduct(jsonLdBlocks: unknown[]): StructuredPro
     });
   }
 
+  const identifiers = new Set<string>();
+  const idFields = ['productID', 'productId', 'sku', 'mpn', 'gtin', 'gtin8', 'gtin12', 'gtin13', 'gtin14', 'productGroupID'];
+  for (const node of [product, ...asArray(product.hasVariant), ...asArray(product.offers)]) {
+    if (!isObject(node)) continue;
+    for (const field of idFields) {
+      const value = text(node[field]);
+      if (value) identifiers.add(value.toLowerCase());
+    }
+  }
+  const aggregate = isObject(product.aggregateRating) ? product.aggregateRating : null;
+  const count = aggregate ? Number(aggregate.reviewCount ?? aggregate.ratingCount) : NaN;
+
   return {
+    identifiers: [...identifiers],
+    reportedReviewCount: Number.isInteger(count) && count >= 0 ? count : null,
     name: text(product.name),
     brand: text(product.brand) ?? text(product.manufacturer),
     sku: text(product.sku) ?? text(product.mpn) ?? text(product.productGroupID),

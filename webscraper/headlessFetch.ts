@@ -573,7 +573,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       }
       await pageThroughReviews({
         click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
-        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)),
+        progress: async () => ({ json: capture.reviewCount(), cards: await countReviews(page) }),
         enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep: (ms) => page.waitForTimeout(ms),
@@ -582,6 +582,11 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
           try {
             await page.keyboard.press('Escape');
             const control = page.locator('[data-pearfit-paging="1"]').first();
+            // A link with an address would load a page and lose what this one rendered; buttons only.
+            const isLink = await control.evaluate(
+              (el) => el.tagName === 'A' && !!el.getAttribute('href') && !/^(#|javascript:)/i.test(el.getAttribute('href') || ''),
+            );
+            if (isLink) return false;
             await control.scrollIntoViewIfNeeded({ timeout: 2000 });
             await control.click({ timeout: 3000 });
             return true;
@@ -605,7 +610,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       await capture.settle();
       await pageThroughReviews({
         click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
-        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)),
+        progress: async () => ({ json: capture.reviewCount(), cards: await countReviews(page) }),
         enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep: (ms) => page.waitForTimeout(ms),
@@ -680,7 +685,12 @@ async function sortReviewsNewest(evaluate: (script: string) => Promise<unknown>,
 export async function pageThroughReviews(ops: {
   /** Clicks a paging control whose label is not in `skip`; returns its label, or '' when none is left. */
   click: (skip: string[]) => Promise<string>;
-  progress: () => Promise<number>;
+  /**
+   * Reviews read from JSON and review cards on the page, counted separately: a click made progress when
+   * either grew. (A pager can replace the cards while the JSON grows; the first JSON page can hold fewer
+   * reviews than the cards the page rendered.)
+   */
+  progress: () => Promise<{ json: number; cards: number }>;
   enough: () => Promise<boolean>;
   settle: () => Promise<void>;
   sleep: (ms: number) => Promise<void>;
@@ -703,14 +713,15 @@ export async function pageThroughReviews(ops: {
     const before = await ops.progress();
     // No control left: infinite-scroll lists load the next reviews when the end comes into view.
     const clicked = (await ops.click([...skip])) || (ops.scroll ? await ops.scroll() : '');
-    if (process.env.SCRAPER_DEBUG) console.error(`[paging] ${i}: clicked=${JSON.stringify(clicked)} before=${before}`);
+    if (process.env.SCRAPER_DEBUG) console.error(`[paging] ${i}: clicked=${JSON.stringify(clicked)} json=${before.json} cards=${before.cards}`);
     if (!clicked) break;
     const waitForGrowth = async () => {
       const until = Math.min(Date.now() + 5000, ops.stopAt);
       while (Date.now() < until) {
         await ops.sleep(300);
         await ops.settle();
-        if ((await ops.progress()) > before) return true;
+        const now = await ops.progress();
+        if (now.json > before.json || now.cards > before.cards) return true;
       }
       return false;
     };
@@ -862,7 +873,7 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
       }
       await pageThroughReviews({
         click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
-        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()),
+        progress: async () => ({ json: capture.reviewCount(), cards: await countReviews() }),
         enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep,

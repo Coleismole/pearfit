@@ -554,3 +554,45 @@ test('a page-size "count" beside a review list is not taken as the store total',
   const { reportedTotal } = extractReviewsFromJson({ reviews: { count: 5, items: [{ rating: 5, body: 'Good' }] } });
   assert.equal(reportedTotal, null);
 });
+
+test('PowerReviews: nested details, metrics and badges; fit and body type from properties; rollup total', () => {
+  const body = {
+    success: true,
+    data: {
+      rollup: { average_rating: 4.94, review_count: 16 },
+      reviews: [
+        {
+          ugc_id: 280436798,
+          review_id: 280436798,
+          details: {
+            comments: 'My new favorite tee! Comfortable, lightweight with a classic look!',
+            headline: 'My favorite tee!',
+            nickname: 'Chris',
+            properties: [
+              { key: 'describeyourself', label: 'Body Type', type: 'tag', value: ['Athletic'] },
+              { key: 'fit', label: 'Fit', type: 'tag', value: ['Kind of Small'] },
+              { key: 'sizepurchased', label: 'Size Purchased', type: 'tag', value: ['L'] },
+            ],
+            created_date: 1592072107189,
+            product_page_id: '1V011322',
+          },
+          badges: { is_verified_buyer: true },
+          metrics: { helpful_votes: 0, rating: 5 },
+        },
+      ],
+    },
+  };
+  const { reviews, reportedTotal } = extractReviewsFromJson(body);
+  assert.equal(reportedTotal, 16);
+  const [r] = reviews;
+  assert.equal(r.id, '280436798');
+  assert.equal(r.author, 'Chris');
+  assert.equal(r.rating, 5);
+  assert.equal(r.title, 'My favorite tee!');
+  assert.equal(r.verifiedPurchase, true);
+  assert.equal(r.sizePurchased, 'L');
+  assert.equal(r.declaredFitTag, 'Slightly Small');
+  assert.equal(r.reviewerBuild, 'Athletic');
+  assert.equal(r.date, new Date(1592072107189).toISOString());
+  assert.deepEqual(r.productKeys, ['1v011322']);
+});

@@ -75,4 +75,5 @@ test('productIdFromUrl finds product codes in common URL shapes', () => {
   assert.equal(productIdFromUrl('https://shop.example/item?color=red&productId=AB123'), 'AB123');
   // A path id wins over a query parameter, which may be an affiliate code.
   assert.equal(productIdFromUrl('https://shop.example/products/E487396-000?pid=aff123'), 'E487396-000');
+  assert.equal(productIdFromUrl('https://www.llbean.com/llb/shop/40651?page=carefree-unshrinkable-tee'), '40651');
 });

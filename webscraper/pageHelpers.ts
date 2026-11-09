@@ -84,6 +84,9 @@ export function productIdFromUrl(url: string): string | null {
     url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) ||
     url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i);
   if (m) return m[1];
+  // A bare number of five or more digits as a path segment: /llb/shop/40651.
+  const numericSegment = url.match(/^[^?#]*\/(\d{5,})(?:[/?#]|$)/);
+  if (numericSegment) return numericSegment[1];
   return param ? param[1] : null;
 }
 

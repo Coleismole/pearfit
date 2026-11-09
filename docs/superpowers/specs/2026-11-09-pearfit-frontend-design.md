@@ -21,9 +21,13 @@ Research behind it (not committed): colossal.com captures, decoded into the syst
 - Free fonts now behind tokens, licensed fonts later. Structural labels allowed sparingly.
 
 **Assumptions (correct these in review)**
-- v1 screens: sign in, closet, add/edit shirt, check, reading (scrape wait), result. Gmail import,
-  the browser extension and bottoms are out of v1.
+- v1 screens: sign in, closet, add shirt, check, result, plus the "requested" state for links the
+  database does not have yet. Gmail import, the browser extension and bottoms are out of v1.
 - Tops only, three dimensions (chest, length, sleeve), matching `engine/src/types.ts`.
+- The app never calls the scraper. It reads products and size charts the scraper stored in Supabase
+  and files scrape requests for links it does not have (D4).
+- Closet shirts are added from a product link too: the user picks the size they own and the chart
+  supplies the measurements. Nobody measures a shirt by hand in v1 (D3).
 - The existing `website/` marketing page is untouched.
 
 **Success**
@@ -119,7 +123,7 @@ Body default 18/1.3 Urbanist 300. Letter-spacing 0 everywhere. No uppercase tran
   14px tall. Use at most two per screen: under the header on result and closet, and above the
   ranking or closet list.
 - Motion: `ease` only. 300ms for hover and state changes; 1000ms fade-in for the size hero; the
-  reading screen's timer updates once a second without animation. Everything sits inside
+  page-level transitions are none. Everything sits inside
   `@media (prefers-reduced-motion: no-preference)`.
 - z-index: content 0, header 10, overlay/dialog 20.
 
@@ -144,7 +148,7 @@ Each is one file in `app/src/components/`, typed props, no data fetching inside.
 | Component | Props (summary) | Notes |
 |---|---|---|
 | `Header` | `readout?: string` | Fixed, 60px, glass + blur. Wordmark left, `Closet` and `Check` right, readout centred in mono (product name on reading/result only). Active nav item in ink, other in ink-2. |
-| `Pill` | `children, glyph?, onClick/href, busy?` | 72px tall, 1px ink border. Hover: chalk fill, paper text. `busy` disables and swaps the glyph for the elapsed seconds. |
+| `Pill` | `children, glyph?, onClick/href, busy?` | 72px tall, 1px ink border. Hover: chalk fill, paper text. `busy` disables it while a lookup or save is in flight. |
 | `QuietLink` | `href, children` | 16px, underline rule, chalk on hover. |
 | `LinkEntry` | `onSubmit(url)` | 72px input on an ink underline with the `Check` pill. Placeholder "Paste a product link". Validates URL shape on submit only. |
 | `SizeHero` | `size: string` | 280px display 100, fades in. `null` size never reaches it (see states). |
@@ -155,143 +159,167 @@ Each is one file in `app/src/components/`, typed props, no data fetching inside.
 | `Tape` | `orientation` | The tick pattern. Decorative, `aria-hidden`. |
 | `SectionNumber` | `n` | `01`, `02` in 16px mono. The only label allowed above a block. |
 | `ClosetItem` | `shirt` | Name in 18px plus the fit word (`great`/`tight`/`loose`) in ink-2 on paper. Click to edit. |
-| `MeasureField` | `dim, value, onChange` | Mono number input in cm, 1 decimal, empty = `null`. Label is the dimension word only. |
+| `SizePicker` | `sizes: string[], value, onChange` | The chart's sizes in order as 48px mono letters on one line; selected in chalk with an ink underline. A radio group for assistive tech. |
 | `FitChoice` | `value, onChange` | Three-way segmented choice: Great, Tight, Loose. Selected: ink fill, paper text. |
 
 ## 6. Screens and states
 
-Routes (App Router): `/signin`, `/closet`, `/closet/new`, `/closet/[id]`, `/` (check),
-`/check/[jobId]` (reading, then result).
+Routes (App Router): `/signin`, `/closet`, `/closet/new`, `/` (check), `/result/[sku]`.
 
-**Sign in** (`/signin`). Wordmark, one email field, `Continue` pill. After submit: "Check your
-email." Nothing else. (Auth method is open question Q1.)
+**Sign in** (`/signin`). Wordmark, a `Continue with Google` pill, a hairline, then one email field
+with a `Send link` pill (magic link). After sending: "Check your email." Nothing else (D1).
 
 **Closet** (`/closet`). Band with tape above, 4-column grid of `ClosetItem`. One pill: `Add shirt +`.
 - Empty: the 72px line "Add a shirt you love." and the pill. No illustration.
-- No `great` shirts yet: the result screen cannot rank, so Check shows the line "Add a shirt that
-  fits you well." with a link to `/closet/new` instead of the entry.
+- A shirt whose page is not in the database yet shows its store domain as the name and `—` as the
+  size until the scraper has read it (see "Requested").
 
-**Add / edit shirt** (`/closet/new`, `/closet/[id]`). Name field (text, 48px), `FitChoice`, three
-`MeasureField`s beside a `Draft` that highlights the dimension in focus. `Save` pill; on edit, a
-quiet `Delete` link with a confirm step. Measurement convention (pit-to-pit flat, high shoulder to
-hem, shoulder seam to cuff) is shown by the highlighted line in the drawing, not by text. A chest
-value over 80 shows the one allowed hint: "That looks like the full chest. Measure across, armpit to
-armpit." (mirrors the engine loader's warning). See open question Q3.
+**Add shirt** (`/closet/new`). Step 1: `LinkEntry` with placeholder "Link to your shirt".
+Step 2 (found): product name at 48px, `SizePicker` with the chart's sizes, `FitChoice`,
+`Save` pill. The shirt's measurements are the chart row for the chosen size, copied as stored
+(nulls stay null). There is no manual measurement entry (D3). Edit = change size or fit; `Delete`
+is a quiet link with a confirm step.
 
 **Check** (`/`). As in the reference: `LinkEntry` centred, closet names along the bottom band.
+- No `great` shirts yet: the line "Add a shirt that fits you well." with a link to `/closet/new`
+  replaces the entry.
 
-**Reading** (`/check/[jobId]` while pending). Header readout shows the store domain. The 72px line
-"Reading the page." and a mono elapsed timer (`00:14`). The tape slowly fills left to right as
-time passes against a 90s cap; it reflects elapsed time, not fake progress, and stops at the cap.
-Cancel: quiet link "Stop".
+**Result** (`/result/[sku]`). The lookup is a database read, so there is no wait screen. As in the
+reference, top to bottom: placeholder (4:5, left 4 columns) | `SizeHero`, verdict,
+`ConfidenceNode`, `SizeSpread`, `Shop the M +` (links to the product's `source_url`) and
+`Check another`. Band `01`: `ShirtRow`s from `ranking`. Section `02`: `Draft` with the ease of the
+top-ranked shirt, plus one line built from data (review agreement or the first engine note).
+- Low confidence: same layout; hollow node, the word "Low". No extra warning text.
+- `size === null`: no hero. The engine's `verdict` alone at 48px, then `Check another`.
 
-**Result** (`/check/[jobId]` when done). As in the reference, top to bottom: placeholder or product
-image (4:5, left 4 columns) | `SizeHero`, verdict, `ConfidenceNode`, `SizeSpread`, `Shop the M +`
-(links to the product URL) and `Check another`. Band `01`: `ShirtRow`s from `ranking`. Section `02`:
-`Draft` with the ease of the top-ranked shirt, plus one line built from data: review agreement or
-the first engine note. Engine `notes` beyond the first are not shown in v1.
-- Low confidence: same layout; the node is hollow and the word says "Low". No extra warning text.
-- `size === null`: no hero. The engine's `verdict` alone at 48px (it explains why, e.g. no great
-  shirts or no overlapping measurements), then `Check another`.
+**Requested** (a link the database does not have, from Check or Add shirt). The app saves a scrape
+request and shows the 72px line "We'll read this page." with `Check another`. The request stays
+listed under the entry on Check (store domain plus mono request time) until it resolves; opening
+the app re-checks pending requests. When the scraper has stored the product, the item links to its
+result (or, from Add shirt, continues to step 2).
 
-**Errors** (inline, replacing the reading line; chalk sentence plus one action):
+**Errors** (chalk sentence plus one action):
 | Case | Copy | Action |
 |---|---|---|
 | Invalid URL | "That isn't a product link." | stay on entry |
-| Store blocked or fetch failed | "Couldn't read that page." | `Try again`, `Paste the page instead` (Q4) |
-| No size chart found | "No size chart on that page." | `Check another` |
-| Timed out (90s) | "That page took too long." | `Try again` |
-| Not a top / unsupported category | "Pearfit sizes tops for now." | `Check another` |
+| In the database, no size chart | "No size chart for this one." | `Check another` |
+| Request failed on the scraper side | "Couldn't read that page." | `Check another` |
+| Not a top | "Pearfit sizes tops for now." | `Check another` |
+| Network or Supabase error | "Something went wrong. Try again." | `Try again` |
 
 ## 7. Architecture and data flow
 
+The app and the scraper never talk to each other. The scraper writes products and size charts to the
+shared Supabase project; the app reads them from there (D2, D4).
+
 ```
-app/ (Next.js App Router, TypeScript, Tailwind v4)
+webscraper/ (unchanged runtime) --writes--> Supabase: commercial_skus, sku_size_chart
+                                      ^                       |
+                     reads requests   |                       | find_fit_product(url)
+                                      |                       v
+            Supabase: scrape_requests <---writes--- app/ (Next.js) --> engine/src (pure)
+```
+
+```
+app/ (Next.js App Router, TypeScript, Tailwind v4, own package.json)
   src/app/...            routes above
   src/components/...     section 5
   src/lib/supabase.ts    browser + server clients (@supabase/ssr)
-  src/lib/scrape.ts      server-only: calls the scraper, maps the response to a Candidate
-  src/app/api/check/route.ts   POST {url} -> starts a job; GET -> job status/result
-engine/src               imported directly (pure, no I/O); the app adds no logic to it
-webscraper/              unchanged; runs as its own server in dev
+  src/lib/catalog.ts     server-only: find_fit_product -> engine Candidate
+  src/lib/closet.ts      server-only: closet rows -> engine OwnedShirt[]
+engine/src               imported directly (pure, no I/O)
 ```
 
-1. Check submits the URL to `POST /api/check` (server). It creates a job row and calls the scraper's
-   `POST /api/scrape {url}`. Locally the scraper runs on `:3000` (`webscraper: npm run dev`); in
-   production it is `pearfit.app/scraper/api/scrape`. The base URL is an env var
-   (`SCRAPER_URL`), listed in `app/.env.example`.
-2. The scraper returns `{ report, sizeChart }`. `scrape.ts` maps them to the engine's `Candidate`:
-   `sizeChart` rows in `sort_order` become `sizes`; the review signal comes from the report's
-   runs-small/true-to-size/runs-large percentages using the same rule as
-   `engine/cli/export-candidates.ts`. That rule moves into `engine/src` as a pure function so the app
-   and the exporter share one implementation (engine change with a hand-computed unit test, per
-   AGENTS.md). No size chart → the "No size chart" error; never a guessed chart.
-3. The server loads the signed-in user's closet from Supabase, maps rows to `OwnedShirt[]` and calls
-   the engine's `recommend`. The `Recommendation` is stored on the job and returned as-is.
-   Engine change: today `verdict` is a finished English string built from the shirt id ("Get the M,
-   fits like your blue uniqlo oxford."), which repeats the hero size and loses capitalisation.
-   `Recommendation` gains `match: { band: 0 | 1 | 2, shirtId: string, gap: string | null } | null`,
-   computed by the same code that builds `verdict` today. `verdict` stays unchanged for the CLI and
-   eval. Ships with a hand-computed unit test per band.
-4. The reading screen polls `GET /api/check?id=` every 2s until done, failed or 90s.
+1. **Lookup.** The app normalises the pasted URL (lowercase host, no query string, fragment or
+   trailing slash) and calls a new RPC `find_fit_product(url)`. Today the only read path,
+   `list_fit_catalog()`, returns the whole catalog with no filter and omits `source_url` and the
+   review percentages, so it cannot serve this. `find_fit_product` returns one product: `sku`,
+   `brand`, `product_name`, `category`, `source_url`, `total_reviews`, the three runs-small /
+   true-to-size / runs-large percentages, and the chart rows in `sort_order`. It is
+   `security definer`, read-only, and granted to `authenticated` only. The scraper must store
+   `source_url` normalised the same way; one shared normaliser in TypeScript is used by both.
+2. **Candidate.** `catalog.ts` maps the result to the engine's `Candidate`: chart rows become
+   `sizes` in order; the review signal uses the rule now in `engine/cli/export-candidates.ts`
+   (`reviewSignal`), which moves into `engine/src` as a pure function so the app and the exporter
+   share one implementation (unit test with hand-computed cases, per AGENTS.md). No chart rows: the
+   "No size chart" error; a chart is never guessed.
+3. **Recommend.** The server loads the user's closet, maps it to `OwnedShirt[]`, calls `recommend`,
+   and renders the `Recommendation` as returned. Engine change: today `verdict` is a finished English
+   string built from the shirt id ("Get the M, fits like your blue uniqlo oxford."), which repeats
+   the hero size and loses capitalisation. `Recommendation` gains
+   `match: { band: 0 | 1 | 2, shirtId: string, gap: string | null } | null`, computed by the code
+   that builds `verdict` today. `verdict` stays unchanged for the CLI and eval. Ships with a
+   hand-computed unit test per band.
+4. **Miss.** No product for the URL: insert a `scrape_requests` row and show "Requested". Picking up
+   requests is the scraper's job and is outside this app (dependency S1 below).
 
-**Supabase (proposal; schema reviewed in the plan with the data-modeling and migration skills)**
-- Auth: Supabase Auth (method: Q1). RLS on every table, owner-only.
-- `closet_shirts`: `id uuid pk`, `user_id uuid not null references auth.users`, `name text not null`,
-  `fit text not null check (fit in ('great','tight','loose'))`, `chest_cm numeric(4,1) null`,
-  `length_cm numeric(4,1) null`, `sleeve_cm numeric(4,1) null`, `created_at timestamptz default now()`.
-  The engine's `id` is derived from `name` (lowercase, dashes) at mapping time.
-- `checks`: `id uuid pk`, `user_id`, `url text`, `status text check (status in
-  ('pending','done','failed'))`, `result jsonb null`, `error text null`, `created_at`.
-- The existing shared fit store (`commit_fit_report`) is untouched. The scraper keeps writing to it.
+**Supabase tables the app owns (proposal; reviewed in the plan with the data-modeling and migration
+skills).** Same Supabase project as the fit store. RLS on, owner-only policies.
+- `closet_shirts`: `id uuid pk`, `user_id uuid not null references auth.users`, `sku text null`
+  (null while requested), `source_url text not null`, `name text not null`, `size_code text null`,
+  `fit text not null check (fit in ('great','tight','loose'))`, `chest_cm`, `length_cm`,
+  `sleeve_cm` (`numeric(4,1)`, nullable, copied from the chart at save time), `created_at`.
+  The engine's `id` is the row id; display uses `name`.
+- `scrape_requests`: `id uuid pk`, `user_id`, `url text not null` (normalised), `status text check
+  (status in ('pending','done','failed'))`, `created_at`, `resolved_at null`. Unique on
+  `(user_id, url)`. The scraper reads pending rows and sets the status with its own service key.
+
+Copying chart values into `closet_shirts` at save time means a later re-scrape never silently
+changes a shirt the user already labelled.
+
+**Dependencies on the scraper side (not built by the app plan)**
+- S1: a worker or manual step that scrapes `pending` rows in `scrape_requests` and marks them done
+  or failed.
+- S2: `find_fit_product(url)` added to `webscraper/fit_store.sql`, and `source_url` stored
+  normalised.
 
 **Repo rule changes (in the same PR as the scaffold):** AGENTS.md "First MVP has no frontend" becomes
-"`app/` is the shopper web app (Next.js); it imports engine types and functions, never the reverse",
-and gains `app/` commands. `app/` has its own `package.json`, like `webscraper/`.
+"`app/` is the shopper web app (Next.js); it imports engine types and functions, never the reverse;
+it reads the fit store through RPCs and never calls the scraper", and gains `app/` commands.
 
-**Local hosting:** `cd webscraper && npm run dev` (scraper, :3000) and `cd app && npm run dev`
-(app, :3001). A Supabase project URL and publishable key go in `app/.env.local`; nothing secret is
-committed.
+**Local hosting (D2):** `cd app && npm run dev` on `:3001` against the shared Supabase project.
+Publishable URL and key in `app/.env.local`, names listed in `app/.env.example`. Google OAuth needs a
+Google Cloud OAuth client configured in Supabase Auth with `http://localhost:3001` as an allowed
+redirect. Nothing secret is committed. Production hosting is out of v1.
 
 ## 8. Accessibility
 - Contrast pairs restricted as in section 3. Focus ring: 2px chalk outline, 2px offset, on every
   interactive element; never removed.
-- Every input has a real `<label>` (visually it is the dimension word or the field's role; the link
-  entry's label is visually hidden: "Product link").
+- Every input has a real `<label>` (the link entry's is visually hidden: "Product link").
 - Size hero has `aria-label="Recommended size M"`; the `Draft` has a text alternative listing the
   three differences; tape and glyphs are `aria-hidden`.
 - Keyboard: tab order follows visual order; `Enter` submits the link entry; dialogs trap focus and
   close on `Escape`.
-- Reduced motion: no fade, no tape fill animation (the timer still counts).
+- Reduced motion: no fade.
 
 ## 9. Verification (required for every task in the plan)
 Nothing is reported as working until these pass and the output is shown.
-1. `engine`: `npm test` and `npm run typecheck` (unchanged engine behaviour; new shared review-signal
-   function has a hand-computed test).
-2. `app`: `npm run typecheck`, `npm run lint`, unit tests for `scrape.ts` mapping (fixtures from a
-   real scraper response, including null dims and no size chart).
-3. Design checker (Playwright, adapted from the mockup verifier) on every route at 1280x800,
-   1440x900, 1920x1080 and 1024x768: header aligned to the content column, fonts actually loaded (FontFace status), no box-shadow, no gradient, no purple hue, no
-   horizontal overflow, every font-size on the scale, no element above a heading except
-   `SectionNumber`, contrast of every text node ≥ 4.5:1 against its background.
-4. Golden check: for the sample closet and `cos-oxford`, the result screen shows M / High / 84.6% /
-   S 70 M 85 L 35, identical to `npm run recommend -- sample cos-oxford`.
-5. Screenshots of each screen and state are viewed by a person (or the managing agent) before a task
-   is called done.
+1. `engine`: `npm test` and `npm run typecheck`; new `reviewSignal` and `match` fields have
+   hand-computed tests; existing eval output unchanged.
+2. `app`: `npm run typecheck`, `npm run lint`, unit tests for `catalog.ts` and `closet.ts` mapping
+   (fixtures shaped like real `find_fit_product` output, including null dims and an empty chart),
+   and for URL normalisation.
+3. RLS: a test signs in as two users and confirms neither can read or write the other's
+   `closet_shirts` or `scrape_requests`, and that anon cannot call `find_fit_product`.
+4. Design checker (Playwright, adapted from the mockup verifier) on every route at 1280x800,
+   1440x900, 1920x1080 and 1024x768: header aligned to the content column, fonts actually loaded,
+   no box-shadow, no gradient, no purple hue, no horizontal overflow, every font-size on the scale,
+   nothing above a heading except `SectionNumber`, every text node ≥ 4.5:1 against its background.
+5. Golden check: with the sample closet and `cos-oxford` seeded, the result screen shows M / High /
+   84.6% / S 70 M 85 L 35, identical to `npm run recommend -- sample cos-oxford`.
+6. Screenshots of each screen and state are viewed by the managing agent before a task is called
+   done.
 
 ## 10. Out of scope (v1)
-Gmail import, browser extension, bottoms and other categories, mobile layouts below 1024px, dark
-mode, product photos from the store (placeholder block until image extraction exists), sharing,
-analytics beyond the existing PostHog setup, editing engine weights from the UI.
+Calling the scraper from the app, pasting page content, manual measurement entry, Gmail import,
+browser extension, bottoms and other categories, mobile layouts below 1024px, dark mode, product
+photos (placeholder block until image extraction exists), production hosting, realtime updates for
+requests (re-checked on load instead), editing engine weights from the UI.
 
-## 11. Open questions (need a decision before the plan)
-- **Q1 Auth method.** Email magic link (no passwords, matches the minimal sign-in screen) or Google
-  OAuth (one click, and later reusable for Gmail import)?
-- **Q2 Scraper in production.** The app calls the scraper on Vercel at `pearfit.app/scraper`, whose
-  SQLite is ephemeral and which runs under a 50s budget. Acceptable for v1, or should the app only
-  target local dev until the scraper has a durable home?
-- **Q3 Measuring a shirt.** Adding a shirt needs three hand measurements. The design teaches the
-  convention through the drawing, with no instructions. Is that enough for a first-time user, or do
-  we allow one short line per field (which breaks principle 2)?
-- **Q4 Blocked stores.** Many stores block scraping. Offer "Paste the page instead" (the scraper
-  already accepts raw HTML), or only show the failure in v1?
+## 11. Decisions (2026-11-09)
+- **D1 Sign-in:** both Google OAuth and email magic link, through Supabase Auth.
+- **D2 Hosting:** local development only for v1.
+- **D3 Closet measurements:** come from scraped size charts (link + size owned). No hand measuring.
+  No chart or no page means the shirt cannot be added yet.
+- **D4 Unknown links:** the app saves a scrape request; the scraper picks it up. This replaces the
+  earlier "paste the page" answer, which cannot work because the app does not run the scraper.

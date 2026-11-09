@@ -429,3 +429,18 @@ test('a card cut short by "Read more" matches its review by the same reviewer th
     server.close();
   }
 });
+
+test('a Shopify page with no SKU uses the product id from its analytics object', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const html = `<!DOCTYPE html><html><head><title>Mill Shirt</title>
+      <script>var meta = {"product":{"id":7123456789012,"vendor":"Alex Mill"}};</script></head><body><h1>Mill Shirt</h1>
+      <div class="review-card" data-author="Sam" data-rating="5"><p class="review-body-copy">Great oxford, true to size.</p></div>
+      <script>var recs = [{"product":{"id":9999999999999}}];</script></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, url: undefined, commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    assert.equal((scraped.json.report as { sku: string }).sku, '7123456789012');
+  } finally {
+    server.close();
+  }
+});

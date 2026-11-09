@@ -1049,6 +1049,8 @@ function scrapeHtmlWithCheerio(
     $p('[data-sku]').attr('data-sku') ||
     // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
     productIdFromUrl(sourceUrl) ||
+    // Shopify names its product in the analytics object: var meta = {"product":{"id":123,...
+    shopifyProductId(productPageHtml) ||
     `URL-${stableHash(sourceUrl)}`;
 
   const priceAmount = meta('meta[property="product:price:amount"]') || meta('meta[property="og:price:amount"]');
@@ -1243,6 +1245,17 @@ function scrapeHtmlWithCheerio(
 }
 
 /**
+ * The product id in Shopify's analytics object (var meta = {"product":{"id":123,...), or else the first
+ * such id on the page: later ones belong to recommendation blocks.
+ */
+function shopifyProductId(html: string): string | null {
+  const match =
+    html.match(/(?:var meta|ShopifyAnalytics\.meta)\s*=\s*\{\s*"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/) ??
+    html.match(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/);
+  return match ? match[1] : null;
+}
+
+/**
  * Ids, SKUs and handles that name this page's product, lowercased. Used to keep only this product's
  * reviews from review JSON. Product cards elsewhere on the page are not read: their ids would let
  * a "you may also like" carousel's reviews through.
@@ -1262,12 +1275,7 @@ function pageProductKeys(
   structuredIds.forEach(add);
   add(sku);
   add($('meta[property="product:retailer_item_id"]').attr('content'));
-  // Shopify's analytics object names the product on its own page: var meta = {"product":{"id":123,...
-  // Only that object, or else the first such id: later ones belong to recommendation blocks.
-  const shopifyMeta =
-    html.match(/(?:var meta|ShopifyAnalytics\.meta)\s*=\s*\{\s*"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/) ??
-    html.match(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/);
-  if (shopifyMeta) add(shopifyMeta[1]);
+  add(shopifyProductId(html));
   $('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
     add($(el).attr('value'));
   });

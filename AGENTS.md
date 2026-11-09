@@ -54,6 +54,10 @@ Owned shirt:
   owns (hand-measure it, compare to that brand's chart at the known size, store the difference, and apply
   it to that brand's charts). When no offset is known and the chart's convention can't be confirmed, set
   that dimension to null rather than mixing conventions.
+- `garmentType` (optional, on owned shirts and candidates): one of `"tee"`, `"tee_long_sleeve"`, `"polo"`,
+  `"button_shirt"`, `"jacket"`, `"other"`. Missing means `"tee"`. The engine only compares a candidate with owned
+  shirts of the same type. The export derives it from the product name (`engine/cli/garment-type.ts`), not from the
+  stored category, which is wrong too often to trust.
 - `id`: lowercase, dashes, no spaces, unique per person.
 
 Candidate garment (used by the Pilot 1 engine; sizes listed smallest to largest):

@@ -1,8 +1,8 @@
 // File loading and validation. Kept outside src/ so the engine itself stays free of I/O.
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { Candidate, EvalCase, Measurements, OwnedShirt } from "../src/types.ts";
-import { DIMS } from "../src/types.ts";
+import type { Candidate, EvalCase, GarmentType, Measurements, OwnedShirt } from "../src/types.ts";
+import { DIMS, GARMENT_TYPES } from "../src/types.ts";
 
 export const DATA_DIR = join(import.meta.dirname, "..", "data");
 
@@ -24,7 +24,13 @@ export function loadWardrobe(owner: string, dataDir = DATA_DIR): OwnedShirt[] {
     if (!["great", "tight", "loose"].includes(s.label)) {
       fail(where, `label must be "great", "tight" or "loose", got ${JSON.stringify(s.label)}`);
     }
-    return { id: s.id, label: s.label, measurements: parseMeasurements(s.measurements, `${where} ${s.id}`) };
+    const garmentType = parseGarmentType(s.garmentType, `${where} ${s.id}`);
+    return {
+      id: s.id,
+      label: s.label,
+      measurements: parseMeasurements(s.measurements, `${where} ${s.id}`),
+      ...(garmentType ? { garmentType } : {}),
+    };
   });
 }
 
@@ -50,7 +56,14 @@ export function loadCandidates(dataDir = DATA_DIR, file?: string): Candidate[] {
     }
     const sizes: Record<string, Measurements> = {};
     for (const [size, m] of Object.entries(c.sizes)) sizes[size] = parseMeasurements(m, `${where} ${c.id} size ${size}`);
-    return { id: c.id, name: typeof c.name === "string" ? c.name : c.id, review: c.review ?? null, sizes };
+    const garmentType = parseGarmentType(c.garmentType, `${where} ${c.id}`);
+    return {
+      id: c.id,
+      name: typeof c.name === "string" ? c.name : c.id,
+      review: c.review ?? null,
+      sizes,
+      ...(garmentType ? { garmentType } : {}),
+    };
   });
 }
 
@@ -59,6 +72,13 @@ export function loadCases(dataDir = DATA_DIR, file?: string): EvalCase[] {
   const raw = readJson(file);
   if (!Array.isArray(raw)) fail(file, "expected a JSON array of cases");
   return raw;
+}
+
+// Missing is fine (the engine treats it as a tee). A value that is not a known type is a typo: fail loudly.
+function parseGarmentType(v: any, where: string): GarmentType | undefined {
+  if (v === undefined || v === null) return undefined;
+  if (!GARMENT_TYPES.includes(v)) fail(where, `garmentType must be one of ${GARMENT_TYPES.join(", ")}, got ${JSON.stringify(v)}`);
+  return v;
 }
 
 function parseMeasurements(m: any, where: string): Measurements {

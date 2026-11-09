@@ -1,7 +1,7 @@
 // Usage: npm run recommend -- <owner> [candidateId] [--candidates <path>]
 // Omit candidateId to run every candidate. --candidates defaults to data/candidates.json; point it at the
 // exporter's data/candidates.generated.json to run scraped data without merging it into the curated file.
-import { recommend } from "../src/recommend.ts";
+import { garmentTypeOf, recommend } from "../src/recommend.ts";
 import type { Candidate, OwnedShirt, Recommendation } from "../src/types.ts";
 import { parseCliArgs } from "./args.ts";
 import { DATA_DIR, listOwners, loadCandidates, loadWardrobe } from "./load.ts";
@@ -28,7 +28,7 @@ try {
 }
 
 function print(c: Candidate, wardrobe: OwnedShirt[], r: Recommendation): void {
-  console.log(`\nCandidate: ${c.name} (${c.id})${c.review ? `  [reviews: ${c.review}]` : ""}`);
+  console.log(`\nCandidate: ${c.name} (${c.id})  [type: ${garmentTypeOf(c)}]${c.review ? `  [reviews: ${c.review}]` : ""}`);
   console.log(`Recommended: ${r.size ?? "none"} (${r.confidence} confidence)`);
   console.log(`"${r.verdict}"`);
   for (const n of r.notes) console.log(`  note: ${n}`);
@@ -41,7 +41,9 @@ function print(c: Candidate, wardrobe: OwnedShirt[], r: Recommendation): void {
         .join(", ");
       console.log(`  ${i + 1}. ${m.shirtId.padEnd(28)} ${m.matchPct.toFixed(1).padStart(5)}%   (${ease})`);
     });
-    const unscored = wardrobe.filter((s) => s.label === "great" && !r.ranking.some((m) => m.shirtId === s.id));
+    const unscored = wardrobe.filter(
+      (s) => s.label === "great" && garmentTypeOf(s) === garmentTypeOf(c) && !r.ranking.some((m) => m.shirtId === s.id),
+    );
     for (const s of unscored) console.log(`  -  ${s.id.padEnd(28)}   n/a   (no overlapping measurements)`);
   }
 

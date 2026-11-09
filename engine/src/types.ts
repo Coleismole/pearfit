@@ -23,7 +23,20 @@ export interface OwnedShirt {
   brand?: string;
   sku?: string;
   size?: string;
+  garmentType?: GarmentType; // missing = "tee"
 }
+
+// What kind of garment this is. Only shirts of the same type are compared. A missing value means "tee".
+export type GarmentType = "tee" | "tee_long_sleeve" | "polo" | "button_shirt" | "jacket" | "other";
+export const GARMENT_TYPES: readonly GarmentType[] = ["tee", "tee_long_sleeve", "polo", "button_shirt", "jacket", "other"];
+export const GARMENT_LABELS: Record<GarmentType, string> = {
+  tee: "a tee",
+  tee_long_sleeve: "a long-sleeve tee",
+  polo: "a polo",
+  button_shirt: "a button shirt",
+  jacket: "a jacket",
+  other: "some other kind of garment",
+};
 
 export type ReviewSignal = "runs_small" | "true_to_size" | "runs_large" | null;
 
@@ -33,6 +46,7 @@ export interface Candidate {
   name: string;
   review: ReviewSignal;
   sizes: Record<string, Measurements>;
+  garmentType?: GarmentType; // missing = "tee". Only owned shirts of the same type are compared.
 }
 
 // Per-dimension difference, candidate minus owned shirt. Only dims present on both.

@@ -938,8 +938,11 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
         // Same named reviewer, and the card contains the start of that review's text (a review can be
         // as short as "Good").
         if (m.author === 'Anonymous' || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
+        const card = loose(review.body);
         const start = loose(m.body).slice(0, 40);
-        return start.length >= 2 && loose(review.body).includes(start);
+        // A card cut short ("Read more") may hold only part of the text, but it still shows the title.
+        const title = loose(m.title);
+        return (start.length >= 2 && card.includes(start)) || (title.length >= 8 && card.includes(title));
       });
     if (!existing) {
       merged.push(review);

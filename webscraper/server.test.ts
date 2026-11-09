@@ -414,3 +414,18 @@ test('a whole-card text with a very short review still matches its review by the
     server.close();
   }
 });
+
+test('a card cut short by "Read more" matches its review by the same reviewer through the title', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = { props: { reviews: { total: 1, items: [{ id: 'r1', rating: 3, title: 'Decent shirt, don’t love the material', body: 'It’s a bit of a cheap material. Not like T-shirts that are a heavier weight.', author: 'Aaron S.' }] } } };
+    const html = `<!DOCTYPE html><html><head><title>Oxford</title></head><body><h1>Oxford</h1>
+      <div class="review-card" data-author="Aaron S." data-rating="3"><span>Rated 3 out of 5 stars10 months agoDecent shirt, don’t love the material It’s a bi… Read More</span></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'OXF-2', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 1);
+  } finally {
+    server.close();
+  }
+});

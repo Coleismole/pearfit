@@ -50,8 +50,8 @@ var require_depd = __commonJS({
     var relative = require("path").relative;
     module2.exports = depd;
     var basePath = process.cwd();
-    function containsNamespace(str, namespace) {
-      var vals = str.split(/[ ,]+/);
+    function containsNamespace(str2, namespace) {
+      var vals = str2.split(/[ ,]+/);
       var ns = String(namespace).toLowerCase();
       for (var i = 0; i < vals.length; i++) {
         var val2 = vals[i];
@@ -78,21 +78,21 @@ var require_depd = __commonJS({
       return descriptor;
     }
     function createArgumentsString(arity) {
-      var str = "";
+      var str2 = "";
       for (var i = 0; i < arity; i++) {
-        str += ", arg" + i;
+        str2 += ", arg" + i;
       }
-      return str.substr(2);
+      return str2.substr(2);
     }
     function createStackString(stack) {
-      var str = this.name + ": " + this.namespace;
+      var str2 = this.name + ": " + this.namespace;
       if (this.message) {
-        str += " deprecated " + this.message;
+        str2 += " deprecated " + this.message;
       }
       for (var i = 0; i < stack.length; i++) {
-        str += "\n    at " + stack[i].toString();
+        str2 += "\n    at " + stack[i].toString();
       }
-      return str;
+      return str2;
     }
     function depd(namespace) {
       if (!namespace) {
@@ -121,15 +121,15 @@ var require_depd = __commonJS({
       if (process.noDeprecation) {
         return true;
       }
-      var str = process.env.NO_DEPRECATION || "";
-      return containsNamespace(str, namespace);
+      var str2 = process.env.NO_DEPRECATION || "";
+      return containsNamespace(str2, namespace);
     }
     function istraced(namespace) {
       if (process.traceDeprecation) {
         return true;
       }
-      var str = process.env.TRACE_DEPRECATION || "";
-      return containsNamespace(str, namespace);
+      var str2 = process.env.TRACE_DEPRECATION || "";
+      return containsNamespace(str2, namespace);
     }
     function log(message, site) {
       var haslisteners = eehaslisteners(process, "deprecation");
@@ -403,16 +403,16 @@ var require_bytes = __commonJS({
         }
       }
       var val2 = value / map2[unit.toLowerCase()];
-      var str = val2.toFixed(decimalPlaces);
+      var str2 = val2.toFixed(decimalPlaces);
       if (!fixedDecimals) {
-        str = str.replace(formatDecimalsRegExp, "$1");
+        str2 = str2.replace(formatDecimalsRegExp, "$1");
       }
       if (thousandsSeparator) {
-        str = str.split(".").map(function(s, i) {
+        str2 = str2.split(".").map(function(s, i) {
           return i === 0 ? s.replace(formatThousandsRegExp, thousandsSeparator) : s;
         }).join(".");
       }
-      return str + unitSeparator + unit;
+      return str2 + unitSeparator + unit;
     }
     function parse8(val2) {
       if (typeof val2 === "number" && !isNaN(val2)) {
@@ -527,14 +527,14 @@ var require_content_type = __commonJS({
       return header;
     }
     function qstring(val2) {
-      var str = String(val2);
-      if (TOKEN_REGEXP.test(str)) {
-        return str;
+      var str2 = String(val2);
+      if (TOKEN_REGEXP.test(str2)) {
+        return str2;
       }
-      if (str.length > 0 && !TEXT_REGEXP.test(str)) {
+      if (str2.length > 0 && !TEXT_REGEXP.test(str2)) {
         throw new TypeError("invalid parameter value");
       }
-      return '"' + str.replace(QUOTE_REGEXP, "\\$1") + '"';
+      return '"' + str2.replace(QUOTE_REGEXP, "\\$1") + '"';
     }
     function ContentType(type) {
       this.parameters = /* @__PURE__ */ Object.create(null);
@@ -756,8 +756,8 @@ var require_toidentifier = __commonJS({
   "webscraper/node_modules/toidentifier/index.js"(exports2, module2) {
     "use strict";
     module2.exports = toIdentifier;
-    function toIdentifier(str) {
-      return str.split(" ").map(function(token) {
+    function toIdentifier(str2) {
+      return str2.split(" ").map(function(token) {
         return token.slice(0, 1).toUpperCase() + token.slice(1);
       }).join("").replace(/[^ _0-9a-z]/gi, "");
     }
@@ -948,13 +948,13 @@ var require_ms = __commonJS({
         "val is not a non-empty string or a valid number. val=" + JSON.stringify(val2)
       );
     };
-    function parse8(str) {
-      str = String(str);
-      if (str.length > 100) {
+    function parse8(str2) {
+      str2 = String(str2);
+      if (str2.length > 100) {
         return;
       }
       var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(
-        str
+        str2
       );
       if (!match) {
         return;
@@ -1259,8 +1259,8 @@ var require_node = __commonJS({
     }
     exports2.formatters.o = function(v) {
       this.inspectOpts.colors = this.useColors;
-      return util.inspect(v, this.inspectOpts).split("\n").map(function(str) {
-        return str.trim();
+      return util.inspect(v, this.inspectOpts).split("\n").map(function(str2) {
+        return str2.trim();
       }).join(" ");
     };
     exports2.formatters.O = function(v) {
@@ -1517,12 +1517,12 @@ var require_bom_handling = __commonJS({
       this.encoder = encoder;
       this.addBOM = true;
     }
-    PrependBOMWrapper.prototype.write = function(str) {
+    PrependBOMWrapper.prototype.write = function(str2) {
       if (this.addBOM) {
-        str = BOMChar + str;
+        str2 = BOMChar + str2;
         this.addBOM = false;
       }
-      return this.encoder.write(str);
+      return this.encoder.write(str2);
     };
     PrependBOMWrapper.prototype.end = function() {
       return this.encoder.end();
@@ -1596,30 +1596,30 @@ var require_internal = __commonJS({
     function InternalEncoder(options, codec) {
       this.enc = codec.enc;
     }
-    InternalEncoder.prototype.write = function(str) {
-      return Buffer2.from(str, this.enc);
+    InternalEncoder.prototype.write = function(str2) {
+      return Buffer2.from(str2, this.enc);
     };
     InternalEncoder.prototype.end = function() {
     };
     function InternalEncoderBase64(options, codec) {
       this.prevStr = "";
     }
-    InternalEncoderBase64.prototype.write = function(str) {
-      str = this.prevStr + str;
-      var completeQuads = str.length - str.length % 4;
-      this.prevStr = str.slice(completeQuads);
-      str = str.slice(0, completeQuads);
-      return Buffer2.from(str, "base64");
+    InternalEncoderBase64.prototype.write = function(str2) {
+      str2 = this.prevStr + str2;
+      var completeQuads = str2.length - str2.length % 4;
+      this.prevStr = str2.slice(completeQuads);
+      str2 = str2.slice(0, completeQuads);
+      return Buffer2.from(str2, "base64");
     };
     InternalEncoderBase64.prototype.end = function() {
       return Buffer2.from(this.prevStr, "base64");
     };
     function InternalEncoderCesu8(options, codec) {
     }
-    InternalEncoderCesu8.prototype.write = function(str) {
-      var buf = Buffer2.alloc(str.length * 3), bufIdx = 0;
-      for (var i = 0; i < str.length; i++) {
-        var charCode = str.charCodeAt(i);
+    InternalEncoderCesu8.prototype.write = function(str2) {
+      var buf = Buffer2.alloc(str2.length * 3), bufIdx = 0;
+      for (var i = 0; i < str2.length; i++) {
+        var charCode = str2.charCodeAt(i);
         if (charCode < 128)
           buf[bufIdx++] = charCode;
         else if (charCode < 2048) {
@@ -1708,8 +1708,8 @@ var require_utf16 = __commonJS({
     Utf16BECodec.prototype.bomAware = true;
     function Utf16BEEncoder() {
     }
-    Utf16BEEncoder.prototype.write = function(str) {
-      var buf = Buffer2.from(str, "ucs2");
+    Utf16BEEncoder.prototype.write = function(str2) {
+      var buf = Buffer2.from(str2, "ucs2");
       for (var i = 0; i < buf.length; i += 2) {
         var tmp = buf[i];
         buf[i] = buf[i + 1];
@@ -1753,8 +1753,8 @@ var require_utf16 = __commonJS({
         options.addBOM = true;
       this.encoder = codec.iconv.getEncoder("utf-16le", options);
     }
-    Utf16Encoder.prototype.write = function(str) {
-      return this.encoder.write(str);
+    Utf16Encoder.prototype.write = function(str2) {
+      return this.encoder.write(str2);
     };
     Utf16Encoder.prototype.end = function() {
       return this.encoder.end();
@@ -1828,8 +1828,8 @@ var require_utf7 = __commonJS({
     function Utf7Encoder(options, codec) {
       this.iconv = codec.iconv;
     }
-    Utf7Encoder.prototype.write = function(str) {
-      return Buffer2.from(str.replace(nonDirectChars, function(chunk) {
+    Utf7Encoder.prototype.write = function(str2) {
+      return Buffer2.from(str2.replace(nonDirectChars, function(chunk) {
         return "+" + (chunk === "+" ? "" : this.iconv.encode(chunk, "utf16-be").toString("base64").replace(/=+$/, "")) + "-";
       }.bind(this)));
     };
@@ -1907,10 +1907,10 @@ var require_utf7 = __commonJS({
       this.base64Accum = Buffer2.alloc(6);
       this.base64AccumIdx = 0;
     }
-    Utf7IMAPEncoder.prototype.write = function(str) {
-      var inBase64 = this.inBase64, base64Accum = this.base64Accum, base64AccumIdx = this.base64AccumIdx, buf = Buffer2.alloc(str.length * 5 + 10), bufIdx = 0;
-      for (var i2 = 0; i2 < str.length; i2++) {
-        var uChar = str.charCodeAt(i2);
+    Utf7IMAPEncoder.prototype.write = function(str2) {
+      var inBase64 = this.inBase64, base64Accum = this.base64Accum, base64AccumIdx = this.base64AccumIdx, buf = Buffer2.alloc(str2.length * 5 + 10), bufIdx = 0;
+      for (var i2 = 0; i2 < str2.length; i2++) {
+        var uChar = str2.charCodeAt(i2);
         if (32 <= uChar && uChar <= 126) {
           if (inBase64) {
             if (base64AccumIdx > 0) {
@@ -2040,10 +2040,10 @@ var require_sbcs_codec = __commonJS({
     function SBCSEncoder(options, codec) {
       this.encodeBuf = codec.encodeBuf;
     }
-    SBCSEncoder.prototype.write = function(str) {
-      var buf = Buffer2.alloc(str.length);
-      for (var i = 0; i < str.length; i++)
-        buf[i] = this.encodeBuf[str.charCodeAt(i)];
+    SBCSEncoder.prototype.write = function(str2) {
+      var buf = Buffer2.alloc(str2.length);
+      for (var i = 0; i < str2.length; i++)
+        buf[i] = this.encodeBuf[str2.charCodeAt(i)];
       return buf;
     };
     SBCSEncoder.prototype.end = function() {
@@ -2858,12 +2858,12 @@ var require_dbcs_codec = __commonJS({
       this.defaultCharSingleByte = codec.defCharSB;
       this.gb18030 = codec.gb18030;
     }
-    DBCSEncoder.prototype.write = function(str) {
-      var newBuf = Buffer2.alloc(str.length * (this.gb18030 ? 4 : 3)), leadSurrogate = this.leadSurrogate, seqObj = this.seqObj, nextChar = -1, i2 = 0, j = 0;
+    DBCSEncoder.prototype.write = function(str2) {
+      var newBuf = Buffer2.alloc(str2.length * (this.gb18030 ? 4 : 3)), leadSurrogate = this.leadSurrogate, seqObj = this.seqObj, nextChar = -1, i2 = 0, j = 0;
       while (true) {
         if (nextChar === -1) {
-          if (i2 == str.length) break;
-          var uCode = str.charCodeAt(i2++);
+          if (i2 == str2.length) break;
+          var uCode = str2.charCodeAt(i2++);
         } else {
           var uCode = nextChar;
           nextChar = -1;
@@ -4681,11 +4681,11 @@ var require_extend_node = __commonJS({
           return Buffer2.isNativeEncoding(encoding) || iconv2.encodingExists(encoding);
         };
         original.BufferByteLength = Buffer2.byteLength;
-        Buffer2.byteLength = SlowBuffer.byteLength = function(str, encoding) {
+        Buffer2.byteLength = SlowBuffer.byteLength = function(str2, encoding) {
           encoding = String(encoding || "utf8").toLowerCase();
           if (Buffer2.isNativeEncoding(encoding))
-            return original.BufferByteLength.call(this, str, encoding);
-          return iconv2.encode(str, encoding).length;
+            return original.BufferByteLength.call(this, str2, encoding);
+          return iconv2.encode(str2, encoding).length;
         };
         original.BufferToString = Buffer2.prototype.toString;
         Buffer2.prototype.toString = function(encoding, start, end2) {
@@ -4774,10 +4774,10 @@ var require_lib = __commonJS({
     iconv2.encodings = null;
     iconv2.defaultCharUnicode = "\uFFFD";
     iconv2.defaultCharSingleByte = "?";
-    iconv2.encode = function encode(str, encoding, options) {
-      str = "" + (str || "");
+    iconv2.encode = function encode(str2, encoding, options) {
+      str2 = "" + (str2 || "");
       var encoder = iconv2.getEncoder(encoding, options);
-      var res = encoder.write(str);
+      var res = encoder.write(str2);
       var trail = encoder.end();
       return trail && trail.length > 0 ? Buffer2.concat([res, trail]) : res;
     };
@@ -5104,12 +5104,12 @@ var require_bom_handling2 = __commonJS({
       this.encoder = encoder;
       this.addBOM = true;
     }
-    PrependBOMWrapper.prototype.write = function(str) {
+    PrependBOMWrapper.prototype.write = function(str2) {
       if (this.addBOM) {
-        str = BOMChar + str;
+        str2 = BOMChar + str2;
         this.addBOM = false;
       }
-      return this.encoder.write(str);
+      return this.encoder.write(str2);
     };
     PrependBOMWrapper.prototype.end = function() {
       return this.encoder.end();
@@ -5183,30 +5183,30 @@ var require_internal2 = __commonJS({
     function InternalEncoder(options, codec) {
       this.enc = codec.enc;
     }
-    InternalEncoder.prototype.write = function(str) {
-      return Buffer2.from(str, this.enc);
+    InternalEncoder.prototype.write = function(str2) {
+      return Buffer2.from(str2, this.enc);
     };
     InternalEncoder.prototype.end = function() {
     };
     function InternalEncoderBase64(options, codec) {
       this.prevStr = "";
     }
-    InternalEncoderBase64.prototype.write = function(str) {
-      str = this.prevStr + str;
-      var completeQuads = str.length - str.length % 4;
-      this.prevStr = str.slice(completeQuads);
-      str = str.slice(0, completeQuads);
-      return Buffer2.from(str, "base64");
+    InternalEncoderBase64.prototype.write = function(str2) {
+      str2 = this.prevStr + str2;
+      var completeQuads = str2.length - str2.length % 4;
+      this.prevStr = str2.slice(completeQuads);
+      str2 = str2.slice(0, completeQuads);
+      return Buffer2.from(str2, "base64");
     };
     InternalEncoderBase64.prototype.end = function() {
       return Buffer2.from(this.prevStr, "base64");
     };
     function InternalEncoderCesu8(options, codec) {
     }
-    InternalEncoderCesu8.prototype.write = function(str) {
-      var buf = Buffer2.alloc(str.length * 3), bufIdx = 0;
-      for (var i = 0; i < str.length; i++) {
-        var charCode = str.charCodeAt(i);
+    InternalEncoderCesu8.prototype.write = function(str2) {
+      var buf = Buffer2.alloc(str2.length * 3), bufIdx = 0;
+      for (var i = 0; i < str2.length; i++) {
+        var charCode = str2.charCodeAt(i);
         if (charCode < 128)
           buf[bufIdx++] = charCode;
         else if (charCode < 2048) {
@@ -5295,8 +5295,8 @@ var require_utf162 = __commonJS({
     Utf16BECodec.prototype.bomAware = true;
     function Utf16BEEncoder() {
     }
-    Utf16BEEncoder.prototype.write = function(str) {
-      var buf = Buffer2.from(str, "ucs2");
+    Utf16BEEncoder.prototype.write = function(str2) {
+      var buf = Buffer2.from(str2, "ucs2");
       for (var i = 0; i < buf.length; i += 2) {
         var tmp = buf[i];
         buf[i] = buf[i + 1];
@@ -5340,8 +5340,8 @@ var require_utf162 = __commonJS({
         options.addBOM = true;
       this.encoder = codec.iconv.getEncoder("utf-16le", options);
     }
-    Utf16Encoder.prototype.write = function(str) {
-      return this.encoder.write(str);
+    Utf16Encoder.prototype.write = function(str2) {
+      return this.encoder.write(str2);
     };
     Utf16Encoder.prototype.end = function() {
       return this.encoder.end();
@@ -5415,8 +5415,8 @@ var require_utf72 = __commonJS({
     function Utf7Encoder(options, codec) {
       this.iconv = codec.iconv;
     }
-    Utf7Encoder.prototype.write = function(str) {
-      return Buffer2.from(str.replace(nonDirectChars, function(chunk) {
+    Utf7Encoder.prototype.write = function(str2) {
+      return Buffer2.from(str2.replace(nonDirectChars, function(chunk) {
         return "+" + (chunk === "+" ? "" : this.iconv.encode(chunk, "utf16-be").toString("base64").replace(/=+$/, "")) + "-";
       }.bind(this)));
     };
@@ -5494,10 +5494,10 @@ var require_utf72 = __commonJS({
       this.base64Accum = Buffer2.alloc(6);
       this.base64AccumIdx = 0;
     }
-    Utf7IMAPEncoder.prototype.write = function(str) {
-      var inBase64 = this.inBase64, base64Accum = this.base64Accum, base64AccumIdx = this.base64AccumIdx, buf = Buffer2.alloc(str.length * 5 + 10), bufIdx = 0;
-      for (var i2 = 0; i2 < str.length; i2++) {
-        var uChar = str.charCodeAt(i2);
+    Utf7IMAPEncoder.prototype.write = function(str2) {
+      var inBase64 = this.inBase64, base64Accum = this.base64Accum, base64AccumIdx = this.base64AccumIdx, buf = Buffer2.alloc(str2.length * 5 + 10), bufIdx = 0;
+      for (var i2 = 0; i2 < str2.length; i2++) {
+        var uChar = str2.charCodeAt(i2);
         if (32 <= uChar && uChar <= 126) {
           if (inBase64) {
             if (base64AccumIdx > 0) {
@@ -5627,10 +5627,10 @@ var require_sbcs_codec2 = __commonJS({
     function SBCSEncoder(options, codec) {
       this.encodeBuf = codec.encodeBuf;
     }
-    SBCSEncoder.prototype.write = function(str) {
-      var buf = Buffer2.alloc(str.length);
-      for (var i = 0; i < str.length; i++)
-        buf[i] = this.encodeBuf[str.charCodeAt(i)];
+    SBCSEncoder.prototype.write = function(str2) {
+      var buf = Buffer2.alloc(str2.length);
+      for (var i = 0; i < str2.length; i++)
+        buf[i] = this.encodeBuf[str2.charCodeAt(i)];
       return buf;
     };
     SBCSEncoder.prototype.end = function() {
@@ -6445,12 +6445,12 @@ var require_dbcs_codec2 = __commonJS({
       this.defaultCharSingleByte = codec.defCharSB;
       this.gb18030 = codec.gb18030;
     }
-    DBCSEncoder.prototype.write = function(str) {
-      var newBuf = Buffer2.alloc(str.length * (this.gb18030 ? 4 : 3)), leadSurrogate = this.leadSurrogate, seqObj = this.seqObj, nextChar = -1, i2 = 0, j = 0;
+    DBCSEncoder.prototype.write = function(str2) {
+      var newBuf = Buffer2.alloc(str2.length * (this.gb18030 ? 4 : 3)), leadSurrogate = this.leadSurrogate, seqObj = this.seqObj, nextChar = -1, i2 = 0, j = 0;
       while (true) {
         if (nextChar === -1) {
-          if (i2 == str.length) break;
-          var uCode = str.charCodeAt(i2++);
+          if (i2 == str2.length) break;
+          var uCode = str2.charCodeAt(i2++);
         } else {
           var uCode = nextChar;
           nextChar = -1;
@@ -8268,11 +8268,11 @@ var require_extend_node2 = __commonJS({
           return Buffer2.isNativeEncoding(encoding) || iconv2.encodingExists(encoding);
         };
         original.BufferByteLength = Buffer2.byteLength;
-        Buffer2.byteLength = SlowBuffer.byteLength = function(str, encoding) {
+        Buffer2.byteLength = SlowBuffer.byteLength = function(str2, encoding) {
           encoding = String(encoding || "utf8").toLowerCase();
           if (Buffer2.isNativeEncoding(encoding))
-            return original.BufferByteLength.call(this, str, encoding);
-          return iconv2.encode(str, encoding).length;
+            return original.BufferByteLength.call(this, str2, encoding);
+          return iconv2.encode(str2, encoding).length;
         };
         original.BufferToString = Buffer2.prototype.toString;
         Buffer2.prototype.toString = function(encoding, start, end2) {
@@ -8361,10 +8361,10 @@ var require_lib2 = __commonJS({
     iconv2.encodings = null;
     iconv2.defaultCharUnicode = "\uFFFD";
     iconv2.defaultCharSingleByte = "?";
-    iconv2.encode = function encode(str, encoding, options) {
-      str = "" + (str || "");
+    iconv2.encode = function encode(str2, encoding, options) {
+      str2 = "" + (str2 || "");
       var encoder = iconv2.getEncoder(encoding, options);
-      var res = encoder.write(str);
+      var res = encoder.write(str2);
       var trail = encoder.end();
       return trail && trail.length > 0 ? Buffer2.concat([res, trail]) : res;
     };
@@ -8458,8 +8458,8 @@ var require_lib2 = __commonJS({
 var require_ee_first = __commonJS({
   "webscraper/node_modules/ee-first/index.js"(exports2, module2) {
     "use strict";
-    module2.exports = first2;
-    function first2(stuff, done) {
+    module2.exports = first3;
+    function first3(stuff, done) {
       if (!Array.isArray(stuff))
         throw new TypeError("arg must be an array of [ee, events...] arrays");
       var cleanups = [];
@@ -8517,7 +8517,7 @@ var require_on_finished = __commonJS({
     module2.exports = onFinished;
     module2.exports.isFinished = isFinished;
     var asyncHooks = tryRequireAsyncHooks();
-    var first2 = require_ee_first();
+    var first3 = require_ee_first();
     var defer = typeof setImmediate === "function" ? setImmediate : function(fn) {
       process.nextTick(fn.bind.apply(fn, arguments));
     };
@@ -8550,12 +8550,12 @@ var require_on_finished = __commonJS({
         finished = true;
         callback(error);
       }
-      eeMsg = eeSocket = first2([[msg, "end", "finish"]], onFinish);
+      eeMsg = eeSocket = first3([[msg, "end", "finish"]], onFinish);
       function onSocket(socket) {
         msg.removeListener("socket", onSocket);
         if (finished) return;
         if (eeMsg !== eeSocket) return;
-        eeSocket = first2([[socket, "error", "close"]], onFinish);
+        eeSocket = first3([[socket, "error", "close"]], onFinish);
       }
       if (msg.socket) {
         onSocket(msg.socket);
@@ -8696,14 +8696,14 @@ var require_read = __commonJS({
             return;
           }
         }
-        var str = body;
+        var str2 = body;
         try {
           debug("parse body");
-          str = typeof body !== "string" && encoding !== null ? iconv2.decode(body, encoding) : body;
-          req.body = parse8(str);
+          str2 = typeof body !== "string" && encoding !== null ? iconv2.decode(body, encoding) : body;
+          req.body = parse8(str2);
         } catch (err) {
           next2(createError(400, err, {
-            body: str,
+            body: str2,
             type: err.type || "entity.parse.failed"
           }));
           return;
@@ -8848,14 +8848,14 @@ var require_media_typer = __commonJS({
       }
     }
     function qstring(val2) {
-      var str = String(val2);
-      if (tokenRegExp.test(str)) {
-        return str;
+      var str2 = String(val2);
+      if (tokenRegExp.test(str2)) {
+        return str2;
       }
-      if (str.length > 0 && !textRegExp.test(str)) {
+      if (str2.length > 0 && !textRegExp.test(str2)) {
         throw new TypeError("invalid parameter value");
       }
-      return '"' + str.replace(quoteRegExp, "\\$1") + '"';
+      return '"' + str2.replace(quoteRegExp, "\\$1") + '"';
     }
     function splitType(string) {
       var match = typeRegExp.exec(string.toLowerCase());
@@ -17425,7 +17425,7 @@ var require_mime_types = __commonJS({
     exports2.contentType = contentType;
     exports2.extension = extension;
     exports2.extensions = /* @__PURE__ */ Object.create(null);
-    exports2.lookup = lookup;
+    exports2.lookup = lookup2;
     exports2.types = /* @__PURE__ */ Object.create(null);
     populateMaps(exports2.extensions, exports2.types);
     function charset(type) {
@@ -17442,11 +17442,11 @@ var require_mime_types = __commonJS({
       }
       return false;
     }
-    function contentType(str) {
-      if (!str || typeof str !== "string") {
+    function contentType(str2) {
+      if (!str2 || typeof str2 !== "string") {
         return false;
       }
-      var mime = str.indexOf("/") === -1 ? exports2.lookup(str) : str;
+      var mime = str2.indexOf("/") === -1 ? exports2.lookup(str2) : str2;
       if (!mime) {
         return false;
       }
@@ -17467,7 +17467,7 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path2) {
+    function lookup2(path2) {
       if (!path2 || typeof path2 !== "string") {
         return false;
       }
@@ -17641,10 +17641,10 @@ var require_json = __commonJS({
           return {};
         }
         if (strict) {
-          var first2 = firstchar(body);
-          if (first2 !== "{" && first2 !== "[") {
+          var first3 = firstchar(body);
+          if (first3 !== "{" && first3 !== "[") {
             debug("strict violation");
-            throw createStrictSyntaxError(body, first2);
+            throw createStrictSyntaxError(body, first3);
           }
         }
         try {
@@ -17692,11 +17692,11 @@ var require_json = __commonJS({
         });
       };
     }
-    function createStrictSyntaxError(str, char) {
-      var index2 = str.indexOf(char);
+    function createStrictSyntaxError(str2, char) {
+      var index2 = str2.indexOf(char);
       var partial = "";
       if (index2 !== -1) {
-        partial = str.substring(0, index2) + new Array(str.length - index2 + 1).join(JSON_SYNTAX_CHAR);
+        partial = str2.substring(0, index2) + new Array(str2.length - index2 + 1).join(JSON_SYNTAX_CHAR);
       }
       try {
         JSON.parse(partial);
@@ -17704,14 +17704,14 @@ var require_json = __commonJS({
       } catch (e) {
         return normalizeJsonSyntaxError(e, {
           message: e.message.replace(JSON_SYNTAX_REGEXP, function(placeholder) {
-            return str.substring(index2, index2 + placeholder.length);
+            return str2.substring(index2, index2 + placeholder.length);
           }),
           stack: e.stack
         });
       }
     }
-    function firstchar(str) {
-      var match = FIRST_CHAR_REGEXP.exec(str);
+    function firstchar(str2) {
+      var match = FIRST_CHAR_REGEXP.exec(str2);
       return match ? match[1] : void 0;
     }
     function getCharset(req) {
@@ -17923,20 +17923,20 @@ var require_object_inspect = __commonJS({
     var gPO = (typeof Reflect === "function" ? Reflect.getPrototypeOf : Object.getPrototypeOf) || ([].__proto__ === Array.prototype ? function(O) {
       return O.__proto__;
     } : null);
-    function addNumericSeparator(num, str) {
-      if (num === Infinity || num === -Infinity || num !== num || num && num > -1e3 && num < 1e3 || $test.call(/e/, str)) {
-        return str;
+    function addNumericSeparator(num2, str2) {
+      if (num2 === Infinity || num2 === -Infinity || num2 !== num2 || num2 && num2 > -1e3 && num2 < 1e3 || $test.call(/e/, str2)) {
+        return str2;
       }
       var sepRegex = /[0-9](?=(?:[0-9]{3})+(?![0-9]))/g;
-      if (typeof num === "number") {
-        var int = num < 0 ? -$floor(-num) : $floor(num);
-        if (int !== num) {
+      if (typeof num2 === "number") {
+        var int = num2 < 0 ? -$floor(-num2) : $floor(num2);
+        if (int !== num2) {
           var intStr = String(int);
-          var dec = $slice.call(str, intStr.length + 1);
+          var dec = $slice.call(str2, intStr.length + 1);
           return $replace.call(intStr, sepRegex, "$&_") + "." + $replace.call($replace.call(dec, /([0-9]{3})/g, "$&_"), /_$/, "");
         }
       }
-      return $replace.call(str, sepRegex, "$&_");
+      return $replace.call(str2, sepRegex, "$&_");
     }
     var utilInspect = require_util_inspect();
     var inspectCustom = utilInspect.custom;
@@ -17986,8 +17986,8 @@ var require_object_inspect = __commonJS({
         if (obj === 0) {
           return Infinity / obj > 0 ? "0" : "-0";
         }
-        var str = String(obj);
-        return numericSeparator ? addNumericSeparator(obj, str) : str;
+        var str2 = String(obj);
+        return numericSeparator ? addNumericSeparator(obj, str2) : str2;
       }
       if (typeof obj === "bigint") {
         var bigIntStr = String(obj) + "n";
@@ -18307,15 +18307,15 @@ var require_object_inspect = __commonJS({
       }
       return typeof x.nodeName === "string" && typeof x.getAttribute === "function";
     }
-    function inspectString(str, opts) {
-      if (str.length > opts.maxStringLength) {
-        var remaining = str.length - opts.maxStringLength;
+    function inspectString(str2, opts) {
+      if (str2.length > opts.maxStringLength) {
+        var remaining = str2.length - opts.maxStringLength;
         var trailer = "... " + remaining + " more character" + (remaining > 1 ? "s" : "");
-        return inspectString($slice.call(str, 0, opts.maxStringLength), opts) + trailer;
+        return inspectString($slice.call(str2, 0, opts.maxStringLength), opts) + trailer;
       }
       var quoteRE = quoteREs[opts.quoteStyle || "single"];
       quoteRE.lastIndex = 0;
-      var s = $replace.call($replace.call(str, quoteRE, "\\$1"), /[\x00-\x1f]/g, lowbyte);
+      var s = $replace.call($replace.call(str2, quoteRE, "\\$1"), /[\x00-\x1f]/g, lowbyte);
       return wrapQuotes(s, "single", opts);
     }
     function lowbyte(c) {
@@ -18332,8 +18332,8 @@ var require_object_inspect = __commonJS({
       }
       return "\\x" + (n < 16 ? "0" : "") + $toUpperCase.call(n.toString(16));
     }
-    function markBoxed(str) {
-      return "Object(" + str + ")";
+    function markBoxed(str2) {
+      return "Object(" + str2 + ")";
     }
     function weakCollectionOf(type) {
       return type + " { ? }";
@@ -18798,14 +18798,14 @@ var require_implementation = __commonJS({
       return arr;
     };
     var joiny = function(arr, joiner) {
-      var str = "";
+      var str2 = "";
       for (var i = 0; i < arr.length; i += 1) {
-        str += arr[i];
+        str2 += arr[i];
         if (i + 1 < arr.length) {
-          str += joiner;
+          str2 += joiner;
         }
       }
-      return str;
+      return str2;
     };
     module2.exports = function bind(that) {
       var target = this;
@@ -19203,11 +19203,11 @@ var require_get_intrinsic = __commonJS({
     var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
     var reEscapeChar = /\\(\\)?/g;
     var stringToPath = function stringToPath2(string) {
-      var first2 = $strSlice(string, 0, 1);
+      var first3 = $strSlice(string, 0, 1);
       var last2 = $strSlice(string, -1);
-      if (first2 === "%" && last2 !== "%") {
+      if (first3 === "%" && last2 !== "%") {
         throw new $SyntaxError("invalid intrinsic syntax, expected closing `%`");
-      } else if (last2 === "%" && first2 !== "%") {
+      } else if (last2 === "%" && first3 !== "%") {
         throw new $SyntaxError("invalid intrinsic syntax, expected opening `%`");
       }
       var result = [];
@@ -19262,9 +19262,9 @@ var require_get_intrinsic = __commonJS({
       }
       for (var i = 1, isOwn = true; i < parts.length; i += 1) {
         var part = parts[i];
-        var first2 = $strSlice(part, 0, 1);
+        var first3 = $strSlice(part, 0, 1);
         var last2 = $strSlice(part, -1);
-        if ((first2 === '"' || first2 === "'" || first2 === "`" || (last2 === '"' || last2 === "'" || last2 === "`")) && first2 !== last2) {
+        if ((first3 === '"' || first3 === "'" || first3 === "`" || (last2 === '"' || last2 === "'" || last2 === "`")) && first3 !== last2) {
           throw new $SyntaxError("property names with quotes must have matching quotes");
         }
         if (part === "constructor" || !isOwn) {
@@ -19602,15 +19602,15 @@ var require_utils = __commonJS({
       var max = min;
       var keys = Object.keys(obj);
       for (var i = 0; i < keys.length; ++i) {
-        var num = parseInt(keys[i], 10);
-        if (String(num) === keys[i] && num > max) {
-          max = num;
+        var num2 = parseInt(keys[i], 10);
+        if (String(num2) === keys[i] && num2 > max) {
+          max = num2;
         }
       }
       return max;
     };
-    var limitedPair = function limitedPair2(first2, second, options) {
-      var pair = [first2, second];
+    var limitedPair = function limitedPair2(first3, second, options) {
+      var pair = [first3, second];
       if (options && typeof options.arrayLimit === "number" && pair.length > options.arrayLimit) {
         if (options.throwOnLimitExceeded) {
           throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
@@ -19734,11 +19734,11 @@ var require_utils = __commonJS({
         return acc;
       }, target);
     };
-    var decode = function(str, defaultDecoder, charset) {
-      if (typeof str === "string" && str.indexOf("%") === -1) {
-        return str.indexOf("+") === -1 ? str : str.replace(/\+/g, " ");
+    var decode = function(str2, defaultDecoder, charset) {
+      if (typeof str2 === "string" && str2.indexOf("%") === -1) {
+        return str2.indexOf("+") === -1 ? str2 : str2.replace(/\+/g, " ");
       }
-      var strWithoutPlus = str.replace(/\+/g, " ");
+      var strWithoutPlus = str2.replace(/\+/g, " ");
       if (charset === "iso-8859-1") {
         return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
       }
@@ -19795,15 +19795,15 @@ var require_utils = __commonJS({
       return objectToString.call(value);
     };
     var limit = 1024;
-    var encode = function encode2(str, defaultEncoder, charset, kind, format) {
-      if (str.length === 0) {
-        return str;
+    var encode = function encode2(str2, defaultEncoder, charset, kind, format) {
+      if (str2.length === 0) {
+        return str2;
       }
-      var string = str;
-      if (typeof str === "symbol") {
-        string = Symbol.prototype.toString.call(str);
-      } else if (typeof str !== "string") {
-        string = String(toCoercible(str));
+      var string = str2;
+      if (typeof str2 === "symbol") {
+        string = Symbol.prototype.toString.call(str2);
+      } else if (typeof str2 !== "string") {
+        string = String(toCoercible(str2));
       }
       if (charset === "iso-8859-1") {
         return escape(string).replace(/%u[0-9a-f]{4}/gi, function($0) {
@@ -20298,8 +20298,8 @@ var require_parse = __commonJS({
       strictNullHandling: false,
       throwOnLimitExceeded: false
     };
-    var interpretNumericEntities = function(str) {
-      return str.replace(/&#(\d+);/g, function($0, numberStr) {
+    var interpretNumericEntities = function(str2) {
+      return str2.replace(/&#(\d+);/g, function($0, numberStr) {
         return String.fromCharCode(parseInt(numberStr, 10));
       });
     };
@@ -20325,9 +20325,9 @@ var require_parse = __commonJS({
     };
     var isoSentinel = "utf8=%26%2310003%3B";
     var charsetSentinel = "utf8=%E2%9C%93";
-    var parseValues = function parseQueryStringValues(str, options) {
+    var parseValues = function parseQueryStringValues(str2, options) {
       var obj = { __proto__: null };
-      var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, "") : str;
+      var cleanStr = options.ignoreQueryPrefix ? str2.replace(/^\?/, "") : str2;
       cleanStr = cleanStr.replace(/%5B/gi, "[").replace(/%5D/gi, "]");
       var limit = options.parameterLimit === Infinity ? void 0 : options.parameterLimit;
       var parts = cleanStr.split(
@@ -20491,8 +20491,8 @@ var require_parse = __commonJS({
         return [key];
       }
       var segments = [];
-      var first2 = key.indexOf("[");
-      var parent2 = first2 >= 0 ? key.slice(0, first2) : key;
+      var first3 = key.indexOf("[");
+      var parent2 = first3 >= 0 ? key.slice(0, first3) : key;
       if (parent2) {
         if (!options.plainObjects && has2.call(Object.prototype, parent2)) {
           if (!options.allowPrototypes) {
@@ -20502,7 +20502,7 @@ var require_parse = __commonJS({
         segments[segments.length] = parent2;
       }
       var n = key.length;
-      var open = first2;
+      var open = first3;
       var collected = 0;
       while (open >= 0 && collected < options.depth) {
         var level = 1;
@@ -20602,17 +20602,17 @@ var require_parse = __commonJS({
         throwOnLimitExceeded: typeof opts.throwOnLimitExceeded === "boolean" ? opts.throwOnLimitExceeded : false
       };
     };
-    module2.exports = function(str, opts) {
+    module2.exports = function(str2, opts) {
       var options = normalizeParseOptions(opts);
-      if (str === "" || str === null || typeof str === "undefined") {
+      if (str2 === "" || str2 === null || typeof str2 === "undefined") {
         return options.plainObjects ? { __proto__: null } : {};
       }
-      var tempObj = typeof str === "string" ? parseValues(str, options) : copyInput(str);
+      var tempObj = typeof str2 === "string" ? parseValues(str2, options) : copyInput(str2);
       var obj = options.plainObjects ? { __proto__: null } : {};
       var keys = Object.keys(tempObj);
       for (var i = 0; i < keys.length; ++i) {
         var key = keys[i];
-        var newObj = parseKeys(key, tempObj[key], options, typeof str === "string");
+        var newObj = parseKeys(key, tempObj[key], options, typeof str2 === "string");
         obj = utils.merge(obj, newObj, options);
       }
       if (options.allowSparse === true) {
@@ -20941,17 +20941,17 @@ var require_escape_html = __commonJS({
     var matchHtmlRegExp = /["'&<>]/;
     module2.exports = escapeHtml;
     function escapeHtml(string) {
-      var str = "" + string;
-      var match = matchHtmlRegExp.exec(str);
+      var str2 = "" + string;
+      var match = matchHtmlRegExp.exec(str2);
       if (!match) {
-        return str;
+        return str2;
       }
       var escape3;
       var html3 = "";
       var index2 = 0;
       var lastIndex = 0;
-      for (index2 = match.index; index2 < str.length; index2++) {
-        switch (str.charCodeAt(index2)) {
+      for (index2 = match.index; index2 < str2.length; index2++) {
+        switch (str2.charCodeAt(index2)) {
           case 34:
             escape3 = "&quot;";
             break;
@@ -20971,12 +20971,12 @@ var require_escape_html = __commonJS({
             continue;
         }
         if (lastIndex !== index2) {
-          html3 += str.substring(lastIndex, index2);
+          html3 += str2.substring(lastIndex, index2);
         }
         lastIndex = index2 + 1;
         html3 += escape3;
       }
-      return lastIndex !== index2 ? html3 + str.substring(lastIndex, index2) : html3;
+      return lastIndex !== index2 ? html3 + str2.substring(lastIndex, index2) : html3;
     }
   }
 });
@@ -21016,20 +21016,20 @@ var require_parseurl = __commonJS({
       parsed._raw = url2;
       return req._parsedOriginalUrl = parsed;
     }
-    function fastparse(str) {
-      if (typeof str !== "string" || str.charCodeAt(0) !== 47) {
-        return parse8(str);
+    function fastparse(str2) {
+      if (typeof str2 !== "string" || str2.charCodeAt(0) !== 47) {
+        return parse8(str2);
       }
-      var pathname = str;
+      var pathname = str2;
       var query = null;
       var search = null;
-      for (var i = 1; i < str.length; i++) {
-        switch (str.charCodeAt(i)) {
+      for (var i = 1; i < str2.length; i++) {
+        switch (str2.charCodeAt(i)) {
           case 63:
             if (search === null) {
-              pathname = str.substring(0, i);
-              query = str.substring(i + 1);
-              search = str.substring(i);
+              pathname = str2.substring(0, i);
+              query = str2.substring(i + 1);
+              search = str2.substring(i);
             }
             break;
           case 9:
@@ -21046,12 +21046,12 @@ var require_parseurl = __commonJS({
           /* #  */
           case 160:
           case 65279:
-            return parse8(str);
+            return parse8(str2);
         }
       }
       var url2 = Url !== void 0 ? new Url() : {};
-      url2.path = str;
-      url2.href = str;
+      url2.path = str2;
+      url2.href = str2;
       url2.pathname = pathname;
       if (search !== null) {
         url2.query = query;
@@ -22095,7 +22095,7 @@ var require_view = __commonJS({
       this.engine = opts.engines[this.ext];
       this.path = this.lookup(fileName);
     }
-    View.prototype.lookup = function lookup(name) {
+    View.prototype.lookup = function lookup2(name) {
       var path3;
       var roots = [].concat(this.root);
       debug('lookup "%s"', name);
@@ -22266,8 +22266,8 @@ var require_content_disposition = __commonJS({
       }
       return string;
     }
-    function decodefield(str) {
-      var match = EXT_VALUE_REGEXP.exec(str);
+    function decodefield(str2) {
+      var match = EXT_VALUE_REGEXP.exec(str2);
       if (!match) {
         throw new TypeError("invalid extended field value");
       }
@@ -22335,19 +22335,19 @@ var require_content_disposition = __commonJS({
       }
       return new ContentDisposition(type, params);
     }
-    function pdecode(str, hex) {
+    function pdecode(str2, hex) {
       return String.fromCharCode(parseInt(hex, 16));
     }
     function pencode(char) {
       return "%" + String(char).charCodeAt(0).toString(16).toUpperCase();
     }
     function qstring(val2) {
-      var str = String(val2);
-      return '"' + str.replace(QUOTE_REGEXP, "\\$1") + '"';
+      var str2 = String(val2);
+      return '"' + str2.replace(QUOTE_REGEXP, "\\$1") + '"';
     }
     function ustring(val2) {
-      var str = String(val2);
-      var encoded = encodeURIComponent(str).replace(ENCODE_URL_ATTR_CHAR_REGEXP, pencode);
+      var str2 = String(val2);
+      var encoded = encodeURIComponent(str2).replace(ENCODE_URL_ATTR_CHAR_REGEXP, pencode);
       return "UTF-8''" + encoded;
     }
     function ContentDisposition(type, parameters) {
@@ -22446,19 +22446,19 @@ var require_fresh = __commonJS({
       var timestamp = date && Date.parse(date);
       return typeof timestamp === "number" ? timestamp : NaN;
     }
-    function parseTokenList(str) {
+    function parseTokenList(str2) {
       var end2 = 0;
       var list = [];
       var start = 0;
-      for (var i = 0, len = str.length; i < len; i++) {
-        switch (str.charCodeAt(i)) {
+      for (var i = 0, len = str2.length; i < len; i++) {
+        switch (str2.charCodeAt(i)) {
           case 32:
             if (start === end2) {
               start = end2 = i + 1;
             }
             break;
           case 44:
-            list.push(str.substring(start, end2));
+            list.push(str2.substring(start, end2));
             start = end2 = i + 1;
             break;
           default:
@@ -22466,7 +22466,7 @@ var require_fresh = __commonJS({
             break;
         }
       }
-      list.push(str.substring(start, end2));
+      list.push(str2.substring(start, end2));
       return list;
     }
   }
@@ -22554,13 +22554,13 @@ var require_ms2 = __commonJS({
         "val is not a non-empty string or a valid number. val=" + JSON.stringify(val2)
       );
     };
-    function parse8(str) {
-      str = String(str);
-      if (str.length > 100) {
+    function parse8(str2) {
+      str2 = String(str2);
+      if (str2.length > 100) {
         return;
       }
       var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
-        str
+        str2
       );
       if (!match) {
         return;
@@ -22654,17 +22654,17 @@ var require_range_parser = __commonJS({
   "webscraper/node_modules/range-parser/index.js"(exports2, module2) {
     "use strict";
     module2.exports = rangeParser;
-    function rangeParser(size, str, options) {
-      if (typeof str !== "string") {
+    function rangeParser(size, str2, options) {
+      if (typeof str2 !== "string") {
         throw new TypeError("argument str must be a string");
       }
-      var index2 = str.indexOf("=");
+      var index2 = str2.indexOf("=");
       if (index2 === -1) {
         return -2;
       }
-      var arr = str.slice(index2 + 1).split(",");
+      var arr = str2.slice(index2 + 1).split(",");
       var ranges = [];
-      ranges.type = str.slice(0, index2);
+      ranges.type = str2.slice(0, index2);
       for (var i = 0; i < arr.length; i++) {
         var range = arr[i].split("-");
         var start = parseInt(range[0], 10);
@@ -23179,13 +23179,13 @@ var require_send = __commonJS({
         res.removeHeader(headers[i]);
       }
     }
-    function collapseLeadingSlashes(str) {
-      for (var i = 0; i < str.length; i++) {
-        if (str[i] !== "/") {
+    function collapseLeadingSlashes(str2) {
+      for (var i = 0; i < str2.length; i++) {
+        if (str2[i] !== "/") {
           break;
         }
       }
-      return i > 1 ? "/" + str.substr(i) : str;
+      return i > 1 ? "/" + str2.substr(i) : str2;
     }
     function containsDotFile(parts) {
       for (var i = 0; i < parts.length; i++) {
@@ -23238,12 +23238,12 @@ var require_send = __commonJS({
       var timestamp = date && Date.parse(date);
       return typeof timestamp === "number" ? timestamp : NaN;
     }
-    function parseTokenList(str) {
+    function parseTokenList(str2) {
       var end2 = 0;
       var list = [];
       var start = 0;
-      for (var i = 0, len = str.length; i < len; i++) {
-        switch (str.charCodeAt(i)) {
+      for (var i = 0, len = str2.length; i < len; i++) {
+        switch (str2.charCodeAt(i)) {
           case 32:
             if (start === end2) {
               start = end2 = i + 1;
@@ -23251,7 +23251,7 @@ var require_send = __commonJS({
             break;
           case 44:
             if (start !== end2) {
-              list.push(str.substring(start, end2));
+              list.push(str2.substring(start, end2));
             }
             start = end2 = i + 1;
             break;
@@ -23261,7 +23261,7 @@ var require_send = __commonJS({
         }
       }
       if (start !== end2) {
-        list.push(str.substring(start, end2));
+        list.push(str2.substring(start, end2));
       }
       return list;
     }
@@ -23334,9 +23334,9 @@ var require_ipaddr = __commonJS({
       } else {
         root2["ipaddr"] = ipaddr;
       }
-      matchCIDR = function(first2, second, partSize, cidrBits) {
+      matchCIDR = function(first3, second, partSize, cidrBits) {
         var part, shift;
-        if (first2.length !== second.length) {
+        if (first3.length !== second.length) {
           throw new Error("ipaddr: cannot match CIDR for objects with different lengths");
         }
         part = 0;
@@ -23345,7 +23345,7 @@ var require_ipaddr = __commonJS({
           if (shift < 0) {
             shift = 0;
           }
-          if (first2[part] >> shift !== second[part] >> shift) {
+          if (first3[part] >> shift !== second[part] >> shift) {
             return false;
           }
           cidrBits -= partSize;
@@ -24011,11 +24011,11 @@ var require_proxy_addr = __commonJS({
     }
     function parseipNotation(note) {
       var pos = note.lastIndexOf("/");
-      var str = pos !== -1 ? note.substring(0, pos) : note;
-      if (!isip(str)) {
-        throw new TypeError("invalid IP address: " + str);
+      var str2 = pos !== -1 ? note.substring(0, pos) : note;
+      if (!isip(str2)) {
+        throw new TypeError("invalid IP address: " + str2);
       }
-      var ip = parseip(str);
+      var ip = parseip(str2);
       if (pos === -1 && ip.kind() === "ipv6" && ip.isIPv4MappedAddress()) {
         ip = ip.toIPv4Address();
       }
@@ -24158,8 +24158,8 @@ var require_utils2 = __commonJS({
       contentDisposition,
       "utils.contentDisposition: use content-disposition npm module instead"
     );
-    function acceptParams(str) {
-      var parts = str.split(/ *; */);
+    function acceptParams(str2) {
+      var parts = str2.split(/ *; */);
       var ret = { value: parts[0], quality: 1, params: {} };
       for (var i = 1; i < parts.length; ++i) {
         var pms = parts[i].split(/ *= */);
@@ -24245,8 +24245,8 @@ var require_utils2 = __commonJS({
         return etag(buf, options);
       };
     }
-    function parseExtendedQueryString(str) {
-      return qs.parse(str, {
+    function parseExtendedQueryString(str2) {
+      return qs.parse(str2, {
         allowPrototypes: true,
         arrayLimit: 1e3
       });
@@ -24551,8 +24551,8 @@ var require_charset = __commonJS({
       accepts.length = j;
       return accepts;
     }
-    function parseCharset(str, i) {
-      var match = simpleCharsetRegExp.exec(str);
+    function parseCharset(str2, i) {
+      var match = simpleCharsetRegExp.exec(str2);
       if (!match) return null;
       var charset = match[1];
       var q = 1;
@@ -24649,8 +24649,8 @@ var require_encoding = __commonJS({
       accepts.length = j;
       return accepts;
     }
-    function parseEncoding(str, i) {
-      var match = simpleEncodingRegExp.exec(str);
+    function parseEncoding(str2, i) {
+      var match = simpleEncodingRegExp.exec(str2);
       if (!match) return null;
       var encoding = match[1];
       var q = 1;
@@ -24736,8 +24736,8 @@ var require_language = __commonJS({
       accepts.length = j;
       return accepts;
     }
-    function parseLanguage(str, i) {
-      var match = simpleLanguageRegExp.exec(str);
+    function parseLanguage(str2, i) {
+      var match = simpleLanguageRegExp.exec(str2);
       if (!match) return null;
       var prefix = match[1];
       var suffix = match[2];
@@ -24831,8 +24831,8 @@ var require_mediaType = __commonJS({
       accepts.length = j;
       return accepts;
     }
-    function parseMediaType(str, i) {
-      var match = simpleMediaTypeRegExp.exec(str);
+    function parseMediaType(str2, i) {
+      var match = simpleMediaTypeRegExp.exec(str2);
       if (!match) return null;
       var params = /* @__PURE__ */ Object.create(null);
       var q = 1;
@@ -24933,15 +24933,15 @@ var require_mediaType = __commonJS({
       }
       return count;
     }
-    function splitKeyValuePair(str) {
-      var index2 = str.indexOf("=");
+    function splitKeyValuePair(str2) {
+      var index2 = str2.indexOf("=");
       var key;
       var val2;
       if (index2 === -1) {
-        key = str;
+        key = str2;
       } else {
-        key = str.substr(0, index2);
-        val2 = str.substr(index2 + 1);
+        key = str2.substr(0, index2);
+        val2 = str2.substr(index2 + 1);
       }
       return [key, val2];
     }
@@ -24957,8 +24957,8 @@ var require_mediaType = __commonJS({
       accepts.length = j + 1;
       return accepts;
     }
-    function splitParameters(str) {
-      var parameters = str.split(";");
+    function splitParameters(str2) {
+      var parameters = str2.split(";");
       for (var i = 1, j = 0; i < parameters.length; i++) {
         if (quoteCount(parameters[j]) % 2 == 0) {
           parameters[++j] = parameters[i];
@@ -25060,8 +25060,8 @@ var require_accepts = __commonJS({
       }
       var mimes = types.map(extToMime);
       var accepts = this.negotiator.mediaTypes(mimes.filter(validMime));
-      var first2 = accepts[0];
-      return first2 ? types[mimes.indexOf(first2)] : false;
+      var first3 = accepts[0];
+      return first3 ? types[mimes.indexOf(first3)] : false;
     };
     Accepts.prototype.encoding = Accepts.prototype.encodings = function(encodings_) {
       var encodings = encodings_;
@@ -25117,7 +25117,7 @@ var require_request = __commonJS({
     "use strict";
     var accepts = require_accepts();
     var deprecate = require_depd()("express");
-    var isIP = require("net").isIP;
+    var isIP2 = require("net").isIP;
     var typeis = require_type_is();
     var http = require("http");
     var fresh = require_fresh();
@@ -25223,7 +25223,7 @@ var require_request = __commonJS({
       var hostname = this.hostname;
       if (!hostname) return [];
       var offset = this.app.get("subdomain offset");
-      var subdomains2 = !isIP(hostname) ? hostname.split(".").reverse() : [hostname];
+      var subdomains2 = !isIP2(hostname) ? hostname.split(".").reverse() : [hostname];
       return subdomains2.slice(offset);
     });
     defineGetter(req, "path", function path2() {
@@ -25287,11 +25287,11 @@ var require_cookie_signature = __commonJS({
     exports2.unsign = function(val2, secret) {
       if ("string" !== typeof val2) throw new TypeError("Signed cookie string must be provided.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      var str = val2.slice(0, val2.lastIndexOf(".")), mac = exports2.sign(str, secret);
-      return sha1(mac) == sha1(val2) ? str : false;
+      var str2 = val2.slice(0, val2.lastIndexOf(".")), mac = exports2.sign(str2, secret);
+      return sha1(mac) == sha1(val2) ? str2 : false;
     };
-    function sha1(str) {
-      return crypto2.createHash("sha1").update(str).digest("hex");
+    function sha1(str2) {
+      return crypto2.createHash("sha1").update(str2).digest("hex");
     }
   }
 });
@@ -25308,54 +25308,54 @@ var require_cookie = __commonJS({
     var cookieValueRegExp = /^("?)[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]*\1$/;
     var domainValueRegExp = /^([.]?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
     var pathValueRegExp = /^[\u0020-\u003A\u003D-\u007E]*$/;
-    function parse8(str, opt) {
-      if (typeof str !== "string") {
+    function parse8(str2, opt) {
+      if (typeof str2 !== "string") {
         throw new TypeError("argument str must be a string");
       }
       var obj = {};
-      var len = str.length;
+      var len = str2.length;
       if (len < 2) return obj;
       var dec = opt && opt.decode || decode;
       var index2 = 0;
       var eqIdx = 0;
       var endIdx = 0;
       do {
-        eqIdx = str.indexOf("=", index2);
+        eqIdx = str2.indexOf("=", index2);
         if (eqIdx === -1) break;
-        endIdx = str.indexOf(";", index2);
+        endIdx = str2.indexOf(";", index2);
         if (endIdx === -1) {
           endIdx = len;
         } else if (eqIdx > endIdx) {
-          index2 = str.lastIndexOf(";", eqIdx - 1) + 1;
+          index2 = str2.lastIndexOf(";", eqIdx - 1) + 1;
           continue;
         }
-        var keyStartIdx = startIndex(str, index2, eqIdx);
-        var keyEndIdx = endIndex(str, eqIdx, keyStartIdx);
-        var key = str.slice(keyStartIdx, keyEndIdx);
+        var keyStartIdx = startIndex(str2, index2, eqIdx);
+        var keyEndIdx = endIndex(str2, eqIdx, keyStartIdx);
+        var key = str2.slice(keyStartIdx, keyEndIdx);
         if (!__hasOwnProperty.call(obj, key)) {
-          var valStartIdx = startIndex(str, eqIdx + 1, endIdx);
-          var valEndIdx = endIndex(str, endIdx, valStartIdx);
-          if (str.charCodeAt(valStartIdx) === 34 && str.charCodeAt(valEndIdx - 1) === 34) {
+          var valStartIdx = startIndex(str2, eqIdx + 1, endIdx);
+          var valEndIdx = endIndex(str2, endIdx, valStartIdx);
+          if (str2.charCodeAt(valStartIdx) === 34 && str2.charCodeAt(valEndIdx - 1) === 34) {
             valStartIdx++;
             valEndIdx--;
           }
-          var val2 = str.slice(valStartIdx, valEndIdx);
+          var val2 = str2.slice(valStartIdx, valEndIdx);
           obj[key] = tryDecode(val2, dec);
         }
         index2 = endIdx + 1;
       } while (index2 < len);
       return obj;
     }
-    function startIndex(str, index2, max) {
+    function startIndex(str2, index2, max) {
       do {
-        var code = str.charCodeAt(index2);
+        var code = str2.charCodeAt(index2);
         if (code !== 32 && code !== 9) return index2;
       } while (++index2 < max);
       return max;
     }
-    function endIndex(str, index2, min) {
+    function endIndex(str2, index2, min) {
       while (index2 > min) {
-        var code = str.charCodeAt(--index2);
+        var code = str2.charCodeAt(--index2);
         if (code !== 32 && code !== 9) return index2 + 1;
       }
       return min;
@@ -25372,54 +25372,54 @@ var require_cookie = __commonJS({
       if (!cookieValueRegExp.test(value)) {
         throw new TypeError("argument val is invalid");
       }
-      var str = name + "=" + value;
-      if (!opt) return str;
+      var str2 = name + "=" + value;
+      if (!opt) return str2;
       if (null != opt.maxAge) {
         var maxAge = Math.floor(opt.maxAge);
         if (!isFinite(maxAge)) {
           throw new TypeError("option maxAge is invalid");
         }
-        str += "; Max-Age=" + maxAge;
+        str2 += "; Max-Age=" + maxAge;
       }
       if (opt.domain) {
         if (!domainValueRegExp.test(opt.domain)) {
           throw new TypeError("option domain is invalid");
         }
-        str += "; Domain=" + opt.domain;
+        str2 += "; Domain=" + opt.domain;
       }
       if (opt.path) {
         if (!pathValueRegExp.test(opt.path)) {
           throw new TypeError("option path is invalid");
         }
-        str += "; Path=" + opt.path;
+        str2 += "; Path=" + opt.path;
       }
       if (opt.expires) {
         var expires = opt.expires;
         if (!isDate(expires) || isNaN(expires.valueOf())) {
           throw new TypeError("option expires is invalid");
         }
-        str += "; Expires=" + expires.toUTCString();
+        str2 += "; Expires=" + expires.toUTCString();
       }
       if (opt.httpOnly) {
-        str += "; HttpOnly";
+        str2 += "; HttpOnly";
       }
       if (opt.secure) {
-        str += "; Secure";
+        str2 += "; Secure";
       }
       if (opt.partitioned) {
-        str += "; Partitioned";
+        str2 += "; Partitioned";
       }
       if (opt.priority) {
         var priority = typeof opt.priority === "string" ? opt.priority.toLowerCase() : opt.priority;
         switch (priority) {
           case "low":
-            str += "; Priority=Low";
+            str2 += "; Priority=Low";
             break;
           case "medium":
-            str += "; Priority=Medium";
+            str2 += "; Priority=Medium";
             break;
           case "high":
-            str += "; Priority=High";
+            str2 += "; Priority=High";
             break;
           default:
             throw new TypeError("option priority is invalid");
@@ -25429,34 +25429,34 @@ var require_cookie = __commonJS({
         var sameSite = typeof opt.sameSite === "string" ? opt.sameSite.toLowerCase() : opt.sameSite;
         switch (sameSite) {
           case true:
-            str += "; SameSite=Strict";
+            str2 += "; SameSite=Strict";
             break;
           case "lax":
-            str += "; SameSite=Lax";
+            str2 += "; SameSite=Lax";
             break;
           case "strict":
-            str += "; SameSite=Strict";
+            str2 += "; SameSite=Strict";
             break;
           case "none":
-            str += "; SameSite=None";
+            str2 += "; SameSite=None";
             break;
           default:
             throw new TypeError("option sameSite is invalid");
         }
       }
-      return str;
+      return str2;
     }
-    function decode(str) {
-      return str.indexOf("%") !== -1 ? decodeURIComponent(str) : str;
+    function decode(str2) {
+      return str2.indexOf("%") !== -1 ? decodeURIComponent(str2) : str2;
     }
     function isDate(val2) {
       return __toString.call(val2) === "[object Date]";
     }
-    function tryDecode(str, decode2) {
+    function tryDecode(str2, decode2) {
       try {
-        return decode2(str);
+        return decode2(str2);
       } catch (e) {
-        return str;
+        return str2;
       }
     }
   }
@@ -25984,9 +25984,9 @@ var require_response = __commonJS({
         opts = {};
       }
       opts._locals = self2.locals;
-      done = done || function(err, str) {
+      done = done || function(err, str2) {
         if (err) return req.next(err);
-        self2.send(str);
+        self2.send(str2);
       };
       app2.render(view, opts, done);
     };
@@ -26143,13 +26143,13 @@ var require_serve_static = __commonJS({
         stream.pipe(res);
       };
     }
-    function collapseLeadingSlashes(str) {
-      for (var i = 0; i < str.length; i++) {
-        if (str.charCodeAt(i) !== 47) {
+    function collapseLeadingSlashes(str2) {
+      for (var i = 0; i < str2.length; i++) {
+        if (str2.charCodeAt(i) !== 47) {
           break;
         }
       }
-      return i > 1 ? "/" + str.substr(i) : str;
+      return i > 1 ? "/" + str2.substr(i) : str2;
     }
     function createHtmlDocument(title, body) {
       return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>' + title + "</title>\n</head>\n<body>\n<pre>" + body + "</pre>\n</body>\n</html>\n";
@@ -26350,8 +26350,8 @@ var require_parse2 = __commonJS({
         String.fromCharCode(high >> 10 | 55296, high & 1023 | 56320)
       );
     }
-    function unescapeCSS(str) {
-      return str.replace(reEscape, funescape);
+    function unescapeCSS(str2) {
+      return str2.replace(reEscape, funescape);
     }
     function isQuote(c) {
       return c === 39 || c === 34;
@@ -26764,16 +26764,16 @@ var require_stringify2 = __commonJS({
     function getNamespace(namespace) {
       return namespace !== null ? "".concat(namespace === "*" ? "*" : escapeName(namespace, charsToEscapeInName), "|") : "";
     }
-    function escapeName(str, charsToEscape) {
+    function escapeName(str2, charsToEscape) {
       var lastIdx = 0;
       var ret = "";
-      for (var i = 0; i < str.length; i++) {
-        if (charsToEscape.has(str.charCodeAt(i))) {
-          ret += "".concat(str.slice(lastIdx, i), "\\").concat(str.charAt(i));
+      for (var i = 0; i < str2.length; i++) {
+        if (charsToEscape.has(str2.charCodeAt(i))) {
+          ret += "".concat(str2.slice(lastIdx, i), "\\").concat(str2.charAt(i));
           lastIdx = i + 1;
         }
       }
-      return ret.length > 0 ? ret + str.slice(lastIdx) : str;
+      return ret.length > 0 ? ret + str2.slice(lastIdx) : str2;
     }
   }
 });
@@ -26839,12 +26839,12 @@ var require_bom_handling3 = __commonJS({
       this.encoder = encoder;
       this.addBOM = true;
     }
-    PrependBOMWrapper.prototype.write = function(str) {
+    PrependBOMWrapper.prototype.write = function(str2) {
       if (this.addBOM) {
-        str = BOMChar + str;
+        str2 = BOMChar + str2;
         this.addBOM = false;
       }
-      return this.encoder.write(str);
+      return this.encoder.write(str2);
     };
     PrependBOMWrapper.prototype.end = function() {
       return this.encoder.end();
@@ -26926,30 +26926,30 @@ var require_internal3 = __commonJS({
     function InternalEncoder(options, codec) {
       this.enc = codec.enc;
     }
-    InternalEncoder.prototype.write = function(str) {
-      return Buffer2.from(str, this.enc);
+    InternalEncoder.prototype.write = function(str2) {
+      return Buffer2.from(str2, this.enc);
     };
     InternalEncoder.prototype.end = function() {
     };
     function InternalEncoderBase64(options, codec) {
       this.prevStr = "";
     }
-    InternalEncoderBase64.prototype.write = function(str) {
-      str = this.prevStr + str;
-      var completeQuads = str.length - str.length % 4;
-      this.prevStr = str.slice(completeQuads);
-      str = str.slice(0, completeQuads);
-      return Buffer2.from(str, "base64");
+    InternalEncoderBase64.prototype.write = function(str2) {
+      str2 = this.prevStr + str2;
+      var completeQuads = str2.length - str2.length % 4;
+      this.prevStr = str2.slice(completeQuads);
+      str2 = str2.slice(0, completeQuads);
+      return Buffer2.from(str2, "base64");
     };
     InternalEncoderBase64.prototype.end = function() {
       return Buffer2.from(this.prevStr, "base64");
     };
     function InternalEncoderCesu8(options, codec) {
     }
-    InternalEncoderCesu8.prototype.write = function(str) {
-      var buf = Buffer2.alloc(str.length * 3), bufIdx = 0;
-      for (var i = 0; i < str.length; i++) {
-        var charCode = str.charCodeAt(i);
+    InternalEncoderCesu8.prototype.write = function(str2) {
+      var buf = Buffer2.alloc(str2.length * 3), bufIdx = 0;
+      for (var i = 0; i < str2.length; i++) {
+        var charCode = str2.charCodeAt(i);
         if (charCode < 128)
           buf[bufIdx++] = charCode;
         else if (charCode < 2048) {
@@ -27046,8 +27046,8 @@ var require_utf32 = __commonJS({
       this.isLE = codec.isLE;
       this.highSurrogate = 0;
     }
-    Utf32Encoder.prototype.write = function(str) {
-      var src = Buffer2.from(str, "ucs2");
+    Utf32Encoder.prototype.write = function(str2) {
+      var src = Buffer2.from(str2, "ucs2");
       var dst = Buffer2.alloc(src.length * 2);
       var write32 = this.isLE ? dst.writeUInt32LE : dst.writeUInt32BE;
       var offset = 0;
@@ -27162,8 +27162,8 @@ var require_utf32 = __commonJS({
         options.addBOM = true;
       this.encoder = codec.iconv.getEncoder(options.defaultEncoding || "utf-32le", options);
     }
-    Utf32AutoEncoder.prototype.write = function(str) {
-      return this.encoder.write(str);
+    Utf32AutoEncoder.prototype.write = function(str2) {
+      return this.encoder.write(str2);
     };
     Utf32AutoEncoder.prototype.end = function() {
       return this.encoder.end();
@@ -27257,8 +27257,8 @@ var require_utf163 = __commonJS({
     Utf16BECodec.prototype.bomAware = true;
     function Utf16BEEncoder() {
     }
-    Utf16BEEncoder.prototype.write = function(str) {
-      var buf = Buffer2.from(str, "ucs2");
+    Utf16BEEncoder.prototype.write = function(str2) {
+      var buf = Buffer2.from(str2, "ucs2");
       for (var i = 0; i < buf.length; i += 2) {
         var tmp = buf[i];
         buf[i] = buf[i + 1];
@@ -27303,8 +27303,8 @@ var require_utf163 = __commonJS({
         options.addBOM = true;
       this.encoder = codec.iconv.getEncoder("utf-16le", options);
     }
-    Utf16Encoder.prototype.write = function(str) {
-      return this.encoder.write(str);
+    Utf16Encoder.prototype.write = function(str2) {
+      return this.encoder.write(str2);
     };
     Utf16Encoder.prototype.end = function() {
       return this.encoder.end();
@@ -27395,8 +27395,8 @@ var require_utf73 = __commonJS({
     function Utf7Encoder(options, codec) {
       this.iconv = codec.iconv;
     }
-    Utf7Encoder.prototype.write = function(str) {
-      return Buffer2.from(str.replace(nonDirectChars, function(chunk) {
+    Utf7Encoder.prototype.write = function(str2) {
+      return Buffer2.from(str2.replace(nonDirectChars, function(chunk) {
         return "+" + (chunk === "+" ? "" : this.iconv.encode(chunk, "utf16-be").toString("base64").replace(/=+$/, "")) + "-";
       }.bind(this)));
     };
@@ -27474,10 +27474,10 @@ var require_utf73 = __commonJS({
       this.base64Accum = Buffer2.alloc(6);
       this.base64AccumIdx = 0;
     }
-    Utf7IMAPEncoder.prototype.write = function(str) {
-      var inBase64 = this.inBase64, base64Accum = this.base64Accum, base64AccumIdx = this.base64AccumIdx, buf = Buffer2.alloc(str.length * 5 + 10), bufIdx = 0;
-      for (var i2 = 0; i2 < str.length; i2++) {
-        var uChar = str.charCodeAt(i2);
+    Utf7IMAPEncoder.prototype.write = function(str2) {
+      var inBase64 = this.inBase64, base64Accum = this.base64Accum, base64AccumIdx = this.base64AccumIdx, buf = Buffer2.alloc(str2.length * 5 + 10), bufIdx = 0;
+      for (var i2 = 0; i2 < str2.length; i2++) {
+        var uChar = str2.charCodeAt(i2);
         if (32 <= uChar && uChar <= 126) {
           if (inBase64) {
             if (base64AccumIdx > 0) {
@@ -27607,10 +27607,10 @@ var require_sbcs_codec3 = __commonJS({
     function SBCSEncoder(options, codec) {
       this.encodeBuf = codec.encodeBuf;
     }
-    SBCSEncoder.prototype.write = function(str) {
-      var buf = Buffer2.alloc(str.length);
-      for (var i = 0; i < str.length; i++)
-        buf[i] = this.encodeBuf[str.charCodeAt(i)];
+    SBCSEncoder.prototype.write = function(str2) {
+      var buf = Buffer2.alloc(str2.length);
+      for (var i = 0; i < str2.length; i++)
+        buf[i] = this.encodeBuf[str2.charCodeAt(i)];
       return buf;
     };
     SBCSEncoder.prototype.end = function() {
@@ -28458,12 +28458,12 @@ var require_dbcs_codec3 = __commonJS({
       this.defaultCharSingleByte = codec.defCharSB;
       this.gb18030 = codec.gb18030;
     }
-    DBCSEncoder.prototype.write = function(str) {
-      var newBuf = Buffer2.alloc(str.length * (this.gb18030 ? 4 : 3)), leadSurrogate = this.leadSurrogate, seqObj = this.seqObj, nextChar = -1, i2 = 0, j = 0;
+    DBCSEncoder.prototype.write = function(str2) {
+      var newBuf = Buffer2.alloc(str2.length * (this.gb18030 ? 4 : 3)), leadSurrogate = this.leadSurrogate, seqObj = this.seqObj, nextChar = -1, i2 = 0, j = 0;
       while (true) {
         if (nextChar === -1) {
-          if (i2 == str.length) break;
-          var uCode = str.charCodeAt(i2++);
+          if (i2 == str2.length) break;
+          var uCode = str2.charCodeAt(i2++);
         } else {
           var uCode = nextChar;
           nextChar = -1;
@@ -30287,10 +30287,10 @@ var require_lib4 = __commonJS({
     iconv2.encodings = null;
     iconv2.defaultCharUnicode = "\uFFFD";
     iconv2.defaultCharSingleByte = "?";
-    iconv2.encode = function encode(str, encoding, options) {
-      str = "" + (str || "");
+    iconv2.encode = function encode(str2, encoding, options) {
+      str2 = "" + (str2 || "");
       var encoder = iconv2.getEncoder(encoding, options);
-      var res = encoder.write(str);
+      var res = encoder.write(str2);
       var trail = encoder.end();
       return trail && trail.length > 0 ? Buffer2.concat([res, trail]) : res;
     };
@@ -33120,11 +33120,11 @@ var require_request2 = __commonJS({
           } else if (typeof val2[i] === "object") {
             throw new InvalidArgumentError(`invalid ${key} header`);
           } else {
-            const str = `${val2[i]}`;
-            if (!isValidHeaderValue(str)) {
+            const str2 = `${val2[i]}`;
+            if (!isValidHeaderValue(str2)) {
               throw new InvalidArgumentError(`invalid ${key} header`);
             }
-            arr.push(str);
+            arr.push(str2);
           }
         }
         val2 = arr;
@@ -34667,8 +34667,8 @@ var require_infra = __commonJS({
     }
     var ASCII_WHITESPACE_REPLACE_REGEX = /[\u0009\u000A\u000C\u000D\u0020]/g;
     var nonASCIIRegex = /[^\x00-\x7F]/;
-    function asciiLowercase(str) {
-      return nonASCIIRegex.test(str) ? str.replace(/[A-Z]+/g, (upper) => upper.toLowerCase()) : str.toLowerCase();
+    function asciiLowercase(str2) {
+      return nonASCIIRegex.test(str2) ? str2.replace(/[A-Z]+/g, (upper) => upper.toLowerCase()) : str2.toLowerCase();
     }
     function forgivingBase64(data2) {
       data2 = data2.replace(ASCII_WHITESPACE_REPLACE_REGEX, "");
@@ -34721,19 +34721,19 @@ var require_infra = __commonJS({
     function parseJSONFromBytes(bytes) {
       return JSON.parse(utf8DecodeBytes(bytes));
     }
-    function removeASCIIWhitespace(str, leading = true, trailing = true) {
-      return removeChars(str, leading, trailing, isASCIIWhitespace);
+    function removeASCIIWhitespace(str2, leading = true, trailing = true) {
+      return removeChars(str2, leading, trailing, isASCIIWhitespace);
     }
-    function removeChars(str, leading, trailing, predicate) {
+    function removeChars(str2, leading, trailing, predicate) {
       let lead = 0;
-      let trail = str.length - 1;
+      let trail = str2.length - 1;
       if (leading) {
-        while (lead < str.length && predicate(str.charCodeAt(lead))) lead++;
+        while (lead < str2.length && predicate(str2.charCodeAt(lead))) lead++;
       }
       if (trailing) {
-        while (trail > 0 && predicate(str.charCodeAt(trail))) trail--;
+        while (trail > 0 && predicate(str2.charCodeAt(trail))) trail--;
       }
-      return lead === 0 && trail === str.length - 1 ? str : str.slice(lead, trail + 1);
+      return lead === 0 && trail === str2.length - 1 ? str2 : str2.slice(lead, trail + 1);
     }
     function serializeJavascriptValueToJSONString(value) {
       const result = JSON.stringify(value);
@@ -34985,8 +34985,8 @@ var require_data_url = __commonJS({
     function isHTTPWhiteSpace(char) {
       return char === 13 || char === 10 || char === 9 || char === 32;
     }
-    function removeHTTPWhitespace(str, leading = true, trailing = true) {
-      return removeChars(str, leading, trailing, isHTTPWhiteSpace);
+    function removeHTTPWhitespace(str2, leading = true, trailing = true) {
+      return removeChars(str2, leading, trailing, isHTTPWhiteSpace);
     }
     function minimizeSupportedMimeType(mimeType) {
       switch (mimeType.essence) {
@@ -37107,7 +37107,7 @@ var require_body = __commonJS({
         const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, "0")}`;
         const prefix = `--${boundary}\r
 Content-Disposition: form-data`;
-        const formdataEscape = (str) => str.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
+        const formdataEscape = (str2) => str2.replace(/\n/g, "%0A").replace(/\r/g, "%0D").replace(/"/g, "%22");
         const normalizeLinefeeds = (value) => value.replace(/\r?\n|\r/g, "\r\n");
         const blobParts = [];
         const rn = new Uint8Array([13, 10]);
@@ -37399,7 +37399,7 @@ var require_client_h1 = __commonJS({
            * @param {number} len
            * @returns {number}
            */
-          wasm_on_url: (p, at, len) => {
+          wasm_on_url: (p, at2, len) => {
             return 0;
           },
           /**
@@ -37408,9 +37408,9 @@ var require_client_h1 = __commonJS({
            * @param {number} len
            * @returns {number}
            */
-          wasm_on_status: (p, at, len) => {
+          wasm_on_status: (p, at2, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+            const start = at2 - currentBufferPtr + currentBufferRef.byteOffset;
             return currentParser.onStatus(new FastBuffer(currentBufferRef.buffer, start, len));
           },
           /**
@@ -37427,9 +37427,9 @@ var require_client_h1 = __commonJS({
            * @param {number} len
            * @returns {number}
            */
-          wasm_on_header_field: (p, at, len) => {
+          wasm_on_header_field: (p, at2, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+            const start = at2 - currentBufferPtr + currentBufferRef.byteOffset;
             return currentParser.onHeaderField(new FastBuffer(currentBufferRef.buffer, start, len));
           },
           /**
@@ -37438,9 +37438,9 @@ var require_client_h1 = __commonJS({
            * @param {number} len
            * @returns {number}
            */
-          wasm_on_header_value: (p, at, len) => {
+          wasm_on_header_value: (p, at2, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+            const start = at2 - currentBufferPtr + currentBufferRef.byteOffset;
             return currentParser.onHeaderValue(new FastBuffer(currentBufferRef.buffer, start, len));
           },
           /**
@@ -37460,9 +37460,9 @@ var require_client_h1 = __commonJS({
            * @param {number} len
            * @returns {number}
            */
-          wasm_on_body: (p, at, len) => {
+          wasm_on_body: (p, at2, len) => {
             assert(currentParser.ptr === p);
-            const start = at - currentBufferPtr + currentBufferRef.byteOffset;
+            const start = at2 - currentBufferPtr + currentBufferRef.byteOffset;
             return currentParser.onBody(new FastBuffer(currentBufferRef.buffer, start, len));
           },
           /**
@@ -45791,8 +45791,8 @@ var require_dump = __commonJS({
 var require_dns = __commonJS({
   "webscraper/node_modules/undici/lib/interceptor/dns.js"(exports2, module2) {
     "use strict";
-    var { isIP } = require("node:net");
-    var { lookup } = require("node:dns");
+    var { isIP: isIP2 } = require("node:net");
+    var { lookup: lookup2 } = require("node:dns");
     var DecoratorHandler = require_decorator_handler();
     var { InvalidArgumentError, InformationalError } = require_errors();
     var maxInt = Math.pow(2, 31) - 1;
@@ -45982,7 +45982,7 @@ var require_dns = __commonJS({
         }
       }
       #defaultLookup(origin, opts, cb) {
-        lookup(
+        lookup2(
           origin.hostname,
           {
             all: true,
@@ -46197,7 +46197,7 @@ var require_dns = __commonJS({
       return (dispatch) => {
         return function dnsInterceptor(origDispatchOpts, handler2) {
           const origin = origDispatchOpts.origin.constructor === URL ? origDispatchOpts.origin : new URL(origDispatchOpts.origin);
-          if (isIP(origin.hostname) !== 0) {
+          if (isIP2(origin.hostname) !== 0) {
             return dispatch(origDispatchOpts, handler2);
           }
           instance.runLookup(origin, origDispatchOpts, (err, newOrigin) => {
@@ -49719,8 +49719,8 @@ var require_deduplicate = __commonJS({
             }
           }
           const cacheKey = makeCacheKey(opts2);
-          const dedupeKey = makeDeduplicationKey(cacheKey, excludeHeaderNamesSet);
-          const pendingHandler = pendingRequests.get(dedupeKey);
+          const dedupeKey2 = makeDeduplicationKey(cacheKey, excludeHeaderNamesSet);
+          const pendingHandler = pendingRequests.get(dedupeKey2);
           if (pendingHandler) {
             if (pendingHandler.addWaitingHandler(handler2)) {
               return true;
@@ -49730,16 +49730,16 @@ var require_deduplicate = __commonJS({
           const deduplicationHandler = new DeduplicationHandler(
             handler2,
             () => {
-              pendingRequests.delete(dedupeKey);
+              pendingRequests.delete(dedupeKey2);
               if (pendingRequestsChannel.hasSubscribers) {
-                pendingRequestsChannel.publish({ size: pendingRequests.size, key: dedupeKey, type: "removed" });
+                pendingRequestsChannel.publish({ size: pendingRequests.size, key: dedupeKey2, type: "removed" });
               }
             },
             maxBufferSize
           );
-          pendingRequests.set(dedupeKey, deduplicationHandler);
+          pendingRequests.set(dedupeKey2, deduplicationHandler);
           if (pendingRequestsChannel.hasSubscribers) {
-            pendingRequestsChannel.publish({ size: pendingRequests.size, key: dedupeKey, type: "added" });
+            pendingRequestsChannel.publish({ size: pendingRequests.size, key: dedupeKey2, type: "added" });
           }
           return dispatch(opts2, deduplicationHandler);
         };
@@ -54137,9 +54137,9 @@ var require_cookies = __commonJS({
       webidl.argumentLengthCheck(arguments, 2, "setCookie");
       brandChecks(headers);
       cookie = webidl.converters.Cookie(cookie);
-      const str = stringify2(cookie);
-      if (str) {
-        headers.append("set-cookie", str, true);
+      const str2 = stringify2(cookie);
+      if (str2) {
+        headers.append("set-cookie", str2, true);
       }
     }
     webidl.converters.DeleteCookieAttributes = webidl.dictionaryConverter([
@@ -54649,8 +54649,8 @@ var require_util5 = __commonJS({
           return false;
         }
       }
-      const num = Number.parseInt(value, 10);
-      return num >= 8 && num <= 15;
+      const num2 = Number.parseInt(value, 10);
+      return num2 >= 8 && num2 <= 15;
     }
     function getURLRecord(url, baseURL) {
       let urlRecord;
@@ -55313,11 +55313,11 @@ var require_receiver = __commonJS({
           return emptyBuffer;
         }
         this.#byteOffset -= n;
-        const first2 = this.#buffers[0];
-        if (first2.length > n) {
-          this.#buffers[0] = first2.subarray(n, first2.length);
-          return first2.subarray(0, n);
-        } else if (first2.length === n) {
+        const first3 = this.#buffers[0];
+        if (first3.length > n) {
+          this.#buffers[0] = first3.subarray(n, first3.length);
+          return first3.subarray(0, n);
+        } else if (first3.length === n) {
           return this.#buffers.shift();
         } else {
           let offset = 0;
@@ -56802,24 +56802,24 @@ ${value}`;
         this.dropConsumedChunks();
       }
       handleBOM() {
-        const first2 = this.peekBufferedByte(0);
+        const first3 = this.peekBufferedByte(0);
         const second = this.peekBufferedByte(1);
         const third = this.peekBufferedByte(2);
         if (second === void 0) {
-          if (first2 === BOM[0]) {
+          if (first3 === BOM[0]) {
             return true;
           }
           this.checkBOM = false;
           return true;
         }
         if (third === void 0) {
-          if (first2 === BOM[0] && second === BOM[1]) {
+          if (first3 === BOM[0] && second === BOM[1]) {
             return true;
           }
           this.checkBOM = false;
           return false;
         }
-        if (first2 === BOM[0] && second === BOM[1] && third === BOM[2]) {
+        if (first3 === BOM[0] && second === BOM[1] && third === BOM[2]) {
           this.discardLeadingBytes(3);
         }
         this.checkBOM = false;
@@ -64618,19 +64618,19 @@ var require_base64url = __commonJS({
         throw new Error(`Invalid Base64-URL character "${String.fromCharCode(charCode)}"`);
       }
     }
-    function stringToBase64URL(str) {
+    function stringToBase64URL(str2) {
       const base64 = [];
       const emitter = (char) => {
         base64.push(char);
       };
       const state = { queue: 0, queuedBits: 0 };
-      stringToUTF8(str, (byte) => {
+      stringToUTF8(str2, (byte) => {
         byteToBase64URL(byte, state, emitter);
       });
       byteToBase64URL(null, state, emitter);
       return base64.join("");
     }
-    function stringFromBase64URL(str) {
+    function stringFromBase64URL(str2) {
       const conv = [];
       const utf8Emit = (codepoint) => {
         conv.push(String.fromCodePoint(codepoint));
@@ -64643,8 +64643,8 @@ var require_base64url = __commonJS({
       const byteEmit = (byte) => {
         stringFromUTF8(byte, utf8State, utf8Emit);
       };
-      for (let i = 0; i < str.length; i += 1) {
-        byteFromBase64URL(str.charCodeAt(i), b64State, byteEmit);
+      for (let i = 0; i < str2.length; i += 1) {
+        byteFromBase64URL(str2.charCodeAt(i), b64State, byteEmit);
       }
       return conv.join("");
     }
@@ -64670,12 +64670,12 @@ var require_base64url = __commonJS({
       }
       throw new Error(`Unrecognized Unicode codepoint: ${codepoint.toString(16)}`);
     }
-    function stringToUTF8(str, emit) {
-      for (let i = 0; i < str.length; i += 1) {
-        let codepoint = str.charCodeAt(i);
+    function stringToUTF8(str2, emit) {
+      for (let i = 0; i < str2.length; i += 1) {
+        let codepoint = str2.charCodeAt(i);
         if (codepoint > 55295 && codepoint <= 56319) {
           const highSurrogate = (codepoint - 55296) * 1024 & 65535;
-          const lowSurrogate = str.charCodeAt(i + 1) - 56320 & 65535;
+          const lowSurrogate = str2.charCodeAt(i + 1) - 56320 & 65535;
           codepoint = (lowSurrogate | highSurrogate) + 65536;
           i += 1;
         }
@@ -64715,20 +64715,20 @@ var require_base64url = __commonJS({
         }
       }
     }
-    function base64UrlToUint8Array(str) {
+    function base64UrlToUint8Array(str2) {
       const result = [];
       const state = { queue: 0, queuedBits: 0 };
       const onByte = (byte) => {
         result.push(byte);
       };
-      for (let i = 0; i < str.length; i += 1) {
-        byteFromBase64URL(str.charCodeAt(i), state, onByte);
+      for (let i = 0; i < str2.length; i += 1) {
+        byteFromBase64URL(str2.charCodeAt(i), state, onByte);
       }
       return new Uint8Array(result);
     }
-    function stringToUint8Array(str) {
+    function stringToUint8Array(str2) {
       const result = [];
-      stringToUTF8(str, (byte) => result.push(byte));
+      stringToUTF8(str2, (byte) => result.push(byte));
       return new Uint8Array(result);
     }
     function bytesToBase64URL(bytes) {
@@ -65101,8 +65101,8 @@ var require_helpers = __commonJS({
       }
     }
     var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    function validateUUID(str) {
-      if (!UUID_REGEX.test(str)) {
+    function validateUUID(str2) {
+      if (!UUID_REGEX.test(str2)) {
         throw new Error("@supabase/auth-js: Expected parameter to be UUID but is not");
       }
     }
@@ -67203,7 +67203,7 @@ var require_webauthn = __commonJS({
       attestation: "direct"
     };
     function deepMerge(...sources) {
-      const isObject2 = (val2) => val2 !== null && typeof val2 === "object" && !Array.isArray(val2);
+      const isObject3 = (val2) => val2 !== null && typeof val2 === "object" && !Array.isArray(val2);
       const isArrayBufferLike = (val2) => val2 instanceof ArrayBuffer || ArrayBuffer.isView(val2);
       const result = {};
       for (const source of sources) {
@@ -67217,9 +67217,9 @@ var require_webauthn = __commonJS({
             result[key] = value;
           } else if (isArrayBufferLike(value)) {
             result[key] = value;
-          } else if (isObject2(value)) {
+          } else if (isObject3(value)) {
             const existing = result[key];
-            if (isObject2(existing)) {
+            if (isObject3(existing)) {
               result[key] = deepMerge(existing, value);
             } else {
               result[key] = deepMerge(value);
@@ -73695,28 +73695,28 @@ var EntityDecoder = class {
    * @param offset The offset at which the entity begins. Should be 0 if this is not the first call.
    * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
    */
-  write(str, offset) {
+  write(str2, offset) {
     switch (this.state) {
       case EntityDecoderState.EntityStart: {
-        if (str.charCodeAt(offset) === CharCodes.NUM) {
+        if (str2.charCodeAt(offset) === CharCodes.NUM) {
           this.state = EntityDecoderState.NumericStart;
           this.consumed += 1;
-          return this.stateNumericStart(str, offset + 1);
+          return this.stateNumericStart(str2, offset + 1);
         }
         this.state = EntityDecoderState.NamedEntity;
-        return this.stateNamedEntity(str, offset);
+        return this.stateNamedEntity(str2, offset);
       }
       case EntityDecoderState.NumericStart: {
-        return this.stateNumericStart(str, offset);
+        return this.stateNumericStart(str2, offset);
       }
       case EntityDecoderState.NumericDecimal: {
-        return this.stateNumericDecimal(str, offset);
+        return this.stateNumericDecimal(str2, offset);
       }
       case EntityDecoderState.NumericHex: {
-        return this.stateNumericHex(str, offset);
+        return this.stateNumericHex(str2, offset);
       }
       case EntityDecoderState.NamedEntity: {
-        return this.stateNamedEntity(str, offset);
+        return this.stateNamedEntity(str2, offset);
       }
     }
   }
@@ -73729,22 +73729,22 @@ var EntityDecoder = class {
    * @param offset The current offset.
    * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
    */
-  stateNumericStart(str, offset) {
-    if (offset >= str.length) {
+  stateNumericStart(str2, offset) {
+    if (offset >= str2.length) {
       return -1;
     }
-    if ((str.charCodeAt(offset) | TO_LOWER_BIT) === CharCodes.LOWER_X) {
+    if ((str2.charCodeAt(offset) | TO_LOWER_BIT) === CharCodes.LOWER_X) {
       this.state = EntityDecoderState.NumericHex;
       this.consumed += 1;
-      return this.stateNumericHex(str, offset + 1);
+      return this.stateNumericHex(str2, offset + 1);
     }
     this.state = EntityDecoderState.NumericDecimal;
-    return this.stateNumericDecimal(str, offset);
+    return this.stateNumericDecimal(str2, offset);
   }
-  addToNumericResult(str, start, end2, base) {
+  addToNumericResult(str2, start, end2, base) {
     if (start !== end2) {
       const digitCount = end2 - start;
-      this.result = this.result * Math.pow(base, digitCount) + parseInt(str.substr(start, digitCount), base);
+      this.result = this.result * Math.pow(base, digitCount) + parseInt(str2.substr(start, digitCount), base);
       this.consumed += digitCount;
     }
   }
@@ -73757,18 +73757,18 @@ var EntityDecoder = class {
    * @param offset The current offset.
    * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
    */
-  stateNumericHex(str, offset) {
+  stateNumericHex(str2, offset) {
     const startIdx = offset;
-    while (offset < str.length) {
-      const char = str.charCodeAt(offset);
+    while (offset < str2.length) {
+      const char = str2.charCodeAt(offset);
       if (isNumber(char) || isHexadecimalCharacter(char)) {
         offset += 1;
       } else {
-        this.addToNumericResult(str, startIdx, offset, 16);
+        this.addToNumericResult(str2, startIdx, offset, 16);
         return this.emitNumericEntity(char, 3);
       }
     }
-    this.addToNumericResult(str, startIdx, offset, 16);
+    this.addToNumericResult(str2, startIdx, offset, 16);
     return -1;
   }
   /**
@@ -73780,18 +73780,18 @@ var EntityDecoder = class {
    * @param offset The current offset.
    * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
    */
-  stateNumericDecimal(str, offset) {
+  stateNumericDecimal(str2, offset) {
     const startIdx = offset;
-    while (offset < str.length) {
-      const char = str.charCodeAt(offset);
+    while (offset < str2.length) {
+      const char = str2.charCodeAt(offset);
       if (isNumber(char)) {
         offset += 1;
       } else {
-        this.addToNumericResult(str, startIdx, offset, 10);
+        this.addToNumericResult(str2, startIdx, offset, 10);
         return this.emitNumericEntity(char, 2);
       }
     }
-    this.addToNumericResult(str, startIdx, offset, 10);
+    this.addToNumericResult(str2, startIdx, offset, 10);
     return -1;
   }
   /**
@@ -73836,12 +73836,12 @@ var EntityDecoder = class {
    * @param offset The current offset.
    * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
    */
-  stateNamedEntity(str, offset) {
+  stateNamedEntity(str2, offset) {
     const { decodeTree } = this;
     let current = decodeTree[this.treeIndex];
     let valueLength = (current & BinTrieFlags.VALUE_LENGTH) >> 14;
-    for (; offset < str.length; offset++, this.excess++) {
-      const char = str.charCodeAt(offset);
+    for (; offset < str2.length; offset++, this.excess++) {
+      const char = str2.charCodeAt(offset);
       this.treeIndex = determineBranch(decodeTree, current, this.treeIndex + Math.max(1, valueLength), char);
       if (this.treeIndex < 0) {
         return this.result === 0 || // If we are parsing an attribute
@@ -73926,15 +73926,15 @@ var EntityDecoder = class {
 };
 function getDecoder(decodeTree) {
   let ret = "";
-  const decoder = new EntityDecoder(decodeTree, (str) => ret += fromCodePoint(str));
-  return function decodeWithTrie(str, decodeMode) {
+  const decoder = new EntityDecoder(decodeTree, (str2) => ret += fromCodePoint(str2));
+  return function decodeWithTrie(str2, decodeMode) {
     let lastIndex = 0;
     let offset = 0;
-    while ((offset = str.indexOf("&", offset)) >= 0) {
-      ret += str.slice(lastIndex, offset);
+    while ((offset = str2.indexOf("&", offset)) >= 0) {
+      ret += str2.slice(lastIndex, offset);
       decoder.startEntity(decodeMode);
       const len = decoder.write(
-        str,
+        str2,
         // Skip the "&"
         offset + 1
       );
@@ -73945,7 +73945,7 @@ function getDecoder(decodeTree) {
       lastIndex = offset + len;
       offset = len === 0 ? lastIndex + 1 : lastIndex;
     }
-    const result = ret + str.slice(lastIndex);
+    const result = ret + str2.slice(lastIndex);
     ret = "";
     return result;
   };
@@ -73998,28 +73998,28 @@ var xmlCodeMap = /* @__PURE__ */ new Map([
 ]);
 var getCodePoint = (
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  String.prototype.codePointAt != null ? (str, index2) => str.codePointAt(index2) : (
+  String.prototype.codePointAt != null ? (str2, index2) => str2.codePointAt(index2) : (
     // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
     (c, index2) => (c.charCodeAt(index2) & 64512) === 55296 ? (c.charCodeAt(index2) - 55296) * 1024 + c.charCodeAt(index2 + 1) - 56320 + 65536 : c.charCodeAt(index2)
   )
 );
-function encodeXML(str) {
+function encodeXML(str2) {
   let ret = "";
   let lastIdx = 0;
   let match;
-  while ((match = xmlReplacer.exec(str)) !== null) {
+  while ((match = xmlReplacer.exec(str2)) !== null) {
     const i = match.index;
-    const char = str.charCodeAt(i);
+    const char = str2.charCodeAt(i);
     const next2 = xmlCodeMap.get(char);
     if (next2 !== void 0) {
-      ret += str.substring(lastIdx, i) + next2;
+      ret += str2.substring(lastIdx, i) + next2;
       lastIdx = i + 1;
     } else {
-      ret += `${str.substring(lastIdx, i)}&#x${getCodePoint(str, i).toString(16)};`;
+      ret += `${str2.substring(lastIdx, i)}&#x${getCodePoint(str2, i).toString(16)};`;
       lastIdx = xmlReplacer.lastIndex += Number((char & 64512) === 55296);
     }
   }
-  return ret + str.substr(lastIdx);
+  return ret + str2.substr(lastIdx);
 }
 function getEscaper(regex, map2) {
   return function escape3(data2) {
@@ -74933,11 +74933,11 @@ __export(attributes_exports, {
 function isCheerio(maybeCheerio) {
   return maybeCheerio.cheerio != null;
 }
-function camelCase(str) {
-  return str.replace(/[._-](\w|$)/g, (_, x) => x.toUpperCase());
+function camelCase(str2) {
+  return str2.replace(/[._-](\w|$)/g, (_, x) => x.toUpperCase());
 }
-function cssCase(str) {
-  return str.replace(/[A-Z]/g, "-$&").toLowerCase();
+function cssCase(str2) {
+  return str2.replace(/[A-Z]/g, "-$&").toLowerCase();
 }
 function domEach(array, fn) {
   const len = array.length;
@@ -74953,15 +74953,15 @@ var CharacterCode;
   CharacterCode2[CharacterCode2["UpperZ"] = 90] = "UpperZ";
   CharacterCode2[CharacterCode2["Exclamation"] = 33] = "Exclamation";
 })(CharacterCode || (CharacterCode = {}));
-function isHtml(str) {
-  if (typeof str !== "string") {
+function isHtml(str2) {
+  if (typeof str2 !== "string") {
     return false;
   }
-  const tagStart = str.indexOf("<");
-  if (tagStart === -1 || tagStart > str.length - 3)
+  const tagStart = str2.indexOf("<");
+  if (tagStart === -1 || tagStart > str2.length - 3)
     return false;
-  const tagChar = str.charCodeAt(tagStart + 1);
-  return (tagChar >= CharacterCode.LowerA && tagChar <= CharacterCode.LowerZ || tagChar >= CharacterCode.UpperA && tagChar <= CharacterCode.UpperZ || tagChar === CharacterCode.Exclamation) && str.includes(">", tagStart + 2);
+  const tagChar = str2.charCodeAt(tagStart + 1);
+  return (tagChar >= CharacterCode.LowerA && tagChar <= CharacterCode.LowerZ || tagChar >= CharacterCode.UpperA && tagChar <= CharacterCode.UpperZ || tagChar === CharacterCode.Exclamation) && str2.includes(">", tagStart + 2);
 }
 
 // webscraper/node_modules/htmlparser2/node_modules/entities/dist/esm/decode-codepoint.js
@@ -76783,9 +76783,9 @@ function parseDataValue(value) {
     return true;
   if (value === "false")
     return false;
-  const num = Number(value);
-  if (value === String(num))
-    return num;
+  const num2 = Number(value);
+  if (value === String(num2))
+    return num2;
   if (rbrace.test(value)) {
     try {
       return JSON.parse(value);
@@ -77873,8 +77873,8 @@ function compileToken(token, options, context) {
   let shouldTestNextSiblings = false;
   const query = token.map((rules) => {
     if (rules.length >= 2) {
-      const [first2, second] = rules;
-      if (first2.type !== import_css_what4.SelectorType.Pseudo || first2.name !== "scope") {
+      const [first3, second] = rules;
+      if (first3.type !== import_css_what4.SelectorType.Pseudo || first3.name !== "scope") {
       } else if (isArrayContext && second.type === import_css_what4.SelectorType.Descendant) {
         rules[1] = FLEXIBLE_DESCENDANT_TOKEN;
       } else if (second.type === import_css_what4.SelectorType.Adjacent || second.type === import_css_what4.SelectorType.Sibling) {
@@ -77977,17 +77977,17 @@ function isFilter(s) {
   return false;
 }
 function getLimit(filter4, data2, partLimit) {
-  const num = data2 != null ? parseInt(data2, 10) : NaN;
+  const num2 = data2 != null ? parseInt(data2, 10) : NaN;
   switch (filter4) {
     case "first":
       return 1;
     case "nth":
     case "eq":
-      return isFinite(num) ? num >= 0 ? num + 1 : Infinity : 0;
+      return isFinite(num2) ? num2 >= 0 ? num2 + 1 : Infinity : 0;
     case "lt":
-      return isFinite(num) ? num >= 0 ? Math.min(num, partLimit) : Infinity : 0;
+      return isFinite(num2) ? num2 >= 0 ? Math.min(num2, partLimit) : Infinity : 0;
     case "gt":
-      return isFinite(num) ? Infinity : 0;
+      return isFinite(num2) ? Infinity : 0;
     case "odd":
       return 2 * partLimit;
     case "even":
@@ -78037,7 +78037,7 @@ function some(elements, selector, options = {}) {
   return plain.length > 0 && elements.some(_compileToken(plain, options)) || filtered.some((sel) => filterBySelector(sel, elements, options).length > 0);
 }
 function filterByPosition(filter4, elems, data2, options) {
-  const num = typeof data2 === "string" ? parseInt(data2, 10) : NaN;
+  const num2 = typeof data2 === "string" ? parseInt(data2, 10) : NaN;
   switch (filter4) {
     case "first":
     case "lt":
@@ -78046,9 +78046,9 @@ function filterByPosition(filter4, elems, data2, options) {
       return elems.length > 0 ? [elems[elems.length - 1]] : elems;
     case "nth":
     case "eq":
-      return isFinite(num) && Math.abs(num) < elems.length ? [num < 0 ? elems[elems.length + num] : elems[num]] : [];
+      return isFinite(num2) && Math.abs(num2) < elems.length ? [num2 < 0 ? elems[elems.length + num2] : elems[num2]] : [];
     case "gt":
-      return isFinite(num) ? elems.slice(num + 1) : [];
+      return isFinite(num2) ? elems.slice(num2 + 1) : [];
     case "even":
       return elems.filter((_, i) => i % 2 === 0);
     case "odd":
@@ -78800,8 +78800,8 @@ function empty() {
     el.children.length = 0;
   });
 }
-function html2(str) {
-  if (str === void 0) {
+function html2(str2) {
+  if (str2 === void 0) {
     const el = this[0];
     if (!el || !hasChildren(el))
       return null;
@@ -78813,19 +78813,19 @@ function html2(str) {
     for (const child of el.children) {
       child.next = child.prev = child.parent = null;
     }
-    const content = isCheerio(str) ? str.toArray() : this._parse(`${str}`, this.options, false, el).children;
+    const content = isCheerio(str2) ? str2.toArray() : this._parse(`${str2}`, this.options, false, el).children;
     update(content, el);
   });
 }
 function toString() {
   return this._render(this);
 }
-function text2(str) {
-  if (str === void 0) {
+function text2(str2) {
+  if (str2 === void 0) {
     return text(this);
   }
-  if (typeof str === "function") {
-    return domEach(this, (el, i) => this._make(el).text(str.call(el, i, text([el]))));
+  if (typeof str2 === "function") {
+    return domEach(this, (el, i) => this._make(el).text(str2.call(el, i, text([el]))));
   }
   return domEach(this, (el) => {
     if (!hasChildren(el))
@@ -78833,7 +78833,7 @@ function text2(str) {
     for (const child of el.children) {
       child.next = child.prev = child.parent = null;
     }
-    const textNode = new Text2(`${str}`);
+    const textNode = new Text2(`${str2}`);
     update(textNode, el);
   });
 }
@@ -78902,7 +78902,7 @@ function getCss(el, prop2) {
   return styles;
 }
 function stringify(obj) {
-  return Object.keys(obj).reduce((str, prop2) => `${str}${str ? " " : ""}${prop2}: ${obj[prop2]};`, "");
+  return Object.keys(obj).reduce((str2, prop2) => `${str2}${str2 ? " " : ""}${prop2}: ${obj[prop2]};`, "");
 }
 function parse5(styles) {
   styles = (styles || "").trim();
@@ -78910,16 +78910,16 @@ function parse5(styles) {
     return {};
   const obj = {};
   let key;
-  for (const str of styles.split(";")) {
-    const n = str.indexOf(":");
-    if (n < 1 || n === str.length - 1) {
-      const trimmed = str.trimEnd();
+  for (const str2 of styles.split(";")) {
+    const n = str2.indexOf(":");
+    if (n < 1 || n === str2.length - 1) {
+      const trimmed = str2.trimEnd();
       if (trimmed.length > 0 && key !== void 0) {
         obj[key] += `;${trimmed}`;
       }
     } else {
-      key = str.slice(0, n).trim();
-      obj[key] = str.slice(n + 1).trim();
+      key = str2.slice(0, n).trim();
+      obj[key] = str2.slice(n + 1).trim();
     }
   }
   return obj;
@@ -87113,19 +87113,19 @@ function enquoteDoctypeId(id) {
   return quote + id + quote;
 }
 function serializeDoctypeContent(name, publicId, systemId) {
-  let str = "!DOCTYPE ";
+  let str2 = "!DOCTYPE ";
   if (name) {
-    str += name;
+    str2 += name;
   }
   if (publicId) {
-    str += ` PUBLIC ${enquoteDoctypeId(publicId)}`;
+    str2 += ` PUBLIC ${enquoteDoctypeId(publicId)}`;
   } else if (systemId) {
-    str += " SYSTEM";
+    str2 += " SYSTEM";
   }
   if (systemId) {
-    str += ` ${enquoteDoctypeId(systemId)}`;
+    str2 += ` ${enquoteDoctypeId(systemId)}`;
   }
-  return str;
+  return str2;
 }
 var adapter = {
   // Re-exports from domhandler
@@ -87440,10 +87440,10 @@ var END_OF_UNQUOTED_ATTRIBUTE_VALUE = /* @__PURE__ */ new Set([
   Chars.TAB,
   Chars.GT
 ]);
-function toUint8Array(str) {
-  const arr = new Uint8Array(str.length);
-  for (let i = 0; i < str.length; i++) {
-    arr[i] = str.charCodeAt(i);
+function toUint8Array(str2) {
+  const arr = new Uint8Array(str2.length);
+  for (let i = 0; i < str2.length; i++) {
+    arr[i] = str2.charCodeAt(i);
   }
   return arr;
 }
@@ -87474,6 +87474,7 @@ var import_dotenv = __toESM(require_main(), 1);
 
 // webscraper/fitAnalyzer.ts
 var GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+var REVIEW_SIZE_TOKEN = "XXXL|3XL|XXL|2XL|XXS|X-LARGE|X-SMALL|EXTRA LARGE|EXTRA SMALL|XLARGE|XSMALL|SMALL|MEDIUM|LARGE|XL|XS|S|M|L|\\d{1,2}";
 var ANATOMICAL_ZONES = [
   "shoulders",
   "chest",
@@ -87513,13 +87514,13 @@ function normalizeSizeOrNull(rawSize) {
   }
   const numericMatch = cleaned.match(/\b(\d{1,2})\b/);
   if (numericMatch) {
-    const num = parseInt(numericMatch[1], 10);
-    if (num <= 2 || num >= 24 && num <= 27) return "XS";
-    if (num >= 4 && num <= 6 || num >= 28 && num <= 29) return "S";
-    if (num >= 8 && num <= 10 || num >= 30 && num <= 32) return "M";
-    if (num >= 12 && num <= 14 || num >= 33 && num <= 34) return "L";
-    if (num === 16 || num >= 35 && num <= 37) return "XL";
-    if (num >= 18 || num >= 38) return "XXL";
+    const num2 = parseInt(numericMatch[1], 10);
+    if (num2 <= 2 || num2 >= 24 && num2 <= 27) return "XS";
+    if (num2 >= 4 && num2 <= 6 || num2 >= 28 && num2 <= 29) return "S";
+    if (num2 >= 8 && num2 <= 10 || num2 >= 30 && num2 <= 32) return "M";
+    if (num2 >= 12 && num2 <= 14 || num2 >= 33 && num2 <= 34) return "L";
+    if (num2 === 16 || num2 >= 35 && num2 <= 37) return "XL";
+    if (num2 >= 18 || num2 >= 38) return "XXL";
   }
   if (cleaned.startsWith("XS")) return "XS";
   if (cleaned.startsWith("XXL") || cleaned.startsWith("2X")) return "XXL";
@@ -87774,9 +87775,9 @@ function parseRawReviewBatch(rawInput) {
   const blocks = trimmed.split(/\n\s*\n+|\n(?=\[?Size\s*:|\bSize\s+(?:XS|S|M|L|XL|XXL)\b)/i).map((b) => b.trim()).filter((b) => b.length > 10);
   blocks.forEach((block, idx) => {
     const sizeMatch = block.match(
-      /\bSize(?:\s+Purchased|\s+Ordered)?\s*[:=-]\s*(XXL|2XL|XL|XS|S|M|L|Small|Medium|Large|\d{1,2})\b/i
-    ) || block.match(/\[\s*(XXL|2XL|XL|XS|S|M|L)\s*\]/i) || block.match(
-      /\b(?:bought|ordered|wearing|got)\s+(?:a\s+|an\s+|size\s+)?(XXL|2XL|XL|XS|S|M|L|Small|Medium|Large)\b/i
+      new RegExp(`\\bSize(?:\\s+Purchased|\\s+Ordered)?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`, "i")
+    ) || block.match(new RegExp(`\\[\\s*(${REVIEW_SIZE_TOKEN})\\s*\\]`, "i")) || block.match(
+      new RegExp(`\\b(?:bought|ordered|wearing|got)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`, "i")
     );
     const ratingMatch = block.match(/\bRating\s*[:=-]\s*(\d(?:\.\d)?)/i) || block.match(/\b(\d)\s*\/\s*5\s*stars?\b/i) || block.match(/★{1,5}/);
     let rating = 3;
@@ -87801,6 +87802,20 @@ function parseRawReviewBatch(rawInput) {
   });
   return results;
 }
+function roundedShares(left, middle, right) {
+  const total = left + middle + right;
+  if (total <= 0) return [0, 0, 0];
+  let leftPct = Math.round(left / total * 100);
+  let rightPct = Math.round(right / total * 100);
+  let middlePct = 100 - leftPct - rightPct;
+  if (middlePct < 0) {
+    const excess = -middlePct;
+    if (leftPct >= rightPct) leftPct -= excess;
+    else rightPct -= excess;
+    middlePct = 0;
+  }
+  return [leftPct, middlePct, rightPct];
+}
 function aggregateProductFitReport(meta, rawReviews) {
   const analyzedReviews = rawReviews.map((r) => {
     const normalizedSize = normalizeSizeOrNull(r.sizePurchased);
@@ -87815,9 +87830,10 @@ function aggregateProductFitReport(meta, rawReviews) {
   const runsSmallCount = analyzedReviews.filter((r) => r.fitDirection === "runs_small").length;
   const trueToSizeCount = analyzedReviews.filter((r) => r.fitDirection === "true_to_size").length;
   const runsLargeCount = analyzedReviews.filter((r) => r.fitDirection === "runs_large").length;
-  const runsSmallPct = totalReviews > 0 ? Math.round(runsSmallCount / totalReviews * 100) : 0;
-  const runsLargePct = totalReviews > 0 ? Math.round(runsLargeCount / totalReviews * 100) : 0;
-  const trueToSizePct = totalReviews > 0 ? Math.max(0, 100 - runsSmallPct - runsLargePct) : 0;
+  const overallShares = roundedShares(runsSmallCount, trueToSizeCount, runsLargeCount);
+  const runsSmallPct = overallShares[0];
+  const trueToSizePct = overallShares[1];
+  const runsLargePct = overallShares[2];
   const overallFitIndex = totalReviews > 0 ? Number(
     (analyzedReviews.reduce((acc, r) => acc + r.fitSkew, 0) / totalReviews).toFixed(2)
   ) : 0;
@@ -87871,9 +87887,7 @@ function aggregateProductFitReport(meta, rawReviews) {
     const sSmall = group.filter((r) => r.fitDirection === "runs_small").length;
     const sTts = group.filter((r) => r.fitDirection === "true_to_size").length;
     const sLarge = group.filter((r) => r.fitDirection === "runs_large").length;
-    const sSmallPct = Math.round(sSmall / count * 100);
-    const sLargePct = Math.round(sLarge / count * 100);
-    const sTtsPct = Math.max(0, 100 - sSmallPct - sLargePct);
+    const [sSmallPct, sTtsPct, sLargePct] = roundedShares(sSmall, sTts, sLarge);
     const fitSkew = Number(
       (group.reduce((acc, r) => acc + r.fitSkew, 0) / count).toFixed(2)
     );
@@ -87977,9 +87991,7 @@ function aggregateProductFitReport(meta, rawReviews) {
     }
     const tightC = mentions.filter((m) => m.tension === "tight").length;
     const looseC = mentions.filter((m) => m.tension === "loose").length;
-    const tightPct = Math.round(tightC / mCount * 100);
-    const loosePct = Math.round(looseC / mCount * 100);
-    const optimalPct = Math.max(0, 100 - tightPct - loosePct);
+    const [tightPct, optimalPct, loosePct] = roundedShares(tightC, mCount - tightC - looseC, looseC);
     const netTensionScore = Number(((looseC - tightC) / mCount).toFixed(2));
     let statusLabel = "Balanced Drape";
     if (netTensionScore <= -0.35) statusLabel = "Runs Tight / Narrow";
@@ -88065,13 +88077,16 @@ function aggregateProductFitReport(meta, rawReviews) {
       reviewNodesMatched: totalReviews,
       selectorsUsed: meta.scraperTelemetry?.selectorsUsed ?? [],
       parseDurationMs: meta.scraperTelemetry?.parseDurationMs ?? 0,
-      engineMode: meta.scraperTelemetry?.engineMode || "cheerio-dom+deterministic-nlp"
+      engineMode: meta.scraperTelemetry?.engineMode || "cheerio-dom+deterministic-nlp",
+      reportedReviewCount: meta.scraperTelemetry?.reportedReviewCount ?? null,
+      reviewSources: meta.scraperTelemetry?.reviewSources ?? []
     },
     committedToDbAt: (/* @__PURE__ */ new Date()).toISOString()
   };
 }
-function generateSqlInsertDump(reports) {
+function generateSqlInsertDump(reports, charts = []) {
   const esc = (val2) => (val2 || "").replace(/'/g, "''");
+  const num2 = (value) => value === null || !Number.isFinite(value) ? "NULL" : String(value);
   const lines = [
     "-- Pearfit Scraper Commercial Apparel Fit Database Dump",
     `-- Generated At: ${(/* @__PURE__ */ new Date()).toISOString()}`,
@@ -88093,7 +88108,7 @@ function generateSqlInsertDump(reports) {
     "  true_to_size_pct INT NOT NULL,",
     "  runs_large_pct INT NOT NULL,",
     "  shrinkage_mention_pct INT NOT NULL,",
-    "  fabric_opacity_pct INT NOT NULL,",
+    "  fabric_opacity_pct INT,",
     "  sentiment_score INT NOT NULL,",
     "  avg_rating DECIMAL(3,1) NOT NULL,",
     "  source_url TEXT,",
@@ -88116,11 +88131,21 @@ function generateSqlInsertDump(reports) {
     "  primary_fit_note TEXT,",
     "  PRIMARY KEY (sku, size_code)",
     ");",
+    "",
+    "CREATE TABLE IF NOT EXISTS sku_size_chart (",
+    "  sku VARCHAR(128) NOT NULL,",
+    "  size_code VARCHAR(16) NOT NULL,",
+    "  sort_order INT NOT NULL,",
+    "  chest_cm DECIMAL(6,1),",
+    "  length_cm DECIMAL(6,1),",
+    "  sleeve_cm DECIMAL(6,1),",
+    "  PRIMARY KEY (sku, size_code)",
+    ");",
     ""
   ];
   for (const r of reports) {
     lines.push(
-      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${r.overallFitIndex}, '${esc(r.overallVerdict)}', ${r.gradingDelta}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${r.tshirtSignals.fabricOpacityPct}, ${r.overallSentimentScore}, ${r.overallAvgRating}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
+      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${num2(r.overallFitIndex)}, '${esc(r.overallVerdict)}', ${num2(r.gradingDelta)}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${num2(r.tshirtSignals.fabricOpacityPct)}, ${r.overallSentimentScore}, ${num2(r.overallAvgRating)}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
     );
     for (const s of r.sizeSummaries) {
       if (s.reviewCount > 0) {
@@ -88131,6 +88156,14 @@ function generateSqlInsertDump(reports) {
     }
     lines.push("");
   }
+  const chartRows = [...charts].sort((a, b) => a.sku.localeCompare(b.sku) || a.sortOrder - b.sortOrder || a.size.localeCompare(b.size));
+  for (const row of chartRows) {
+    if (!row.sku || !row.size) continue;
+    lines.push(
+      `INSERT INTO sku_size_chart (sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm) VALUES ('${esc(row.sku)}', '${esc(row.size)}', ${Math.round(row.sortOrder) || 0}, ${num2(row.chest_cm)}, ${num2(row.length_cm)}, ${num2(row.sleeve_cm)});`
+    );
+  }
+  if (chartRows.length > 0) lines.push("");
   return lines.join("\n");
 }
 
@@ -89236,8 +89269,22 @@ function parseRating(ratingRaw) {
   return Math.min(5, Math.max(1, Math.round(scaled)));
 }
 function extractSizeFromReviewText(body) {
-  const match = body.match(/\bsize(?:\s+(?:purchased|ordered|bought))?\s*[:=-]\s*(XXS|XXL|2XL|3XL|XL|XS|S|M|L|small|medium|large|\d{1,2})\b/i) || body.match(/\b(?:bought|ordered|got|wearing|wear|purchased)\s+(?:a|an|the|my|size)?\s*(XXL|2XL|XL|XS|S|M|L|small|medium|large|x-?small|x-?large)\b/i) || body.match(/\bin\s+(?:a\s+|size\s+)(XXL|2XL|XL|XS|S|M|L|small|medium|large)\b/i);
-  return match ? match[1] : "";
+  const labeled = new RegExp(
+    `\\bsize(?:\\s+(?:purchased|ordered|bought))?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`,
+    "i"
+  );
+  const sizedTo = new RegExp(
+    `\\b(?:sized|went)\\s+(?:up|down)\\s+(?:to|a size to)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`,
+    "i"
+  );
+  const letterSize = REVIEW_SIZE_TOKEN.replace("|\\d{1,2}", "");
+  const bought = new RegExp(
+    `\\b(?:bought|ordered|purchased)\\s+(?:(?:a|an|the|my)\\s+)?(?:size\\s+(${REVIEW_SIZE_TOKEN})|(${letterSize}))\\b`,
+    "i"
+  );
+  const wornIn = new RegExp(`\\bin\\s+(?:a\\s+|size\\s+)(${REVIEW_SIZE_TOKEN})\\b`, "i");
+  const match = body.match(labeled) || body.match(sizedTo) || body.match(bought) || body.match(wornIn);
+  return match ? match[1] ?? match[2] ?? "" : "";
 }
 var FIT_TAG_REGEX = /\b(runs\s+small|true\s+to\s+size|runs\s+large|slightly\s+small|slightly\s+large)\b/i;
 function extractStructuredProduct(jsonLdBlocks) {
@@ -89278,7 +89325,22 @@ function extractStructuredProduct(jsonLdBlocks) {
       declaredFitTag: fitTag
     });
   }
+  const identifiers = /* @__PURE__ */ new Set();
+  const idFields = ["productID", "productId", "sku", "mpn", "gtin", "gtin8", "gtin12", "gtin13", "gtin14", "productGroupID"];
+  for (const node of [product, ...asArray(product.hasVariant), ...asArray(product.offers)]) {
+    if (!isObject(node)) continue;
+    for (const field of idFields) {
+      const value = text3(node[field]);
+      if (value) identifiers.add(value.toLowerCase());
+    }
+  }
+  const aggregate = isObject(product.aggregateRating) ? product.aggregateRating : null;
+  const count = aggregate ? Number(aggregate.reviewCount ?? aggregate.ratingCount) : NaN;
+  const organization = nodes.find((n) => hasType(n, "Organization") || hasType(n, "Corporation") || hasType(n, "OnlineStore"));
   return {
+    organizationName: organization ? text3(organization.name) : null,
+    identifiers: [...identifiers],
+    reportedReviewCount: Number.isInteger(count) && count >= 0 ? count : null,
     name: text3(product.name),
     brand: text3(product.brand) ?? text3(product.manufacturer),
     sku: text3(product.sku) ?? text3(product.mpn) ?? text3(product.productGroupID),
@@ -89301,23 +89363,1119 @@ function parseJsonLdScripts(scriptContents) {
   return blocks;
 }
 
+// webscraper/publicUrl.ts
+var import_promises = require("node:dns/promises");
+var import_node_net = require("node:net");
+function isBlockedHostname(hostname) {
+  let host = hostname.trim().toLowerCase().replace(/\.$/, "");
+  if (host.startsWith("[") && host.endsWith("]")) host = host.slice(1, -1);
+  if (!host) return true;
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal") || host === "metadata.google.internal") {
+    return true;
+  }
+  const mapped = host.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (mapped) return isBlockedIPv4(mapped[1]);
+  if (host.includes(":")) return isBlockedIPv6(host);
+  if (/^\d+$/.test(host)) return true;
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return isBlockedIPv4(host);
+  return false;
+}
+function isBlockedIPv4(host) {
+  const parts = host.split(".").map((part) => Number(part));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return true;
+  }
+  const [a, b] = parts;
+  if (a === 0 || a === 10 || a === 127) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a >= 224) return true;
+  return false;
+}
+function embeddedIPv4(high, low) {
+  const hi = parseInt(high, 16);
+  const lo = parseInt(low, 16);
+  return [hi >> 8, hi & 255, lo >> 8, lo & 255].join(".");
+}
+function isBlockedIPv6(host) {
+  const bare = host.split("%")[0];
+  if (bare === "::" || bare === "::1") return true;
+  if (/^fe[89ab]/.test(bare) || bare.startsWith("fc") || bare.startsWith("fd")) return true;
+  const embedded = bare.match(/^(?:::(?:ffff:)?|64:ff9b::)(?:(\d{1,3}(?:\.\d{1,3}){3})|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
+  if (embedded) return isBlockedIPv4(embedded[1] ?? embeddedIPv4(embedded[2], embedded[3]));
+  return false;
+}
+function blockedFetchTarget(raw) {
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    return "That is not a valid http(s) URL.";
+  }
+  if (url.username || url.password) {
+    return "The scraper does not fetch URLs that embed credentials.";
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return "Only http and https product URLs can be scraped.";
+  }
+  if (isBlockedHostname(url.hostname)) {
+    return `${url.hostname} is not a public address. The scraper only fetches public product pages.`;
+  }
+  return null;
+}
+async function blockedFetchTargetResolved(raw) {
+  const literal = blockedFetchTarget(raw);
+  if (literal) return literal;
+  const hostname = new URL(raw).hostname;
+  if ((0, import_node_net.isIP)(hostname)) return null;
+  try {
+    const records = await (0, import_promises.lookup)(hostname, { all: true });
+    for (const record of records) {
+      if (isBlockedHostname(record.address)) {
+        return `${hostname} resolves to a non-public address. The scraper only fetches public product pages.`;
+      }
+    }
+  } catch {
+  }
+  return null;
+}
+function createRequestHostGuard(resolve = (hostname) => (0, import_promises.lookup)(hostname, { all: true })) {
+  const cache = /* @__PURE__ */ new Map();
+  return (rawUrl) => {
+    let hostname;
+    try {
+      hostname = new URL(rawUrl).hostname;
+    } catch {
+      return Promise.resolve(false);
+    }
+    let verdict = cache.get(hostname);
+    if (!verdict) {
+      verdict = (async () => {
+        if (isBlockedHostname(hostname)) return true;
+        const bare = hostname.replace(/^\[|\]$/g, "");
+        if ((0, import_node_net.isIP)(bare)) return false;
+        try {
+          const records = await resolve(hostname);
+          return records.some((record) => isBlockedHostname(record.address));
+        } catch {
+          return false;
+        }
+      })();
+      cache.set(hostname, verdict);
+    }
+    return verdict;
+  };
+}
+
+// webscraper/reviewJson.ts
+function isObject2(v) {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+function str(v) {
+  if (typeof v === "string") {
+    const t = v.replace(/\s+/g, " ").trim();
+    return t || null;
+  }
+  if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  return null;
+}
+function num(v) {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && /^\s*-?\d+(\.\d+)?\s*$/.test(v)) return Number(v);
+  return null;
+}
+function first2(obj, keys) {
+  for (const key of keys) {
+    if (obj[key] !== void 0 && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return void 0;
+}
+function at(obj, path2) {
+  let cur = obj;
+  for (const part of path2.split(".")) {
+    if (!isObject2(cur)) return void 0;
+    cur = cur[part];
+  }
+  return cur;
+}
+function firstPath(obj, paths) {
+  for (const path2 of paths) {
+    const v = at(obj, path2);
+    if (v !== void 0 && v !== null && v !== "") return v;
+  }
+  return void 0;
+}
+var RATING_KEYS = ["rating", "score", "Rating", "reviewRating", "stars", "starRating", "star_rating", "overallRating", "ratingValue", "reviewScore", "rate"];
+var BODY_KEYS = ["body", "content", "comments", "ReviewText", "reviewText", "reviewMessage", "reviewBody", "review_body", "review_text", "text", "comment", "review", "message"];
+var TITLE_KEYS = ["title", "Title", "reviewTitle", "review_title", "headline"];
+var DATE_KEYS = ["createdAt", "created_at", "dateCreated", "date_created", "SubmissionTime", "submissionTime", "reviewDate", "datePublished", "publishedAt", "published_at", "submittedAt", "createDate", "dateCreatedMillis", "createdDate", "created_date", "reviewed_at", "reviewedAt", "date", "created"];
+var ID_KEYS = ["id", "Id", "reviewId", "review_id", "ReviewId", "ugc_id", "uuid"];
+var AUTHOR_PATHS = [
+  "user.displayName",
+  "user.display_name",
+  "user.name",
+  "author.name",
+  "author.displayName",
+  "author.display_name",
+  "reviewer.displayName",
+  "reviewer.display_name",
+  "reviewer.name",
+  "customer.name",
+  "UserNickname",
+  "userNickname",
+  "nickname",
+  "reviewerName",
+  "reviewer_name",
+  "displayName",
+  "display_name",
+  "author",
+  "name"
+];
+var AGGREGATE_KEYS = [
+  "review_count",
+  "reviewCount",
+  "totalReviews",
+  "total_reviews",
+  "TotalReviewCount",
+  "rating_histogram",
+  "ratingHistogram",
+  "averageScore",
+  "average_score",
+  "averageRating",
+  "average_rating",
+  "AverageOverallRating"
+];
+function normalizeRating(raw, best) {
+  let value;
+  let scale = num(best);
+  if (isObject2(raw)) {
+    value = num(first2(raw, ["ratingValue", "value", "Value", "rating"]));
+    scale = num(first2(raw, ["bestRating", "best", "max", "RatingRange"])) ?? scale;
+  } else {
+    value = num(raw);
+  }
+  if (value === null || value <= 0) return null;
+  if (scale && scale > 0 && scale !== 5) value = value / scale * 5;
+  else if (value > 5 && value <= 10) value = value / 2;
+  else if (value > 10 && value <= 100) value = value / 20;
+  if (value > 5) return null;
+  return Math.round(value * 10) / 10;
+}
+function bodyOf(obj) {
+  for (const key of BODY_KEYS) {
+    const v = obj[key];
+    if (typeof v === "string") {
+      const t = v.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      if (t.length >= 2) return t;
+    }
+  }
+  return null;
+}
+function flattenReview(obj) {
+  if (!isObject2(obj.details) || !isObject2(obj.metrics)) return obj;
+  const badges = isObject2(obj.badges) ? obj.badges : {};
+  return { ...obj, ...obj.details, ...obj.metrics, verifiedBuyer: badges.is_verified_buyer === true };
+}
+function looksLikeReview(raw) {
+  const obj = flattenReview(raw);
+  if (AGGREGATE_KEYS.some((key) => key in obj)) return false;
+  const rating = normalizeRating(first2(obj, RATING_KEYS), obj.bestRating);
+  if (rating === null) return false;
+  if (bodyOf(obj) !== null) return true;
+  if (str(first2(obj, TITLE_KEYS)) === null) return false;
+  return authorOf(obj) !== "Anonymous" || str(first2(obj, DATE_KEYS)) !== null;
+}
+var SMALL_WORDS = /small|tight|snug|short|narrow/i;
+var LARGE_WORDS = /large|big|loose|roomy|long|baggy|wide/i;
+function directionFrom(lowLabel, highLabel) {
+  const low = str(lowLabel) ?? "";
+  const high = str(highLabel) ?? "";
+  if (SMALL_WORDS.test(low) || LARGE_WORDS.test(high)) return true;
+  if (LARGE_WORDS.test(low) || SMALL_WORDS.test(high)) return false;
+  return null;
+}
+function labelFromId(label) {
+  return label.replace(/_\d+$/, "").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+}
+function answer(label, value, scale = null) {
+  const raw = str(label);
+  const l = raw ? labelFromId(raw) : null;
+  if (!l) return null;
+  const list = Array.isArray(value) ? value : [value];
+  const text4 = list.map((v) => str(v)).filter(Boolean).join(", ") || null;
+  const numeric = list.length === 1 ? num(list[0]) : null;
+  if (text4 === null && numeric === null) return null;
+  return { label: l, value: text4, numeric, scale };
+}
+function reviewAnswers(review) {
+  const out = [];
+  const push = (a) => {
+    if (a) out.push(a);
+  };
+  for (const key of ["customFields", "custom_fields"]) {
+    const fields = review[key];
+    if (!isObject2(fields)) continue;
+    for (const field of Object.values(fields)) {
+      if (!isObject2(field)) continue;
+      const type = str(first2(field, ["fieldType", "field_type"])) ?? "";
+      const scale = /^size$/i.test(type) ? { center: 2, half: 1, lowIsSmall: true } : null;
+      push(answer(first2(field, ["title", "question", "label"]), field.value, scale));
+    }
+  }
+  if (isObject2(review.question_answers)) {
+    for (const qa of Object.values(review.question_answers)) {
+      if (!isObject2(qa)) continue;
+      const type = str(qa.type) ?? "";
+      const values = isObject2(qa.values) ? qa.values : {};
+      const lowIsSmall = directionFrom(values.min, values.max);
+      const scale = /range/.test(type) && lowIsSmall !== null ? { center: 2, half: 2, lowIsSmall } : null;
+      push(answer(qa.label, qa.answer, scale));
+    }
+  }
+  const attrLists = [
+    review.attributes,
+    at(review, "author.attributes"),
+    at(review, "reviewer.attributes"),
+    review.productAttributes,
+    review.attributesWithRating,
+    review.reviewer_attributes,
+    review.reviewAttributes
+  ];
+  for (const list of attrLists) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      if (!isObject2(item)) continue;
+      const label = first2(item, ["label", "title", "name", "question", "attributeName"]);
+      const type = str(item.type) ?? "";
+      const options = Array.isArray(item.options) ? item.options : [];
+      let scale = null;
+      const min = num(first2(item, ["minValue", "min"]));
+      const max = num(first2(item, ["maxValue", "max"]));
+      const lowIsSmall = directionFrom(
+        first2(item, ["minLabel", "min_label"]) ?? options[0],
+        first2(item, ["maxLabel", "max_label"]) ?? options[options.length - 1]
+      );
+      if (min !== null && max !== null && max > min && lowIsSmall !== null) {
+        scale = { center: (min + max) / 2, half: (max - min) / 2, lowIsSmall };
+      } else if (/centered/i.test(type) && options.length === 3 && lowIsSmall !== null) {
+        scale = { center: 3, half: 2, lowIsSmall };
+      } else if (/centered/i.test(type) && "midLabel" in item && lowIsSmall !== null) {
+        const v = num(item.value);
+        if (v !== null && Math.abs(v) <= 1) scale = { center: 0, half: 1, lowIsSmall };
+      }
+      push(answer(label, first2(item, ["value", "answer", "values", "displayName"]), scale));
+    }
+  }
+  for (const [key, label] of [["heightRange", "height"], ["height", "height"], ["weightRange", "weight"], ["weight", "weight"], ["bodyType", "body type"], ["usualSize", "usual size"], ["usual_size", "usual size"]]) {
+    const value = review[key];
+    if (typeof value === "string" || typeof value === "number") push(answer(label, value));
+  }
+  if (typeof review.fit === "string" && !/^\d+(\.\d+)?$/.test(review.fit.trim())) push(answer("fit", review.fit));
+  if (typeof review.fit === "number" && "purchasedSize" in review && "rate" in review) {
+    push(answer("fit", review.fit, { center: 3, half: 2, lowIsSmall: true }));
+  }
+  for (const key of ["size", "sizePurchased", "size_purchased", "purchasedSize", "purchased_size", "sizeOrdered", "size_ordered", "variantSize", "variant_size"]) {
+    const value = review[key];
+    if (typeof value === "string" || typeof value === "number") push(answer("size purchased", value));
+  }
+  if (Array.isArray(review.product_options)) {
+    for (const item of review.product_options) {
+      if (isObject2(item)) push(answer(item.name ?? item.label, item.value));
+    }
+  }
+  if (isObject2(review.productVariants)) {
+    for (const [name, value] of Object.entries(review.productVariants)) push(answer(name, value));
+  }
+  for (const key of ["ContextDataValues", "AdditionalFields"]) {
+    const fields = review[key];
+    if (!isObject2(fields)) continue;
+    for (const [id, field] of Object.entries(fields)) {
+      if (!isObject2(field)) continue;
+      push(answer(first2(field, ["DimensionLabel", "Label"]) ?? id, first2(field, ["ValueLabel", "Value"])));
+    }
+  }
+  if (isObject2(review.SecondaryRatings)) {
+    for (const [id, field] of Object.entries(review.SecondaryRatings)) {
+      if (!isObject2(field)) continue;
+      const range = num(field.ValueRange);
+      const lowIsSmall = directionFrom(field.MinLabel, field.MaxLabel) ?? true;
+      const scale = range && range >= 3 ? { center: (range + 1) / 2, half: (range - 1) / 2, lowIsSmall } : null;
+      push(answer(first2(field, ["Label"]) ?? id.replace(/_\d+$/, ""), field.Value, scale));
+    }
+  }
+  if (Array.isArray(review.dimensions)) {
+    for (const item of review.dimensions) {
+      if (!isObject2(item)) continue;
+      const labels = Array.isArray(item.valueLabels) ? item.valueLabels.map((l) => str(isObject2(l) ? first2(l, ["label", "value", "name"]) : l)) : [];
+      const v = num(item.value);
+      const worded = v !== null && Number.isInteger(v) && v >= 1 && v <= labels.length ? labels[v - 1] : null;
+      push(answer(item.dimensionLabel, worded));
+    }
+  }
+  const profile = at(review, "profileAttributes.custom");
+  if (Array.isArray(profile)) {
+    for (const item of profile) if (isObject2(item)) push(answer(item.label, item.value));
+  }
+  for (const key of ["reviewOptionsList", "options", "survey_answers", "surveyAnswers", "answers", "customQuestions", "properties"]) {
+    const list = review[key];
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      if (!isObject2(item)) continue;
+      const label = first2(item, ["label", "k", "question", "title", "name", "key"]) ?? at(item, "survey_question.title") ?? at(item, "question.title");
+      push(answer(label, first2(item, ["v", "value", "answer", "response"])));
+    }
+  }
+  return out;
+}
+var SIZE_BOUGHT_LABEL = /^(size|sizes?)\??$|\b(size (purchased|ordered|bought|worn|selected|chosen|received)|purchased size|ordered size|what size did you (buy|order|purchase|get|choose)|which size did you (buy|order|purchase|get|choose)|size you (bought|ordered|purchased))\b/i;
+var USUAL_SIZE_LABEL = /usual(ly)? (wear|size)|normally wear|typical(ly)? (wear|size)|what size do you (usually|normally|typically)/i;
+var FIT_LABEL = /\bfits?\b|sizing|true to size|how (did|does|do) (it|they|this|the \w+) fit|runs? (small|large|big)|size rating/i;
+var HEIGHT_LABEL = /\bheight\b|how tall/i;
+var BUILD_LABEL = /\bweight\b|body (type|shape)|\bbuild\b/i;
+var STRICT_SIZE = /^(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL|4XL|1X|2X|3X|SMALL|MEDIUM|LARGE|X-?SMALL|X-?LARGE|XX-?LARGE|EXTRA[ -]SMALL|EXTRA[ -]LARGE|ONE SIZE|\d{1,2}(\.\d)?)$/i;
+function sizeFromVariantTitle(title) {
+  const parts = title.split(/\s*[\/|,–—]\s*|\s+-\s+/).map((p) => p.trim()).filter(Boolean);
+  const letter = parts.find((p) => STRICT_SIZE.test(p) && !/^\d/.test(p));
+  if (letter) return letter;
+  const numeric = parts.find((p) => STRICT_SIZE.test(p));
+  return numeric ?? null;
+}
+function fitTagFromAnswer(a) {
+  if (a.numeric !== null && a.scale) {
+    const offset = a.numeric - a.scale.center;
+    if (Math.abs(offset) < 1e-9) return "True to Size";
+    const towardLarge = a.scale.lowIsSmall ? offset > 0 : offset < 0;
+    const strong = Math.abs(offset) / a.scale.half >= 0.75;
+    return `${strong ? "Runs" : "Slightly"} ${towardLarge ? "Large" : "Small"}`;
+  }
+  const text4 = a.value ?? "";
+  if (!text4 || /^\d+(\.\d+)?$/.test(text4)) return null;
+  if (/true to size|just right|perfect|as expected|fits? (as expected|well|great)|accurate/i.test(text4)) return "True to Size";
+  const mild = /slightly|a bit|a little|somewhat|kind of|sort of/i.test(text4);
+  if (SMALL_WORDS.test(text4) && !LARGE_WORDS.test(text4)) return `${mild ? "Slightly" : "Runs"} Small`;
+  if (LARGE_WORDS.test(text4) && !SMALL_WORDS.test(text4)) return `${mild ? "Slightly" : "Runs"} Large`;
+  return null;
+}
+function fieldsFromAnswers(answers) {
+  const out = {};
+  for (const a of answers) {
+    if (a.scale && (FIT_LABEL.test(a.label) || /\bsize\b/i.test(a.label))) {
+      if (!out.declaredFitTag) {
+        const tag = fitTagFromAnswer(a);
+        if (tag) out.declaredFitTag = tag;
+      }
+      continue;
+    }
+    if (!out.usualSize && USUAL_SIZE_LABEL.test(a.label) && a.value) {
+      out.usualSize = a.value;
+    } else if (/\bfits?\b/i.test(a.label) && FIT_LABEL.test(a.label)) {
+      if (!out.declaredFitTag) {
+        const tag = fitTagFromAnswer(a);
+        if (tag) out.declaredFitTag = tag;
+      }
+    } else if (SIZE_BOUGHT_LABEL.test(a.label) && a.value) {
+      const exact = sizeFromVariantTitle(a.value);
+      if (!out.sizePurchased || exact && !sizeFromVariantTitle(out.sizePurchased)) out.sizePurchased = exact ?? a.value;
+    } else if (!out.declaredFitTag && FIT_LABEL.test(a.label)) {
+      const tag = fitTagFromAnswer(a);
+      if (tag) out.declaredFitTag = tag;
+    } else if (!out.reviewerHeight && HEIGHT_LABEL.test(a.label) && a.value) {
+      out.reviewerHeight = a.value;
+    } else if (!out.reviewerBuild && BUILD_LABEL.test(a.label) && a.value) {
+      out.reviewerBuild = a.value;
+    }
+  }
+  return out;
+}
+var PRODUCT_KEY_PATHS = [
+  "productId",
+  "product_id",
+  "ProductId",
+  "productExternalId",
+  "product_external_id",
+  "productSKU",
+  "productHandle",
+  "product_handle",
+  "product.shopify_id",
+  "product.external_id",
+  "product.shopify_handle",
+  "product.handle",
+  "product.id",
+  "product_variant.product_external_id",
+  "shopProductId",
+  "catItem.sku",
+  "product_page_id",
+  "reviewed_product.product_id"
+];
+var PRODUCT_NAME_PATHS = ["productName", "product_name", "OriginalProductName", "product.name", "product.title", "groupingData.productName", "catItem.title", "reviewed_product.title"];
+function authorOf(obj) {
+  for (const path2 of AUTHOR_PATHS) {
+    const v = at(obj, path2);
+    const s = typeof v === "string" ? str(v) : null;
+    if (s) return s;
+  }
+  const firstName = str(firstPath(obj, ["customer.first_name", "reviewer.first_name", "first_name", "user.firstName", "firstName"]));
+  const lastName = str(firstPath(obj, ["customer.last_name", "reviewer.last_name", "last_name", "user.lastName", "lastName"]));
+  if (firstName) return lastName ? `${firstName} ${lastName.charAt(0)}.` : firstName;
+  return "Anonymous";
+}
+function verifiedOf(obj) {
+  const v = first2(obj, ["verifiedBuyer", "verified_buyer", "isVerifiedBuyer", "verified", "isVerified", "verifiedPurchase"]);
+  if (v === true || v === 1 || v === "true" || v === "1") return true;
+  const badges = obj.Badges;
+  if (isObject2(badges) && Object.keys(badges).some((k) => /verified/i.test(k))) return true;
+  return false;
+}
+function dateOf(v) {
+  if (typeof v === "number" && Number.isFinite(v) && v > 1e9) {
+    const ms = v > 1e12 ? v : v * 1e3;
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  return str(v) ?? "";
+}
+function reviewFromJson(raw, index2) {
+  if (!looksLikeReview(raw)) return null;
+  const obj = flattenReview(raw);
+  const rating = normalizeRating(first2(obj, RATING_KEYS), obj.bestRating);
+  const fields = fieldsFromAnswers(reviewAnswers(obj));
+  const variantTitle = str(firstPath(obj, ["product_variant.title", "productVariantName", "variantName", "variant_title", "variant.title"]));
+  const sizePurchased = fields.sizePurchased ?? (variantTitle ? sizeFromVariantTitle(variantTitle) : null) ?? extractSizeFromReviewText(bodyOf(obj) ?? "");
+  const productKeys = PRODUCT_KEY_PATHS.map((p) => str(at(obj, p))?.toLowerCase().replace(/^shopify-/, "")).filter((k) => !!k);
+  return {
+    id: str(first2(obj, ID_KEYS)) ?? `json-${index2}`,
+    author: authorOf(obj),
+    sizePurchased,
+    usualSize: fields.usualSize,
+    rating: Math.min(5, Math.max(1, Math.round(rating))),
+    title: str(first2(obj, TITLE_KEYS)) ?? "",
+    body: bodyOf(obj) ?? str(first2(obj, TITLE_KEYS)) ?? "",
+    date: dateOf(first2(obj, DATE_KEYS)),
+    verifiedPurchase: verifiedOf(obj),
+    reviewerHeight: fields.reviewerHeight,
+    reviewerBuild: fields.reviewerBuild,
+    declaredFitTag: fields.declaredFitTag,
+    productKeys: [...new Set(productKeys)],
+    productName: str(firstPath(obj, PRODUCT_NAME_PATHS))
+  };
+}
+var TOTAL_PATHS = [
+  "bottomline.totalReview",
+  "bottomline.total_review",
+  "TotalResults",
+  "response.TotalResults",
+  "pagination.total",
+  "rollup.review_count",
+  "data.rollup.review_count",
+  "results.0.rollup.review_count",
+  "summary.review_count",
+  "reviewAggregate.reviewCount",
+  "aggregate.reviewCount",
+  "total_reviews",
+  "totalReviews",
+  "reviewCount",
+  "review_count",
+  "total"
+];
+function reportedTotalOf(root2) {
+  if (!isObject2(root2)) return null;
+  for (const path2 of TOTAL_PATHS) {
+    const v = num(at(root2, path2));
+    if (v !== null && v >= 0 && Number.isInteger(v)) return v;
+  }
+  return null;
+}
+var CONTAINER_TOTAL_KEYS = ["total", "totalCount", "total_count", "totalResults", "TotalResults", "totalReviews", "total_reviews", "reviewCount", "review_count", "numberOfReviews"];
+function extractReviewsFromJson(root2) {
+  const reviews = [];
+  const seen = /* @__PURE__ */ new Set();
+  let containerTotal = null;
+  const walk = (v, depth, parent2 = null) => {
+    if (depth > 40 || v === null || typeof v !== "object" || seen.has(v)) return;
+    seen.add(v);
+    if (Array.isArray(v)) {
+      const before2 = reviews.length;
+      for (const item of v) walk(item, depth + 1);
+      if (reviews.length > before2 && parent2 && containerTotal === null) {
+        for (const key of CONTAINER_TOTAL_KEYS) {
+          const total = num(parent2[key]);
+          if (total !== null && Number.isInteger(total) && total >= 0) {
+            containerTotal = total;
+            break;
+          }
+        }
+        if (containerTotal === null) containerTotal = reportedTotalOf(parent2);
+      }
+      return;
+    }
+    const review = reviewFromJson(v, reviews.length);
+    if (review) {
+      reviews.push(review);
+      return;
+    }
+    for (const child of Object.values(v)) walk(child, depth + 1, v);
+  };
+  walk(root2, 0);
+  return { reviews, reportedTotal: reviews.length > 0 ? reportedTotalOf(root2) ?? containerTotal : null };
+}
+function parseJsonBody(body) {
+  const t = body.trim();
+  if (!t || t[0] !== "{" && t[0] !== "[") return null;
+  try {
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
+}
+function normName(s) {
+  return s.toLowerCase().replace(/[®™]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+}
+function reviewMatchesProduct(review, responseKeys, product) {
+  const keys = review.productKeys.length > 0 ? review.productKeys : responseKeys;
+  if (keys.length > 0 && product.keys.length > 0) {
+    if (keys.some((k) => product.keys.includes(k))) return true;
+  }
+  if (review.productName && product.name) {
+    const a = normName(review.productName.split("|")[0]);
+    const b = normName(product.name.split("|")[0]);
+    if (a && b && (a.startsWith(b) || b.startsWith(a))) return true;
+  }
+  if (keys.length === 0 && !review.productName) return null;
+  return false;
+}
+function keysFromUrl(url) {
+  try {
+    const u = new URL(url);
+    const parts = [...u.pathname.split("/"), ...[...u.searchParams.values()].flatMap((v) => v.split(/[:,=]/))];
+    return [...new Set(parts.map((p) => decodeURIComponent(p).toLowerCase()).filter((p) => /^\d{5,}$/.test(p) || /^shopify-\d+$/.test(p)).map((p) => p.replace(/^shopify-/, "")))];
+  } catch {
+    return [];
+  }
+}
+function reviewIdentity(review) {
+  if (!review.id.startsWith("json-")) return `id:${review.id}`;
+  const body = review.body.toLowerCase().replace(/\s+/g, " ").trim();
+  return `body:${review.author.toLowerCase()}:${body.slice(0, 60)}`;
+}
+function dedupeKey(review) {
+  return [reviewIdentity(review)];
+}
+function collectJsonReviews(sources, product) {
+  const kept = [];
+  const seen = /* @__PURE__ */ new Set();
+  const hosts = /* @__PURE__ */ new Set();
+  let reportedTotal = null;
+  const sets = sources.map((source) => {
+    const set = extractReviewsFromJson(source.value);
+    const urlKeys = source.url.startsWith("page:") ? [] : keysFromUrl(source.url);
+    return { source, set, urlKeys, verdicts: set.reviews.map((r) => reviewMatchesProduct(r, urlKeys, product)) };
+  });
+  const someSourceMatches = sets.some((s) => s.verdicts.includes(true));
+  const ownListOf = ({ set, urlKeys, verdicts }) => {
+    const matched = verdicts.filter((v) => v === true).length;
+    return urlKeys.some((k) => product.keys.includes(k)) || matched > 0 && set.reportedTotal !== null || set.reviews.length > 0 && matched * 2 >= set.reviews.length;
+  };
+  const sharedEndpoint = (url) => /graphql|\/batch(\.json)?\/?$|\/widgets?\/fetch/i.test(pathOf(url));
+  const ownPaths = new Set(
+    sets.filter((s) => s.set.reviews.length > 0 && ownListOf(s) && !sharedEndpoint(s.source.url)).map((s) => pathOf(s.source.url))
+  );
+  for (const entry of sets) {
+    const { source, set, verdicts } = entry;
+    if (set.reviews.length === 0) continue;
+    const anyMatch = verdicts.includes(true);
+    const anyOther = verdicts.includes(false);
+    const ownList = ownListOf(entry) || !source.url.startsWith("page:") && !sharedEndpoint(source.url) && ownPaths.has(pathOf(source.url));
+    if (anyOther && !anyMatch && !ownList) continue;
+    if (!anyMatch && !ownList && someSourceMatches && !source.url.startsWith("page:")) continue;
+    let added = 0;
+    set.reviews.forEach((review, i) => {
+      if (!ownList && verdicts[i] === false) return;
+      if (!ownList && verdicts[i] === null && anyOther) return;
+      const keys = dedupeKey(review);
+      if (keys.some((k) => seen.has(k))) return;
+      keys.forEach((k) => seen.add(k));
+      kept.push(review);
+      added++;
+    });
+    if (added > 0 || anyMatch) {
+      hosts.add(source.url.startsWith("page:") ? "page" : safeHost(source.url));
+      if (set.reportedTotal !== null) reportedTotal = Math.max(reportedTotal ?? 0, set.reportedTotal);
+    }
+  }
+  return { reviews: kept, reportedTotal, sources: [...hosts] };
+}
+function pathOf(url) {
+  try {
+    const u = new URL(url);
+    return u.origin + u.pathname;
+  } catch {
+    return url;
+  }
+}
+function safeHost(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+// webscraper/sizeChart.ts
+var LETTERS = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+function round1(n) {
+  return Math.round((n + Number.EPSILON) * 10) / 10;
+}
+function toCm(value, unit) {
+  return unit === "in" ? value * 2.54 : value;
+}
+function chartSizeCode(raw) {
+  const cleaned = raw.replace(/\s+/g, " ").trim().toUpperCase();
+  if (!cleaned || cleaned.length > 24) return null;
+  const letters = {
+    XS: "XS",
+    "X-SMALL": "XS",
+    "XSMALL": "XS",
+    "EXTRA SMALL": "XS",
+    S: "S",
+    SM: "S",
+    SMALL: "S",
+    M: "M",
+    MED: "M",
+    MEDIUM: "M",
+    L: "L",
+    LG: "L",
+    LARGE: "L",
+    XL: "XL",
+    "X-LARGE": "XL",
+    XLARGE: "XL",
+    "EXTRA LARGE": "XL",
+    "1XL": "XL",
+    XXL: "XXL",
+    "2XL": "XXL",
+    "XX-LARGE": "XXL",
+    XXXL: "XXXL",
+    "3XL": "XXXL"
+  };
+  if (letters[cleaned]) return letters[cleaned];
+  const word = cleaned.match(/\b(XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
+  if (word && letters[word[1]]) return letters[word[1]];
+  const numeric = cleaned.match(/^(?:US|UK|EU|IT|FR|JP)?\s*(\d{1,3})(?:\s*\((?:US|UK|EU|IT|FR|JP)\))?$/);
+  if (numeric) return numeric[1];
+  return null;
+}
+function sortOrder(size, index2) {
+  const letter = LETTERS.indexOf(size);
+  if (letter >= 0) return letter;
+  if (size === "00") return 999;
+  const numeric = Number(size);
+  if (/^\d+$/.test(size) && Number.isFinite(numeric)) return 1e3 + numeric;
+  return 2e3 + index2;
+}
+function unitInText(text4) {
+  const h = text4.toLowerCase();
+  if (/\bcm\b|centimet(?:er|re)s?/.test(h)) return "cm";
+  if (/\binches\b|\binch\b|\(in\)|\bin\./.test(h)) return "in";
+  return null;
+}
+function unitFromToggle($2, node) {
+  for (const box of $2(node).parents().toArray()) {
+    const checked = /* @__PURE__ */ new Set();
+    let found = false;
+    $2(box).find('input[type="radio"]').each((_i, radio) => {
+      const el = $2(radio);
+      const id = el.attr("id") ?? "";
+      if (!/unit|measure/i.test(`${el.attr("name") ?? ""} ${id}`)) return;
+      const label = [
+        id,
+        el.attr("value") ?? "",
+        el.attr("aria-label") ?? "",
+        id ? $2(`label[for="${id}"]`).text() : "",
+        el.closest("label").text()
+      ].join(" ");
+      const isCm = /\b(cm|centimet(?:er|re)s?)\b/i.test(label);
+      const isIn = /\b(in|inch|inches)\b/i.test(label);
+      if (isCm === isIn) return;
+      found = true;
+      const aria = el.attr("aria-checked");
+      if (aria === void 0 ? el.is("[checked]") : aria === "true") checked.add(isCm ? "cm" : "in");
+    });
+    if (found) return checked.size === 1 ? [...checked][0] : null;
+  }
+  return null;
+}
+var UNICODE_FRACTIONS = {
+  "\xBD": 0.5,
+  "\xBC": 0.25,
+  "\xBE": 0.75,
+  "\u215B": 0.125,
+  "\u215C": 0.375,
+  "\u215D": 0.625,
+  "\u215E": 0.875
+};
+function tapeFraction(num2, den) {
+  const n = Number(num2);
+  const d = Number(den);
+  if (![2, 4, 8, 16].includes(d) || n <= 0 || n >= d) return null;
+  return n / d;
+}
+function readMeasurement(raw) {
+  const text4 = raw.replace(/(\d),(\d{1,2})(?!\d)/g, "$1.$2");
+  const mixed = text4.match(/(\d+)\s+(\d+)\s*\/\s*(\d+)/);
+  if (mixed) {
+    const fraction = tapeFraction(mixed[2], mixed[3]);
+    return fraction === null ? null : Number(mixed[1]) + fraction;
+  }
+  const unicode = text4.match(/(\d+(?:\.\d+)?)\s*([½¼¾⅛⅜⅝⅞])/);
+  if (unicode) return Number(unicode[1]) + UNICODE_FRACTIONS[unicode[2]];
+  const bare = text4.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  if (bare) return tapeFraction(bare[1], bare[2]);
+  const match = text4.match(/(\d+(?:\.\d+)?)/);
+  if (!match) return null;
+  const value = Number(match[1]);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return value;
+}
+var UNIT_PAIR = /(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[½¼¾⅛⅜⅝⅞])?)\s*(cm|centimet(?:er|re)s?|in(?:ch(?:es)?)?\b|"|″)/gi;
+function parseCell(raw, tableUnit) {
+  const text4 = raw.replace(/\s+/g, " ").trim();
+  if (!text4 || /^(-|–|—|n\/a|null|unknown)$/i.test(text4)) return null;
+  if (/[\d½¼¾⅛⅜⅝⅞]\s*[-–—]\s*\d/.test(text4)) return null;
+  const pairs = [...text4.matchAll(UNIT_PAIR)].map((m) => ({
+    value: readMeasurement(m[1]),
+    unit: /^c/i.test(m[2]) ? "cm" : "in"
+  }));
+  if (pairs.length > 1) {
+    const pick = pairs.find((p) => p.unit === "cm" && p.value !== null) ?? pairs.find((p) => p.value !== null);
+    return pick && pick.value !== null && pick.value > 0 ? { value: pick.value, unit: pick.unit } : null;
+  }
+  const value = readMeasurement(text4);
+  if (value === null || value <= 0) return null;
+  const unit = /cm\b/i.test(text4) ? "cm" : /in(?:ch(?:es)?)?\b|"|″/.test(text4) ? "in" : tableUnit;
+  if (!unit) return null;
+  return { value, unit };
+}
+function chestKind(header) {
+  const h = header.toLowerCase();
+  if (!/\b(chest|bust|pit)\b|body width/.test(h)) return null;
+  if (/pit[\s-]*to[\s-]*pit|body width|chest width|half chest|flat|across chest|laid flat/.test(h)) {
+    return "flat";
+  }
+  if (/circumference|all around|full chest|around bust|around chest/.test(h)) return "circumference";
+  return "unspecified";
+}
+function measureCol(header) {
+  if (chestKind(header)) return "chest";
+  const h = header.toLowerCase();
+  if (/\bsleeve\b|\barm length\b/.test(h)) return "sleeve";
+  if (/\blength\b/.test(h) && !/\bsleeve\b/.test(h)) return "length";
+  return null;
+}
+function isSizeHeader(header) {
+  const h = header.toLowerCase().trim();
+  return h === "" || h === "size" || h === "sizes" || h === "size (us)" || /^size\b/.test(h);
+}
+function chestCm(value, unit, kind) {
+  if (kind === "unspecified") return null;
+  const cm = toCm(value, unit);
+  return round1(kind === "flat" ? cm : cm / 2);
+}
+function parseHtmlTable(headers, body, tableUnit) {
+  let sizeIdx = headers.findIndex((h) => isSizeHeader(h));
+  if (sizeIdx < 0) sizeIdx = 0;
+  const cols = [];
+  headers.forEach((header, index2) => {
+    if (index2 === sizeIdx) return;
+    const kind = measureCol(header);
+    if (!kind) return;
+    cols.push({ index: index2, kind, chest: kind === "chest" ? chestKind(header) : null });
+  });
+  if (cols.length === 0) return null;
+  const rows = [];
+  const seen = /* @__PURE__ */ new Set();
+  let tableHasValue = false;
+  body.forEach((cells, index2) => {
+    const size = chartSizeCode(cells[sizeIdx] ?? "");
+    if (!size || seen.has(size)) return;
+    const row = {
+      size,
+      sortOrder: sortOrder(size, index2),
+      chest_cm: null,
+      length_cm: null,
+      sleeve_cm: null
+    };
+    let any = false;
+    for (const col of cols) {
+      const parsed = parseCell(cells[col.index] ?? "", tableUnit);
+      if (!parsed) continue;
+      if (col.kind === "chest" && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest);
+      if (col.kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
+      if (col.kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
+      if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
+    }
+    if (any) tableHasValue = true;
+    seen.add(size);
+    rows.push(row);
+  });
+  return tableHasValue ? { rows } : null;
+}
+function parseTransposedTable(headers, body, tableUnit) {
+  const seen = /* @__PURE__ */ new Set();
+  const sizes = headers.slice(1).map((cell) => {
+    const size = chartSizeCode(cell);
+    if (!size || seen.has(size)) return null;
+    seen.add(size);
+    return size;
+  });
+  if (sizes.filter(Boolean).length < 2) return null;
+  const rows = [];
+  sizes.forEach((size, index2) => {
+    if (!size) return;
+    rows.push({
+      size,
+      sortOrder: sortOrder(size, index2),
+      chest_cm: null,
+      length_cm: null,
+      sleeve_cm: null
+    });
+  });
+  let any = false;
+  for (const cells of body) {
+    const kind = measureCol(cells[0] ?? "");
+    if (!kind) continue;
+    const rowUnit = unitInText(cells[0] ?? "") ?? tableUnit;
+    const chest = kind === "chest" ? chestKind(cells[0] ?? "") : null;
+    sizes.forEach((size, index2) => {
+      if (!size) return;
+      const row = rows.find((item) => item.size === size);
+      if (!row) return;
+      const parsed = parseCell(cells[index2 + 1] ?? "", rowUnit);
+      if (!parsed) return;
+      if (kind === "chest" && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
+      if (kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
+      if (kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
+      if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
+    });
+  }
+  return any ? { rows } : null;
+}
+function cellText($2, cell) {
+  const parts = [];
+  const walk = (node) => {
+    $2(node).contents().each((_i, child) => {
+      if (child.type === "text") parts.push(child.data);
+      else if (child.type === "tag") walk(child);
+    });
+  };
+  walk(cell);
+  return parts.join(" ").replace(/\s+/g, " ").trim();
+}
+function tableGrid($2, table) {
+  const grid = [];
+  $2(table).find("tr").each((_r, tr) => {
+    const cells = [];
+    $2(tr).children("th, td").each((_c, cell) => {
+      cells.push(cellText($2, cell));
+    });
+    if (cells.length > 0) grid.push(cells);
+  });
+  return grid;
+}
+function rowsFromTables(html3) {
+  const $2 = load(html3);
+  let best = [];
+  $2("table").each((_i, table) => {
+    const node = $2(table);
+    const grid = tableGrid($2, table);
+    if (grid.length < 2) return;
+    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
+    if (headerAt < 0) return;
+    const context = [node.find("caption").text(), node.attr("class") ?? "", node.prev().text(), grid[headerAt].join(" ")].join(" ");
+    const unit = unitInText(context) ?? unitFromToggle($2, table);
+    const parsed = preferChart(
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
+      parseTransposedTable(grid[0], grid.slice(1), unit)
+    );
+    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+  });
+  return best.length > 0 ? best : rowsFromDivCharts($2);
+}
+function filledMeasurements(rows) {
+  if (!rows) return 0;
+  return rows.reduce(
+    (count, row) => count + [row.chest_cm, row.length_cm, row.sleeve_cm].filter((value) => value !== null).length,
+    0
+  );
+}
+function preferChart(byRow, byColumn) {
+  if (filledMeasurements(byColumn?.rows) > filledMeasurements(byRow?.rows)) return byColumn;
+  return byRow;
+}
+function cellTexts($2, node) {
+  const cells = [];
+  $2(node).children().each((_i, child) => {
+    const text4 = $2(child).text().replace(/\s+/g, " ").trim();
+    if (text4) cells.push(text4);
+  });
+  return cells;
+}
+function rowsFromDivCharts($2) {
+  let best = [];
+  $2('[class*="size-chart"], [class*="sizechart"], [class*="size-guide"], [class*="sizeguide"], [id*="size-chart"], [id*="size-guide"]').each((_i, box) => {
+    if ($2(box).is("table") || $2(box).find("table").length > 0) return;
+    const grid = [];
+    $2(box).find('li, [class*="row"]').each((_r, row) => {
+      const cells = cellTexts($2, row);
+      if (cells.length >= 2) grid.push(cells);
+    });
+    if (grid.length < 2) return;
+    const context = [$2(box).attr("class") ?? "", $2(box).attr("id") ?? "", grid[0].join(" ")].join(" ");
+    const unit = unitInText(context) ?? unitFromToggle($2, box);
+    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
+    if (headerAt < 0) return;
+    const parsed = preferChart(
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
+      parseTransposedTable(grid[0], grid.slice(1), unit)
+    );
+    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+  });
+  return best;
+}
+function parseSizeChart(html3) {
+  const rows = rowsFromTables(html3);
+  return rows.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+function parseSizeChartFirst(...pages) {
+  for (const html3 of pages) {
+    if (!html3) continue;
+    const rows = parseSizeChart(html3);
+    if (rows.length > 0) return rows;
+  }
+  return [];
+}
+
 // webscraper/headlessFetch.ts
-var REVIEW_CARD_SELECTOR = '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
-var USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+var REVIEW_CARD_SELECTOR = '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 var NAV_TIMEOUT_MS = 45e3;
-var RENDER_DEADLINE_MS = 9e4;
+var RENDER_DEADLINE_MS = 12e4;
+var RENDER_TAIL_MS = 25e3;
 var REVIEW_WAIT_MS = 1e4;
-var MAX_LOAD_MORE_CLICKS = 5;
-var MAX_INFINITE_SCROLL_ROUNDS = 10;
-var MAX_REVIEWS = 200;
+var MAX_REVIEW_PAGES = 60;
+var MAX_REVIEWS = 300;
+var MAX_LINKED_REVIEW_PAGES = 15;
+var MAX_CAPTURED_BODY_BYTES = 5e6;
+var MAX_CAPTURED_TOTAL_BYTES = 3e7;
+var REVIEW_WIDGET_SELECTOR = [
+  "#yotpo-main-widget",
+  ".yotpo-main-widget",
+  '[class*="yotpo-reviews"]',
+  ".yotpo-display-wrapper",
+  ".okeReviews",
+  "[data-oke-reviews-widget]",
+  "[data-oke-widget]",
+  ".jdgm-widget",
+  ".jdgm-rev-widg",
+  "#judgeme_product_reviews",
+  "#stamped-main-widget",
+  ".stamped-main-widget",
+  "#stamped-reviews-widget",
+  '[class*="junip"]',
+  "junip-product-reviews",
+  "[data-bv-show]",
+  "#BVRRContainer",
+  '[class*="bv-rnr"]',
+  '[class*="bv_main"]',
+  '[class*="bv-pagination"]',
+  "[data-bv-v]",
+  "#pr-reviewdisplay",
+  ".pr-review-display",
+  ".kl_reviews",
+  '[class*="kl_reviews"]',
+  "#klaviyo-reviews-all",
+  ".loox-reviews-default",
+  "#looxReviews",
+  ".reviews-io-widget",
+  "#ReviewsWidget",
+  "#full-page-widget",
+  "#reviews",
+  "#Reviews",
+  "#product-reviews",
+  '[id*="review" i]:not([id*="preview" i])',
+  '[class*="review" i]:not([class*="preview" i])'
+].join(", ");
+var RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating|rate)"\s*:/;
+var JSONP = /^[\w$.]+\(\s*([\s\S]*?)\s*\)\s*;?\s*$/;
+var JsonCapture = class {
+  constructor() {
+    this.items = [];
+    this.bytes = 0;
+    this.pending = /* @__PURE__ */ new Set();
+    /** Rough count of rating fields seen, used to stop paging once enough reviews loaded. */
+    this.ratingFields = 0;
+    this.counted = /* @__PURE__ */ new Set();
+    this.countedItems = 0;
+    this.statedTotal = null;
+    this.statedTotalFrom = 0;
+  }
+  offer(url, status, contentType, read) {
+    if (status < 200 || status >= 300) return;
+    const isJson = /json/i.test(contentType);
+    const maybeJsonp = /javascript|text\/plain/i.test(contentType) && /review|rating|ugc|bazaarvoice|batch/i.test(url);
+    if (!isJson && !maybeJsonp) return;
+    const job = read().then((raw) => this.add(url, raw)).catch(() => {
+    }).finally(() => this.pending.delete(job));
+    this.pending.add(job);
+  }
+  add(url, raw) {
+    if (raw.length > MAX_CAPTURED_BODY_BYTES || this.bytes + raw.length > MAX_CAPTURED_TOTAL_BYTES) return;
+    let body = raw.trim();
+    const wrapped = body[0] !== "{" && body[0] !== "[" ? JSONP.exec(body) : null;
+    if (wrapped) body = wrapped[1];
+    if (body[0] !== "{" && body[0] !== "[") return;
+    if (!RATING_FIELD.test(body)) return;
+    this.items.push({ url, body });
+    this.bytes += body.length;
+    this.ratingFields += (body.match(new RegExp(RATING_FIELD.source, "g")) ?? []).length;
+  }
+  /** Distinct reviews in the JSON kept so far (by id, else by the start of the text). */
+  reviewCount() {
+    for (; this.countedItems < this.items.length; this.countedItems++) {
+      const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
+      for (const r of set.reviews) this.counted.add(reviewIdentity(r));
+      if (set.reportedTotal !== null && set.reviews.length >= this.statedTotalFrom) {
+        this.statedTotal = set.reportedTotal;
+        this.statedTotalFrom = set.reviews.length;
+      }
+    }
+    return this.counted.size;
+  }
+  /** The largest product review total the kept JSON states, or null. */
+  reportedTotal() {
+    this.reviewCount();
+    return this.statedTotal;
+  }
+  async settle(timeoutMs = 3e3) {
+    await Promise.race([Promise.all([...this.pending]), new Promise((r) => setTimeout(r, timeoutMs))]);
+  }
+};
 function shouldUseHeadlessRender(input) {
   if (!input.isRemoteUrl || input.renderMode === "never" || input.staticFailed) return false;
   if (input.renderMode === "always") return true;
-  return input.reviewCount === null || input.reviewCount === 0;
+  if (input.reviewCount === null || input.reviewCount === 0) return true;
+  if (typeof input.reportedReviewCount === "number" && input.reviewCount >= input.reportedReviewCount) return false;
+  return true;
 }
 var browserPromise = null;
 var renderTail = Promise.resolve();
 var SERVERLESS_CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar";
+function startUrlAllowsPrivate(raw) {
+  try {
+    return isBlockedHostname(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
+}
 function renderBudgetMs() {
   return process.env.VERCEL ? 5e4 : RENDER_DEADLINE_MS;
 }
@@ -89370,15 +90528,199 @@ async function clickFirst(page, role, name) {
   }
   return false;
 }
-async function scrollThroughPage(page) {
-  await page.evaluate(`(async () => {
-    const step = Math.max(400, Math.floor(window.innerHeight * 0.8));
-    for (let y = 0; y < document.body.scrollHeight && y < 40000; y += step) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 150));
+var DEEP_QUERY = `const deepAll = (selector, root = document) => {
+  const out = [...root.querySelectorAll(selector)];
+  for (const el of root.querySelectorAll('*')) if (el.shadowRoot) out.push(...deepAll(selector, el.shadowRoot));
+  return out;
+};`;
+var OPEN_RATING_SUMMARY = `(() => {
+  ${DEEP_QUERY}
+  for (const el of deepAll('a, button, [role="button"]')) {
+    const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (label.length > 90 || !/out of 5[^a-z]*\\(?\\d|out of 5\\b.*\\b\\d[\\d,]* (reviews?|ratings?)\\b|\\(\\d[\\d,]*\\)|^\\d[\\d,]* (reviews?|ratings?)\\b/i.test(label)) continue;
+    const href = el.getAttribute('href') || '';
+    if (el.tagName === 'A' && href && !/^(#|javascript:)/i.test(href)) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    el.click();
+    return label.slice(0, 40);
+  }
+  return '';
+})()`;
+var ALL_REVIEWS_LINK = `(() => {
+  ${DEEP_QUERY}
+  const base = location.pathname.replace(/\\/$/, '');
+  for (const el of deepAll('a[href]')) {
+    const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!/^(see|view|read|show)( all)?( \\d[\\d,]*)? reviews?\\b|^all reviews\\b/i.test(label)) continue;
+    try {
+      const target = new URL(el.getAttribute('href'), location.href);
+      if (target.origin === location.origin && target.pathname.startsWith(base + '/') && /review/i.test(target.pathname)) return target.href;
+    } catch (e) {}
+  }
+  return '';
+})()`;
+var NEXT_REVIEW_PAGE_LINK = `(() => {
+  if (!/review/i.test(location.pathname)) return '';
+  const pageOf = (u) => Number((u.pathname.match(/\\/page\\/(\\d+)\\/?$/) || [])[1] || (u.search.match(/[?&](?:page|pg)=(\\d+)/) || [])[1] || 1);
+  const base = location.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '');
+  // The other query parameters (a star filter, another sort) must match, or the link is another list.
+  const otherParams = (u) => {
+    const params = new URLSearchParams(u.search);
+    params.delete('page');
+    params.delete('pg');
+    params.sort();
+    return params.toString();
+  };
+  const here = new URL(location.href);
+  const current = pageOf(here);
+  for (const a of document.querySelectorAll('a[href]')) {
+    let target;
+    try { target = new URL(a.getAttribute('href'), location.href); } catch (e) { continue; }
+    if (target.origin !== location.origin) continue;
+    const samePath = target.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '') === base;
+    if (samePath && otherParams(target) === otherParams(here) && pageOf(target) === current + 1) return target.href;
+  }
+  return '';
+})()`;
+var SCROLL_TO_END = `(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const step = Math.max(400, Math.floor(window.innerHeight * 0.8));
+  let y = 0;
+  let stable = 0;
+  let lastHeight = 0;
+  const started = Date.now();
+  while (y < 80000 && Date.now() - started < 15000) {
+    y += step;
+    window.scrollTo(0, y);
+    await sleep(120);
+    const height = document.documentElement.scrollHeight;
+    if (y + window.innerHeight >= height) {
+      stable = height === lastHeight ? stable + 1 : 0;
+      lastHeight = height;
+      if (stable >= 3) break;
+      await sleep(400);
     }
-  })()`);
-}
+  }
+})()`;
+var SCROLL_TO_BOTTOM = `(() => { window.scrollTo(0, document.documentElement.scrollHeight); return 'scroll'; })()`;
+var REVIEW_WIDGETS_INTO_VIEW = `(async () => {
+  ${DEEP_QUERY}
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const seen = [];
+  for (const el of deepAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
+    if (seen.some((s) => s.contains(el))) continue;
+    seen.push(el);
+    el.scrollIntoView({ block: 'center' });
+    await sleep(350);
+    if (seen.length >= 12) break;
+  }
+  return seen.length;
+})()`;
+var CLICK_NEXT_REVIEWS = `((skip) => {
+  ${DEEP_QUERY}
+  // "Read more" expands one review's text; it never loads more reviews.
+  const MORE = /^(load|show|see|view) (more|all|\\d+ more)( reviews?)?$|^more reviews$/i;
+  const NEXT = /^(next|next page|next reviews?|\u203A|\xBB|\u2192|>|go to next page)$/i;
+  const visible = (el) => {
+    const r = el.getBoundingClientRect();
+    const st = window.getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && st.display !== 'none';
+  };
+  const disabled = (el) =>
+    el.disabled || el.getAttribute('aria-disabled') === 'true' || /(^|\\s)(is-)?disabled(\\s|$)/.test(String(el.className || ''));
+  const seen = new Set();
+  const found = [];
+  for (const box of deepAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
+    for (const el of deepAll('button, a, [role="button"], [role="link"]', box)) {
+      if (seen.has(el)) continue;
+      seen.add(el);
+      const aria = el.getAttribute('aria-label') || '';
+      // Decoration around the words: "+ Load More Reviews", "Load More Reviews (73 remaining)".
+      const label = (aria || el.textContent || el.getAttribute('title') || '')
+        .replace(/\\s+/g, ' ')
+        .trim()
+        .replace(/^[^a-z0-9\u203A\xBB\u2192>]+/i, '')
+        // Only a count of what is left: "See all (12)" (customer photos) must not become "See all".
+        .replace(/\\s*\\(\\d[\\d,]* (remaining|more|left)\\)$/i, '');
+      if (/about this review|this review'?s? (text|content)/i.test(aria)) continue;
+      const isMore = MORE.test(label);
+      const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);
+      if (!isMore && !isNext) continue;
+      if (el.tagName === 'A') {
+        // Same-page links only: "#\u2026", "javascript:\u2026", "?\u2026" (Okendo's ?okeReviewsNextUrl=\u2026), or this page's
+        // own path with other parameters (Bazaarvoice's "Next Reviews" links to ?bvstate=pg:2).
+        const href = el.getAttribute('href') || '';
+        if (href && !/^(#|javascript:|\\?)/i.test(href)) {
+          let same = false;
+          try {
+            const target = new URL(href, location.href);
+            same = target.origin === location.origin && target.pathname === location.pathname;
+          } catch (e) {}
+          if (!same) continue;
+        }
+      }
+      // A "next" beside numbered page buttons is the review list's pager, not a picture slider.
+      const pager = isNext && el.parentElement && [...el.parentElement.querySelectorAll('button, a, [role="button"]')]
+        .some((b) => /^(page )?\\d+$/i.test((b.getAttribute('aria-label') || b.textContent || '').trim()));
+      // Other arrows inside a photo carousel or slider are not review paging.
+      if (isNext && !isMore && !pager && el.closest('[class*="carousel" i], [class*="slider" i], [class*="swiper" i], [class*="slick" i], [class*="gallery" i], [class*="media" i]')) continue;
+      if (!visible(el) || disabled(el)) continue;
+      found.push({ el, isMore, label, rank: isMore ? 3 : pager ? 2 : 1 });
+    }
+  }
+  // Fallback: a "load more reviews" button that sits outside the widget (buttons only, never links).
+  if (found.length === 0) {
+    for (const el of deepAll('button, [role="button"]')) {
+      const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+      if (/^(load|show|see|view) more( reviews?)?$/i.test(label) && visible(el) && !disabled(el)) {
+        found.push({ el, isMore: true, label, rank: 3 });
+        break;
+      }
+    }
+  }
+  // A control that loaded nothing last time is skipped, so the next candidate gets a turn.
+  const pick = found.filter((f) => !skip.includes(f.label.slice(0, 40) || 'next')).sort((a, b) => b.rank - a.rank)[0];
+  if (!pick) return '';
+  // Mark it, so a real pointer click can be sent to the same control if this script click does nothing.
+  for (const el of deepAll('[data-pearfit-paging]')) el.removeAttribute('data-pearfit-paging');
+  pick.el.setAttribute('data-pearfit-paging', '1');
+  pick.el.scrollIntoView({ block: 'center' });
+  pick.el.click();
+  return pick.label.slice(0, 40) || 'next';
+})`;
+var SORT_NEWEST = `((step) => {
+  ${DEEP_QUERY}
+  const NEWEST = /^(sort( by)?:?\\s*)?(most recent|newest( first| to oldest)?|date,? newest( first)?|date \\(newest\\)|recent|latest)$/i;
+  const boxes = deepAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)});
+  const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  const text = (el) => (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+  if (step === 'select') {
+    for (const box of boxes) {
+      for (const select of deepAll('select', box)) {
+        const option = [...select.options].find((o) => NEWEST.test(o.textContent.trim()));
+        if (!option || select.value === option.value) continue;
+        select.value = option.value;
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        return 'select:' + option.textContent.trim();
+      }
+    }
+    return '';
+  }
+  if (step === 'open') {
+    for (const box of boxes) {
+      for (const el of deepAll('button, [role="button"], [role="combobox"], [aria-haspopup]', box)) {
+        if (/^sort\\b|sort by/i.test(text(el)) && visible(el)) { el.click(); return 'open:' + text(el).slice(0, 30); }
+      }
+    }
+    return '';
+  }
+  for (const el of deepAll('[role="option"], [role="menuitem"], [role="menuitemradio"], li, button, a[href^="#"], a:not([href])')) {
+    if (NEWEST.test(text(el)) && visible(el) && el.getAttribute('aria-selected') !== 'true') { el.click(); return 'pick:' + text(el); }
+  }
+  return '';
+})`;
 var SERIALIZE_WITH_SHADOW_ROOTS = `(() => {
   const parts = [];
   const walk = (root) => {
@@ -89427,15 +90769,24 @@ async function renderPageHtmlOnce(url) {
 async function renderWithPlaywright(url) {
   const browser = await getBrowser();
   const context = await browser.newContext({
-    userAgent: USER_AGENT,
     locale: "en-US",
     viewport: { width: 1366, height: 900 }
   });
-  await context.route("**/*", (route) => {
+  const allowPrivate = startUrlAllowsPrivate(url);
+  const hostIsBlocked = createRequestHostGuard();
+  await context.route("**/*", async (route) => {
     const type = route.request().resourceType();
-    return type === "image" || type === "media" || type === "font" ? route.abort() : route.continue();
+    if (type === "image" || type === "media" || type === "font") return route.abort();
+    if (!allowPrivate && await hostIsBlocked(route.request().url())) return route.abort();
+    return route.continue();
   });
   const page = await context.newPage();
+  const capture = new JsonCapture();
+  page.on("response", (response) => {
+    capture.offer(response.url(), response.status(), response.headers()["content-type"] ?? "", () => response.text());
+  });
+  const startedAt = Date.now();
+  const stopPagingAt = startedAt + renderBudgetMs() - RENDER_TAIL_MS;
   let timedOut = false;
   const deadline = setTimeout(() => {
     timedOut = true;
@@ -89446,45 +90797,123 @@ async function renderWithPlaywright(url) {
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: "", status, finalUrl: page.url(), reviewSelectorFound: false };
+      return { html: "", status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
     }
     await page.waitForLoadState("networkidle", { timeout: 8e3 }).catch(() => {
     });
     await clickFirst(page, "button", /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
-    await scrollThroughPage(page);
+    await page.evaluate(SCROLL_TO_END);
+    let chartHtml = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
     const reviewsBeforeOpening = await countReviews(page);
-    const openedSection = await clickFirst(page, "tab", /reviews?/i) || await clickFirst(page, "button", /^(customer )?reviews?\b/i) || !await hasReviews(page) && await clickFirst(page, "link", /^(read |see |customer )?(all )?reviews?\b/i);
+    const openedSection = await clickFirst(page, "tab", /reviews?/i) || await clickFirst(page, "button", /^(customer )?reviews?\b/i) || !await hasReviews(page) && capture.ratingFields === 0 && await clickFirst(page, "link", /^(read |see |customer )?(all )?reviews?\b/i);
     if (openedSection) {
       await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
       });
       await waitForMoreReviews(page, reviewsBeforeOpening, REVIEW_WAIT_MS);
-      await scrollThroughPage(page);
     }
-    const reviewSelectorFound = await page.locator(REVIEW_CARD_SELECTOR).first().waitFor({ timeout: REVIEW_WAIT_MS, state: "attached" }).then(() => true).catch(() => false);
-    if (reviewSelectorFound) {
-      for (let i = 0; i < MAX_LOAD_MORE_CLICKS; i++) {
-        const before2 = await countReviews(page);
-        const clicked = await clickFirst(page, "button", /^(load|show|see|view) more( reviews)?$/i);
-        if (!clicked) break;
-        if (!await waitForMoreReviews(page, before2, 5e3)) break;
+    if (capture.reviewCount() === 0 && await page.evaluate(OPEN_RATING_SUMMARY)) {
+      await page.waitForLoadState("networkidle", { timeout: 6e3 }).catch(() => {
+      });
+    }
+    await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
+    await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
+    });
+    await capture.settle();
+    const reviewSelectorFound = capture.ratingFields > 0 || await page.locator(REVIEW_CARD_SELECTOR).first().waitFor({ timeout: REVIEW_WAIT_MS, state: "attached" }).then(() => true).catch(() => false);
+    const hasReviewWidget = await page.locator(REVIEW_WIDGET_SELECTOR).count() > 0;
+    const pagingOps = {
+      click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`),
+      progress: async () => ({ json: capture.reviewCount(), cards: await countReviews(page) }),
+      enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
+      settle: () => capture.settle(1500),
+      sleep: (ms) => page.waitForTimeout(ms),
+      scroll: () => page.evaluate(SCROLL_TO_BOTTOM),
+      realClick: async () => {
+        try {
+          const control = page.locator('[data-pearfit-paging="1"]').first();
+          const isLink = await control.evaluate(
+            (el) => el.tagName === "A" && !!el.getAttribute("href") && !/^(#|javascript:)/i.test(el.getAttribute("href") || "")
+          );
+          if (isLink) return false;
+          await control.scrollIntoViewIfNeeded({ timeout: 2e3 });
+          try {
+            await control.click({ timeout: 3e3 });
+          } catch {
+            await page.keyboard.press("Escape");
+            await control.click({ timeout: 3e3 });
+          }
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      stopAt: stopPagingAt
+    };
+    if (process.env.SCRAPER_DEBUG) console.error(`[render] reviewSelectorFound=${reviewSelectorFound} hasReviewWidget=${hasReviewWidget} json=${capture.items.length}`);
+    if (reviewSelectorFound || hasReviewWidget) {
+      let sorted = await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms));
+      if (!sorted) sorted = await sortNewestByRealClick(page);
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] sort=${JSON.stringify(sorted)}`);
+      if (sorted) {
+        await page.waitForLoadState("networkidle", { timeout: 4e3 }).catch(() => {
+        });
+        await capture.settle();
       }
-      for (let i = 0; i < MAX_INFINITE_SCROLL_ROUNDS; i++) {
-        const before2 = await countReviews(page);
-        if (before2 >= MAX_REVIEWS) break;
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
-        if (!await waitForMoreReviews(page, before2, 4e3)) break;
+      await pageThroughReviews(pagingOps);
+    }
+    const stated = capture.reportedTotal();
+    const reviewPage = await page.evaluate(ALL_REVIEWS_LINK);
+    const timeLeft = stopPagingAt - Date.now();
+    if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25e3) {
+      await clickFirst(page, "tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
+      await clickFirst(page, "button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+      const withGuide = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
+      if (parseSizeChart(withGuide).length > 0) chartHtml = withGuide;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
+      await page.goto(reviewPage, { waitUntil: "domcontentloaded", timeout: Math.min(NAV_TIMEOUT_MS, timeLeft - 1e4) }).catch(() => null);
+      await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
+      });
+      await page.evaluate(REVIEW_WIDGETS_INTO_VIEW).catch(() => {
+      });
+      await capture.settle();
+      await pageThroughReviews(pagingOps);
+    }
+    const extraHtml = [];
+    let cardsKept = 0;
+    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8e3; i++) {
+      const known = capture.reportedTotal();
+      if (known !== null && capture.reviewCount() >= known) break;
+      const cardsHere = await countReviews(page).catch(() => 0);
+      if (capture.reviewCount() + cardsKept + cardsHere >= MAX_REVIEWS) break;
+      const next2 = await page.evaluate(NEXT_REVIEW_PAGE_LINK);
+      if (!next2) break;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next2}`);
+      const here = page.url();
+      extraHtml.push(await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS));
+      cardsKept += cardsHere;
+      const moved = await page.goto(next2, { waitUntil: "domcontentloaded", timeout: Math.max(3e3, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3e3)) }).then(() => true, () => false);
+      if (!moved) {
+        if (page.url() === here) extraHtml.pop();
+        break;
       }
+      await page.waitForLoadState("networkidle", { timeout: 3e3 }).catch(() => {
+      });
+      await capture.settle(1500);
     }
     await clickFirst(page, "tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickFirst(page, "button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-    await page.waitForLoadState("networkidle", { timeout: 3e3 }).catch(() => {
+    await page.waitForLoadState("networkidle", { timeout: 2e3 }).catch(() => {
     });
+    await capture.settle(2e3);
     const html3 = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
     return {
       html: html3,
       status,
       finalUrl: page.url(),
-      reviewSelectorFound
+      reviewSelectorFound,
+      chartHtml,
+      jsonResponses: capture.items,
+      extraHtml
     };
   } catch (err) {
     if (timedOut) {
@@ -89497,13 +90926,76 @@ async function renderWithPlaywright(url) {
     });
   }
 }
-var SCROLL_PAGE = `(async () => {
-  const step = Math.max(400, Math.floor(window.innerHeight * 0.8));
-  for (let y = 0; y < document.body.scrollHeight && y < 40000; y += step) {
-    window.scrollTo(0, y);
-    await new Promise((r) => setTimeout(r, 150));
+async function sortNewestByRealClick(page) {
+  const button = page.locator('[aria-haspopup="menu"], [aria-haspopup="listbox"], [aria-haspopup="true"], [role="combobox"]').filter({ hasText: /^\s*sort\b/i }).or(page.locator('[aria-haspopup][aria-label^="sort" i]')).first();
+  try {
+    if (!await button.isVisible({ timeout: 500 })) return "";
+    await page.keyboard.press("Escape");
+    await button.scrollIntoViewIfNeeded({ timeout: 2e3 });
+    await button.click({ timeout: 3e3 });
+    await page.waitForTimeout(600);
+    return await page.evaluate(`${SORT_NEWEST}('pick')`) || "";
+  } catch {
+    return "";
   }
-})()`;
+}
+async function sortReviewsNewest(evaluate, sleep2) {
+  const viaSelect = await evaluate(`${SORT_NEWEST}('select')`);
+  if (viaSelect) return viaSelect;
+  const opened = await evaluate(`${SORT_NEWEST}('open')`);
+  if (!opened) return "";
+  await sleep2(600);
+  const picked = await evaluate(`${SORT_NEWEST}('pick')`);
+  return picked ? `${opened} ${picked}` : "";
+}
+async function pageThroughReviews(ops) {
+  let pages = 0;
+  let idle = 0;
+  const skip = /* @__PURE__ */ new Set();
+  const needsRealClick = /* @__PURE__ */ new Set();
+  const fruitless = /* @__PURE__ */ new Map();
+  if (process.env.SCRAPER_DEBUG) console.error(`[paging] start: msLeft=${ops.stopAt - Date.now()} enough=${await ops.enough()}`);
+  for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < ops.stopAt; i++) {
+    if (await ops.enough()) break;
+    const before2 = await ops.progress();
+    const clicked = await ops.click([...skip]) || (ops.scroll ? await ops.scroll() : "");
+    if (process.env.SCRAPER_DEBUG) console.error(`[paging] ${i}: clicked=${JSON.stringify(clicked)} json=${before2.json} cards=${before2.cards}`);
+    if (!clicked) break;
+    const waitForGrowth = async () => {
+      const until = Math.min(Date.now() + 5e3, ops.stopAt);
+      while (Date.now() < until) {
+        await ops.sleep(300);
+        await ops.settle();
+        const now = await ops.progress();
+        if (now.json > before2.json || now.cards > before2.cards) return true;
+      }
+      return false;
+    };
+    const loadsMore = /more/i.test(clicked);
+    let grew = false;
+    if (loadsMore && needsRealClick.has(clicked) && ops.realClick) {
+      grew = await ops.realClick() && await waitForGrowth();
+    } else {
+      grew = await waitForGrowth();
+      if (!grew && loadsMore && ops.realClick && await ops.realClick()) {
+        grew = await waitForGrowth();
+        if (grew) needsRealClick.add(clicked);
+      }
+    }
+    if (grew) {
+      pages++;
+      idle = 0;
+    } else {
+      if (clicked !== "scroll") {
+        const misses = (fruitless.get(clicked) ?? 0) + 1;
+        fruitless.set(clicked, misses);
+        if (misses >= 2) skip.add(clicked);
+      }
+      if (++idle >= 3) break;
+    }
+  }
+  return pages;
+}
 var CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
   const re = new RegExp(source, flags);
   const roleOf = (el) => {
@@ -89528,13 +91020,29 @@ var CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
 async function renderWithServerlessChromium(url) {
   const browser = await getBrowser();
   const page = await browser.newPage();
-  await page.setUserAgent(USER_AGENT);
+  const allowPrivate = startUrlAllowsPrivate(url);
+  const hostIsBlocked = createRequestHostGuard();
   await page.setRequestInterception(true);
   page.on("request", (req) => {
     const type = req.resourceType();
-    if (type === "image" || type === "media" || type === "font") void req.abort();
-    else void req.continue();
+    if (type === "image" || type === "media" || type === "font") {
+      void req.abort();
+      return;
+    }
+    if (allowPrivate) {
+      void req.continue();
+      return;
+    }
+    void hostIsBlocked(req.url()).then(
+      (blocked) => blocked ? req.abort() : req.continue(),
+      () => req.abort()
+    );
   });
+  const capture = new JsonCapture();
+  page.on("response", (res) => {
+    capture.offer(res.url(), res.status(), res.headers()["content-type"] ?? "", () => res.text());
+  });
+  const stopPagingAt = Date.now() + renderBudgetMs() - RENDER_TAIL_MS;
   let timedOut = false;
   const deadline = setTimeout(() => {
     timedOut = true;
@@ -89556,40 +91064,52 @@ async function renderWithServerlessChromium(url) {
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: "", status, finalUrl: page.url(), reviewSelectorFound: false };
+      return { html: "", status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
     }
     await page.waitForNetworkIdle({ timeout: 8e3 }).catch(() => {
     });
     await clickRole("button", /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
-    await page.evaluate(SCROLL_PAGE);
+    await page.evaluate(SCROLL_TO_END);
+    const chartHtml = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
     const reviewsBeforeOpening = await countReviews2();
-    const openedSection = await clickRole("tab", /reviews?/i) || await clickRole("button", /^(customer )?reviews?\b/i) || await countReviews2() === 0 && await clickRole("link", /^(read |see |customer )?(all )?reviews?\b/i);
+    const openedSection = await clickRole("tab", /reviews?/i) || await clickRole("button", /^(customer )?reviews?\b/i) || await countReviews2() === 0 && capture.ratingFields === 0 && await clickRole("link", /^(read |see |customer )?(all )?reviews?\b/i);
     if (openedSection) {
       await page.waitForNetworkIdle({ timeout: 5e3 }).catch(() => {
       });
       await waitForMore(reviewsBeforeOpening, REVIEW_WAIT_MS);
-      await page.evaluate(SCROLL_PAGE);
     }
-    const reviewSelectorFound = await page.waitForSelector(REVIEW_CARD_SELECTOR, { timeout: REVIEW_WAIT_MS }).then(() => true).catch(() => false);
-    if (reviewSelectorFound) {
-      for (let i = 0; i < MAX_LOAD_MORE_CLICKS; i++) {
-        const before2 = await countReviews2();
-        const clicked = await clickRole("button", /^(load|show|see|view) more( reviews)?$/i);
-        if (!clicked) break;
-        if (!await waitForMore(before2, 5e3)) break;
+    if (capture.reviewCount() === 0 && await page.evaluate(OPEN_RATING_SUMMARY)) {
+      await page.waitForNetworkIdle({ timeout: 6e3 }).catch(() => {
+      });
+    }
+    await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
+    await page.waitForNetworkIdle({ timeout: 5e3 }).catch(() => {
+    });
+    await capture.settle();
+    const reviewSelectorFound = capture.ratingFields > 0 || await page.waitForSelector(REVIEW_CARD_SELECTOR, { timeout: REVIEW_WAIT_MS }).then(() => true).catch(() => false);
+    const hasReviewWidget = await page.evaluate(`document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)}).length`) > 0;
+    if (reviewSelectorFound || hasReviewWidget) {
+      if (await sortReviewsNewest((script) => page.evaluate(script), sleep2)) {
+        await page.waitForNetworkIdle({ timeout: 4e3 }).catch(() => {
+        });
+        await capture.settle();
       }
-      for (let i = 0; i < MAX_INFINITE_SCROLL_ROUNDS; i++) {
-        const before2 = await countReviews2();
-        if (before2 >= MAX_REVIEWS) break;
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
-        if (!await waitForMore(before2, 4e3)) break;
-      }
+      await pageThroughReviews({
+        click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`),
+        progress: async () => ({ json: capture.reviewCount(), cards: await countReviews2() }),
+        enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews2()) >= MAX_REVIEWS,
+        settle: () => capture.settle(1500),
+        sleep: sleep2,
+        scroll: () => page.evaluate(SCROLL_TO_BOTTOM),
+        stopAt: stopPagingAt
+      });
     }
     await clickRole("tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickRole("button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
     await sleep2(500);
+    await capture.settle(2e3);
     const html3 = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
-    return { html: html3, status, finalUrl: page.url(), reviewSelectorFound };
+    return { html: html3, status, finalUrl: page.url(), reviewSelectorFound, chartHtml, jsonResponses: capture.items };
   } catch (err) {
     if (timedOut) throw new Error(`Headless render timed out after ${renderBudgetMs() / 1e3}s`);
     throw err;
@@ -89598,247 +91118,6 @@ async function renderWithServerlessChromium(url) {
     await page.close().catch(() => {
     });
   }
-}
-
-// webscraper/sizeChart.ts
-var LETTERS = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-function round1(n) {
-  return Math.round((n + Number.EPSILON) * 10) / 10;
-}
-function toCm(value, unit) {
-  return unit === "in" ? value * 2.54 : value;
-}
-function chartSizeCode(raw) {
-  const cleaned = raw.replace(/\s+/g, " ").trim().toUpperCase();
-  if (!cleaned || cleaned.length > 24) return null;
-  const letters = {
-    XS: "XS",
-    "X-SMALL": "XS",
-    "XSMALL": "XS",
-    "EXTRA SMALL": "XS",
-    S: "S",
-    SM: "S",
-    SMALL: "S",
-    M: "M",
-    MED: "M",
-    MEDIUM: "M",
-    L: "L",
-    LG: "L",
-    LARGE: "L",
-    XL: "XL",
-    "X-LARGE": "XL",
-    XLARGE: "XL",
-    "EXTRA LARGE": "XL",
-    "1XL": "XL",
-    XXL: "XXL",
-    "2XL": "XXL",
-    "XX-LARGE": "XXL",
-    XXXL: "XXXL",
-    "3XL": "XXXL"
-  };
-  if (letters[cleaned]) return letters[cleaned];
-  const word = cleaned.match(/\b(XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
-  if (word && letters[word[1]]) return letters[word[1]];
-  if (/^\d{2,3}$/.test(cleaned)) return cleaned;
-  return null;
-}
-function sortOrder(size, index2) {
-  const letter = LETTERS.indexOf(size);
-  if (letter >= 0) return letter;
-  const numeric = Number(size);
-  if (Number.isFinite(numeric)) return 1e3 + numeric;
-  return 2e3 + index2;
-}
-function unitInText(text4) {
-  const h = text4.toLowerCase();
-  if (/\bcm\b|centimet(?:er|re)s?/.test(h)) return "cm";
-  if (/\binches\b|\binch\b|\(in\)|\bin\./.test(h)) return "in";
-  return null;
-}
-function parseCell(raw, tableUnit) {
-  const text4 = raw.replace(/\s+/g, " ").trim();
-  if (!text4 || /^(-|–|—|n\/a|null|unknown)$/i.test(text4)) return null;
-  if (/\d\s*[-–—]\s*\d/.test(text4)) return null;
-  const match = text4.match(/(\d+(?:\.\d+)?)/);
-  if (!match) return null;
-  const value = Number(match[1]);
-  if (!Number.isFinite(value) || value <= 0) return null;
-  const unit = /cm\b/i.test(text4) ? "cm" : /in(?:ch(?:es)?)?\b|"|″/.test(text4) ? "in" : tableUnit;
-  if (!unit) return null;
-  return { value, unit };
-}
-function chestKind(header) {
-  const h = header.toLowerCase();
-  if (!/\b(chest|bust|pit)\b|body width/.test(h)) return null;
-  if (/pit[\s-]*to[\s-]*pit|body width|chest width|half chest|flat|across chest|laid flat/.test(h)) {
-    return "flat";
-  }
-  if (/circumference|all around|full chest|around bust|around chest/.test(h)) return "circumference";
-  return "unspecified";
-}
-function measureCol(header) {
-  if (chestKind(header)) return "chest";
-  const h = header.toLowerCase();
-  if (/\bsleeve\b|\barm length\b/.test(h)) return "sleeve";
-  if (/\blength\b/.test(h) && !/\bsleeve\b/.test(h)) return "length";
-  return null;
-}
-function isSizeHeader(header) {
-  const h = header.toLowerCase().trim();
-  return h === "" || h === "size" || h === "sizes" || h === "size (us)" || /^size\b/.test(h);
-}
-function chestCm(value, unit, kind) {
-  const cm = toCm(value, unit);
-  const flat = kind === "flat" || kind === "unspecified" && cm <= 80;
-  return round1(flat ? cm : cm / 2);
-}
-function parseHtmlTable(headers, body, tableUnit) {
-  let sizeIdx = headers.findIndex((h) => isSizeHeader(h));
-  if (sizeIdx < 0) sizeIdx = 0;
-  const cols = [];
-  headers.forEach((header, index2) => {
-    if (index2 === sizeIdx) return;
-    const kind = measureCol(header);
-    if (!kind) return;
-    cols.push({ index: index2, kind, chest: kind === "chest" ? chestKind(header) : null });
-  });
-  if (cols.length === 0) return null;
-  const rows = [];
-  const seen = /* @__PURE__ */ new Set();
-  let tableHasValue = false;
-  body.forEach((cells, index2) => {
-    const size = chartSizeCode(cells[sizeIdx] ?? "");
-    if (!size || seen.has(size)) return;
-    const row = {
-      size,
-      sortOrder: sortOrder(size, index2),
-      chest_cm: null,
-      length_cm: null,
-      sleeve_cm: null
-    };
-    let any = false;
-    for (const col of cols) {
-      const parsed = parseCell(cells[col.index] ?? "", tableUnit);
-      if (!parsed) continue;
-      any = true;
-      if (col.kind === "chest" && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest);
-      if (col.kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
-      if (col.kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
-    }
-    if (any) tableHasValue = true;
-    seen.add(size);
-    rows.push(row);
-  });
-  return tableHasValue ? { rows } : null;
-}
-function parseTransposedTable(headers, body, tableUnit) {
-  const sizes = headers.slice(1).map((cell) => chartSizeCode(cell));
-  if (sizes.filter(Boolean).length < 2) return null;
-  const rows = [];
-  sizes.forEach((size, index2) => {
-    if (!size) return;
-    rows.push({
-      size,
-      sortOrder: sortOrder(size, index2),
-      chest_cm: null,
-      length_cm: null,
-      sleeve_cm: null
-    });
-  });
-  let any = false;
-  for (const cells of body) {
-    const kind = measureCol(cells[0] ?? "");
-    if (!kind) continue;
-    const rowUnit = unitInText(cells[0] ?? "") ?? tableUnit;
-    const chest = kind === "chest" ? chestKind(cells[0] ?? "") : null;
-    sizes.forEach((size, index2) => {
-      if (!size) return;
-      const row = rows.find((item) => item.size === size);
-      if (!row) return;
-      const parsed = parseCell(cells[index2 + 1] ?? "", rowUnit);
-      if (!parsed) return;
-      any = true;
-      if (kind === "chest" && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
-      if (kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
-      if (kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
-    });
-  }
-  return any ? { rows } : null;
-}
-function tableGrid($2, table) {
-  const grid = [];
-  $2(table).find("tr").each((_r, tr) => {
-    const cells = [];
-    $2(tr).children("th, td").each((_c, cell) => {
-      cells.push($2(cell).text().replace(/\s+/g, " ").trim());
-    });
-    if (cells.length > 0) grid.push(cells);
-  });
-  return grid;
-}
-function rowsFromTables(html3) {
-  const $2 = load(html3);
-  let best = [];
-  $2("table").each((_i, table) => {
-    const node = $2(table);
-    const grid = tableGrid($2, table);
-    if (grid.length < 2) return;
-    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
-    if (headerAt < 0) return;
-    const context = [node.find("caption").text(), node.attr("class") ?? "", node.prev().text(), grid[headerAt].join(" ")].join(" ");
-    const unit = unitInText(context);
-    const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit)
-    );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
-  });
-  return best.length > 0 ? best : rowsFromDivCharts($2);
-}
-function filledMeasurements(rows) {
-  if (!rows) return 0;
-  return rows.reduce(
-    (count, row) => count + [row.chest_cm, row.length_cm, row.sleeve_cm].filter((value) => value !== null).length,
-    0
-  );
-}
-function preferChart(byRow, byColumn) {
-  if (filledMeasurements(byColumn?.rows) > filledMeasurements(byRow?.rows)) return byColumn;
-  return byRow;
-}
-function cellTexts($2, node) {
-  const cells = [];
-  $2(node).children().each((_i, child) => {
-    const text4 = $2(child).text().replace(/\s+/g, " ").trim();
-    if (text4) cells.push(text4);
-  });
-  return cells;
-}
-function rowsFromDivCharts($2) {
-  let best = [];
-  $2('[class*="size-chart"], [class*="sizechart"], [class*="size-guide"], [class*="sizeguide"], [id*="size-chart"], [id*="size-guide"]').each((_i, box) => {
-    if ($2(box).is("table") || $2(box).find("table").length > 0) return;
-    const grid = [];
-    $2(box).find('li, [class*="row"]').each((_r, row) => {
-      const cells = cellTexts($2, row);
-      if (cells.length >= 2) grid.push(cells);
-    });
-    if (grid.length < 2) return;
-    const context = [$2(box).attr("class") ?? "", $2(box).attr("id") ?? "", grid[0].join(" ")].join(" ");
-    const unit = unitInText(context);
-    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
-    if (headerAt < 0) return;
-    const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit)
-    );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
-  });
-  return best;
-}
-function parseSizeChart(html3) {
-  const rows = rowsFromTables(html3);
-  return rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 // webscraper/pageHelpers.ts
@@ -89898,8 +91177,17 @@ function cleanProductTitle(title) {
   return t || null;
 }
 function productIdFromUrl(url) {
-  const m = url.match(/\/products?\/([A-Z0-9][A-Z0-9_-]{3,})(?:[/?#.]|$)/) || url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]{4,})(?:[/?#]|$)/i) || url.match(/\/(\d{4,})\.html/);
-  return m ? m[1] : null;
+  const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
+  const m = (
+    // Target: /p/<name>/-/A-93249836 (the A- number is Target's item id).
+    url.match(/\/-\/(A-\d{5,})(?:[/?#]|$)/) || url.match(/\/(\d{4,})\.html/) || // A product code with letters and digits as the page name: /edgartown-pocket-tee/1V011322.html.
+    url.match(/\/([A-Z0-9]*\d[A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z][A-Z0-9]*\d[A-Z0-9]*)\.html(?:[?#]|$)/i) || // A code contains a digit. A slug such as /product/mens-shirt/ must not win over the id after it.
+    url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) || url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i)
+  );
+  if (m) return m[1];
+  if (param) return param[1];
+  const numericSegment = url.match(/^[^?#]*\/(\d{5,})(?:[/?#]|$)/);
+  return numericSegment ? numericSegment[1] : null;
 }
 function ratingFromLabel(label) {
   const m = label?.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+)/i);
@@ -89908,6 +91196,12 @@ function ratingFromLabel(label) {
   const best = parseFloat(m[2]);
   if (!(best > 1)) return "";
   return best === 5 ? String(value) : String(1 + (value - 1) / (best - 1) * 4);
+}
+function blockPageTitle(html3) {
+  const head2 = html3.match(/<head[\s>][\s\S]*?<\/head>/i)?.[0] ?? html3.slice(0, 5e3);
+  const title = (head2.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "").replace(/\s+/g, " ").trim();
+  const pattern = /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
+  return pattern.test(title) ? title : null;
 }
 
 // webscraper/node_modules/@supabase/supabase-js/dist/index.mjs
@@ -98140,7 +99434,7 @@ function shouldShowDeprecationWarning() {
 if (shouldShowDeprecationWarning()) console.warn("\u26A0\uFE0F  Node.js 20 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 22 or later. For more information, visit: https://github.com/orgs/supabase/discussions/45715");
 
 // webscraper/fitPayload.ts
-function fitPayloadFromReport(report, chart = []) {
+function fitPayloadFromReport(report, chart = [], options = {}) {
   return {
     sku: report.sku,
     productId: report.id,
@@ -98162,7 +99456,8 @@ function fitPayloadFromReport(report, chart = []) {
     avgRating: report.overallAvgRating,
     sourceUrl: report.sourceUrl,
     scrapedAt: report.scraperTelemetry.scrapedAt,
-    sizes: report.sizeSummaries.map((size) => ({
+    // A size with no reviews has no fit numbers. Sending it would store a zero rating and a "Low" return risk.
+    sizes: report.sizeSummaries.filter((size) => size.reviewCount > 0).map((size) => ({
       size: size.size,
       reviewCount: size.reviewCount,
       fitSkew: size.fitSkew,
@@ -98182,7 +99477,8 @@ function fitPayloadFromReport(report, chart = []) {
       chest_cm: row.chest_cm,
       length_cm: row.length_cm,
       sleeve_cm: row.sleeve_cm
-    }))
+    })),
+    chartOnly: options.chartOnly === true
   };
 }
 
@@ -98218,7 +99514,7 @@ async function checkFitStore() {
   const { error } = await getClient(env).rpc("commit_fit_report", { payload: {} });
   return interpretFitStoreProbe(error?.message ?? null);
 }
-async function pushFitReports(reports, charts = {}) {
+async function pushFitReports(reports, charts = {}, options = {}) {
   const env = readSupabaseEnv();
   if (!env) {
     return { ok: false, skipped: true, reason: "SUPABASE_URL or a Supabase key is not set" };
@@ -98226,7 +99522,7 @@ async function pushFitReports(reports, charts = {}) {
   const db2 = getClient(env);
   for (const report of reports) {
     const { error } = await db2.rpc("commit_fit_report", {
-      payload: fitPayloadFromReport(report, charts[report.sku] ?? [])
+      payload: fitPayloadFromReport(report, charts[report.sku] ?? [], options)
     });
     if (error) return { ok: false, error: error.message };
   }
@@ -98274,6 +99570,13 @@ async function deleteRemoteFitSku(sku) {
   const env = readSupabaseEnv();
   if (!env) {
     return { ok: false, skipped: true, reason: "SUPABASE_URL or a Supabase key is not set" };
+  }
+  if (!process.env.SUPABASE_SECRET_KEY?.trim()) {
+    return {
+      ok: false,
+      skipped: true,
+      reason: "Deleting from the shared fit store needs SUPABASE_SECRET_KEY in .env.local. The local copy was deleted."
+    };
   }
   const { error } = await getClient(env).rpc("delete_fit_sku", { target_sku: sku });
   if (error) return { ok: false, error: error.message };
@@ -98434,6 +99737,17 @@ if (opacityColumn?.notnull === 1) {
     ALTER TABLE commercial_skus__opacity RENAME TO commercial_skus;
     COMMIT;
   `);
+}
+function hasStoredReviews(sku) {
+  const row = db.prepare(`SELECT total_reviews FROM commercial_skus WHERE sku = ?`).get(sku);
+  return (row?.total_reviews ?? 0) > 0;
+}
+function loadStoredReport(sku) {
+  const row = db.prepare(`SELECT report_json, committed_at FROM commercial_skus WHERE sku = ?`).get(sku);
+  if (!row) return null;
+  const report = JSON.parse(row.report_json);
+  report.committedToDbAt = row.committed_at;
+  return report;
 }
 var upsertReportTransaction = db.transaction((report) => {
   const nowIso = (/* @__PURE__ */ new Date()).toISOString();
@@ -99087,35 +100401,115 @@ function inferCategory(...hints) {
 function looksLikeFullHtmlDocument(input) {
   return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5e3));
 }
-function scrapeHtmlWithCheerio(html3, sourceUrl, overrides) {
+var PLACEHOLDER_AUTHOR = /^(anonymous|verified (buyer|purchaser|customer|reviewer)|customer|guest|a customer|shopper)$/i;
+function startsAtWord(text4, part) {
+  let from = text4.indexOf(part);
+  while (from !== -1) {
+    if (from === 0 || !/[\p{L}\p{N}]/u.test(text4[from - 1])) return true;
+    from = text4.indexOf(part, from + 1);
+  }
+  return false;
+}
+function mergeScrapedReviews(primary, extra) {
+  const norm = (body) => body.replace(/\s+/g, " ").replace(/(\.\.\.|…)?\s*(read more|show more|more)?$/i, "").trim().toLowerCase().slice(0, 60);
+  const merged = primary.map((review) => ({ ...review }));
+  const index2 = /* @__PURE__ */ new Map();
+  const remember = (key, review) => {
+    if (!key) return;
+    const list = index2.get(key) ?? [];
+    list.push(review);
+    index2.set(key, list);
+  };
+  const unnamed = (author) => !author || PLACEHOLDER_AUTHOR.test(author);
+  const nameWords = (name) => name.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const sameName = (a, b) => {
+    const [short, long] = [nameWords(a), nameWords(b)].sort((x, y) => x.length - y.length);
+    if (short.length === 0 || short[0] !== long[0]) return false;
+    return short.every((word, i) => long[i].startsWith(word) || word.startsWith(long[i]));
+  };
+  const sameReviewer = (a, b) => unnamed(a.author) || unnamed(b.author) || sameName(a.author, b.author);
+  for (const review of merged) remember(norm(review.body), review);
+  const loose = (body) => body.replace(/\s+/g, " ").trim().toLowerCase();
+  for (const review of extra) {
+    const key = norm(review.body);
+    const existing = (key ? index2.get(key)?.find((m) => sameReviewer(m, review)) : void 0) ?? merged.find((m) => {
+      if (PLACEHOLDER_AUTHOR.test(m.author) || !sameName(m.author, review.author)) return false;
+      const card = loose(review.body);
+      const start = loose(m.body).slice(0, 40);
+      const title = loose(m.title);
+      const startMatches = start.length >= 12 ? card.includes(start) : start.length >= 2 && startsAtWord(card, start);
+      return startMatches || title.length >= 8 && card.includes(title);
+    });
+    if (!existing) {
+      merged.push(review);
+      remember(key, review);
+      continue;
+    }
+    if (!existing.sizePurchased && review.sizePurchased) existing.sizePurchased = review.sizePurchased;
+    if (!existing.declaredFitTag && review.declaredFitTag) existing.declaredFitTag = review.declaredFitTag;
+    if (!existing.date && review.date) existing.date = review.date;
+    if ((!existing.author || existing.author === "Anonymous") && review.author && review.author !== "Anonymous") {
+      existing.author = review.author;
+    }
+    if (!existing.usualSize && review.usualSize) existing.usualSize = review.usualSize;
+  }
+  return merged;
+}
+function chartRowsFromClient(value) {
+  if (!Array.isArray(value)) return [];
+  const rows = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const row = item;
+    if (typeof row.size !== "string" || !row.size.trim()) continue;
+    const measurement = (field) => typeof field === "number" && Number.isFinite(field) ? field : null;
+    rows.push({
+      size: row.size.trim(),
+      sortOrder: typeof row.sortOrder === "number" && Number.isFinite(row.sortOrder) ? row.sortOrder : rows.length,
+      chest_cm: measurement(row.chest_cm),
+      length_cm: measurement(row.length_cm),
+      sleeve_cm: measurement(row.sleeve_cm)
+    });
+  }
+  return rows;
+}
+function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], productHtml = null) {
   const startTime = Date.now();
   const $2 = load(html3);
+  const $p = productHtml ? load(productHtml) : $2;
+  const productPageHtml = productHtml ?? html3;
   const domNodesScanned = $2("*").length;
   const selectorsUsed = [];
-  const jsonLdScripts = $2('script[type="application/ld+json"]').map((_i, el) => $2(el).contents().text()).get();
+  const jsonLdScripts = $p('script[type="application/ld+json"]').map((_i, el) => $p(el).contents().text()).get();
   const structured = extractStructuredProduct(parseJsonLdScripts(jsonLdScripts));
+  if (productHtml && structured) {
+    const reviewPageLd = extractStructuredProduct(
+      parseJsonLdScripts($2('script[type="application/ld+json"]').map((_i, el) => $2(el).contents().text()).get())
+    );
+    if (reviewPageLd?.reviews.length) structured.reviews = mergeScrapedReviews(structured.reviews, reviewPageLd.reviews);
+  }
   if (structured) selectorsUsed.push('script[type="application/ld+json"] Product');
-  const meta = (selector) => $2(selector).attr("content")?.trim() || null;
-  const firstText = (selector) => $2(selector).first().text().replace(/\s+/g, " ").trim() || null;
-  const extractedName = overrides?.productName || structured?.name || cleanProductTitle(meta('meta[property="og:title"]')) || firstText("h1.product-title") || cleanProductTitle($2("title").first().text()) || firstText("h1") || "Unknown product";
-  const extractedBrand = overrides?.brand || structured?.brand || meta('meta[name="product:brand"]') || meta('meta[property="product:brand"]') || meta('meta[property="og:site_name"]') || firstText(".product-brand") || "Unknown brand";
+  const meta = (selector) => $p(selector).attr("content")?.trim() || null;
+  const firstText = (selector) => $p(selector).first().text().replace(/\s+/g, " ").trim() || null;
+  const extractedName = overrides?.productName || structured?.name || cleanProductTitle(meta('meta[property="og:title"]')) || firstText("h1.product-title") || cleanProductTitle($p("title").first().text()) || firstText("h1") || "Unknown product";
+  const extractedBrand = overrides?.brand || structured?.brand || meta('meta[name="product:brand"]') || meta('meta[property="product:brand"]') || meta('meta[property="og:site_name"]') || firstText(".product-brand") || // A single-brand store names itself; used only when nothing names the product's brand.
+  structured?.organizationName || "Unknown brand";
   const category = overrides?.category || inferCategory(
     meta('meta[name="product:category"]'),
     meta('meta[property="product:category"]'),
     structured?.category,
     extractedName
   );
-  const sku = overrides?.sku || structured?.sku || meta('meta[name="product:sku"]') || meta('meta[property="product:retailer_item_id"]') || $2("[data-sku]").attr("data-sku") || // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
-  productIdFromUrl(sourceUrl) || `URL-${stableHash(sourceUrl)}`;
+  const sku = overrides?.sku || structured?.sku || meta('meta[name="product:sku"]') || meta('meta[property="product:retailer_item_id"]') || $p("[data-sku]").attr("data-sku") || // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
+  productIdFromUrl(sourceUrl) || // Shopify names its product in the analytics object: var meta = {"product":{"id":123,...
+  shopifyProductId(productPageHtml) || `URL-${stableHash(sourceUrl)}`;
   const priceAmount = meta('meta[property="product:price:amount"]') || meta('meta[property="og:price:amount"]');
   const priceCurrency = meta('meta[property="product:price:currency"]') || meta('meta[property="og:price:currency"]');
-  const price = structured?.price || meta('meta[name="product:price"]') || (priceAmount ? [priceAmount, priceCurrency].filter(Boolean).join(" ") : null) || $2("[data-price]").attr("data-price") || "Unknown";
-  const fabricComposition = structured?.material || meta('meta[name="product:fabric"]') || $2("[data-fabric]").attr("data-fabric") || "Unknown";
-  const reviews = [];
-  if (structured && structured.reviews.length > 0) {
-    reviews.push(...structured.reviews);
-  }
-  if (reviews.length === 0) {
+  const price = structured?.price || meta('meta[name="product:price"]') || (priceAmount ? [priceAmount, priceCurrency].filter(Boolean).join(" ") : null) || $p("[data-price]").attr("data-price") || "Unknown";
+  const fabricComposition = structured?.material || meta('meta[name="product:fabric"]') || $p("[data-fabric]").attr("data-fabric") || "Unknown";
+  const domReviews = [];
+  const completeDomCards = /* @__PURE__ */ new Set();
+  {
     const reviewElements = $2(REVIEW_CARD_SELECTOR);
     if (reviewElements.length > 0) {
       selectorsUsed.push("review-card DOM selectors");
@@ -99126,21 +100520,28 @@ function scrapeHtmlWithCheerio(html3, sourceUrl, overrides) {
         const lines = leafTexts($2, node);
         const isDate = (l) => /^\d{1,2}\/\d{1,2}\/\d{2,4}$|^\d{4}-\d{2}-\d{2}$/.test(l);
         const author = node.attr("data-author") || node.attr("data-reviewer") || node.find('[itemprop="author"]').first().text().trim() || node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, "").trim() || "Anonymous";
-        const body = node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, " ").trim() || longestFreeText(lines, [author]) || nodeText;
+        const body = node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, " ").trim() || longestFreeText(lines, [author]) || nodeText;
         const title = node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().replace(/\s+/g, " ").trim() || lines.slice(0, Math.max(0, lines.indexOf(body))).find(
           (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l)
         ) || "";
         const sizePurchased = node.attr("data-size") || node.find(".review-size-tag strong").text().trim() || labelledValue(lines, /^(purchased size|size purchased|size ordered|size bought|size)$/i) || nodeText.match(/Size(?:\s+(?:Purchased|Ordered|Bought))?:\s*([A-Za-z0-9]+)/i)?.[1] || extractSizeFromReviewText(body);
         const ratingStr = node.attr("data-rating") || node.find('[itemprop="ratingValue"]').attr("content") || node.find('[itemprop="ratingValue"]').text().trim() || node.find("[data-score]").attr("data-score") || node.find(".review-rating").text().match(/(\d(?:\.\d)?)/)?.[1] || // Accessible star widgets: aria-label/title like "4 out of 5 stars".
-        ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr("aria-label") ?? node.find('[title*="out of 5" i]').first().attr("title")) || ratingFromStarIcons($2, node) || "";
+        ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr("aria-label") ?? node.find('[title*="out of 5" i]').first().attr("title")) || ratingFromStarIcons($2, node) || // Screen-reader text such as "Rated 5 out of 5" (Okendo and others).
+        nodeText.match(/\brated\s+(\d(?:\.\d)?)\s+out of\s+5\b/i)?.[1] || "";
         const declaredFitTag = node.attr("data-fit") || node.find(".review-fit-tag").text().replace(/^Fit:\s*/i, "").trim() || labelledValue(lines, /^(how it fits|fit|overall fit|sizing)$/i) || void 0;
         const date = node.attr("data-date") || node.find('[itemprop="datePublished"]').attr("content") || node.find("time").attr("datetime") || lines.find(isDate) || "";
         const reviewerHeight = labelledValue(lines, /^height$/i) || void 0;
         const reviewerBuild = labelledValue(lines, /^(weight|body type|build)$/i) || void 0;
         const usualSize = labelledValue(lines, /^(usual size|normally wears|usually wears)$/i) || void 0;
         const parsedRating = parseFloat(ratingStr);
-        if (body.length > 8) {
-          reviews.push({
+        const words = body.split(/[\s,]+/).filter(Boolean);
+        const tokenish = words.filter((w) => /_/.test(w) || /^[a-z]+\d+$/i.test(w)).length;
+        const WIDGET_WORDS = /\b(facebook|twitter|pinterest|share (this )?review|share|copy link|was this (review )?helpful|report (this )?review|tweet|pin it|by|anonymous|user|yes|no)\b|\d+/gi;
+        const widgetLine = /\b(facebook|twitter|pinterest|share (this )?review|copy link|was this (review )?helpful|report (this )?review)\b/i.test(body) && body.replace(WIDGET_WORDS, " ").split(/[^\p{L}]+/u).filter(Boolean).length <= 2;
+        const debugText = !Number.isFinite(parsedRating) && author === "Anonymous" && (tokenish * 2 >= words.length || widgetLine);
+        if (body.length > 8 && !debugText) {
+          if (Number.isFinite(parsedRating) && author !== "Anonymous") completeDomCards.add(domReviews.length);
+          domReviews.push({
             id: `dom-rev-${idx + 1}`,
             author,
             sizePurchased,
@@ -99159,6 +100560,35 @@ function scrapeHtmlWithCheerio(html3, sourceUrl, overrides) {
       });
     }
   }
+  const jsonSources = jsonResponses.map((r) => ({ url: r.url, value: parseJsonBody(r.body) }));
+  $2('script#__NEXT_DATA__, script[type="application/json"]').each((i, el) => {
+    const raw = $2(el).contents().text();
+    if (raw.length > 0 && /review/i.test(raw)) {
+      jsonSources.push({ url: `page:${$2(el).attr("id") || `json-${i}`}`, value: parseJsonBody(raw) });
+    }
+  });
+  const fromJson = collectJsonReviews(
+    jsonSources.filter((source) => source.value !== null),
+    { keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName }
+  );
+  if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(", ")})`);
+  const jsonReviews = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
+  const WIDGET_LINE = /was this (review )?helpful|write a review|report (this )?review|^[\w .'-]{1,30},$/i;
+  const substantiveDom = domReviews.filter(
+    (r, i) => completeDomCards.has(i) || r.body.split(/\s+/).length >= 6 && !WIDGET_LINE.test(r.body)
+  );
+  const onlyPageData = fromJson.sources.every((src) => src === "page");
+  const markupIsTheList = onlyPageData && substantiveDom.length > jsonReviews.length;
+  const useDom = jsonReviews.length === 0 || markupIsTheList;
+  const reviews = jsonReviews.length === 0 ? mergeScrapedReviews(structured?.reviews ?? [], domReviews) : markupIsTheList ? mergeScrapedReviews(mergeScrapedReviews(structured?.reviews ?? [], substantiveDom), jsonReviews) : mergeScrapedReviews(
+    mergeScrapedReviews(jsonReviews, structured?.reviews ?? []),
+    domReviews.filter((_r, i) => completeDomCards.has(i))
+  );
+  const reviewSources = [
+    ...fromJson.sources,
+    ...structured?.reviews.length ? ["json-ld"] : [],
+    ...(useDom ? domReviews.length : completeDomCards.size) ? ["dom"] : []
+  ];
   if (reviews.length === 0 && !looksLikeFullHtmlDocument(html3)) {
     selectorsUsed.push("fallback-text-blocks");
     reviews.push(...parseRawReviewBatch(html3));
@@ -99181,38 +100611,92 @@ function scrapeHtmlWithCheerio(html3, sourceUrl, overrides) {
         reviewNodesMatched: reviews.length,
         selectorsUsed,
         parseDurationMs,
-        engineMode: "cheerio-dom+deterministic-nlp"
+        engineMode: "cheerio-dom+deterministic-nlp",
+        reportedReviewCount: fromJson.reportedTotal ?? structured?.reportedReviewCount ?? null,
+        reviewSources
       }
     },
     reviews
   };
 }
-var PASTE_HINT = " If the reviews show in your own browser, copy them (or View Source) and paste into the raw HTML box instead.";
-async function fetchStaticHtml(url) {
-  let response;
+function shopifyProductId(html3) {
+  const match = html3.match(/(?:var meta|ShopifyAnalytics\.meta)\s*=\s*\{\s*"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/) ?? html3.match(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/);
+  return match ? match[1] : null;
+}
+function pageProductKeys($2, html3, sourceUrl, structuredIds, sku) {
+  const keys = /* @__PURE__ */ new Set();
+  const add2 = (value) => {
+    const t = String(value ?? "").trim().toLowerCase().replace(/^shopify-/, "");
+    if (t.length >= 3) keys.add(t);
+  };
+  structuredIds.forEach(add2);
+  add2(sku);
+  add2($2('meta[property="product:retailer_item_id"]').attr("content"));
+  add2(shopifyProductId(html3));
+  $2('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
+    add2($2(el).attr("value"));
+  });
   try {
-    response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9"
-      },
-      redirect: "follow",
-      signal: AbortSignal.timeout(2e4)
-    });
-  } catch (fetchErr) {
-    const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-    return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+    const url = new URL(sourceUrl);
+    const segments = url.pathname.split("/").filter(Boolean);
+    for (const segment of segments) if (/^\d{5,}$/.test(segment)) add2(segment);
+    const last2 = segments[segments.length - 1]?.replace(/\.html?$/, "");
+    if (last2) {
+      add2(last2);
+      const tail = last2.match(/(\d{4,})$/);
+      if (tail) add2(tail[1]);
+    }
+    for (const value of url.searchParams.values()) if (/^\d{5,}$/.test(value)) add2(value);
+  } catch {
   }
-  if (!response.ok) {
-    const blocked = response.status === 403 || response.status === 429 || response.status === 503;
-    return {
-      status: 400,
-      message: blocked ? `${url} returned HTTP ${response.status}: the store refuses automated requests.` : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
-      blocked
-    };
+  return [...keys];
+}
+var PASTE_HINT = " If the reviews show in your own browser, copy them (or View Source) and paste into the raw HTML box instead.";
+var FETCH_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9"
+};
+async function fetchStaticHtml(url) {
+  let current = url;
+  for (let hop = 0; hop <= 5; hop++) {
+    const blocked = await blockedFetchTargetResolved(current);
+    if (blocked) return { status: 400, message: blocked, blocked: true };
+    let response;
+    try {
+      response = await fetch(current, {
+        headers: FETCH_HEADERS,
+        redirect: "manual",
+        signal: AbortSignal.timeout(2e4)
+      });
+    } catch (fetchErr) {
+      const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+      return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+    }
+    if (response.status >= 300 && response.status < 400) {
+      const location2 = response.headers.get("location");
+      if (!location2 || hop === 5) {
+        return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
+      }
+      current = new URL(location2, current).toString();
+      continue;
+    }
+    if (!response.ok) {
+      const refused = [403, 418, 429, 503].includes(response.status);
+      return {
+        status: 400,
+        message: refused ? `${url} returned HTTP ${response.status}: the store refuses automated requests.` : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
+        blocked: refused
+      };
+    }
+    const html3 = await response.text();
+    const blockedBy = blockPageTitle(html3);
+    if (blockedBy) {
+      return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };
+    }
+    return { html: html3 };
   }
-  return { html: await response.text() };
+  return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
 }
 function getDatabaseSummary() {
   const rows = db.prepare(`SELECT report_json, committed_at FROM commercial_skus ORDER BY committed_at DESC`).all();
@@ -99228,10 +100712,27 @@ function getDatabaseSummary() {
         (SELECT COUNT(*) FROM sku_reviews) as reviewRows
     `).get();
   const recentLogs = db.prepare(`SELECT id, sku, product_name, action, rows_affected, committed_at FROM ingestion_log ORDER BY id DESC LIMIT 10`).all();
+  const chartRows = db.prepare(
+    `SELECT sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm
+       FROM size_chart ORDER BY sku, sort_order`
+  ).all();
+  const charts = {};
+  for (const row of chartRows) {
+    const list = charts[row.sku] ?? [];
+    list.push({
+      size: row.size_code,
+      sortOrder: row.sort_order,
+      chest_cm: row.chest_cm,
+      length_cm: row.length_cm,
+      sleeve_cm: row.sleeve_cm
+    });
+    charts[row.sku] = list;
+  }
   return {
     reports,
     stats,
-    recentLogs
+    recentLogs,
+    charts
   };
 }
 function createApp() {
@@ -99261,6 +100762,13 @@ function createApp() {
       html: renderMockStoreHtml(product)
     });
   });
+  app2.get("/api/posthog-config", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      projectToken: process.env.POSTHOG_PROJECT_TOKEN || "",
+      host: process.env.POSTHOG_HOST || ""
+    });
+  });
   app2.get("/api/db/remote", async (_req, res) => {
     const remote = await listRemoteFitSkus();
     res.json(remote);
@@ -99270,7 +100778,7 @@ function createApp() {
   });
   app2.post("/api/db/commit", async (req, res) => {
     try {
-      const { report, reports } = req.body;
+      const { report, reports, charts: incomingCharts } = req.body;
       const list = reports || (report ? [report] : []);
       if (list.length === 0) {
         res.status(400).json({ error: "No scraped SKU report provided to dump into database." });
@@ -99278,6 +100786,8 @@ function createApp() {
       }
       for (const item of list) {
         upsertReportTransaction(item);
+        const rows = chartRowsFromClient(incomingCharts?.[item.sku]);
+        if (rows.length > 0) saveSizeChart(item.sku, rows);
       }
       const supabase = await pushFitReports(list, chartsBySku(list));
       res.json({
@@ -99291,8 +100801,7 @@ function createApp() {
       });
     }
   });
-  app2.delete("/api/db/sku/:sku", async (req, res) => {
-    const sku = req.params.sku;
+  const deleteSkuTransaction = db.transaction((sku) => {
     db.prepare(`DELETE FROM commercial_skus WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_size_metrics WHERE sku = ?`).run(sku);
     db.prepare(`DELETE FROM sku_reviews WHERE sku = ?`).run(sku);
@@ -99301,12 +100810,19 @@ function createApp() {
       INSERT INTO ingestion_log (sku, product_name, action, rows_affected, committed_at)
       VALUES (?, ?, 'DELETE_SKU', 1, ?)
     `).run(sku, sku, (/* @__PURE__ */ new Date()).toISOString());
+  });
+  app2.delete("/api/db/sku/:sku", async (req, res) => {
+    const sku = req.params.sku;
+    deleteSkuTransaction(sku);
     const supabase = await deleteRemoteFitSku(sku);
     res.json({ supabase, ...getDatabaseSummary() });
   });
   app2.get("/api/db/dump.sql", (_req, res) => {
-    const { reports } = getDatabaseSummary();
-    const sql = generateSqlInsertDump(reports);
+    const { reports, charts } = getDatabaseSummary();
+    const chartRows = Object.entries(charts).flatMap(
+      ([sku, rows]) => rows.map((row) => ({ sku, ...row }))
+    );
+    const sql = generateSqlInsertDump(reports, chartRows);
     res.setHeader("Content-Type", "application/sql; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
@@ -99355,6 +100871,8 @@ function createApp() {
       } = req.body;
       const renderMode = render3 === "always" || render3 === "never" ? render3 : "auto";
       let targetHtml = (rawHtml || "").trim();
+      let renderedChartHtml = null;
+      let renderedFinalHtml = null;
       let sourceUrl = (url || "batch://direct-review-payload").trim();
       let isRemoteUrl = false;
       let staticError = null;
@@ -99366,6 +100884,11 @@ function createApp() {
           sourceUrl = `https://storefront.pearfitscraper.local/api/mock-store/${mockProd.slug}`;
         } else if (/^https?:\/\//i.test(url)) {
           isRemoteUrl = true;
+          const blocked = await blockedFetchTargetResolved(url);
+          if (blocked) {
+            res.status(400).json({ error: blocked });
+            return;
+          }
           if (renderMode !== "always") {
             const result = await fetchStaticHtml(url);
             if ("html" in result) targetHtml = result.html;
@@ -99385,18 +100908,42 @@ function createApp() {
         isRemoteUrl,
         renderMode,
         staticFailed: staticError !== null,
-        reviewCount: scraped ? scraped.reviews.length : null
+        reviewCount: scraped ? scraped.reviews.length : null,
+        reportedReviewCount: scraped?.meta.scraperTelemetry.reportedReviewCount ?? null
       });
       if (needsRender) {
         try {
           const rendered = await renderPageHtml(url);
+          const blockedBy = blockPageTitle(rendered.html);
           if (rendered.status !== null && rendered.status >= 400) {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
+          } else if (blockedBy) {
+            headlessNote = `The store showed the headless browser a block page ("${blockedBy}"): it refuses automated requests.`;
           } else {
-            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides);
+            const leftProductPage = rendered.chartHtml !== null && new URL(rendered.finalUrl).pathname !== new URL(url).pathname;
+            const renderedScrape = scrapeHtmlWithCheerio(
+              rendered.html,
+              sourceUrl,
+              overrides,
+              rendered.jsonResponses,
+              leftProductPage ? rendered.chartHtml : null
+            );
+            if (rendered.extraHtml?.length) {
+              let earlierReviews = [];
+              for (const pageHtml of rendered.extraHtml) {
+                const earlier = scrapeHtmlWithCheerio(pageHtml, sourceUrl, overrides);
+                earlierReviews = mergeScrapedReviews(earlierReviews, earlier.reviews);
+                renderedScrape.meta.scraperTelemetry.reportedReviewCount ??= earlier.meta.scraperTelemetry.reportedReviewCount;
+              }
+              renderedScrape.reviews = mergeScrapedReviews(earlierReviews, renderedScrape.reviews);
+            }
             renderedScrape.meta.scraperTelemetry.engineMode = "headless-chromium+cheerio-dom";
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift("headless-chromium render");
-            if (!scraped || renderedScrape.reviews.length > 0 || scraped.reviews.length === 0) {
+            const renderedHasData = renderedScrape.meta.scraperTelemetry.reviewSources.some((src) => src !== "dom" && src !== "json-ld");
+            const staticHasData = (scraped?.meta.scraperTelemetry.reviewSources ?? []).some((src) => src !== "dom" && src !== "json-ld");
+            renderedChartHtml = rendered.chartHtml;
+            renderedFinalHtml = rendered.html;
+            if (!scraped || renderedScrape.reviews.length >= scraped.reviews.length || renderedHasData && !staticHasData && renderedScrape.reviews.length > 0) {
               scraped = renderedScrape;
               targetHtml = rendered.html;
             }
@@ -99419,14 +100966,16 @@ function createApp() {
       }
       const { meta, reviews } = scraped;
       if (reviews.length === 0) {
-        const sizeChart2 = targetHtml ? parseSizeChart(targetHtml) : [];
+        const sizeChart2 = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
         if (commitToDb && sizeChart2.length > 0) {
-          const report2 = aggregateProductFitReport(meta, []);
-          upsertReportTransaction(report2);
-          saveSizeChart(report2.sku, sizeChart2);
-          const supabase2 = await pushFitReports([report2], { [report2.sku]: sizeChart2 });
+          const emptyReport = aggregateProductFitReport(meta, []);
+          const keptStoredReviews = hasStoredReviews(emptyReport.sku);
+          if (!keptStoredReviews) upsertReportTransaction(emptyReport);
+          saveSizeChart(emptyReport.sku, sizeChart2);
+          const supabase2 = await pushFitReports([emptyReport], { [emptyReport.sku]: sizeChart2 }, { chartOnly: true });
           res.json({
-            report: report2,
+            report: keptStoredReviews && loadStoredReport(emptyReport.sku) || emptyReport,
+            keptStoredReviews,
             sizeChart: sizeChart2,
             committedToDb: true,
             supabase: supabase2,
@@ -99442,7 +100991,7 @@ function createApp() {
         return;
       }
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = targetHtml ? parseSizeChart(targetHtml) : [];
+      const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
       let supabase = null;
       if (commitToDb) {
         upsertReportTransaction(report);

@@ -159,8 +159,19 @@ function directionFrom(lowLabel: unknown, highLabel: unknown): boolean | null {
   return null;
 }
 
+/** Field ids as words: "SizePurchased" → "Size Purchased", "YourHeight_2024" → "Your Height". */
+export function labelFromId(label: string): string {
+  return label
+    .replace(/_\d+$/, '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function answer(label: unknown, value: unknown, scale: Scale | null = null): ReviewAnswer | null {
-  const l = str(label);
+  const raw = str(label);
+  const l = raw ? labelFromId(raw) : null;
   if (!l) return null;
   const list = Array.isArray(value) ? value : [value];
   const text = list.map((v) => str(v)).filter(Boolean).join(', ') || null;

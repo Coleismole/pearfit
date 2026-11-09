@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   collectJsonReviews,
+  labelFromId,
   extractReviewsFromJson,
   fitTagFromAnswer,
   keysFromUrl,
@@ -496,4 +497,29 @@ test('a review with no size field falls back to the size its text states', () =>
   assert.equal(reviews[0].sizePurchased, 'large');
   // A quantity is not a size.
   assert.equal(reviews[1].sizePurchased, '');
+});
+
+test('Bazaarvoice fields with only an id: SizePurchased, YourHeight_2024, BodyType', () => {
+  const { reviews } = extractReviewsFromJson({
+    Results: [{
+      Id: '1', ProductId: 'X000010292', Rating: 4, ReviewText: 'Good tee for climbing.',
+      AdditionalFields: { SizePurchased: { Value: 'M', Id: 'SizePurchased' }, YourHeight: { Value: '175', Id: 'YourHeight' } },
+      ContextDataValues: { YourHeight_2024: { Value: '176to182', Id: 'YourHeight_2024' }, BodyType: { Value: 'Athletic', Id: 'BodyType' } },
+      SecondaryRatings: { Fit: { Value: 2, Id: 'Fit', ValueRange: 5, MinLabel: null, MaxLabel: null } },
+    }],
+  });
+  const [r] = reviews;
+  assert.equal(r.sizePurchased, 'M');
+  // Both height answers are the reviewer's; the first read (the range) is kept.
+  assert.equal(r.reviewerHeight, '176to182');
+  assert.equal(r.reviewerBuild, 'Athletic');
+  // 2 on 1..5 centred on 3: |2 - 3| / 2 = 0.5, toward small.
+  assert.equal(r.declaredFitTag, 'Slightly Small');
+});
+
+test('labelFromId turns field ids into words', () => {
+  assert.equal(labelFromId('SizePurchased'), 'Size Purchased');
+  assert.equal(labelFromId('YourHeight_2024'), 'Your Height');
+  assert.equal(labelFromId('size_purchased'), 'size purchased');
+  assert.equal(labelFromId('How was the fit?'), 'How was the fit?');
 });

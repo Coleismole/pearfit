@@ -63,6 +63,7 @@ test('a size chart with no reviews is stored, and deleting the SKU removes it', 
     assert.equal(report.totalReviews, 0);
     assert.equal(report.sku, 'CHART-ONLY-1');
     assert.equal(report.overallVerdict, 'Insufficient Data');
+    assert.equal(scraped.json.keptStoredReviews, false);
     const chart = scraped.json.sizeChart as { size: string; chest_cm: number }[];
     assert.equal(chart[0].size, 'M');
     assert.equal(chart[0].chest_cm, 54);
@@ -263,6 +264,9 @@ test('a re-scrape that finds a chart but no reviews keeps the stored reviews', a
       render: 'never',
     });
     assert.equal(rescraped.status, 200, JSON.stringify(rescraped.json));
+    // The response shows the stored report (2 reviews), not an empty one, and says the reviews were kept.
+    assert.equal(rescraped.json.keptStoredReviews, true);
+    assert.equal((rescraped.json.report as { totalReviews: number }).totalReviews, 2);
 
     const dumped = await request(port, 'GET', '/api/db/dump.json');
     const tables = dumped.json.tables as {

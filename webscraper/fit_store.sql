@@ -60,6 +60,10 @@ create table if not exists public.sku_size_chart (
   primary key (sku, size_code)
 );
 
+-- Older scrapes stored a row for every size, including sizes no review mentioned.
+-- Those rows carry a zero rating and a "Low" return risk that no reviewer gave. Safe to re-run.
+delete from public.sku_size_metrics where review_count = 0;
+
 -- Existing projects created this column as NOT NULL. Re-run this script so an unknown opacity can be null.
 alter table public.commercial_skus alter column fabric_opacity_pct drop not null;
 
@@ -195,7 +199,9 @@ begin
       (s->>'avgRating')::double precision,
       s->>'returnRisk',
       s->>'primaryFitNote'
-    from jsonb_array_elements(coalesce(payload->'sizes', '[]'::jsonb)) as s;
+    from jsonb_array_elements(coalesce(payload->'sizes', '[]'::jsonb)) as s
+    -- A size with no reviews has no fit numbers. Older scraper copies still send one row per size.
+    where coalesce((s->>'reviewCount')::integer, 0) > 0;
   end if;
 
   -- Replace this SKU's chart only when the scrape actually found one.

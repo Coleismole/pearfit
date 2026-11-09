@@ -175,7 +175,16 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
         data.committedToDb ? data.dbState : undefined,
         Array.isArray(data.sizeChart) ? data.sizeChart : undefined,
       );
-      if (autoCommitToDb) {
+      if (data.keptStoredReviews) {
+        const remote = supabaseNote(data.supabase);
+        setCommitBanner(
+          `No reviews loaded for SKU ${data.report.sku} this time. Kept the ${data.report.totalReviews} reviews from the earlier scrape${
+            Array.isArray(data.sizeChart) && data.sizeChart.length > 0
+              ? ` and updated the size chart (${data.sizeChart.length} sizes)`
+              : ''
+          }.${remote}`
+        );
+      } else if (autoCommitToDb) {
         const remote = supabaseNote(data.supabase);
         setCommitBanner(
           `Scraped & Dumped SKU ${data.report.sku} (${data.report.name}) into SQLite Database: 1 SKU row, ${data.report.sizeSummaries.length} size_metrics rows, and ${data.report.totalReviews} review rows committed.${remote}${

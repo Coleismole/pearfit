@@ -21,7 +21,7 @@ function scrapedFixture() {
   const cases = join(dir, "cases.json");
   // Engine picks M (ease +0.5 chest); the case says L is right, so this is a measurement miss driven by chest.
   writeFileSync(candidates, JSON.stringify([{
-    id: "uniqlo-oxford", name: "Uniqlo oxford", review: null,
+    id: "uniqlo-oxford", name: "Uniqlo oxford", review: null, garmentType: "button_shirt",
     sizes: {
       S: { chest_cm: 51, length_cm: 70, sleeve_cm: 62 },
       M: { chest_cm: 54.5, length_cm: 72, sleeve_cm: 63 },

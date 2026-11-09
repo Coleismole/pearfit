@@ -299,7 +299,7 @@ const REVIEW_WIDGETS_INTO_VIEW = `(async () => {
  * Clicks one "load more" or "next page" control inside a review widget. Never a link that would
  * leave the page. Returns the control's label, or '' when there is none.
  */
-const CLICK_NEXT_REVIEWS = `(() => {
+const CLICK_NEXT_REVIEWS = `((skip) => {
   ${DEEP_QUERY}
   // "Read more" expands one review's text; it never loads more reviews.
   const MORE = /^(load|show|see|view) (more|all|\\d+ more)( reviews?)?$|^more reviews$/i;
@@ -355,12 +355,16 @@ const CLICK_NEXT_REVIEWS = `(() => {
       }
     }
   }
-  const pick = found.sort((a, b) => b.rank - a.rank)[0];
+  // A control that loaded nothing last time is skipped, so the next candidate gets a turn.
+  const pick = found.filter((f) => !skip.includes(f.label.slice(0, 40) || 'next')).sort((a, b) => b.rank - a.rank)[0];
   if (!pick) return '';
+  // Mark it, so a real pointer click can be sent to the same control if this script click does nothing.
+  for (const el of deepAll('[data-pearfit-paging]')) el.removeAttribute('data-pearfit-paging');
+  pick.el.setAttribute('data-pearfit-paging', '1');
   pick.el.scrollIntoView({ block: 'center' });
   pick.el.click();
   return pick.label.slice(0, 40) || 'next';
-})()`;
+})`;
 
 /**
  * Sorts a review widget by newest first, when it offers that. Widgets often open on "most helpful"
@@ -540,12 +544,23 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
         await capture.settle();
       }
       await pageThroughReviews({
-        click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
+        click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
         progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)),
         enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep: (ms) => page.waitForTimeout(ms),
         scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
+        realClick: async () => {
+          try {
+            await page.keyboard.press('Escape');
+            const control = page.locator('[data-pearfit-paging="1"]').first();
+            await control.scrollIntoViewIfNeeded({ timeout: 2000 });
+            await control.click({ timeout: 3000 });
+            return true;
+          } catch {
+            return false;
+          }
+        },
         stopAt: stopPagingAt,
       });
     }
@@ -614,40 +629,59 @@ async function sortReviewsNewest(evaluate: (script: string) => Promise<unknown>,
  * enough reviews were seen, or time runs out.
  */
 export async function pageThroughReviews(ops: {
-  click: () => Promise<string>;
+  /** Clicks a paging control whose label is not in `skip`; returns its label, or '' when none is left. */
+  click: (skip: string[]) => Promise<string>;
   progress: () => Promise<number>;
   enough: () => Promise<boolean>;
   settle: () => Promise<void>;
   sleep: (ms: number) => Promise<void>;
   /** Scrolls to the end of the page; returns 'scroll'. */
   scroll?: () => Promise<string>;
+  /**
+   * Sends a real pointer click to the control the last click marked. Some stores (L.L.Bean) ignore a
+   * script click on their "load more" button and answer only a real one.
+   */
+  realClick?: () => Promise<boolean>;
   stopAt: number;
 }): Promise<number> {
   let pages = 0;
   let idle = 0;
+  const skip = new Set<string>();
+  const needsRealClick = new Set<string>();
   if (process.env.SCRAPER_DEBUG) console.error(`[paging] start: msLeft=${ops.stopAt - Date.now()} enough=${await ops.enough()}`);
   for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < ops.stopAt; i++) {
     if (await ops.enough()) break;
     const before = await ops.progress();
     // No control left: infinite-scroll lists load the next reviews when the end comes into view.
-    const clicked = (await ops.click()) || (ops.scroll ? await ops.scroll() : '');
+    const clicked = (await ops.click([...skip])) || (ops.scroll ? await ops.scroll() : '');
     if (process.env.SCRAPER_DEBUG) console.error(`[paging] ${i}: clicked=${JSON.stringify(clicked)} before=${before}`);
     if (!clicked) break;
+    const waitForGrowth = async () => {
+      const until = Math.min(Date.now() + 5000, ops.stopAt);
+      while (Date.now() < until) {
+        await ops.sleep(300);
+        await ops.settle();
+        if ((await ops.progress()) > before) return true;
+      }
+      return false;
+    };
     let grew = false;
-    const until = Math.min(Date.now() + 5000, ops.stopAt);
-    while (Date.now() < until) {
-      await ops.sleep(300);
-      await ops.settle();
-      if ((await ops.progress()) > before) {
-        grew = true;
-        break;
+    if (clicked !== 'scroll' && needsRealClick.has(clicked) && ops.realClick) {
+      grew = (await ops.realClick()) && (await waitForGrowth());
+    } else {
+      grew = await waitForGrowth();
+      if (!grew && clicked !== 'scroll' && ops.realClick && (await ops.realClick())) {
+        grew = await waitForGrowth();
+        if (grew) needsRealClick.add(clicked);
       }
     }
     if (grew) {
       pages++;
       idle = 0;
-    } else if (++idle >= 2) {
-      break;
+    } else {
+      // That control loaded nothing; try the next one. Stop after three fruitless clicks in a row.
+      if (clicked !== 'scroll') skip.add(clicked);
+      if (++idle >= 3) break;
     }
   }
   return pages;
@@ -778,7 +812,7 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
         await capture.settle();
       }
       await pageThroughReviews({
-        click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
+        click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
         progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()),
         enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),

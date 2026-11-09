@@ -341,8 +341,9 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
 // Turning answers into fields
 // ---------------------------------------------------------------------------------------------
 
+/** "Size", or a question about the size bought, with or without a prefix ("Mens What Size Did You Purchase"). */
 const SIZE_BOUGHT_LABEL =
-  /^(size|sizes?|size (purchased|ordered|bought|worn|selected|chosen|received)|purchased size|ordered size|what size did you (buy|order|purchase|get|choose)|which size did you (buy|order|purchase|get|choose)|size you (bought|ordered|purchased))\??$/i;
+  /^(size|sizes?)\??$|\b(size (purchased|ordered|bought|worn|selected|chosen|received)|purchased size|ordered size|what size did you (buy|order|purchase|get|choose)|which size did you (buy|order|purchase|get|choose)|size you (bought|ordered|purchased))\b/i;
 const USUAL_SIZE_LABEL = /usual(ly)? (wear|size)|normally wear|typical(ly)? (wear|size)|what size do you (usually|normally|typically)/i;
 const FIT_LABEL = /\bfits?\b|sizing|true to size|how (did|does|do) (it|they|this|the \w+) fit|runs? (small|large|big)|size rating/i;
 const HEIGHT_LABEL = /\bheight\b|how tall/i;

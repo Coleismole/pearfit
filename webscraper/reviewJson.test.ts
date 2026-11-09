@@ -596,3 +596,13 @@ test('PowerReviews: nested details, metrics and badges; fit and body type from p
   assert.equal(r.date, new Date(1592072107189).toISOString());
   assert.deepEqual(r.productKeys, ['1v011322']);
 });
+
+test('a size question with a prefix: L.L.Bean MensWhatSizeDidYouPurchase', () => {
+  const { reviews } = extractReviewsFromJson({
+    Results: [{
+      Id: '1', Rating: 3, ReviewText: 'Shorter than before.',
+      ContextDataValues: { MensWhatSizeDidYouPurchase: { Value: 'L', Id: 'MensWhatSizeDidYouPurchase' }, MensSizeRangePurchased: { Value: 'Regular', Id: 'MensSizeRangePurchased' } },
+    }],
+  });
+  assert.equal(reviews[0].sizePurchased, 'L');
+});

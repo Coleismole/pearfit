@@ -18,6 +18,8 @@ export interface StructuredProduct {
   identifiers: string[];
   /** The review count the page states (aggregateRating.reviewCount, else ratingCount), or null. */
   reportedReviewCount: number | null;
+  /** The site's own name from an Organization node, used as the brand when the product names none. */
+  organizationName: string | null;
 }
 
 type Json = Record<string, unknown>;
@@ -182,7 +184,9 @@ export function extractStructuredProduct(jsonLdBlocks: unknown[]): StructuredPro
   const aggregate = isObject(product.aggregateRating) ? product.aggregateRating : null;
   const count = aggregate ? Number(aggregate.reviewCount ?? aggregate.ratingCount) : NaN;
 
+  const organization = nodes.find((n) => hasType(n, 'Organization') || hasType(n, 'Corporation') || hasType(n, 'OnlineStore'));
   return {
+    organizationName: organization ? text(organization.name) : null,
     identifiers: [...identifiers],
     reportedReviewCount: Number.isInteger(count) && count >= 0 ? count : null,
     name: text(product.name),

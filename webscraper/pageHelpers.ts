@@ -80,6 +80,8 @@ export function productIdFromUrl(url: string): string | null {
   const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
   const m =
     url.match(/\/(\d{4,})\.html/) ||
+    // A product code with letters and digits as the page name: /edgartown-pocket-tee/1V011322.html.
+    url.match(/\/([A-Z0-9]*\d[A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z][A-Z0-9]*\d[A-Z0-9]*)\.html(?:[?#]|$)/i) ||
     // A code contains a digit. A slug such as /product/mens-shirt/ must not win over the id after it.
     url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) ||
     url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i);

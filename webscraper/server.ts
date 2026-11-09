@@ -1025,6 +1025,8 @@ function scrapeHtmlWithCheerio(
     meta('meta[property="product:brand"]') ||
     meta('meta[property="og:site_name"]') ||
     firstText('.product-brand') ||
+    // A single-brand store names itself; used only when nothing names the product's brand.
+    structured?.organizationName ||
     'Unknown brand';
 
   const category =

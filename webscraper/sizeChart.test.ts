@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseSizeChart } from './sizeChart.ts';
+import { parseSizeChart, parseSizeChartFirst } from './sizeChart.ts';
 
 test('an inch chest chart is stored as pit-to-pit centimeters', () => {
   const html = `
@@ -136,4 +136,95 @@ test('a chart whose only numbers are an unspecified chest yields no rows', () =>
       <tr><td>M</td><td>54</td></tr>
     </table>`;
   assert.deepEqual(parseSizeChart(html), []);
+});
+
+const UNIQLO_STYLE_TABLE = `
+  <table class="size-chart"><tbody>
+    <tr><th>Size</th><th>Body length back</th><th>Shoulder width<br>(seam to seam)</th><th>Body width</th><th>Sleeve length<br>(center back)</th></tr>
+    <tr><td>XS</td><td>25 ½</td><td>17 ¼</td><td>19 ¼</td><td>16 ½</td></tr>
+    <tr><td>S</td><td>26 ¾</td><td>17 ¾</td><td>20 ½</td><td>17 ¼</td></tr>
+  </tbody></table>`;
+
+const unitToggle = (cmChecked: boolean, inChecked: boolean) => `
+  <div class="drawer">
+    <input type="radio" name="drawer-measurement-unit" id="drawer-unit-cm" aria-checked="${cmChecked}" ${cmChecked ? 'checked' : ''}>
+    <label for="drawer-unit-cm">CM</label>
+    <input type="radio" name="drawer-measurement-unit" id="drawer-unit-inch" aria-checked="${inChecked}" ${inChecked ? 'checked' : ''}>
+    <label for="drawer-unit-inch">IN</label>
+    ${UNIQLO_STYLE_TABLE}
+  </div>`;
+
+test('a chart with no unit text uses the checked unit radio of its own toggle', () => {
+  // Inches, as the checked radio says. Shoulder width is not a measurement we store.
+  // XS: 25.5 × 2.54 = 64.77 → 64.8; 19.25 × 2.54 = 48.895 → 48.9; 16.5 × 2.54 = 41.91 → 41.9
+  // S:  26.75 × 2.54 = 67.945 → 67.9; 20.5 × 2.54 = 52.07 → 52.1; 17.25 × 2.54 = 43.815 → 43.8
+  assert.deepEqual(parseSizeChart(unitToggle(false, true)), [
+    { size: 'XS', sortOrder: 0, chest_cm: 48.9, length_cm: 64.8, sleeve_cm: 41.9 },
+    { size: 'S', sortOrder: 1, chest_cm: 52.1, length_cm: 67.9, sleeve_cm: 43.8 },
+  ]);
+});
+
+test('a unit toggle with nothing checked, or with two units checked, gives no unit and no rows', () => {
+  assert.deepEqual(parseSizeChart(unitToggle(false, false)), []);
+  assert.deepEqual(parseSizeChart(unitToggle(true, true)), []);
+});
+
+test('radios that are not a unit control are ignored', () => {
+  const html = `
+    <div>
+      <input type="radio" name="color" id="color-in-stock" checked>
+      ${UNIQLO_STYLE_TABLE}
+    </div>`;
+  assert.deepEqual(parseSizeChart(html), []);
+});
+
+test('a unit stated in the chart wins over the toggle', () => {
+  const html = `
+    <div>
+      <input type="radio" name="measurement-unit" id="unit-inch" aria-checked="true" checked>
+      <table>
+        <caption>Size guide (cm)</caption>
+        <tr><th>Size</th><th>Body width</th></tr>
+        <tr><td>M</td><td>54</td></tr>
+      </table>
+    </div>`;
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: null, sleeve_cm: null },
+  ]);
+});
+
+test('a range that starts with a fraction is not read as its first number', () => {
+  const html = `
+    <table>
+      <caption>Size guide (inches)</caption>
+      <tr><th>Size</th><th>Body width</th><th>Length</th></tr>
+      <tr><td>M</td><td>25 ½ - 26</td><td>28</td></tr>
+    </table>`;
+  // 28 × 2.54 = 71.12 → 71.1
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 71.1, sleeve_cm: null },
+  ]);
+});
+
+const CM_CHART = `
+  <table>
+    <caption>Size guide (cm)</caption>
+    <tr><th>Size</th><th>Body width</th><th>Body length</th></tr>
+    <tr><td>M</td><td>52</td><td>70</td></tr>
+  </table>`;
+const CM_CHART_ROWS = [{ size: 'M', sortOrder: 2, chest_cm: 52, length_cm: 70, sleeve_cm: null }];
+
+test('parseSizeChartFirst uses the first page that has a chart', () => {
+  const other = CM_CHART.replace('52', '99');
+  assert.deepEqual(parseSizeChartFirst(CM_CHART, other), CM_CHART_ROWS);
+});
+
+test('parseSizeChartFirst falls back when the first page has no chart, and skips missing pages', () => {
+  const reviewsOnly = '<html><body><article class="review-card">Runs small</article></body></html>';
+  assert.deepEqual(parseSizeChartFirst(reviewsOnly, null, undefined, '', CM_CHART), CM_CHART_ROWS);
+});
+
+test('parseSizeChartFirst returns no rows when no page has a chart', () => {
+  assert.deepEqual(parseSizeChartFirst('<p>nothing</p>', null), []);
+  assert.deepEqual(parseSizeChartFirst(), []);
 });

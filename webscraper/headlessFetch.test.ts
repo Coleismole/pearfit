@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { closeHeadlessBrowser, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
+import { parseSizeChart, parseSizeChartFirst } from './sizeChart.ts';
 
 // A product page whose reviews exist only after JavaScript runs: one batch appears after
 // clicking a "Reviews" tab, one lives in a shadow root, and a "Load more" button adds a third.
@@ -99,6 +100,48 @@ test('renderPageHtml reports an HTTP error status without rendering', { skip: !b
     const result = await renderPageHtml(`http://127.0.0.1:${port}/blocked`);
     assert.equal(result.status, 403);
     assert.equal(result.html, '');
+  } finally {
+    server.close();
+  }
+});
+
+// A product page whose size chart is in the product view, and whose "Load more" review button moves to
+// a reviews-only view (like a client-side route change) and removes the chart from the page.
+const ROUTE_CHANGE_PAGE = `<!DOCTYPE html><html><head><title>Route Tee</title></head><body>
+<div id="app">
+  <h1>Route Tee</h1>
+  <table>
+    <caption>Size guide (cm)</caption>
+    <tr><th>Size</th><th>Body width</th><th>Body length</th></tr>
+    <tr><td>M</td><td>52</td><td>70</td></tr>
+  </table>
+  <article class="review-card"><p>Size: M. True to size.</p></article>
+  <button id="more">Load more</button>
+</div>
+<script>
+  document.getElementById('more').addEventListener('click', () => {
+    history.pushState({}, '', '/product/reviews');
+    document.getElementById('app').innerHTML =
+      '<article class="review-card"><p>Size: M. True to size.</p></article>' +
+      '<article class="review-card"><p>Size: L. Runs small.</p></article>';
+  });
+</script></body></html>`;
+
+test('renderPageHtml keeps the size chart from before a review click leaves the product view', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const server = http.createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end(ROUTE_CHANGE_PAGE);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const result = await renderPageHtml(`http://127.0.0.1:${port}/product`);
+    assert.match(result.html, /Runs small/); // the load-more click really moved to the reviews view
+    assert.equal(parseSizeChart(result.html).length, 0); // so the final html has lost the chart
+    assert.ok(result.chartHtml && /Size guide \(cm\)/.test(result.chartHtml));
+    assert.deepEqual(parseSizeChartFirst(result.html, result.chartHtml), [
+      { size: 'M', sortOrder: 2, chest_cm: 52, length_cm: 70, sleeve_cm: null },
+    ]);
   } finally {
     server.close();
   }

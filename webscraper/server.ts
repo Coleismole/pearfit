@@ -928,9 +928,16 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
     const key = norm(review.body);
     if (key && !index.has(key)) index.set(key, review);
   }
+  const loose = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
   for (const review of extra) {
     const key = norm(review.body);
-    const existing = key ? index.get(key) : undefined;
+    // A card whose text holds the whole card (stars, date, title, body) still matches its review.
+    const existing =
+      (key ? index.get(key) : undefined) ??
+      merged.find((m) => {
+        const start = loose(m.body).slice(0, 40);
+        return start.length >= 15 && loose(review.body).includes(start);
+      });
     if (!existing) {
       merged.push(review);
       if (key) index.set(key, review);
@@ -1068,7 +1075,7 @@ function scrapeHtmlWithCheerio(
           node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
           'Anonymous';
         const body =
-          node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
+          node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
           longestFreeText(lines, [author]) ||
           nodeText;
         // Unlabelled markup: the first short free-text line before the body is the title.

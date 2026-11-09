@@ -366,3 +366,19 @@ test('Bazaarvoice search-engine debug text in review markup is not counted as re
     server.close();
   }
 });
+
+test('a review card whose text is the whole card still matches its review from the page data', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = { props: { reviews: { total: 1, items: [{ id: 'r1', rating: 4, body: 'Nice quality! The fit was a little shorter than I expected', author: 'Hayley W.' }] } } };
+    const html = `<!DOCTYPE html><html><head><title>Sweater</title></head><body><h1>Sweater</h1>
+      <div class="review-card" data-author="Hayley W." data-rating="4"><span>Rated 4 out of 5 stars6 days agoGood Sweater Nice quality! The fit was a little shorter than I expected</span></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script>
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'SWEATER-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 1);
+  } finally {
+    server.close();
+  }
+});

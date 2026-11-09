@@ -986,28 +986,35 @@ function scrapeHtmlWithCheerio(
     category?: ProductFitReport['category'];
   },
   jsonResponses: CapturedJson[] = [],
+  /**
+   * The product page, when the reviews were read on another page of the same product (Nike's
+   * /t/<product>/reviews). Product details and ids come from it; reviews come from `html`.
+   */
+  productHtml: string | null = null,
 ) {
   const startTime = Date.now();
   const $ = cheerio.load(html);
+  const $p = productHtml ? cheerio.load(productHtml) : $;
+  const productPageHtml = productHtml ?? html;
   const domNodesScanned = $('*').length;
   const selectorsUsed: string[] = [];
 
   // 1. schema.org JSON-LD: the most reliable source on real storefronts.
-  const jsonLdScripts = $('script[type="application/ld+json"]')
-    .map((_i, el) => $(el).contents().text())
+  const jsonLdScripts = $p('script[type="application/ld+json"]')
+    .map((_i, el) => $p(el).contents().text())
     .get();
   const structured = extractStructuredProduct(parseJsonLdScripts(jsonLdScripts));
   if (structured) selectorsUsed.push('script[type="application/ld+json"] Product');
 
-  const meta = (selector: string) => $(selector).attr('content')?.trim() || null;
-  const firstText = (selector: string) => $(selector).first().text().replace(/\s+/g, ' ').trim() || null;
+  const meta = (selector: string) => $p(selector).attr('content')?.trim() || null;
+  const firstText = (selector: string) => $p(selector).first().text().replace(/\s+/g, ' ').trim() || null;
 
   const extractedName =
     overrides?.productName ||
     structured?.name ||
     cleanProductTitle(meta('meta[property="og:title"]')) ||
     firstText('h1.product-title') ||
-    cleanProductTitle($('title').first().text()) ||
+    cleanProductTitle($p('title').first().text()) ||
     firstText('h1') ||
     'Unknown product';
 
@@ -1034,7 +1041,7 @@ function scrapeHtmlWithCheerio(
     structured?.sku ||
     meta('meta[name="product:sku"]') ||
     meta('meta[property="product:retailer_item_id"]') ||
-    $('[data-sku]').attr('data-sku') ||
+    $p('[data-sku]').attr('data-sku') ||
     // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
     productIdFromUrl(sourceUrl) ||
     `URL-${stableHash(sourceUrl)}`;
@@ -1045,13 +1052,13 @@ function scrapeHtmlWithCheerio(
     structured?.price ||
     meta('meta[name="product:price"]') ||
     (priceAmount ? [priceAmount, priceCurrency].filter(Boolean).join(' ') : null) ||
-    $('[data-price]').attr('data-price') ||
+    $p('[data-price]').attr('data-price') ||
     'Unknown';
 
   const fabricComposition =
     structured?.material ||
     meta('meta[name="product:fabric"]') ||
-    $('[data-fabric]').attr('data-fabric') ||
+    $p('[data-fabric]').attr('data-fabric') ||
     'Unknown';
 
   const domReviews: RawScrapedReview[] = [];
@@ -1162,7 +1169,7 @@ function scrapeHtmlWithCheerio(
   });
   const fromJson = collectJsonReviews(
     jsonSources.filter((source) => source.value !== null),
-    { keys: pageProductKeys($, html, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
+    { keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
   );
   if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
   const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
@@ -1605,7 +1612,16 @@ export function createApp() {
           if (rendered.status !== null && rendered.status >= 400) {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
           } else {
-            const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides, rendered.jsonResponses);
+            // The render may end on the product's own review page; product details come from the
+            // product page snapshot then.
+            const leftProductPage = rendered.chartHtml !== null && new URL(rendered.finalUrl).pathname !== new URL(url!).pathname;
+            const renderedScrape = scrapeHtmlWithCheerio(
+              rendered.html,
+              sourceUrl,
+              overrides,
+              rendered.jsonResponses,
+              leftProductPage ? rendered.chartHtml : null,
+            );
             renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
             // Keep the render when it found at least as many reviews as the page source, or when it read

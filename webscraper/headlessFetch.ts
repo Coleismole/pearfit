@@ -112,13 +112,22 @@ export class JsonCapture {
   private readonly counted = new Set<string>();
   private countedItems = 0;
 
+  private statedTotal: number | null = null;
+
   /** Distinct reviews in the JSON kept so far (by id, else by the start of the text). */
   reviewCount(): number {
     for (; this.countedItems < this.items.length; this.countedItems++) {
       const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
       for (const r of set.reviews) this.counted.add(reviewIdentity(r));
+      if (set.reportedTotal !== null) this.statedTotal = Math.max(this.statedTotal ?? 0, set.reportedTotal);
     }
     return this.counted.size;
+  }
+
+  /** The largest product review total the kept JSON states, or null. */
+  reportedTotal(): number | null {
+    this.reviewCount();
+    return this.statedTotal;
   }
 
   async settle(timeoutMs = 3000): Promise<void> {
@@ -245,13 +254,31 @@ const OPEN_RATING_SUMMARY = `(() => {
   ${DEEP_QUERY}
   for (const el of deepAll('a, button, [role="button"]')) {
     const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
-    if (label.length > 90 || !/out of 5[^a-z]*\\(?\\d|\\(\\d[\\d,]*\\)|^\\d[\\d,]* reviews?\\b/i.test(label)) continue;
+    if (label.length > 90 || !/out of 5[^a-z]*\\(?\\d|out of 5\\b.*\\b\\d[\\d,]* (reviews?|ratings?)\\b|\\(\\d[\\d,]*\\)|^\\d[\\d,]* (reviews?|ratings?)\\b/i.test(label)) continue;
     const href = el.getAttribute('href') || '';
     if (el.tagName === 'A' && href && !/^(#|javascript:)/i.test(href)) continue;
     const r = el.getBoundingClientRect();
     if (!r.width || !r.height) continue;
     el.click();
     return label.slice(0, 40);
+  }
+  return '';
+})()`;
+
+/**
+ * The address of this product's own review page ("See Reviews" → /t/product/reviews): a link whose path
+ * extends the product page's path. Never another product or section of the site.
+ */
+const ALL_REVIEWS_LINK = `(() => {
+  ${DEEP_QUERY}
+  const base = location.pathname.replace(/\\/$/, '');
+  for (const el of deepAll('a[href]')) {
+    const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!/^(see|view|read|show)( all)?( \\d[\\d,]*)? reviews?\\b|^all reviews\\b/i.test(label)) continue;
+    try {
+      const target = new URL(el.getAttribute('href'), location.href);
+      if (target.origin === location.origin && target.pathname.startsWith(base + '/') && /review/i.test(target.pathname)) return target.href;
+    } catch (e) {}
   }
   return '';
 })()`;
@@ -561,6 +588,27 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
             return false;
           }
         },
+        stopAt: stopPagingAt,
+      });
+    }
+
+    // The product page shows only some reviews and links to its own review page (Nike: /t/product/reviews).
+    // Follow it when fewer reviews were read than the store states and time is left, and page through there.
+    const stated = capture.reportedTotal();
+    const reviewPage = (await page.evaluate(ALL_REVIEWS_LINK)) as string;
+    if (reviewPage && stated !== null && capture.reviewCount() < stated && Date.now() < stopPagingAt - 15_000) {
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
+      await page.goto(reviewPage, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS }).catch(() => null);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      await page.evaluate(REVIEW_WIDGETS_INTO_VIEW).catch(() => {});
+      await capture.settle();
+      await pageThroughReviews({
+        click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`) as Promise<string>,
+        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)),
+        enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
+        settle: () => capture.settle(1500),
+        sleep: (ms) => page.waitForTimeout(ms),
+        scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
         stopAt: stopPagingAt,
       });
     }

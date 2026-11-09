@@ -1045,6 +1045,7 @@ function scrapeHtmlWithCheerio(
     'Unknown';
 
   const domReviews: RawScrapedReview[] = [];
+  const completeDomCards = new Set<number>();
 
   // 2. Review cards in the DOM (microdata and common review-widget markup).
   // JSON-LD often carries only a few reviews. The cards on the page are still read.
@@ -1110,6 +1111,9 @@ function scrapeHtmlWithCheerio(
         const parsedRating = parseFloat(ratingStr);
 
         if (body.length > 8) {
+          // A card with a star rating in its markup and a named reviewer is a real review. Lines a widget
+          // repeats around reviews ("Was this review helpful?") have neither.
+          if (Number.isFinite(parsedRating) && author !== 'Anonymous') completeDomCards.add(domReviews.length);
           domReviews.push({
             id: `dom-rev-${idx + 1}`,
             author,
@@ -1146,17 +1150,20 @@ function scrapeHtmlWithCheerio(
   if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
   const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
 
-  // When the review widget's own data was read, the review cards in the markup are the same reviews
-  // with less reliable fields (a widget's "Was this review helpful?" line can pass for a body), so
-  // they are not added on top. JSON-LD often holds only a few reviews, so it still merges with cards.
+  // When the review widget's own data was read, only complete markup cards are added: a widget that
+  // renders its first reviews in the page and loads the rest as JSON (Okendo) needs both, while a
+  // "Was this review helpful?" line must not pass for a review. JSON-LD still merges with all cards.
   const useDom = jsonReviews.length === 0;
   const reviews = useDom
     ? mergeScrapedReviews(structured?.reviews ?? [], domReviews)
-    : mergeScrapedReviews(jsonReviews, structured?.reviews ?? []);
+    : mergeScrapedReviews(
+        mergeScrapedReviews(jsonReviews, structured?.reviews ?? []),
+        domReviews.filter((_r, i) => completeDomCards.has(i)),
+      );
   const reviewSources = [
     ...fromJson.sources,
     ...(structured?.reviews.length ? ['json-ld'] : []),
-    ...(useDom && domReviews.length ? ['dom'] : []),
+    ...((useDom ? domReviews.length : completeDomCards.size) ? ['dom'] : []),
   ];
 
   // 3. Free-text fallback, only for pasted review text/snippets. On a full fetched page it

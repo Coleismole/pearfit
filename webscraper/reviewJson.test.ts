@@ -387,3 +387,71 @@ test('Quince: slider answers by display name, and another widget whose reviews n
   // No answer says which size was bought, so none is guessed.
   assert.equal(r.sizePurchased, '');
 });
+
+test('Okendo: a centred range from -1 to 1, size purchased, and reviewer height and weight', () => {
+  const review = (id: string, fit: number) => ({
+    reviewId: id,
+    productId: 'shopify-8143575580858',
+    productName: 'Kessler Sweater',
+    rating: 4,
+    body: 'Nice quality.',
+    dateCreated: '2026-11-02T22:35:46.756Z',
+    attributesWithRating: [
+      { minLabel: 'Bad', title: 'Quality', type: 'range', value: 5, maxLabel: 'Good' },
+      { minLabel: 'Small', midLabel: 'True to Size', title: 'Fit', type: 'centered-range', value: fit, maxLabel: 'Large' },
+    ],
+    productAttributes: [{ title: 'Size Purchased', type: 'single-value', value: 'L' }],
+    reviewer: {
+      displayName: 'Hayley W.',
+      isVerified: true,
+      attributes: [
+        { title: 'Height (in)', type: 'single-value', value: '5\' 10"' },
+        { title: 'Weight (lb)', type: 'single-value', value: '160 - 170 lb' },
+      ],
+    },
+  });
+  const { reviews } = extractReviewsFromJson({ reviews: [review('a', 0.5), review('b', -1), review('c', 0), review('d', 2)] });
+  assert.equal(reviews[0].author, 'Hayley W.');
+  assert.equal(reviews[0].sizePurchased, 'L');
+  assert.equal(reviews[0].reviewerHeight, '5\' 10"');
+  assert.equal(reviews[0].reviewerBuild, '160 - 170 lb');
+  assert.deepEqual(reviews[0].productKeys, ['8143575580858']);
+  // 0.5 on -1..1: |0.5| / 1 = 0.5 < 0.75, toward Large. The widget draws it at "1.0 of -2..2".
+  assert.equal(reviews[0].declaredFitTag, 'Slightly Large');
+  assert.equal(reviews[1].declaredFitTag, 'Runs Small');
+  assert.equal(reviews[2].declaredFitTag, 'True to Size');
+  // 2 is outside -1..1, so the scale is unknown and nothing is guessed.
+  assert.equal(reviews[3].declaredFitTag, undefined);
+});
+
+test('TurnTo: text, first and last name, millisecond date, catalog sku, and worded dimensions', () => {
+  const body = {
+    total: 373,
+    reviews: [
+      {
+        id: 255163,
+        catItem: { id: 677, sku: 'K87', title: 'Iconic K87 Pocket T-Shirt' },
+        dateCreatedMillis: 1793966456000,
+        dimensions: [
+          { dimensionLabel: 'Durability', type: 1, value: 5, valueLabels: [] },
+          { dimensionLabel: 'Fit', type: 2, value: 1, valueLabels: ['Runs small', 'True to size', 'Runs large'] },
+        ],
+        profileAttributes: { custom: [{ label: 'Height', value: '5\'9" - 6\'0"' }] },
+        rating: 5,
+        text: 'Thick and well made.',
+        title: 'Best shirts ever!',
+        user: { firstName: 'Christy', lastName: 'B' },
+      },
+    ],
+  };
+  const { reviews, reportedTotal } = extractReviewsFromJson(body);
+  assert.equal(reportedTotal, 373);
+  const [r] = reviews;
+  assert.equal(r.author, 'Christy B.');
+  assert.equal(r.body, 'Thick and well made.');
+  assert.equal(r.date, new Date(1793966456000).toISOString());
+  assert.deepEqual(r.productKeys, ['k87']);
+  // Value 1 is the first of its own labels: "Runs small".
+  assert.equal(r.declaredFitTag, 'Runs Small');
+  assert.equal(r.reviewerHeight, '5\'9" - 6\'0"');
+});

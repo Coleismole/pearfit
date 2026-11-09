@@ -74,7 +74,7 @@ function firstPath(obj: Json, paths: string[]): unknown {
 const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore', 'rate'];
 const BODY_KEYS = ['body', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
 const TITLE_KEYS = ['title', 'Title', 'reviewTitle', 'review_title', 'headline'];
-const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'date', 'created'];
+const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'dateCreatedMillis', 'createdDate', 'date', 'created'];
 const ID_KEYS = ['id', 'Id', 'reviewId', 'review_id', 'ReviewId', 'uuid'];
 const AUTHOR_PATHS = [
   'user.displayName', 'user.display_name', 'user.name', 'author.name', 'author.displayName', 'author.display_name',
@@ -225,6 +225,11 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
         scale = { center: (min + max) / 2, half: (max - min) / 2, lowIsSmall };
       } else if (/centered/i.test(type) && options.length === 3 && lowIsSmall !== null) {
         scale = { center: 3, half: 2, lowIsSmall };
+      } else if (/centered/i.test(type) && 'midLabel' in item && lowIsSmall !== null) {
+        // Okendo stores a centred range from -1 to 1 and shows it as "a scale of minus 2 to 2":
+        // 0.5 is drawn at 75% ("Rated 1.0"). A value outside -1..1 is not on that scale.
+        const v = num(item.value);
+        if (v !== null && Math.abs(v) <= 1) scale = { center: 0, half: 1, lowIsSmall };
       }
       push(answer(label, first(item, ['value', 'answer', 'values', 'displayName']), scale));
     }
@@ -278,6 +283,22 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
       const scale = range && range >= 3 ? { center: (range + 1) / 2, half: (range - 1) / 2, lowIsSmall } : null;
       push(answer(first(field, ['Label']) ?? id.replace(/_\d+$/, ''), field.Value, scale));
     }
+  }
+
+  // TurnTo: dimensions [{ dimensionLabel, value, valueLabels }] and profileAttributes.custom [{ label, value }].
+  // A dimension's number is used only through its own value labels (1-based), never on a guessed scale.
+  if (Array.isArray(review.dimensions)) {
+    for (const item of review.dimensions) {
+      if (!isObject(item)) continue;
+      const labels = Array.isArray(item.valueLabels) ? item.valueLabels.map((l) => str(isObject(l) ? first(l, ['label', 'value', 'name']) : l)) : [];
+      const v = num(item.value);
+      const worded = v !== null && Number.isInteger(v) && v >= 1 && v <= labels.length ? labels[v - 1] : null;
+      push(answer(item.dimensionLabel, worded));
+    }
+  }
+  const profile = at(review, 'profileAttributes.custom');
+  if (Array.isArray(profile)) {
+    for (const item of profile) if (isObject(item)) push(answer(item.label, item.value));
   }
 
   // Stamped and others: arrays of { k, v } / { key, value } / { question, answer } pairs.
@@ -358,9 +379,9 @@ function fieldsFromAnswers(answers: ReviewAnswer[]): Partial<RawScrapedReview> {
 const PRODUCT_KEY_PATHS = [
   'productId', 'product_id', 'ProductId', 'productExternalId', 'product_external_id', 'productSKU', 'productHandle',
   'product_handle', 'product.shopify_id', 'product.external_id', 'product.shopify_handle', 'product.handle', 'product.id',
-  'product_variant.product_external_id', 'shopProductId',
+  'product_variant.product_external_id', 'shopProductId', 'catItem.sku',
 ];
-const PRODUCT_NAME_PATHS = ['productName', 'product_name', 'OriginalProductName', 'product.name', 'product.title', 'groupingData.productName'];
+const PRODUCT_NAME_PATHS = ['productName', 'product_name', 'OriginalProductName', 'product.name', 'product.title', 'groupingData.productName', 'catItem.title'];
 
 function authorOf(obj: Json): string {
   for (const path of AUTHOR_PATHS) {
@@ -368,8 +389,8 @@ function authorOf(obj: Json): string {
     const s = typeof v === 'string' ? str(v) : null;
     if (s) return s;
   }
-  const firstName = str(firstPath(obj, ['customer.first_name', 'reviewer.first_name', 'first_name']));
-  const lastName = str(firstPath(obj, ['customer.last_name', 'reviewer.last_name', 'last_name']));
+  const firstName = str(firstPath(obj, ['customer.first_name', 'reviewer.first_name', 'first_name', 'user.firstName', 'firstName']));
+  const lastName = str(firstPath(obj, ['customer.last_name', 'reviewer.last_name', 'last_name', 'user.lastName', 'lastName']));
   if (firstName) return lastName ? `${firstName} ${lastName.charAt(0)}.` : firstName;
   return 'Anonymous';
 }

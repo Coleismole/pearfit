@@ -325,3 +325,25 @@ test('when the page holds review data, widget markup is not counted as more revi
     server.close();
   }
 });
+
+test('a complete review card in the markup is kept next to review data, a bare widget line is not', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // Page data holds review r2 (page 2 of a widget); the first review was rendered as markup only.
+    const nextData = { props: { reviews: { total: 2, items: [{ id: 'r2', rating: 4, body: 'Second page review, fits well.', author: 'Bo', size: 'L' }] } } };
+    const html = `<!DOCTYPE html><html><head><title>Mixed Tee</title></head><body><h1>Mixed Tee</h1>
+      <article class="review-card" data-author="Ana" data-rating="5" data-size="M"><p class="review-body-copy">First page review, rendered by the store.</p></article>
+      <div class="review-card"><p>Was this review helpful to you?</p></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script>
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'MIXED-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { reviews: { author: string; normalizedSize: string | null }[] };
+    assert.deepEqual(
+      report.reviews.map((r) => [r.author, r.normalizedSize]).sort(),
+      [['Ana', 'M'], ['Bo', 'L']],
+    );
+  } finally {
+    server.close();
+  }
+});

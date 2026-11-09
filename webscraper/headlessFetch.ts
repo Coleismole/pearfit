@@ -14,7 +14,7 @@ import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
-  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
+  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
@@ -459,8 +459,10 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
         .waitFor({ timeout: REVIEW_WAIT_MS, state: 'attached' })
         .then(() => true)
         .catch(() => false));
+    // A review widget whose first reviews came embedded in the page (Okendo) still pages by JavaScript.
+    const hasReviewWidget = (await page.locator(REVIEW_WIDGET_SELECTOR).count()) > 0;
 
-    if (reviewSelectorFound) {
+    if (reviewSelectorFound || hasReviewWidget) {
       if (await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms))) {
         await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {});
         await capture.settle();
@@ -671,8 +673,9 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
         .waitForSelector(REVIEW_CARD_SELECTOR, { timeout: REVIEW_WAIT_MS })
         .then(() => true)
         .catch(() => false));
+    const hasReviewWidget = ((await page.evaluate(`document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)}).length`)) as number) > 0;
 
-    if (reviewSelectorFound) {
+    if (reviewSelectorFound || hasReviewWidget) {
       if (await sortReviewsNewest((script) => page.evaluate(script), sleep)) {
         await page.waitForNetworkIdle({ timeout: 4000 }).catch(() => {});
         await capture.settle();

@@ -485,3 +485,15 @@ test('later pages of this product\'s own list are kept even when every review na
   );
   assert.deepEqual(out.reviews.map((r) => r.id), ['1', '2', '3', '4']);
 });
+
+test('a review with no size field falls back to the size its text states', () => {
+  const { reviews } = extractReviewsFromJson({
+    Results: [
+      { Id: '1', Rating: 5, ReviewText: 'Perfect size (I ordered a large), so soft.' },
+      { Id: '2', Rating: 4, ReviewText: 'I bought 2 of these in different colours.' },
+    ],
+  });
+  assert.equal(reviews[0].sizePurchased, 'large');
+  // A quantity is not a size.
+  assert.equal(reviews[1].sizePurchased, '');
+});

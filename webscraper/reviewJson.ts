@@ -11,6 +11,7 @@
  * A size is taken from an answer labelled as the size bought, or from the purchased variant.
  */
 import type { RawScrapedReview } from './fitAnalyzer.ts';
+import { extractSizeFromReviewText } from './structuredData.ts';
 
 type Json = Record<string, unknown>;
 
@@ -419,8 +420,9 @@ export function reviewFromJson(obj: Json, index: number): JsonReview | null {
   const rating = normalizeRating(first(obj, RATING_KEYS), obj.bestRating)!;
   const fields = fieldsFromAnswers(reviewAnswers(obj));
   const variantTitle = str(firstPath(obj, ['product_variant.title', 'productVariantName', 'variantName', 'variant_title', 'variant.title']));
+  // Last, the size the review text states ("I ordered a large"), as for markup and JSON-LD reviews.
   const sizePurchased =
-    fields.sizePurchased ?? (variantTitle ? sizeFromVariantTitle(variantTitle) : null) ?? '';
+    fields.sizePurchased ?? (variantTitle ? sizeFromVariantTitle(variantTitle) : null) ?? extractSizeFromReviewText(bodyOf(obj) ?? '');
   const productKeys = PRODUCT_KEY_PATHS.map((p) => str(at(obj, p))?.toLowerCase().replace(/^shopify-/, '')).filter((k): k is string => !!k);
   return {
     id: str(first(obj, ID_KEYS)) ?? `json-${index}`,

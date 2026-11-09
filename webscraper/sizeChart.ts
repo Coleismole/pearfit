@@ -376,3 +376,13 @@ export function parseSizeChart(html: string): SizeChartRow[] {
   const rows = rowsFromTables(html);
   return rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
+
+/** The chart from the first page that has one. Later pages are fallbacks, e.g. a snapshot from before navigation. */
+export function parseSizeChartFirst(...pages: (string | null | undefined)[]): SizeChartRow[] {
+  for (const html of pages) {
+    if (!html) continue;
+    const rows = parseSizeChart(html);
+    if (rows.length > 0) return rows;
+  }
+  return [];
+}

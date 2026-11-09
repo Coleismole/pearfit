@@ -33,6 +33,12 @@ export interface RenderedPage {
   status: number | null;
   finalUrl: string;
   reviewSelectorFound: boolean;
+  /**
+   * The page as serialized once it settled and was scrolled, before any review step.
+   * A review click can navigate away from the product view (Uniqlo goes to /reviews) and take the
+   * size chart with it, so the chart is read from here when the final html has none.
+   */
+  chartHtml: string | null;
 }
 
 /**
@@ -224,13 +230,16 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false };
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null };
     }
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
 
     await clickFirst(page, 'button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
 
     await scrollThroughPage(page);
+
+    // Snapshot before touching reviews: a review click may leave the product view.
+    const chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
 
     // The full review list is often behind a tab or accordion, even when a few highlight
     // reviews are already visible. A link may navigate away, so only use it as a last resort.
@@ -280,6 +289,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       status,
       finalUrl: page.url(),
       reviewSelectorFound,
+      chartHtml,
     };
   } catch (err) {
     if (timedOut) {
@@ -371,11 +381,14 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
-      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false };
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null };
     }
     await page.waitForNetworkIdle({ timeout: 8000 }).catch(() => {});
     await clickRole('button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
     await page.evaluate(SCROLL_PAGE);
+
+    // Snapshot before touching reviews: a review click may leave the product view.
+    const chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
 
     const reviewsBeforeOpening = await countReviews();
     const openedSection =
@@ -413,7 +426,7 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
     await sleep(500);
 
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
-    return { html, status, finalUrl: page.url(), reviewSelectorFound };
+    return { html, status, finalUrl: page.url(), reviewSelectorFound, chartHtml };
   } catch (err) {
     if (timedOut) throw new Error(`Headless render timed out after ${renderBudgetMs() / 1000}s`);
     throw err;

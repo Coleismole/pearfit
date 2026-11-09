@@ -198,6 +198,25 @@ if (opacityColumn?.notnull === 1) {
   `);
 }
 
+/** True when this SKU is stored locally with at least one review. */
+function hasStoredReviews(sku: string): boolean {
+  const row = db.prepare(`SELECT total_reviews FROM commercial_skus WHERE sku = ?`).get(sku) as
+    | { total_reviews: number }
+    | undefined;
+  return (row?.total_reviews ?? 0) > 0;
+}
+
+/** The report this machine stored for a SKU, or null when there is none. */
+function loadStoredReport(sku: string): ProductFitReport | null {
+  const row = db.prepare(`SELECT report_json, committed_at FROM commercial_skus WHERE sku = ?`).get(sku) as
+    | { report_json: string; committed_at: string }
+    | undefined;
+  if (!row) return null;
+  const report = JSON.parse(row.report_json) as ProductFitReport;
+  report.committedToDbAt = row.committed_at;
+  return report;
+}
+
 const upsertReportTransaction = db.transaction((report: ProductFitReport) => {
   const nowIso = new Date().toISOString();
   report.committedToDbAt = nowIso;
@@ -1500,12 +1519,16 @@ export function createApp() {
         // A chart with no parent SKU never shows up and never reaches Supabase.
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
-          const report = aggregateProductFitReport(meta, []);
-          upsertReportTransaction(report);
-          saveSizeChart(report.sku, sizeChart);
-          const supabase = await pushFitReports([report], { [report.sku]: sizeChart });
+          const emptyReport = aggregateProductFitReport(meta, []);
+          // The reviews may have failed to load this time. Keep the ones an earlier scrape stored,
+          // and show that stored report rather than an empty one.
+          const keptStoredReviews = hasStoredReviews(emptyReport.sku);
+          if (!keptStoredReviews) upsertReportTransaction(emptyReport);
+          saveSizeChart(emptyReport.sku, sizeChart);
+          const supabase = await pushFitReports([emptyReport], { [emptyReport.sku]: sizeChart }, { chartOnly: true });
           res.json({
-            report,
+            report: (keptStoredReviews && loadStoredReport(emptyReport.sku)) || emptyReport,
+            keptStoredReviews,
             sizeChart,
             committedToDb: true,
             supabase,

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import type { ProductFitReport } from './fitAnalyzer.ts';
+import { aggregateProductFitReport, type ProductFitReport } from './fitAnalyzer.ts';
 import { fitPayloadFromReport } from './fitPayload.ts';
 
 test('fit payload keeps numerical fit values and drops review text', () => {
@@ -112,4 +112,47 @@ test('fit payload keeps numerical fit values and drops review text', () => {
   assert.equal(encoded.includes('reviews'), false);
   assert.equal(encoded.includes('sampleQuote'), false);
   assert.equal(encoded.includes('Sam'), false);
+});
+
+const meta = {
+  id: 'e1',
+  name: 'Tee',
+  brand: 'UNIQLO',
+  category: 'T-Shirts & Tops' as ProductFitReport['category'],
+  sku: 'E1',
+  price: 'Unknown',
+  fabricComposition: 'Unknown',
+  sourceUrl: 'https://example.com/tee',
+};
+
+test('sizes with no reviews are not sent to the fit store', () => {
+  const review = (id: string, size: string) => ({
+    id,
+    author: 'A',
+    sizePurchased: size,
+    rating: 5,
+    title: '',
+    body: 'Fits true to size, great shirt',
+    date: '',
+    verifiedPurchase: false,
+  });
+  const report = aggregateProductFitReport(meta, [review('1', 'M'), review('2', 'M'), review('3', 'L')]);
+  // The report itself still lists all six sizes, XS to XXL.
+  assert.equal(report.sizeSummaries.length, 6);
+  const payload = fitPayloadFromReport(report);
+  // Only M (2 reviews) and L (1 review) carry fit numbers.
+  assert.deepEqual(
+    payload.sizes.map((size) => [size.size, size.reviewCount]),
+    [['M', 2], ['L', 1]],
+  );
+  assert.equal(payload.chartOnly, false);
+});
+
+test('a scrape with a chart and no reviews is sent as chart-only', () => {
+  const report = aggregateProductFitReport(meta, []);
+  const chart = [{ size: 'M', sortOrder: 2, chest_cm: 55.9, length_cm: 71.8, sleeve_cm: null }];
+  const payload = fitPayloadFromReport(report, chart, { chartOnly: true });
+  assert.equal(payload.chartOnly, true);
+  assert.deepEqual(payload.sizes, []);
+  assert.equal(payload.chart.length, 1);
 });

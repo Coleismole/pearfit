@@ -60,6 +60,10 @@ create table if not exists public.sku_size_chart (
   primary key (sku, size_code)
 );
 
+-- Older scrapes stored a row for every size, including sizes no review mentioned.
+-- Those rows carry a zero rating and a "Low" return risk that no reviewer gave. Safe to re-run.
+delete from public.sku_size_metrics where review_count = 0;
+
 -- Existing projects created this column as NOT NULL. Re-run this script so an unknown opacity can be null.
 alter table public.commercial_skus alter column fabric_opacity_pct drop not null;
 
@@ -124,75 +128,108 @@ begin
     raise exception 'sku is required';
   end if;
 
-  insert into public.commercial_skus (
-    sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at
-  ) values (
-    payload->>'sku',
-    payload->>'productId',
-    payload->>'brand',
-    payload->>'name',
-    payload->>'category',
-    payload->>'price',
-    payload->>'fabricComposition',
-    (payload->>'totalReviews')::integer,
-    (payload->>'overallFitIndex')::double precision,
-    payload->>'overallVerdict',
-    (payload->>'gradingDelta')::double precision,
-    (payload->>'runsSmallPct')::integer,
-    (payload->>'trueToSizePct')::integer,
-    (payload->>'runsLargePct')::integer,
-    (payload->>'shrinkageMentionPct')::integer,
-    (payload->>'fabricOpacityPct')::integer,
-    (payload->>'sentimentScore')::integer,
-    (payload->>'avgRating')::double precision,
-    payload->>'sourceUrl',
-    (payload->>'scrapedAt')::timestamptz,
-    now()
-  )
-  on conflict (sku) do update set
-    product_id = excluded.product_id,
-    brand = excluded.brand,
-    product_name = excluded.product_name,
-    category = excluded.category,
-    retail_price = excluded.retail_price,
-    fabric_composition = excluded.fabric_composition,
-    total_reviews = excluded.total_reviews,
-    overall_fit_index = excluded.overall_fit_index,
-    overall_verdict = excluded.overall_verdict,
-    grading_delta = excluded.grading_delta,
-    runs_small_pct = excluded.runs_small_pct,
-    true_to_size_pct = excluded.true_to_size_pct,
-    runs_large_pct = excluded.runs_large_pct,
-    shrinkage_mention_pct = excluded.shrinkage_mention_pct,
-    fabric_opacity_pct = excluded.fabric_opacity_pct,
-    sentiment_score = excluded.sentiment_score,
-    avg_rating = excluded.avg_rating,
-    source_url = excluded.source_url,
-    scraped_at = excluded.scraped_at,
-    committed_at = now();
+  -- A chart-only payload means the scrape found no reviews. Create the row if it is new so the
+  -- chart has a parent, but keep fit numbers and per-size rows from an earlier scrape.
+  if coalesce((payload->>'chartOnly')::boolean, false) then
+    insert into public.commercial_skus (
+      sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at
+    ) values (
+      payload->>'sku',
+      payload->>'productId',
+      payload->>'brand',
+      payload->>'name',
+      payload->>'category',
+      payload->>'price',
+      payload->>'fabricComposition',
+      (payload->>'totalReviews')::integer,
+      (payload->>'overallFitIndex')::double precision,
+      payload->>'overallVerdict',
+      (payload->>'gradingDelta')::double precision,
+      (payload->>'runsSmallPct')::integer,
+      (payload->>'trueToSizePct')::integer,
+      (payload->>'runsLargePct')::integer,
+      (payload->>'shrinkageMentionPct')::integer,
+      (payload->>'fabricOpacityPct')::integer,
+      (payload->>'sentimentScore')::integer,
+      (payload->>'avgRating')::double precision,
+      payload->>'sourceUrl',
+      (payload->>'scrapedAt')::timestamptz,
+      now()
+    )
+    on conflict (sku) do nothing;
+  else
+    insert into public.commercial_skus (
+      sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at
+    ) values (
+      payload->>'sku',
+      payload->>'productId',
+      payload->>'brand',
+      payload->>'name',
+      payload->>'category',
+      payload->>'price',
+      payload->>'fabricComposition',
+      (payload->>'totalReviews')::integer,
+      (payload->>'overallFitIndex')::double precision,
+      payload->>'overallVerdict',
+      (payload->>'gradingDelta')::double precision,
+      (payload->>'runsSmallPct')::integer,
+      (payload->>'trueToSizePct')::integer,
+      (payload->>'runsLargePct')::integer,
+      (payload->>'shrinkageMentionPct')::integer,
+      (payload->>'fabricOpacityPct')::integer,
+      (payload->>'sentimentScore')::integer,
+      (payload->>'avgRating')::double precision,
+      payload->>'sourceUrl',
+      (payload->>'scrapedAt')::timestamptz,
+      now()
+    )
+    on conflict (sku) do update set
+      product_id = excluded.product_id,
+      brand = excluded.brand,
+      product_name = excluded.product_name,
+      category = excluded.category,
+      retail_price = excluded.retail_price,
+      fabric_composition = excluded.fabric_composition,
+      total_reviews = excluded.total_reviews,
+      overall_fit_index = excluded.overall_fit_index,
+      overall_verdict = excluded.overall_verdict,
+      grading_delta = excluded.grading_delta,
+      runs_small_pct = excluded.runs_small_pct,
+      true_to_size_pct = excluded.true_to_size_pct,
+      runs_large_pct = excluded.runs_large_pct,
+      shrinkage_mention_pct = excluded.shrinkage_mention_pct,
+      fabric_opacity_pct = excluded.fabric_opacity_pct,
+      sentiment_score = excluded.sentiment_score,
+      avg_rating = excluded.avg_rating,
+      source_url = excluded.source_url,
+      scraped_at = excluded.scraped_at,
+      committed_at = now();
 
-  delete from public.sku_size_metrics where sku = payload->>'sku';
+    delete from public.sku_size_metrics where sku = payload->>'sku';
 
-  insert into public.sku_size_metrics (
-    sku, size_code, review_count, fit_skew, fit_verdict,
-    runs_small_pct, true_to_size_pct, runs_large_pct,
-    shrinkage_pct, sentiment_score, avg_rating, return_risk, primary_fit_note
-  )
-  select
-    payload->>'sku',
-    s->>'size',
-    (s->>'reviewCount')::integer,
-    (s->>'fitSkew')::double precision,
-    s->>'verdict',
-    (s->>'runsSmallPct')::integer,
-    (s->>'trueToSizePct')::integer,
-    (s->>'runsLargePct')::integer,
-    (s->>'shrinkagePct')::integer,
-    (s->>'sentimentScore')::integer,
-    (s->>'avgRating')::double precision,
-    s->>'returnRisk',
-    s->>'primaryFitNote'
-  from jsonb_array_elements(coalesce(payload->'sizes', '[]'::jsonb)) as s;
+    insert into public.sku_size_metrics (
+      sku, size_code, review_count, fit_skew, fit_verdict,
+      runs_small_pct, true_to_size_pct, runs_large_pct,
+      shrinkage_pct, sentiment_score, avg_rating, return_risk, primary_fit_note
+    )
+    select
+      payload->>'sku',
+      s->>'size',
+      (s->>'reviewCount')::integer,
+      (s->>'fitSkew')::double precision,
+      s->>'verdict',
+      (s->>'runsSmallPct')::integer,
+      (s->>'trueToSizePct')::integer,
+      (s->>'runsLargePct')::integer,
+      (s->>'shrinkagePct')::integer,
+      (s->>'sentimentScore')::integer,
+      (s->>'avgRating')::double precision,
+      s->>'returnRisk',
+      s->>'primaryFitNote'
+    from jsonb_array_elements(coalesce(payload->'sizes', '[]'::jsonb)) as s
+    -- A size with no reviews has no fit numbers. Older scraper copies still send one row per size.
+    where coalesce((s->>'reviewCount')::integer, 0) > 0;
+  end if;
 
   -- Replace this SKU's chart only when the scrape actually found one.
   -- A missing or empty chart leaves the previous rows in place.
@@ -294,21 +331,27 @@ as $$
 $$;
 
 -- Grant every overload. A signature mismatch leaves the API calling a function anon still cannot execute.
+-- The publishable (anon) key is public, so it may commit and list but never delete.
+-- Deleting a SKU from the shared store needs SUPABASE_SECRET_KEY (service_role).
 do $$
 declare
-  fn regprocedure;
+  fn record;
 begin
   for fn in
-    select p.oid::regprocedure
+    select p.oid::regprocedure as signature, p.proname as name
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.proname in ('commit_fit_report', 'delete_fit_sku', 'list_fit_catalog')
   loop
-    execute format('revoke all on function %s from public', fn);
-    execute format(
-      'grant execute on function %s to anon, authenticated, service_role',
-      fn
-    );
+    execute format('revoke all on function %s from public, anon, authenticated', fn.signature);
+    if fn.name = 'delete_fit_sku' then
+      execute format('grant execute on function %s to service_role', fn.signature);
+    else
+      execute format(
+        'grant execute on function %s to anon, authenticated, service_role',
+        fn.signature
+      );
+    end if;
   end loop;
 end $$;

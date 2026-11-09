@@ -99,13 +99,22 @@ export function extractSizeFromReviewText(body: string): string {
     `\\bsize(?:\\s+(?:purchased|ordered|bought))?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`,
     'i',
   );
+  // "Sized down to M" names the size bought, even when the review first names the usual size.
+  const sizedTo = new RegExp(
+    `\\b(?:sized|went)\\s+(?:up|down)\\s+(?:to|a size to)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`,
+    'i',
+  );
+  // "Wear" and "wearing" usually name the reviewer's usual size, and "got a small stain" is not a size.
+  // Only verbs of buying count.
+  // A bare number after a buying verb is a quantity ("bought 2 of these"). It is a size only after "size".
+  const letterSize = REVIEW_SIZE_TOKEN.replace('|\\d{1,2}', '');
   const bought = new RegExp(
-    `\\b(?:bought|ordered|got|wearing|wear|purchased)\\s+(?:a|an|the|my|size)?\\s*(${REVIEW_SIZE_TOKEN})\\b`,
+    `\\b(?:bought|ordered|purchased)\\s+(?:(?:a|an|the|my)\\s+)?(?:size\\s+(${REVIEW_SIZE_TOKEN})|(${letterSize}))\\b`,
     'i',
   );
   const wornIn = new RegExp(`\\bin\\s+(?:a\\s+|size\\s+)(${REVIEW_SIZE_TOKEN})\\b`, 'i');
-  const match = body.match(labeled) || body.match(bought) || body.match(wornIn);
-  return match ? match[1] : '';
+  const match = body.match(labeled) || body.match(sizedTo) || body.match(bought) || body.match(wornIn);
+  return match ? (match[1] ?? match[2] ?? '') : '';
 }
 
 const FIT_TAG_REGEX = /\b(runs\s+small|true\s+to\s+size|runs\s+large|slightly\s+small|slightly\s+large)\b/i;

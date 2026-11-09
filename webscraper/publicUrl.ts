@@ -43,10 +43,21 @@ function isBlockedIPv4(host: string): boolean {
   return false;
 }
 
+/** The IPv4 address in the last 32 bits of an IPv6 address written in hex, e.g. "7f00:1" is 127.0.0.1. */
+function embeddedIPv4(high: string, low: string): string {
+  const hi = parseInt(high, 16);
+  const lo = parseInt(low, 16);
+  return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
+}
+
 function isBlockedIPv6(host: string): boolean {
   const bare = host.split('%')[0];
   if (bare === '::' || bare === '::1') return true;
   if (/^fe[89ab]/.test(bare) || bare.startsWith('fc') || bare.startsWith('fd')) return true;
+  // IPv4-mapped (::ffff:a.b.c.d), IPv4-compatible (::a.b.c.d) and NAT64 (64:ff9b::a.b.c.d) addresses
+  // reach the embedded IPv4 host. The URL parser rewrites the dotted form to hex, so check both.
+  const embedded = bare.match(/^(?:::(?:ffff:)?|64:ff9b::)(?:(\d{1,3}(?:\.\d{1,3}){3})|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
+  if (embedded) return isBlockedIPv4(embedded[1] ?? embeddedIPv4(embedded[2], embedded[3]));
   return false;
 }
 
@@ -87,4 +98,39 @@ export async function blockedFetchTargetResolved(raw: string): Promise<string | 
     // The fetch reports a name that does not resolve.
   }
   return null;
+}
+
+/**
+ * A per-render check for every request a headless page makes. The hostname alone is not enough:
+ * a public name can point at a private address, so each new host is resolved once and cached.
+ * A name that does not resolve is let through; the browser request fails on its own.
+ */
+export function createRequestHostGuard(
+  resolve: (hostname: string) => Promise<{ address: string }[]> = (hostname) => lookup(hostname, { all: true }),
+): (rawUrl: string) => Promise<boolean> {
+  const cache = new Map<string, Promise<boolean>>();
+  return (rawUrl: string) => {
+    let hostname: string;
+    try {
+      hostname = new URL(rawUrl).hostname;
+    } catch {
+      return Promise.resolve(false);
+    }
+    let verdict = cache.get(hostname);
+    if (!verdict) {
+      verdict = (async () => {
+        if (isBlockedHostname(hostname)) return true;
+        const bare = hostname.replace(/^\[|\]$/g, '');
+        if (isIP(bare)) return false;
+        try {
+          const records = await resolve(hostname);
+          return records.some((record) => isBlockedHostname(record.address));
+        } catch {
+          return false;
+        }
+      })();
+      cache.set(hostname, verdict);
+    }
+    return verdict;
+  };
 }

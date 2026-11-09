@@ -149,10 +149,12 @@ export default function App() {
         setCharts({});
         setActiveProductId(SEED_CATALOG[0].id);
       }
-      if (data.supabase && data.supabase.ok === false && data.supabase.error) {
+      const supabaseProblem =
+        data.supabase && data.supabase.ok === false ? data.supabase.error || data.supabase.reason : null;
+      if (supabaseProblem) {
         setSkuNotice({
           ok: false,
-          text: `Removed from this machine. Supabase was not updated: ${data.supabase.error}`,
+          text: `Removed from this machine. Supabase was not updated: ${supabaseProblem}`,
         });
       } else {
         setSkuNotice(null);

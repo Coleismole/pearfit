@@ -10,7 +10,7 @@
  * Playwright is imported lazily so the server still starts when no browser is installed.
  */
 import type { Browser, Page } from 'playwright';
-import { isBlockedHostname } from './publicUrl.ts';
+import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
@@ -73,13 +73,6 @@ function startUrlAllowsPrivate(raw: string): boolean {
   }
 }
 
-function requestHostIsBlocked(raw: string): boolean {
-  try {
-    return isBlockedHostname(new URL(raw).hostname);
-  } catch {
-    return false;
-  }
-}
 
 function renderBudgetMs(): number {
   // The hosted function is capped at 60s, including the Chromium download on a cold start.
@@ -212,11 +205,13 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     viewport: { width: 1366, height: 900 },
   });
   const allowPrivate = startUrlAllowsPrivate(url);
+  const hostIsBlocked = createRequestHostGuard();
   // Images, video and fonts are irrelevant to review text; skipping them makes renders faster.
-  await context.route('**/*', (route) => {
+  // Every other request, redirects included, is checked against the resolved address of its host.
+  await context.route('**/*', async (route) => {
     const type = route.request().resourceType();
     if (type === 'image' || type === 'media' || type === 'font') return route.abort();
-    if (!allowPrivate && requestHostIsBlocked(route.request().url())) return route.abort();
+    if (!allowPrivate && (await hostIsBlocked(route.request().url()))) return route.abort();
     return route.continue();
   });
 
@@ -348,15 +343,23 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
   const browser = (await getBrowser()) as unknown as { newPage(): Promise<ServerlessPage> };
   const page = await browser.newPage();
   const allowPrivate = startUrlAllowsPrivate(url);
+  const hostIsBlocked = createRequestHostGuard();
   await page.setUserAgent(USER_AGENT);
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const type = req.resourceType();
-    if (type === 'image' || type === 'media' || type === 'font' || (!allowPrivate && requestHostIsBlocked(req.url()))) {
+    if (type === 'image' || type === 'media' || type === 'font') {
       void req.abort();
-    } else {
-      void req.continue();
+      return;
     }
+    if (allowPrivate) {
+      void req.continue();
+      return;
+    }
+    void hostIsBlocked(req.url()).then(
+      (blocked) => (blocked ? req.abort() : req.continue()),
+      () => req.abort(),
+    );
   });
 
   let timedOut = false;

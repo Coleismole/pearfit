@@ -27,6 +27,11 @@ export interface FitPayload {
   sizes: FitSizePayload[];
   /** Brand chart, pit-to-pit chest. A measurement the chart did not state is null. */
   chart: FitChartPayload[];
+  /**
+   * True when the scrape found a chart but no reviews. The store then updates the chart only and
+   * keeps fit numbers from an earlier scrape, so a failed review load never wipes them.
+   */
+  chartOnly: boolean;
 }
 
 export interface FitChartPayload {
@@ -52,7 +57,11 @@ export interface FitSizePayload {
   primaryFitNote: string;
 }
 
-export function fitPayloadFromReport(report: ProductFitReport, chart: SizeChartRow[] = []): FitPayload {
+export function fitPayloadFromReport(
+  report: ProductFitReport,
+  chart: SizeChartRow[] = [],
+  options: { chartOnly?: boolean } = {},
+): FitPayload {
   return {
     sku: report.sku,
     productId: report.id,
@@ -74,7 +83,8 @@ export function fitPayloadFromReport(report: ProductFitReport, chart: SizeChartR
     avgRating: report.overallAvgRating,
     sourceUrl: report.sourceUrl,
     scrapedAt: report.scraperTelemetry.scrapedAt,
-    sizes: report.sizeSummaries.map((size) => ({
+    // A size with no reviews has no fit numbers. Sending it would store a zero rating and a "Low" return risk.
+    sizes: report.sizeSummaries.filter((size) => size.reviewCount > 0).map((size) => ({
       size: size.size,
       reviewCount: size.reviewCount,
       fitSkew: size.fitSkew,
@@ -95,5 +105,6 @@ export function fitPayloadFromReport(report: ProductFitReport, chart: SizeChartR
       length_cm: row.length_cm,
       sleeve_cm: row.sleeve_cm,
     })),
+    chartOnly: options.chartOnly === true,
   };
 }

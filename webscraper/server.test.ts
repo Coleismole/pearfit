@@ -63,6 +63,7 @@ test('a size chart with no reviews is stored, and deleting the SKU removes it', 
     assert.equal(report.totalReviews, 0);
     assert.equal(report.sku, 'CHART-ONLY-1');
     assert.equal(report.overallVerdict, 'Insufficient Data');
+    assert.equal(scraped.json.keptStoredReviews, false);
     const chart = scraped.json.sizeChart as { size: string; chest_cm: number }[];
     assert.equal(chart[0].size, 'M');
     assert.equal(chart[0].chest_cm, 54);
@@ -222,6 +223,66 @@ test('a commit stores the size chart sent with the report', async () => {
     const removed = await request(port, 'DELETE', '/api/db/sku/CHART-COMMIT-1');
     assert.equal(removed.status, 200);
   } finally {
+    server.close();
+  }
+});
+
+test('a re-scrape that finds a chart but no reviews keeps the stored reviews', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const review = (id: string, size: string) => ({
+      id,
+      author: id,
+      sizePurchased: size,
+      rating: 5,
+      title: '',
+      body: 'True to size and fits perfectly in the chest.',
+      date: '',
+      verifiedPurchase: false,
+    });
+    const report = aggregateProductFitReport(
+      {
+        id: 'keep-1',
+        name: 'Keep Tee',
+        brand: 'Example',
+        category: 'T-Shirts & Tops',
+        sku: 'KEEP-1',
+        price: 'Unknown',
+        fabricComposition: '100% cotton',
+        sourceUrl: 'https://example.test/keep',
+      },
+      [review('a', 'M'), review('b', 'L')],
+    );
+    const committed = await request(port, 'POST', '/api/db/commit', { report });
+    assert.equal(committed.status, 200, JSON.stringify(committed.json));
+
+    // Same SKU again, but this time the page only shows the chart (e.g. the reviews failed to load).
+    const rescraped = await request(port, 'POST', '/api/scrape', {
+      rawHtml: CHART_HTML,
+      sku: 'KEEP-1',
+      commitToDb: true,
+      render: 'never',
+    });
+    assert.equal(rescraped.status, 200, JSON.stringify(rescraped.json));
+    // The response shows the stored report (2 reviews), not an empty one, and says the reviews were kept.
+    assert.equal(rescraped.json.keptStoredReviews, true);
+    assert.equal((rescraped.json.report as { totalReviews: number }).totalReviews, 2);
+
+    const dumped = await request(port, 'GET', '/api/db/dump.json');
+    const tables = dumped.json.tables as {
+      commercial_skus: { sku: string; total_reviews: number }[];
+      sku_reviews: { sku: string }[];
+      size_chart: { sku: string; chest_cm: number }[];
+    };
+    // The two earlier reviews are still there, and the new chart (M, 54 cm) was saved.
+    assert.equal(tables.commercial_skus.find((row) => row.sku === 'KEEP-1')?.total_reviews, 2);
+    assert.equal(tables.sku_reviews.filter((row) => row.sku === 'KEEP-1').length, 2);
+    assert.deepEqual(
+      tables.size_chart.filter((row) => row.sku === 'KEEP-1').map((row) => row.chest_cm),
+      [54],
+    );
+  } finally {
+    await request(port, 'DELETE', '/api/db/sku/KEEP-1');
     server.close();
   }
 });

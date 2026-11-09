@@ -19,6 +19,7 @@ import { SizeSentimentMatrix } from './SizeSentimentMatrix';
 import { GarmentBlueprintIllustration } from './GarmentBlueprintIllustration';
 import { ReviewCorpusTable } from './ReviewCorpusTable';
 import { apiPath } from './clientApi';
+import { track } from './analytics.ts';
 import type { FitChartPayload } from './fitPayload';
 
 export default function App() {
@@ -135,6 +136,7 @@ export default function App() {
         setSkuNotice({ ok: false, text: data.error || 'The SKU was not removed.' });
         return;
       }
+      track('sku_deleted');
       const loadedReports: ProductFitReport[] = data.reports || data.records || [];
       if (Array.isArray(loadedReports) && loadedReports.length > 0) {
         setCatalog(loadedReports);
@@ -188,6 +190,7 @@ export default function App() {
         setSkuNotice({ ok: false, text: data.error || 'The SKU was not saved.' });
         return;
       }
+      track('sku_committed', { to_supabase: data.supabase?.ok === true });
       if (Array.isArray(data.reports) && data.reports.length > 0) {
         setCatalog(data.reports);
         setUsingSamples(false);

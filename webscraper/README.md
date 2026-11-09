@@ -27,3 +27,9 @@ Size bought, usual size, fit, height and build come from each review's own answe
 Stores that refuse automated requests (HTTP 403/418/429/503, or a block page) are reported and not retried. See `SUPPORTED_STORES.md` for the stores this was tested on.
 
 To see what a render does on a store (review data found, sort, each paging click), run the server with `SCRAPER_DEBUG=1`.
+
+## Analytics (PostHog)
+
+The page reports to PostHog when `POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` are set (see `.env.example`; with either empty, nothing loads). The browser gets them from `/api/posthog-config`, so the build holds no keys. On pearfit.app the scraper shares the marketing site's origin and PostHog project, so one visitor is one person across both.
+
+Events: `scrape_completed` (mode, store hostname, reviews read and stated, size chart rows, duration), `scrape_failed` (mode, hostname, reason `refused` / `no_reviews` / `other`), `sku_committed`, `sku_deleted`. Every event carries `app: pearfit-scraper` and `environment`. Review text, reviewer names, full product URLs, pasted HTML and error messages are never sent; `analyticsEvents.ts` builds each payload and its tests check this.

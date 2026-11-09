@@ -1500,6 +1500,16 @@ export function createApp() {
     });
   });
 
+  // Public PostHog settings for the browser (the project token is meant to be public). The page loads
+  // them at start so the build holds no analytics keys. Empty when PostHog is not configured.
+  app.get('/api/posthog-config', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      projectToken: process.env.POSTHOG_PROJECT_TOKEN || '',
+      host: process.env.POSTHOG_HOST || '',
+    });
+  });
+
   // Commercial SQLite Database Query & Inspection Endpoints
   app.get('/api/db/remote', async (_req, res) => {
     const remote = await listRemoteFitSkus();

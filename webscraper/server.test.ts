@@ -504,3 +504,26 @@ test('two shoppers who wrote the same words are two reviews; the same text by on
     server.close();
   }
 });
+
+test('/api/posthog-config hands the browser the public PostHog settings, empty when unset', async () => {
+  const before = { token: process.env.POSTHOG_PROJECT_TOKEN, host: process.env.POSTHOG_HOST };
+  const { server, port } = await listen(createApp());
+  try {
+    delete process.env.POSTHOG_PROJECT_TOKEN;
+    delete process.env.POSTHOG_HOST;
+    const unset = await request(port, 'GET', '/api/posthog-config');
+    assert.equal(unset.status, 200);
+    assert.deepEqual(unset.json, { projectToken: '', host: '' });
+
+    process.env.POSTHOG_PROJECT_TOKEN = 'phc_test_token';
+    process.env.POSTHOG_HOST = 'https://eu.i.posthog.com';
+    const set = await request(port, 'GET', '/api/posthog-config');
+    assert.deepEqual(set.json, { projectToken: 'phc_test_token', host: 'https://eu.i.posthog.com' });
+  } finally {
+    if (before.token === undefined) delete process.env.POSTHOG_PROJECT_TOKEN;
+    else process.env.POSTHOG_PROJECT_TOKEN = before.token;
+    if (before.host === undefined) delete process.env.POSTHOG_HOST;
+    else process.env.POSTHOG_HOST = before.host;
+    server.close();
+  }
+});

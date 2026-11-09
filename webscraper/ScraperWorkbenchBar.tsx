@@ -15,6 +15,8 @@ import {
 } from './fitAnalyzer';
 import { SCRAPABLE_PRESET_TARGETS } from './seedCatalog';
 import { apiPath } from './clientApi';
+import { track } from './analytics.ts';
+import { scrapeCompletedProperties, scrapeFailedProperties } from './analyticsEvents.ts';
 import type { FitChartPayload } from './fitPayload';
 
 function supabaseNote(sync: { ok?: boolean; error?: string; skipped?: boolean; reason?: string } | null): string {
@@ -147,6 +149,9 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
     }
 
     setIsScraping(true);
+    const startedAt = Date.now();
+    const analyticsMode = scrapeMode === 'url' ? 'url' : 'paste';
+    const analyticsUrl = scrapeMode === 'url' ? targetUrl.trim() : null;
     try {
       const response = await fetch(apiPath('/api/scrape'), {
         method: 'POST',
@@ -169,6 +174,7 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
       if (!response.ok || !data.report) {
         throw new Error(data.error || 'Failed to scrape reviews from target.');
       }
+      track('scrape_completed', scrapeCompletedProperties(analyticsMode, analyticsUrl, data, Date.now() - startedAt));
 
       onScrapedReportReady(
         data.report,
@@ -199,6 +205,10 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
         );
       }
     } catch (err) {
+      track(
+        'scrape_failed',
+        scrapeFailedProperties(analyticsMode, analyticsUrl, err instanceof Error ? err.message : null, Date.now() - startedAt),
+      );
       // A server error is shown as-is. The local parser is only for when the server cannot be reached.
       if (scrapeMode === 'batch' && err instanceof TypeError && rawInput.trim()) {
         const parsed = parseRawReviewBatch(rawInput);

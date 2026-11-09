@@ -1,7 +1,7 @@
 [
   { "id": "uniqlo-boxy-charcoal", "label": "loose", "measurements": { "chest_cm": 55.5, "length_cm": 65.4, "sleeve_cm": 22.6 } },
-  { "id": "ralph-lauren-polo-blue", "label": "great", "measurements": { "chest_cm": 51, "length_cm": 66.4, "sleeve_cm": 23.2 } },
-  { "id": "hm-brown-tee", "label": "great", "measurements": { "chest_cm": 49, "length_cm": 66.6, "sleeve_cm": 21.7 } },
+  { "id": "ralph-lauren-polo-blue", "label": "great", "garmentType": "polo", "measurements": { "chest_cm": 51, "length_cm": 66.4, "sleeve_cm": 23.2 } },
+  { "id": "hm-brown-tee", "label": "great", "garmentType": "tee", "measurements": { "chest_cm": 49, "length_cm": 66.6, "sleeve_cm": 21.7 } },
   { "id": "hm-regular-standard", "label": "tight", "measurements": { "chest_cm": 52.7, "length_cm": 68.6, "sleeve_cm": 23.5 } },
   { "id": "banana-republic-essential", "label": "great", "measurements": { "chest_cm": 49.8, "length_cm": 67.5, "sleeve_cm": 21 } }
 ]

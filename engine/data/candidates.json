@@ -3,6 +3,7 @@
     "id": "cos-oxford",
     "name": "COS oxford",
     "review": "runs_small",
+    "garmentType": "button_shirt",
     "sizes": {
       "S": { "chest_cm": 51, "length_cm": 70, "sleeve_cm": 62 },
       "M": { "chest_cm": 54.5, "length_cm": 72.5, "sleeve_cm": 63.5 },

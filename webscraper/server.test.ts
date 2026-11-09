@@ -347,3 +347,22 @@ test('a complete review card in the markup is kept next to review data, a bare w
     server.close();
   }
 });
+
+test('Bazaarvoice search-engine debug text in review markup is not counted as reviews', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const card = (body: string, attrs = '') => `<div class="review-card"${attrs}><p class="review-body-copy">${body}</p></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Roots Tee</title></head><body><h1>Roots Tee</h1>
+      ${card('Nice soft material, but runs very large.', ' data-author="LisaKH" data-rating="4"')}
+      ${card('y_2026, m_11, d_8, h_6')}
+      ${card('bvseo_bulk, prod_bvrr, vn_bulk_3.0.50')}
+      ${card('loc_en_CA, sid_39031035, prod, sort_default')}
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'ROOTS-T', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { reviews: { author: string }[] };
+    assert.deepEqual(report.reviews.map((r) => r.author), ['LisaKH']);
+  } finally {
+    server.close();
+  }
+});

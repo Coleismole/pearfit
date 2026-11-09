@@ -1112,7 +1112,12 @@ function scrapeHtmlWithCheerio(
         const usualSize = labelledValue(lines, /^(usual size|normally wears|usually wears)$/i) || undefined;
         const parsedRating = parseFloat(ratingStr);
 
-        if (body.length > 8) {
+        // Bazaarvoice's search-engine block renders debug text ("bvseo_bulk, prod_bvrr", "y_2026, m_11")
+        // inside review markup. A card with no rating, no reviewer and mostly snake_case tokens is not a review.
+        const words = body.split(/[\s,]+/).filter(Boolean);
+        const tokenish = words.filter((w) => /_/.test(w) || /^[a-z]+\d+$/i.test(w)).length;
+        const debugText = !Number.isFinite(parsedRating) && author === 'Anonymous' && tokenish * 2 >= words.length;
+        if (body.length > 8 && !debugText) {
           // A card with a star rating in its markup and a named reviewer is a real review. Lines a widget
           // repeats around reviews ("Was this review helpful?") have neither.
           if (Number.isFinite(parsedRating) && author !== 'Anonymous') completeDomCards.add(domReviews.length);
@@ -1576,8 +1581,15 @@ export function createApp() {
             const renderedScrape = scrapeHtmlWithCheerio(rendered.html, sourceUrl, overrides, rendered.jsonResponses);
             renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');
-            // Keep the render when it found at least as many reviews as the page source.
-            if (!scraped || renderedScrape.reviews.length >= scraped.reviews.length) {
+            // Keep the render when it found at least as many reviews as the page source, or when it read
+            // the review widget's own data and the page source had only markup cards.
+            const renderedHasData = renderedScrape.meta.scraperTelemetry.reviewSources.some((src) => src !== 'dom' && src !== 'json-ld');
+            const staticHasData = (scraped?.meta.scraperTelemetry.reviewSources ?? []).some((src) => src !== 'dom' && src !== 'json-ld');
+            if (
+              !scraped ||
+              renderedScrape.reviews.length >= scraped.reviews.length ||
+              (renderedHasData && !staticHasData && renderedScrape.reviews.length > 0)
+            ) {
               scraped = renderedScrape;
               targetHtml = rendered.html;
               renderedChartHtml = rendered.chartHtml;

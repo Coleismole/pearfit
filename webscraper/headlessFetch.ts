@@ -336,12 +336,12 @@ const CLICK_NEXT_REVIEWS = `(() => {
           if (!same) continue;
         }
       }
-      // Arrows of a photo carousel or slider are not review paging.
-      if (isNext && !isMore && el.closest('[class*="carousel" i], [class*="slider" i], [class*="swiper" i], [class*="slick" i], [class*="gallery" i], [class*="media" i]')) continue;
-      if (!visible(el) || disabled(el)) continue;
       // A "next" beside numbered page buttons is the review list's pager, not a picture slider.
       const pager = isNext && el.parentElement && [...el.parentElement.querySelectorAll('button, a, [role="button"]')]
         .some((b) => /^(page )?\\d+$/i.test((b.getAttribute('aria-label') || b.textContent || '').trim()));
+      // Other arrows inside a photo carousel or slider are not review paging.
+      if (isNext && !isMore && !pager && el.closest('[class*="carousel" i], [class*="slider" i], [class*="swiper" i], [class*="slick" i], [class*="gallery" i], [class*="media" i]')) continue;
+      if (!visible(el) || disabled(el)) continue;
       found.push({ el, isMore, label, rank: isMore ? 3 : pager ? 2 : 1 });
     }
   }

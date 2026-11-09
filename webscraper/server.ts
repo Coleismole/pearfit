@@ -946,10 +946,17 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
     index.set(key, list);
   };
   const unnamed = (author: string) => !author || PLACEHOLDER_AUTHOR.test(author);
-  // "Eddie K." in a widget's data and "Eddie K" in JSON-LD are one reviewer: compare letters and digits only.
-  const nameKey = (name: string) => name.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+  // One reviewer is shown in several forms: "Eddie K." in a widget's data, "Eddie K" or "Eddie Kowalski" in
+  // JSON-LD, "Ann S., Toronto ON" on a card. Compare words of letters and digits: the first word must match,
+  // and each word of the shorter form must start the matching word of the longer one.
+  const nameWords = (name: string) => name.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const sameName = (a: string, b: string) => {
+    const [short, long] = [nameWords(a), nameWords(b)].sort((x, y) => x.length - y.length);
+    if (short.length === 0 || short[0] !== long[0]) return false;
+    return short.every((word, i) => long[i].startsWith(word) || word.startsWith(long[i]));
+  };
   const sameReviewer = (a: RawScrapedReview, b: RawScrapedReview) =>
-    unnamed(a.author) || unnamed(b.author) || nameKey(a.author) === nameKey(b.author);
+    unnamed(a.author) || unnamed(b.author) || sameName(a.author, b.author);
   for (const review of merged) remember(norm(review.body), review);
   const loose = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
   for (const review of extra) {
@@ -961,7 +968,7 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
         // Same named reviewer, and the card contains the start of that review's text (a review can be
         // as short as "Good").
         // A placeholder name ("Verified Buyer") is shared by many reviewers and identifies no one.
-        if (PLACEHOLDER_AUTHOR.test(m.author) || nameKey(m.author) !== nameKey(review.author)) return false;
+        if (PLACEHOLDER_AUTHOR.test(m.author) || !sameName(m.author, review.author)) return false;
         const card = loose(review.body);
         const start = loose(m.body).slice(0, 40);
         // A card cut short ("Read more") may hold only part of the text, but it still shows the title.
@@ -1175,7 +1182,12 @@ function scrapeHtmlWithCheerio(
         const words = body.split(/[\s,]+/).filter(Boolean);
         const tokenish = words.filter((w) => /_/.test(w) || /^[a-z]+\d+$/i.test(w)).length;
         // Share buttons and widget lines ("facebook Share Review by Anonymous User") are not reviews either.
-        const widgetLine = /\b(facebook|twitter|pinterest|share (this )?review|copy link|was this (review )?helpful|report (this )?review)\b/i.test(body);
+        // Only a card made of such words: a real review can mention Facebook.
+        const WIDGET_WORDS =
+          /\b(facebook|twitter|pinterest|share (this )?review|share|copy link|was this (review )?helpful|report (this )?review|tweet|pin it|by|anonymous|user|yes|no)\b|\d+/gi;
+        const widgetLine =
+          /\b(facebook|twitter|pinterest|share (this )?review|copy link|was this (review )?helpful|report (this )?review)\b/i.test(body) &&
+          body.replace(WIDGET_WORDS, ' ').split(/[^\p{L}]+/u).filter(Boolean).length <= 2;
         const debugText =
           !Number.isFinite(parsedRating) && author === 'Anonymous' && (tokenish * 2 >= words.length || widgetLine);
         if (body.length > 8 && !debugText) {
@@ -1388,7 +1400,13 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
         blocked: refused,
       };
     }
-    return { html: await response.text() };
+    const html = await response.text();
+    // A bot check served with HTTP 200 ("Just a moment...") is a refusal too, not a product page.
+    const blockedBy = blockPageTitle(html);
+    if (blockedBy) {
+      return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };
+    }
+    return { html };
   }
   return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
 }
@@ -1677,11 +1695,16 @@ export function createApp() {
               rendered.jsonResponses,
               leftProductPage ? rendered.chartHtml : null,
             );
-            // Earlier pages of a review list that pages by link each hold their own reviews.
-            for (const pageHtml of rendered.extraHtml ?? []) {
-              const earlier = scrapeHtmlWithCheerio(pageHtml, sourceUrl, overrides, [], leftProductPage ? rendered.chartHtml : null);
-              renderedScrape.reviews = mergeScrapedReviews(earlier.reviews, renderedScrape.reviews);
-              renderedScrape.meta.scraperTelemetry.reportedReviewCount ??= earlier.meta.scraperTelemetry.reportedReviewCount;
+            // Earlier pages of a review list that pages by link each hold their own reviews. Merge them in
+            // page order, then the last page, so the list keeps the store's order (newest first).
+            if (rendered.extraHtml?.length) {
+              let earlierReviews: RawScrapedReview[] = [];
+              for (const pageHtml of rendered.extraHtml) {
+                const earlier = scrapeHtmlWithCheerio(pageHtml, sourceUrl, overrides);
+                earlierReviews = mergeScrapedReviews(earlierReviews, earlier.reviews);
+                renderedScrape.meta.scraperTelemetry.reportedReviewCount ??= earlier.meta.scraperTelemetry.reportedReviewCount;
+              }
+              renderedScrape.reviews = mergeScrapedReviews(earlierReviews, renderedScrape.reviews);
             }
             renderedScrape.meta.scraperTelemetry.engineMode = 'headless-chromium+cheerio-dom';
             renderedScrape.meta.scraperTelemetry.selectorsUsed.unshift('headless-chromium render');

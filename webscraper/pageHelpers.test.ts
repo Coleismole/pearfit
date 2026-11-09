@@ -90,4 +90,8 @@ test('blockPageTitle recognises bot checks and access-denied pages', () => {
   assert.equal(blockPageTitle('<title>Access to this page has been denied</title>'), 'Access to this page has been denied');
   assert.equal(blockPageTitle('<title>Just a moment...</title>'), 'Just a moment...');
   assert.equal(blockPageTitle('<title>Essentials No. 1 Logo Men\'s Tee | PUMA</title>'), null);
+  assert.equal(blockPageTitle('<title>Attention Required! | Cloudflare</title>'), 'Attention Required! | Cloudflare');
+  // A product named like a block page, and an SVG title in the body, are not block pages.
+  assert.equal(blockPageTitle('<title>Access Denied Graphic Tee | Store</title>'), null);
+  assert.equal(blockPageTitle('<html><head><title>Logo Tee</title></head><body><svg><title>Security Check</title></svg></body></html>'), null);
 });

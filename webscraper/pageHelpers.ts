@@ -111,8 +111,12 @@ export function ratingFromLabel(label: string | undefined): string {
  * access-denied page. Returns the matched text, or null for an ordinary page.
  */
 export function blockPageTitle(html: string): string | null {
-  const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').replace(/\s+/g, ' ').trim();
+  // The document's own title (in <head>), not an SVG or product <title> further down the page.
+  const head = html.match(/<head[\s>][\s\S]*?<\/head>/i)?.[0] ?? html.slice(0, 5000);
+  const title = (head.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').replace(/\s+/g, ' ').trim();
+  // The whole title is the block phrase, at most followed by a "| Cloudflare"-style suffix, so a product
+  // named "Access Denied Graphic Tee" is not a block page.
   const pattern =
-    /access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot|verify you are (a )?human|request blocked|security check|bot protection/i;
+    /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
   return pattern.test(title) ? title : null;
 }

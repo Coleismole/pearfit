@@ -358,11 +358,13 @@ test('Bazaarvoice search-engine debug text in review markup is not counted as re
       ${card('bvseo_bulk, prod_bvrr, vn_bulk_3.0.50')}
       ${card('loc_en_CA, sid_39031035, prod, sort_default')}
       ${card('facebook Share Review by Anonymous User')}
+      ${card("Saw this on Facebook and it fits true to size, I'm 6'1 and got the L")}
       </body></html>`;
     const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'ROOTS-T', commitToDb: false, render: 'never' });
     assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
-    const report = scraped.json.report as { reviews: { author: string }[] };
-    assert.deepEqual(report.reviews.map((r) => r.author), ['LisaKH']);
+    const report = scraped.json.report as { reviews: { author: string; text: string }[] };
+    // The share line is dropped; a real review that mentions Facebook is kept.
+    assert.deepEqual(report.reviews.map((r) => r.author), ['LisaKH', 'Anonymous']);
   } finally {
     server.close();
   }
@@ -492,6 +494,12 @@ test('two shoppers who wrote the same words are two reviews; the same text by on
       <body><h1>Logo Tee</h1><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(next)}</script></body></html>`;
     const scraped2 = await request(port, 'POST', '/api/scrape', { rawHtml: html2, commitToDb: false, render: 'never' });
     assert.equal((scraped2.json.report as { totalReviews: number }).totalReviews, 1);
+
+    // A full name in one source and the short form in another ("Eddie Kowalski", "Eddie K.") is one reviewer.
+    const ld3 = { ...ld2, review: [{ ...ld2.review[0], author: 'Eddie Kowalski' }] };
+    const html3 = html2.replace(JSON.stringify(ld2), JSON.stringify(ld3));
+    const scraped3 = await request(port, 'POST', '/api/scrape', { rawHtml: html3, commitToDb: false, render: 'never' });
+    assert.equal((scraped3.json.report as { totalReviews: number }).totalReviews, 1);
   } finally {
     server.close();
   }

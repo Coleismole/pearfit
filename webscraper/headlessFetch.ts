@@ -304,13 +304,22 @@ const NEXT_REVIEW_PAGE_LINK = `(() => {
   if (!/review/i.test(location.pathname)) return '';
   const pageOf = (u) => Number((u.pathname.match(/\\/page\\/(\\d+)\\/?$/) || [])[1] || (u.search.match(/[?&](?:page|pg)=(\\d+)/) || [])[1] || 1);
   const base = location.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '');
-  const current = pageOf(new URL(location.href));
+  // The other query parameters (a star filter, another sort) must match, or the link is another list.
+  const otherParams = (u) => {
+    const params = new URLSearchParams(u.search);
+    params.delete('page');
+    params.delete('pg');
+    params.sort();
+    return params.toString();
+  };
+  const here = new URL(location.href);
+  const current = pageOf(here);
   for (const a of document.querySelectorAll('a[href]')) {
     let target;
     try { target = new URL(a.getAttribute('href'), location.href); } catch (e) { continue; }
     if (target.origin !== location.origin) continue;
     const samePath = target.pathname.replace(/\\/page\\/\\d+\\/?$/, '').replace(/\\/$/, '') === base;
-    if (samePath && pageOf(target) === current + 1) return target.href;
+    if (samePath && otherParams(target) === otherParams(here) && pageOf(target) === current + 1) return target.href;
   }
   return '';
 })()`;
@@ -382,7 +391,8 @@ const CLICK_NEXT_REVIEWS = `((skip) => {
         .replace(/\\s+/g, ' ')
         .trim()
         .replace(/^[^a-z0-9›»→>]+/i, '')
-        .replace(/\\s*\\(\\d[\\d,]*( remaining| more| left)?\\)$/i, '');
+        // Only a count of what is left: "See all (12)" (customer photos) must not become "See all".
+        .replace(/\\s*\\(\\d[\\d,]* (remaining|more|left)\\)$/i, '');
       if (/about this review|this review'?s? (text|content)/i.test(aria)) continue;
       const isMore = MORE.test(label);
       const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);
@@ -665,19 +675,27 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     }
 
     // A review list that pages by link (Zappos): keep each page, then load the next, while time is left.
+    // Review cards on the pages kept so far count toward the same cap as the other paging.
     const extraHtml: string[] = [];
+    let cardsKept = 0;
     for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8_000; i++) {
       const known = capture.reportedTotal();
       if (known !== null && capture.reviewCount() >= known) break;
+      const cardsHere = await countReviews(page).catch(() => 0);
+      if (capture.reviewCount() + cardsKept + cardsHere >= MAX_REVIEWS) break;
       const next = (await page.evaluate(NEXT_REVIEW_PAGE_LINK)) as string;
       if (!next) break;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next}`);
+      const here = page.url();
       extraHtml.push((await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string);
+      cardsKept += cardsHere;
       const moved = await page
         .goto(next, { waitUntil: 'domcontentloaded', timeout: Math.max(3_000, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3_000)) })
         .then(() => true, () => false);
       if (!moved) {
-        extraHtml.pop();
+        // Still on this page: the final snapshot holds it, so drop the copy. If the browser had already
+        // moved on, the copy is the only record of this page's reviews and stays.
+        if (page.url() === here) extraHtml.pop();
         break;
       }
       await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});

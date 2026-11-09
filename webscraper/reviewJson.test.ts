@@ -468,3 +468,20 @@ test('two reviews with different ids count twice even with the same text; one id
   );
   assert.deepEqual(out.reviews.map((x) => x.id), ['a', 'b']);
 });
+
+test('later pages of this product\'s own list are kept even when every review names a sibling product', () => {
+  const product = { keys: ['8016253780042'], name: 'Tahoe Fresh Tracks Flannel Shirt' };
+  const review = (id: number, shopifyId: number) => ({ id, rating: 5, content: `Review ${id}`, product: { shopify_id: shopifyId, name: 'Flannel' } });
+  const base = 'https://fast.a.klaviyo.com/reviews/api/client_reviews/7795908608074/';
+  const out = collectJsonReviews(
+    [
+      { url: `${base}?offset=0`, value: { summary: { review_count: 15 }, reviews: [review(1, 8016253780042), review(2, 7795908608074)] } },
+      // Page 2: only sibling colourways, same list address.
+      { url: `${base}?offset=5`, value: { summary: { review_count: 15 }, reviews: [review(3, 7795908608074), review(4, 7795908608075)] } },
+      // A different address whose reviews all name other products stays out.
+      { url: 'https://fast.a.klaviyo.com/reviews/api/featured/', value: { reviews: [review(9, 111)] } },
+    ],
+    product,
+  );
+  assert.deepEqual(out.reviews.map((r) => r.id), ['1', '2', '3', '4']);
+});

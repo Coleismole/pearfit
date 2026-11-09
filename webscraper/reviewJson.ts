@@ -593,19 +593,28 @@ export function collectJsonReviews(sources: JsonSource[], product: ProductIdenti
   // When some response is known to be this product's, a response whose reviews name no product at
   // all is another widget on the page ("complete the look", recently viewed). Page data is kept.
   const someSourceMatches = sets.some((s) => s.verdicts.includes(true));
-  for (const { source, set, urlKeys, verdicts } of sets) {
+  // This product's own review list. Stores group reviews of colourways or editions under one product
+  // (Okendo "areReviewsGrouped", Klaviyo grouped ids), so its reviews may name sibling products.
+  // A list is this product's when its URL names the product, when it states a product total and
+  // holds a review of this product, or when at least half its reviews are this product's. Later pages
+  // of that list come from the same address path and are this product's too, whatever they hold.
+  const ownListOf = ({ set, urlKeys, verdicts }: (typeof sets)[number]) => {
+    const matched = verdicts.filter((v) => v === true).length;
+    return (
+      urlKeys.some((k) => product.keys.includes(k)) ||
+      (matched > 0 && set.reportedTotal !== null) ||
+      (set.reviews.length > 0 && matched * 2 >= set.reviews.length)
+    );
+  };
+  const ownPaths = new Set(sets.filter((s) => s.set.reviews.length > 0 && ownListOf(s)).map((s) => pathOf(s.source.url)));
+  for (const entry of sets) {
+    const { source, set, verdicts } = entry;
     if (set.reviews.length === 0) continue;
     const anyMatch = verdicts.includes(true);
     const anyOther = verdicts.includes(false);
-    if (anyOther && !anyMatch) continue;
-    if (!anyMatch && someSourceMatches && !source.url.startsWith('page:')) continue;
-    // This product's own review list. Stores group reviews of colourways or editions under one product
-    // (Okendo "areReviewsGrouped", Klaviyo grouped ids), so its reviews may name sibling products.
-    // A list is this product's when its URL names the product, when it states a product total and
-    // holds a review of this product, or when at least half its reviews are this product's.
-    const urlNamesProduct = urlKeys.some((k) => product.keys.includes(k));
-    const matched = verdicts.filter((v) => v === true).length;
-    const ownList = urlNamesProduct || (anyMatch && set.reportedTotal !== null) || matched * 2 >= set.reviews.length;
+    const ownList = ownListOf(entry) || (!source.url.startsWith('page:') && ownPaths.has(pathOf(source.url)));
+    if (anyOther && !anyMatch && !ownList) continue;
+    if (!anyMatch && !ownList && someSourceMatches && !source.url.startsWith('page:')) continue;
     let added = 0;
     set.reviews.forEach((review, i) => {
       if (!ownList && verdicts[i] === false) return;
@@ -622,6 +631,16 @@ export function collectJsonReviews(sources: JsonSource[], product: ProductIdenti
     }
   }
   return { reviews: kept, reportedTotal, sources: [...hosts] };
+}
+
+/** Origin and path of a URL, without its query: pages of one list share it. */
+function pathOf(url: string): string {
+  try {
+    const u = new URL(url);
+    return u.origin + u.pathname;
+  } catch {
+    return url;
+  }
 }
 
 function safeHost(url: string): string {

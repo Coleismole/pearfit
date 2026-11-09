@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pearfit</title>
+<meta name="viewport" content="width=1440">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112,100..800&family=Urbanist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F2EEE5;
+  --paper-glass: rgba(242, 238, 229, 0.72);
+  --band: #E8E2D5;
+  --ink: #1A1A17;
+  --ink-2: #6E6A60;
+  --rule: rgba(26, 26, 23, 0.25);
+  --chalk: #B42A1E;
+  --font-display: "Martian Mono", ui-monospace, monospace;
+  --font-text: "Urbanist", system-ui, sans-serif;
+  /* Desktop-first fluid frame: margin steps by viewport, column caps at 1600px. */
+  --margin: 115px;
+  --col: min(1600px, calc(100vw - 2 * var(--margin)));
+}
+@media (max-width: 1439px) { :root { --margin: 80px; } }
+@media (max-width: 1279px) { :root { --margin: 48px; } }
+@media (min-width: 1800px) { :root { --margin: 160px; } }
+* { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0; box-shadow: none; }
+html { background: var(--paper); overflow-x: clip; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-weight: 300;
+  font-size: 18px;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+.mono { font-family: var(--font-display); font-stretch: 112%; font-weight: 300; }
+
+/* header (sticky inside each screen wrapper so the readout is result-only) */
+.hdr {
+  position: sticky; top: 0; z-index: 10;
+  height: 60px;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding: 0 calc((100vw - var(--col)) / 2);
+  background: var(--paper-glass);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--rule);
+}
+.wordmark { font-weight: 500; font-size: 22px; letter-spacing: 0; }
+.readout { font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 16px; }
+.nav { justify-self: end; display: flex; gap: 48px; font-size: 16px; font-weight: 400; }
+.nav a { transition: color 300ms ease; }
+.nav a:hover { color: var(--chalk); }
+
+.wrap { width: var(--col); margin: 0 auto; }
+.grid { display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 30px; }
+
+/* tape ticks */
+.tape { display: block; width: 100%; height: 14px; }
+.tape-v { display: block; width: 14px; height: 100%; }
+.tape-full { position: relative; width: 100vw; left: 50%; margin-left: -50vw; }
+
+/* pills */
+.pill {
+  display: inline-flex; align-items: center; gap: 24px;
+  height: 72px; padding: 0 40px;
+  border: 1px solid var(--ink); border-radius: 999px;
+  background: transparent; color: var(--ink);
+  font-family: var(--font-text); font-weight: 300; font-size: 22px;
+  cursor: pointer;
+}
+.pill .g { font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 22px; }
+@media (prefers-reduced-motion: no-preference) {
+  .pill { transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease; }
+  .closet li { transition: color 300ms ease; }
+  .m-hero { animation: fadein 1000ms ease both; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+}
+.pill:hover { background: var(--chalk); border-color: var(--chalk); color: var(--paper); }
+
+/* CHECK */
+.check { min-height: calc(100vh - 60px); display: flex; flex-direction: column; justify-content: space-between; }
+.check-main { padding-top: 220px; }
+.entry { display: flex; align-items: center; justify-content: space-between; gap: 48px; border-bottom: 1px solid var(--ink); padding-bottom: 32px; }
+.entry input {
+  flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
+  font-family: var(--font-text); font-weight: 300; font-size: 72px; line-height: 1.1; color: var(--ink);
+}
+.entry input::placeholder { color: var(--ink-2); opacity: 1; }
+.closet-wrap { padding-bottom: 56px; }
+.closet { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 30px; padding-top: 24px; font-size: 18px; font-weight: 400; }
+.closet li:hover { color: var(--chalk); }
+
+/* RESULT TOP */
+.res-top { padding: 40px 0 72px; align-content: start; }
+.ph { grid-column: 1 / span 4; aspect-ratio: 4 / 5; background: var(--band); border: 1px solid var(--rule); }
+.res-main { grid-column: 6 / span 7; }
+.m-hero { font-family: var(--font-display); font-stretch: 112%; font-weight: 100; font-size: 280px; line-height: 0.82; margin-left: -12px; margin-top: 8px; }
+.verdict { font-size: 48px; font-weight: 300; line-height: 1.15; margin-top: 40px; }
+.conf { display: flex; align-items: center; gap: 16px; margin-top: 24px; font-size: 22px; font-weight: 400; }
+.spread-wrap { margin-top: 40px; }
+.spread { display: flex; align-items: baseline; gap: 64px; padding: 20px 0 0; font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 32px; }
+.spread span.on { color: var(--chalk); font-size: 48px; }
+.spread span.on b { font-weight: 300; }
+.actions { margin-top: 40px; display: flex; align-items: center; gap: 40px; }
+.quiet { font-size: 16px; font-weight: 400; border-bottom: 1px solid var(--ink); padding-bottom: 2px; transition: color 300ms ease, border-color 300ms ease; }
+.quiet:hover { color: var(--chalk); border-color: var(--chalk); }
+
+/* BAND with rows */
+.band { background: var(--band); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 72px 0; }
+.band .num { display: block; font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 16px; margin-bottom: 40px; }
+.rows { list-style: none; }
+.rows li { display: grid; grid-template-columns: 48px 1fr 160px 120px 120px 120px; align-items: baseline; column-gap: 30px; padding: 24px 0; border-top: 1px solid var(--rule); color: var(--ink); }
+.rows li:last-child { border-bottom: 1px solid var(--rule); }
+.rows .rk { font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 16px; }
+.rows .nm { font-size: 32px; font-weight: 300; }
+.rows .pc { font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 32px; }
+.rows .d { font-size: 18px; font-weight: 400; }
+.rows .d b { font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 18px; margin-left: 6px; }
+
+/* WHY */
+.why { padding: 0 0 120px; }
+.why-in { padding-top: 56px; align-items: start; }
+.why .num { grid-column: 1 / span 1; font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 16px; padding-top: 14px; }
+.why h2 { grid-column: 2 / span 6; font-size: 72px; font-weight: 300; line-height: 1; }
+.draft { grid-column: 2 / span 7; margin-top: 56px; }
+.draft svg { display: block; width: 100%; max-width: 740px; height: auto; }
+.why-line { grid-column: 9 / span 4; margin-top: 56px; font-size: 32px; font-weight: 300; line-height: 1.2; align-self: start; }
+
+footer { height: 80px; }
+
+/* svg draft */
+.ln { fill: none; stroke: var(--ink); stroke-width: 1; }
+.ln-thin { fill: none; stroke: var(--ink); stroke-width: 1; stroke-dasharray: 4 4; }
+.dim { fill: none; stroke: var(--ink); stroke-width: 1; }
+.dim-t { font-family: var(--font-display); font-stretch: 112%; font-weight: 300; font-size: 13px; fill: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- shared tick patterns: 8px minor, 40px major -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="t8" width="8" height="14" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="1" height="6" fill="#1A1A17"/></pattern>
+    <pattern id="t40" width="40" height="14" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="1" height="14" fill="#1A1A17"/></pattern>
+    <pattern id="v8" width="14" height="8" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="6" height="1" fill="#1A1A17"/></pattern>
+    <pattern id="v40" width="14" height="40" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="14" height="1" fill="#1A1A17"/></pattern>
+  </defs>
+</svg>
+
+<!-- ============ 1. CHECK ============ -->
+<section class="screen" id="check">
+  <header class="hdr">
+    <a class="wordmark" href="#check">pearfit</a>
+    <span></span>
+    <nav class="nav"><a href="#">Closet</a><a href="#check">Check</a></nav>
+  </header>
+  <div class="check">
+    <div class="check-main wrap">
+      <div class="entry">
+        <input type="text" placeholder="Paste a product link" aria-label="Product link">
+        <button class="pill" type="button">Check <span class="g">+</span></button>
+      </div>
+    </div>
+    <div class="closet-wrap">
+      <svg class="tape tape-full" aria-hidden="true"><rect width="100%" height="14" fill="url(#t8)"/><rect width="100%" height="14" fill="url(#t40)"/></svg>
+      <div class="wrap">
+        <ul class="closet">
+          <li>Blue Uniqlo oxford</li>
+          <li>White Gap tee</li>
+          <li>Grey Zara shirt</li>
+          <li>Black H&amp;M polo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. RESULT ============ -->
+<section class="screen" id="result" style="border-top:1px solid var(--rule)">
+  <header class="hdr">
+    <a class="wordmark" href="#check">pearfit</a>
+    <span class="readout">COS oxford</span>
+    <nav class="nav"><a href="#">Closet</a><a href="#check">Check</a></nav>
+  </header>
+
+  <div class="wrap grid res-top">
+    <div class="ph" aria-hidden="true"></div>
+    <div class="res-main">
+      <div class="m-hero">M</div>
+      <p class="verdict">Fits like your blue Uniqlo oxford.</p>
+      <div class="conf">
+        <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14.5" fill="none" stroke="#1A1A17" stroke-width="1"/><circle cx="16" cy="16" r="6.5" fill="#B42A1E"/></svg>
+        <span>High</span>
+      </div>
+      <div class="spread-wrap">
+        <svg class="tape" aria-hidden="true"><rect width="100%" height="14" fill="url(#t8)"/><rect width="100%" height="14" fill="url(#t40)"/></svg>
+        <div class="spread">
+          <span>S <b style="font-weight:300">70%</b></span>
+          <span class="on">M <b>85%</b></span>
+          <span>L <b style="font-weight:300">35%</b></span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="pill" href="#">Shop the M <span class="g">+</span></a>
+        <a class="quiet" href="#check">Check another</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="wrap">
+      <span class="num">01</span>
+      <ul class="rows">
+        <li><span class="rk">1</span><span class="nm">Blue Uniqlo oxford</span><span class="pc">84.6%</span><span class="d">chest<b>+0.5</b></span><span class="d">length<b>+0.5</b></span><span class="d">sleeve<b>+0.5</b></span></li>
+        <li><span class="rk">2</span><span class="nm">White Gap tee</span><span class="pc">49.0%</span><span class="d">chest<b>+2.0</b></span><span class="d">length<b>+2.5</b></span><span class="d">sleeve<b>—</b></span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="why" id="why">
+    <svg class="tape tape-full" aria-hidden="true"><rect width="100%" height="14" fill="url(#t8)"/><rect width="100%" height="14" fill="url(#t40)"/></svg>
+    <div class="wrap grid why-in">
+      <span class="num">02</span>
+      <div class="draft">
+        <svg width="740" height="640" viewBox="0 0 740 640" role="img" aria-label="Flat shirt draft with chest, length and sleeve differences">
+          <path class="ln" d="M250 40 Q320 100 390 40 L470 72 L590 332 L540 358 L455 210 L455 600 L185 600 L185 210 L100 358 L50 332 L170 72 Z"/>
+          <path class="ln" d="M250 40 Q320 82 390 40" opacity="0.6"/>
+          <path class="ln-thin" d="M185 588 L455 588"/>
+          <path class="ln-thin" d="M58 314 L110 341"/>
+          <path class="ln-thin" d="M582 314 L530 341"/>
+          <g class="dim">
+            <line x1="185" y1="232" x2="455" y2="232"/><line x1="185" y1="224" x2="185" y2="240"/><line x1="455" y1="224" x2="455" y2="240"/>
+          </g>
+          <text class="dim-t" x="320" y="262" text-anchor="middle">chest +0.5</text>
+          <g class="dim">
+            <line x1="215" y1="52" x2="215" y2="600"/><line x1="207" y1="52" x2="223" y2="52"/><line x1="207" y1="600" x2="223" y2="600"/>
+          </g>
+          <text class="dim-t" x="235" y="420">length +0.5</text>
+          <g class="dim">
+            <line x1="497" y1="59" x2="617" y2="319"/><line x1="490" y1="62" x2="504" y2="56"/><line x1="610" y1="322" x2="624" y2="316"/>
+          </g>
+          <text class="dim-t" x="600" y="170">sleeve +0.5</text>
+        </svg>
+      </div>
+      <p class="why-line">Reviews say it runs small. Measurements agree on M.</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

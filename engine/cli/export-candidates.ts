@@ -13,6 +13,7 @@ import { parseArgs } from "node:util";
 import { round } from "../src/score.ts";
 import type { Candidate, ReviewSignal } from "../src/types.ts";
 import type { BrandOffsetRow, ProductRow, SizeChartRow, SourceRows } from "./db-types.ts";
+import { garmentTypeFor } from "./garment-type.ts";
 import { DATA_DIR } from "./load.ts";
 
 const ENGINE_DIR = join(import.meta.dirname, "..");
@@ -185,7 +186,13 @@ export function buildCandidates(rows: SourceRows): ExportResult {
         sleeve_cm: applyOffset(row.sleeve_cm, offset.sleeve_cm),
       };
     }
-    candidates.push({ id: slug(p.sku), name: p.product_name, review: reviewSignal(p), sizes });
+    candidates.push({
+      id: slug(p.sku),
+      name: p.product_name,
+      review: reviewSignal(p),
+      garmentType: garmentTypeFor(p.product_name),
+      sizes,
+    });
   }
   return { candidates, skipped };
 }

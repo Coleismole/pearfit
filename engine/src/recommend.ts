@@ -1,19 +1,24 @@
 import type { ScorerConfig } from "./config.ts";
-import { TOPS } from "./config.ts";
+import { DEFAULT_GARMENT_TYPE, TOPS } from "./config.ts";
 import type {
   Candidate,
   Confidence,
   Dim,
   Ease,
+  GarmentType,
   OwnedShirt,
   Recommendation,
   ShirtMatch,
   SizeResult,
 } from "./types.ts";
-import { DIMS } from "./types.ts";
+import { DIMS, GARMENT_LABELS } from "./types.ts";
 import { distance, easeVector, matchPct, round } from "./score.ts";
 
 const LEVELS: Confidence[] = ["high", "medium", "low"];
+
+export function garmentTypeOf(item: { garmentType?: GarmentType }): GarmentType {
+  return item.garmentType ?? DEFAULT_GARMENT_TYPE;
+}
 
 export function recommend(
   wardrobe: OwnedShirt[],
@@ -21,7 +26,10 @@ export function recommend(
   cfg: ScorerConfig = TOPS,
 ): Recommendation {
   const sizeOrder = Object.keys(candidate.sizes);
-  const greats = wardrobe.filter((s) => s.label === "great");
+  // Like is only compared with like: a polo is never sized against a tee.
+  const type = garmentTypeOf(candidate);
+  const comparable = wardrobe.filter((s) => garmentTypeOf(s) === type);
+  const greats = comparable.filter((s) => s.label === "great");
 
   const sizes: SizeResult[] = sizeOrder.map((size) => ({
     size,
@@ -29,6 +37,10 @@ export function recommend(
   }));
 
   const base = { candidateId: candidate.id, sizes };
+  if (comparable.length === 0) {
+    return { ...base, size: null, confidence: "low", ranking: [], notes: [],
+      verdict: `No comparable shirts in your wardrobe. This is ${GARMENT_LABELS[type]}, and your wardrobe has none.` };
+  }
   if (greats.length === 0) {
     return { ...base, size: null, confidence: "low", ranking: [], notes: [],
       verdict: "No shirts labelled great in this wardrobe, so there is nothing to compare against." };
@@ -74,7 +86,7 @@ export function recommend(
   }
 
   // Guard: landing on top of a shirt the person already said doesn't fit is a red flag.
-  for (const shirt of wardrobe) {
+  for (const shirt of comparable) {
     if (shirt.label === "great") continue;
     const c = pickMeasurements.chest_cm;
     const r = shirt.measurements.chest_cm;

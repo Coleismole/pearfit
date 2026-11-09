@@ -38,6 +38,7 @@ test("export subtracts the brand offset from length and nulls an unconfirmed sle
     id: "ab-100-wht",
     name: "Acme crew tee",
     review: "runs_small", // 60 / 30 / 10
+    garmentType: "tee", // "Acme crew tee"
     sizes: {
       // Offset +2.5 = Acme's chart runs bigger. S: 71 - 2.5 = 68.5. M: 75.3 - 2.5 = 72.8.
       // Sleeve offset is NULL, so sleeve is null.
@@ -53,6 +54,7 @@ test("brand with no offset row keeps chest and nulls length and sleeve; a review
     id: "zz-200-blk",
     name: "Zed boxy tee",
     review: null, // 40 / 40 / 20 ties
+    garmentType: "tee", // "Zed boxy tee"
     sizes: { L: { chest_cm: 58, length_cm: null, sleeve_cm: null } }, // chest 58.04 rounds to 58
   });
 });

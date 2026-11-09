@@ -1,4 +1,4 @@
-import type { Dim } from "./types.ts";
+import type { Dim, GarmentType } from "./types.ts";
 
 // Every tunable number lives here. Starting values are educated guesses; tune them against eval results.
 export interface ScorerConfig {
@@ -21,3 +21,6 @@ export const TOPS: ScorerConfig = {
   guardChestCm: 1,
   gapWordingCm: 0.5,
 };
+
+// A candidate or owned shirt with no garmentType is treated as this. Only the same type is compared with the same type.
+export const DEFAULT_GARMENT_TYPE: GarmentType = "tee";

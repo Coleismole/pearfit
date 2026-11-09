@@ -82,6 +82,40 @@ function unitInText(text: string): Unit | null {
   return null;
 }
 
+/**
+ * The unit a chart shows when its own text states none: the checked radio of its cm/inch toggle.
+ * Looks only at radios whose name or id says they are a unit control, in the nearest enclosing
+ * element that has one. If none is checked, or the checked ones disagree, the unit stays unknown.
+ */
+function unitFromToggle($: cheerio.CheerioAPI, node: unknown): Unit | null {
+  for (const box of $(node as never).parents().toArray()) {
+    const checked = new Set<Unit>();
+    let found = false;
+    $(box)
+      .find('input[type="radio"]')
+      .each((_i, radio) => {
+        const el = $(radio);
+        const id = el.attr('id') ?? '';
+        if (!/unit|measure/i.test(`${el.attr('name') ?? ''} ${id}`)) return;
+        const label = [
+          id,
+          el.attr('value') ?? '',
+          el.attr('aria-label') ?? '',
+          id ? $(`label[for="${id}"]`).text() : '',
+          el.closest('label').text(),
+        ].join(' ');
+        const isCm = /\b(cm|centimet(?:er|re)s?)\b/i.test(label);
+        const isIn = /\b(in|inch|inches)\b/i.test(label);
+        if (isCm === isIn) return; // neither, or both: not a usable unit radio
+        found = true;
+        const aria = el.attr('aria-checked');
+        if (aria === undefined ? el.is('[checked]') : aria === 'true') checked.add(isCm ? 'cm' : 'in');
+      });
+    if (found) return checked.size === 1 ? [...checked][0] : null;
+  }
+  return null;
+}
+
 const UNICODE_FRACTIONS: Record<string, number> = {
   '½': 0.5,
   '¼': 0.25,
@@ -119,7 +153,7 @@ function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: 
   const text = raw.replace(/\s+/g, ' ').trim();
   if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
   // A range is not one measurement. Leave it null instead of picking an end.
-  if (/\d\s*[-–—]\s*\d/.test(text)) return null;
+  if (/[\d½¼¾⅛⅜⅝⅞]\s*[-–—]\s*\d/.test(text)) return null;
   const value = readMeasurement(text);
   if (value === null || value <= 0) return null;
   const unit = /cm\b/i.test(text)
@@ -276,7 +310,7 @@ function rowsFromTables(html: string): SizeChartRow[] {
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
     const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
-    const unit = unitInText(context);
+    const unit = unitInText(context) ?? unitFromToggle($, table);
     const parsed = preferChart(
       parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
       parseTransposedTable(grid[0], grid.slice(1), unit),
@@ -325,7 +359,7 @@ function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
       });
     if (grid.length < 2) return;
     const context = [$(box).attr('class') ?? '', $(box).attr('id') ?? '', grid[0].join(' ')].join(' ');
-    const unit = unitInText(context);
+    const unit = unitInText(context) ?? unitFromToggle($, box);
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
     const parsed = preferChart(

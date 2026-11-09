@@ -564,11 +564,14 @@ export interface CollectedJsonReviews {
   sources: string[];
 }
 
+/**
+ * A review's identity: its id, or the start of its text when it has none. Two reviews with different
+ * ids are two reviews even when their text matches (a shopper who submitted twice): the store counts both.
+ */
 function dedupeKey(review: JsonReview): string[] {
+  if (!review.id.startsWith('json-')) return [`id:${review.id}`];
   const body = review.body.toLowerCase().replace(/\s+/g, ' ').trim();
-  const keys = [`body:${body.slice(0, 60)}`];
-  if (!review.id.startsWith('json-')) keys.push(`id:${review.id}`);
-  return keys;
+  return [`body:${body.slice(0, 60)}`];
 }
 
 /**

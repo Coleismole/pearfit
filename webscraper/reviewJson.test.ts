@@ -455,3 +455,16 @@ test('TurnTo: text, first and last name, millisecond date, catalog sku, and word
   assert.equal(r.declaredFitTag, 'Runs Small');
   assert.equal(r.reviewerHeight, '5\'9" - 6\'0"');
 });
+
+test('two reviews with different ids count twice even with the same text; one id counts once', () => {
+  const product = { keys: ['1'], name: 'Sweater' };
+  const r = (id: string) => ({ reviewId: id, productId: '1', rating: 5, body: 'This sweater is wonderful: comfortable, made well.' });
+  const out = collectJsonReviews(
+    [
+      { url: 'https://api.example.com/products/1/reviews', value: { reviews: [r('a'), r('b')] } },
+      { url: 'https://api.example.com/products/1/reviews?page=2', value: { reviews: [r('b')] } },
+    ],
+    product,
+  );
+  assert.deepEqual(out.reviews.map((x) => x.id), ['a', 'b']);
+});

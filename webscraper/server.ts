@@ -935,9 +935,11 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
     const existing =
       (key ? index.get(key) : undefined) ??
       merged.find((m) => {
+        // Same named reviewer, and the card contains the start of that review's text (a review can be
+        // as short as "Good").
         if (m.author === 'Anonymous' || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
         const start = loose(m.body).slice(0, 40);
-        return start.length >= 15 && loose(review.body).includes(start);
+        return start.length >= 2 && loose(review.body).includes(start);
       });
     if (!existing) {
       merged.push(review);

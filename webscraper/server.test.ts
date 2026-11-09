@@ -399,3 +399,18 @@ test('one featured review in the page data does not hide the review cards in the
     server.close();
   }
 });
+
+test('a whole-card text with a very short review still matches its review by the same reviewer', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = { props: { reviews: { total: 1, items: [{ id: 'r1', rating: 5, title: 'Perfect for every occasion', body: 'Good', author: 'sachit k.' }] } } };
+    const html = `<!DOCTYPE html><html><head><title>Oxford</title></head><body><h1>Oxford</h1>
+      <div class="review-card" data-author="sachit k." data-rating="5"><span>Rated 5 out of 5 stars2 months agoPerfect for every occasion GoodRead More</span></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'OXF-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 1);
+  } finally {
+    server.close();
+  }
+});

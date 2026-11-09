@@ -345,7 +345,8 @@ const CLICK_NEXT_REVIEWS = `((skip) => {
       if (seen.has(el)) continue;
       seen.add(el);
       const aria = el.getAttribute('aria-label') || '';
-      const label = (aria || el.textContent || el.getAttribute('title') || '').replace(/\\s+/g, ' ').trim();
+      // Leading symbols are decoration: "+ Load More Reviews".
+      const label = (aria || el.textContent || el.getAttribute('title') || '').replace(/\\s+/g, ' ').trim().replace(/^[^a-z0-9›»→>]+/i, '');
       if (/about this review|this review'?s? (text|content)/i.test(aria)) continue;
       const isMore = MORE.test(label);
       const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);

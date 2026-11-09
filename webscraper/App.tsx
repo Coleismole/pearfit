@@ -149,8 +149,10 @@ export default function App() {
         setCharts({});
         setActiveProductId(SEED_CATALOG[0].id);
       }
-      const supabaseProblem =
-        data.supabase && data.supabase.ok === false ? data.supabase.error || data.supabase.reason : null;
+      // A skip because Supabase is not configured at all is not news on every delete.
+      const skipReason =
+        data.supabase?.reason && !/is not set$/.test(data.supabase.reason) ? data.supabase.reason : null;
+      const supabaseProblem = data.supabase && data.supabase.ok === false ? data.supabase.error || skipReason : null;
       if (supabaseProblem) {
         setSkuNotice({
           ok: false,

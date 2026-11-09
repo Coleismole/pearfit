@@ -370,6 +370,15 @@ export function fitTagFromAnswer(a: ReviewAnswer): string | null {
 function fieldsFromAnswers(answers: ReviewAnswer[]): Partial<RawScrapedReview> {
   const out: Partial<RawScrapedReview> = {};
   for (const a of answers) {
+    // An answer on a known scale is a fit rating, even when it is labelled "Size" (a Bazaarvoice or
+    // Yotpo "Size" slider). Its number is never a size bought.
+    if (a.scale && (FIT_LABEL.test(a.label) || /\bsize\b/i.test(a.label))) {
+      if (!out.declaredFitTag) {
+        const tag = fitTagFromAnswer(a);
+        if (tag) out.declaredFitTag = tag;
+      }
+      continue;
+    }
     if (!out.usualSize && USUAL_SIZE_LABEL.test(a.label) && a.value) {
       out.usualSize = a.value;
     } else if (SIZE_BOUGHT_LABEL.test(a.label) && a.value) {
@@ -471,7 +480,8 @@ function reportedTotalOf(root: unknown): number | null {
 
 /** Finds every review in a JSON value. Does not descend into a review once found. */
 /** Totals stated beside a review list: { total: 2, items: [...] }. */
-const CONTAINER_TOTAL_KEYS = ['total', 'totalCount', 'total_count', 'totalResults', 'TotalResults', 'totalReviews', 'total_reviews', 'reviewCount', 'review_count', 'numberOfReviews', 'count'];
+/** Not "count": it is often the page size, not the store's total. */
+const CONTAINER_TOTAL_KEYS = ['total', 'totalCount', 'total_count', 'totalResults', 'TotalResults', 'totalReviews', 'total_reviews', 'reviewCount', 'review_count', 'numberOfReviews'];
 
 export function extractReviewsFromJson(root: unknown): JsonReviewSet {
   const reviews: JsonReview[] = [];
@@ -581,10 +591,15 @@ export interface CollectedJsonReviews {
  * A review's identity: its id, or the start of its text when it has none. Two reviews with different
  * ids are two reviews even when their text matches (a shopper who submitted twice): the store counts both.
  */
-function dedupeKey(review: JsonReview): string[] {
-  if (!review.id.startsWith('json-')) return [`id:${review.id}`];
+export function reviewIdentity(review: Pick<RawScrapedReview, 'id' | 'author' | 'body'>): string {
+  if (!review.id.startsWith('json-')) return `id:${review.id}`;
+  // No id: the reviewer and the text together. Two shoppers who both wrote "Great shirt!" are two reviews.
   const body = review.body.toLowerCase().replace(/\s+/g, ' ').trim();
-  return [`body:${body.slice(0, 60)}`];
+  return `body:${review.author.toLowerCase()}:${body.slice(0, 60)}`;
+}
+
+function dedupeKey(review: JsonReview): string[] {
+  return [reviewIdentity(review)];
 }
 
 /**
@@ -619,13 +634,19 @@ export function collectJsonReviews(sources: JsonSource[], product: ProductIdenti
       (set.reviews.length > 0 && matched * 2 >= set.reviews.length)
     );
   };
-  const ownPaths = new Set(sets.filter((s) => s.set.reviews.length > 0 && ownListOf(s)).map((s) => pathOf(s.source.url)));
+  // Endpoints that serve many widgets from one address (GraphQL, batch calls) are not one list.
+  const sharedEndpoint = (url: string) => /graphql|\/batch(\.json)?\/?$|\/widgets?\/fetch/i.test(pathOf(url));
+  const ownPaths = new Set(
+    sets.filter((s) => s.set.reviews.length > 0 && ownListOf(s) && !sharedEndpoint(s.source.url)).map((s) => pathOf(s.source.url)),
+  );
   for (const entry of sets) {
     const { source, set, verdicts } = entry;
     if (set.reviews.length === 0) continue;
     const anyMatch = verdicts.includes(true);
     const anyOther = verdicts.includes(false);
-    const ownList = ownListOf(entry) || (!source.url.startsWith('page:') && ownPaths.has(pathOf(source.url)));
+    const ownList =
+      ownListOf(entry) ||
+      (!source.url.startsWith('page:') && !sharedEndpoint(source.url) && ownPaths.has(pathOf(source.url)));
     if (anyOther && !anyMatch && !ownList) continue;
     if (!anyMatch && !ownList && someSourceMatches && !source.url.startsWith('page:')) continue;
     let added = 0;

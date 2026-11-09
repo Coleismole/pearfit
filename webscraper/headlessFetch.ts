@@ -11,7 +11,7 @@
  */
 import type { Browser, Page } from 'playwright';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
-import { extractReviewsFromJson, parseJsonBody } from './reviewJson.ts';
+import { extractReviewsFromJson, parseJsonBody, reviewIdentity } from './reviewJson.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
@@ -51,7 +51,7 @@ export const REVIEW_WIDGET_SELECTOR = [
   '#pr-reviewdisplay', '.pr-review-display',
   '.kl_reviews', '[class*="kl_reviews"]', '#klaviyo-reviews-all',
   '.loox-reviews-default', '#looxReviews', '.reviews-io-widget', '#ReviewsWidget', '#full-page-widget',
-  '#reviews', '#Reviews', '#product-reviews', '[id*="review" i]', '[class*="review" i]',
+  '#reviews', '#Reviews', '#product-reviews', '[id*="review" i]:not([id*="preview" i])', '[class*="review" i]:not([class*="preview" i])',
 ].join(', ');
 
 export interface RenderedPage {
@@ -116,7 +116,7 @@ export class JsonCapture {
   reviewCount(): number {
     for (; this.countedItems < this.items.length; this.countedItems++) {
       const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
-      for (const r of set.reviews) this.counted.add(r.id.startsWith('json-') ? `b:${r.body.slice(0, 60)}` : `i:${r.id}`);
+      for (const r of set.reviews) this.counted.add(reviewIdentity(r));
     }
     return this.counted.size;
   }
@@ -541,8 +541,8 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       }
       await pageThroughReviews({
         click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
-        progress: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews(page)),
-        enough: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
+        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)),
+        enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep: (ms) => page.waitForTimeout(ms),
         scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
@@ -779,8 +779,8 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
       }
       await pageThroughReviews({
         click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
-        progress: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews()),
-        enough: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews()) >= MAX_REVIEWS,
+        progress: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()),
+        enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews()) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep,
         scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,

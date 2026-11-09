@@ -382,3 +382,20 @@ test('a review card whose text is the whole card still matches its review from t
     server.close();
   }
 });
+
+test('one featured review in the page data does not hide the review cards in the markup', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = { props: { featured: { review: { id: 'f1', rating: 5, body: 'Featured: the best tee I own.', author: 'Shop' } } } };
+    const cards = ['Soft cotton and the fit is right for me.', 'Shrank a little after the first hot wash.', 'Good weight, runs a touch long in the body.']
+      .map((t) => `<div class="review-card"><p class="review-body-copy">${t}</p></div>`).join('');
+    const html = `<!DOCTYPE html><html><head><title>Tee</title></head><body><h1>Tee</h1>${cards}
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'FEAT-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    // Three anonymous cards in the markup plus the featured review.
+    assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 4);
+  } finally {
+    server.close();
+  }
+});

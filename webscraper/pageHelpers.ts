@@ -76,14 +76,15 @@ export function cleanProductTitle(title: string | null | undefined): string | nu
 
 /** Product code from common URL shapes (/products/E487396-000, /p/AY670, /product/.../45215.html, ?pid=795346052). */
 export function productIdFromUrl(url: string): string | null {
+  // An id in the path wins; a query parameter (which may be a tracking code) is the fallback.
   const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
-  if (param) return param[1];
   const m =
     url.match(/\/(\d{4,})\.html/) ||
     // A code contains a digit. A slug such as /product/mens-shirt/ must not win over the id after it.
     url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) ||
     url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i);
-  return m ? m[1] : null;
+  if (m) return m[1];
+  return param ? param[1] : null;
 }
 
 /** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */

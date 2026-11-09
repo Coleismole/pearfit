@@ -523,3 +523,34 @@ test('labelFromId turns field ids into words', () => {
   assert.equal(labelFromId('size_purchased'), 'size purchased');
   assert.equal(labelFromId('How was the fit?'), 'How was the fit?');
 });
+
+test('review findings: a "Size" slider is fit, not a size; id-less twins from two shoppers both count; batch endpoints are not one list', () => {
+  const { reviews } = extractReviewsFromJson({
+    Results: [{ Id: '1', Rating: 4, ReviewText: 'Nice.', SecondaryRatings: { Size: { Label: 'Size', Value: 2, ValueRange: 5, MinLabel: 'Runs Small', MaxLabel: 'Runs Large' } } }],
+  });
+  assert.equal(reviews[0].sizePurchased, '');
+  assert.equal(reviews[0].declaredFitTag, 'Slightly Small');
+
+  const twins = collectJsonReviews(
+    [{ url: 'page:__NEXT_DATA__', value: { reviews: [{ rating: 5, body: 'Great shirt!', author: 'Ann' }, { rating: 4, body: 'Great shirt!', author: 'Bob' }] } }],
+    { keys: [], name: null },
+  );
+  assert.equal(twins.reviews.length, 2);
+
+  const product = { keys: ['p1'], name: 'Oxford' };
+  const mine = { reviews: [{ id: 'a', rating: 5, body: 'Mine', productId: 'p1' }], total: 1 };
+  const carousel = { reviews: [{ id: 'z', rating: 5, body: 'Other product', productId: 'p9' }] };
+  const out = collectJsonReviews(
+    [
+      { url: 'https://shop.example/graphql', value: mine },
+      { url: 'https://shop.example/graphql', value: carousel },
+    ],
+    product,
+  );
+  assert.deepEqual(out.reviews.map((r) => r.id), ['a']);
+});
+
+test('a page-size "count" beside a review list is not taken as the store total', () => {
+  const { reportedTotal } = extractReviewsFromJson({ reviews: { count: 5, items: [{ rating: 5, body: 'Good' }] } });
+  assert.equal(reportedTotal, null);
+});

@@ -483,6 +483,15 @@ test('two shoppers who wrote the same words are two reviews; the same text by on
     assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
     // Ann and Bob are two reviews; Ann's card is Ann's review again.
     assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 2);
+
+    // The same reviewer written "Eddie K." in one source and "Eddie K" in another is one review.
+    const ld2 = { '@context': 'https://schema.org', '@type': 'Product', name: 'Logo Tee', sku: 'P-1',
+      review: [{ '@type': 'Review', author: 'Eddie K', reviewBody: 'Nice T-shirt, delivered on time.', reviewRating: { ratingValue: 5 } }] };
+    const next = { props: { reviews: { total: 1, items: [{ id: 'r1', rating: 5, body: 'Nice T-shirt, delivered on time.', author: 'Eddie K.' }] } } };
+    const html2 = `<!DOCTYPE html><html><head><title>Logo Tee</title><script type="application/ld+json">${JSON.stringify(ld2)}</script></head>
+      <body><h1>Logo Tee</h1><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(next)}</script></body></html>`;
+    const scraped2 = await request(port, 'POST', '/api/scrape', { rawHtml: html2, commitToDb: false, render: 'never' });
+    assert.equal((scraped2.json.report as { totalReviews: number }).totalReviews, 1);
   } finally {
     server.close();
   }

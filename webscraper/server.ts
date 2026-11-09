@@ -946,8 +946,10 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
     index.set(key, list);
   };
   const unnamed = (author: string) => !author || PLACEHOLDER_AUTHOR.test(author);
+  // "Eddie K." in a widget's data and "Eddie K" in JSON-LD are one reviewer: compare letters and digits only.
+  const nameKey = (name: string) => name.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
   const sameReviewer = (a: RawScrapedReview, b: RawScrapedReview) =>
-    unnamed(a.author) || unnamed(b.author) || a.author.toLowerCase() === b.author.toLowerCase();
+    unnamed(a.author) || unnamed(b.author) || nameKey(a.author) === nameKey(b.author);
   for (const review of merged) remember(norm(review.body), review);
   const loose = (body: string) => body.replace(/\s+/g, ' ').trim().toLowerCase();
   for (const review of extra) {
@@ -959,7 +961,7 @@ function mergeScrapedReviews(primary: RawScrapedReview[], extra: RawScrapedRevie
         // Same named reviewer, and the card contains the start of that review's text (a review can be
         // as short as "Good").
         // A placeholder name ("Verified Buyer") is shared by many reviewers and identifies no one.
-        if (PLACEHOLDER_AUTHOR.test(m.author) || m.author.toLowerCase() !== review.author.toLowerCase()) return false;
+        if (PLACEHOLDER_AUTHOR.test(m.author) || nameKey(m.author) !== nameKey(review.author)) return false;
         const card = loose(review.body);
         const start = loose(m.body).slice(0, 40);
         // A card cut short ("Read more") may hold only part of the text, but it still shows the title.

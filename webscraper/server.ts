@@ -35,6 +35,7 @@ import {
   LABEL_LINE,
   longestFreeText,
   productIdFromUrl,
+  blockPageTitle,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -1646,8 +1647,12 @@ export function createApp() {
       if (needsRender) {
         try {
           const rendered = await renderPageHtml(url!);
+          const blockedBy = blockPageTitle(rendered.html);
           if (rendered.status !== null && rendered.status >= 400) {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
+          } else if (blockedBy) {
+            // A bot check or access-denied page is a refusal, reported as one and not worked around.
+            headlessNote = `The store showed the headless browser a block page ("${blockedBy}"): it refuses automated requests.`;
           } else {
             // The render may end on the product's own review page; product details come from the
             // product page snapshot then.

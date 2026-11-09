@@ -8,6 +8,7 @@ import {
   leafTexts,
   longestFreeText,
   productIdFromUrl,
+  blockPageTitle,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -81,4 +82,11 @@ test('productIdFromUrl finds product codes in common URL shapes', () => {
   assert.equal(productIdFromUrl('https://www.vineyardvines.com/product/mens-t-shirts/edgartown-short-sleeve-pocket-tee/1V011322.html'), '1V011322');
   // A word page name is not a code.
   assert.equal(productIdFromUrl('https://example.com/about-us.html'), null);
+});
+
+test('blockPageTitle recognises bot checks and access-denied pages', () => {
+  assert.equal(blockPageTitle('<html><head><title>Client Challenge</title></head></html>'), 'Client Challenge');
+  assert.equal(blockPageTitle('<title>Access to this page has been denied</title>'), 'Access to this page has been denied');
+  assert.equal(blockPageTitle('<title>Just a moment...</title>'), 'Just a moment...');
+  assert.equal(blockPageTitle('<title>Essentials No. 1 Logo Men\'s Tee | PUMA</title>'), null);
 });

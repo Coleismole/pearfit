@@ -103,3 +103,14 @@ export function ratingFromLabel(label: string | undefined): string {
   return best === 5 ? String(value) : String(1 + ((value - 1) / (best - 1)) * 4);
 }
 
+
+/**
+ * The title of a page a store shows automated visitors instead of the product: a bot check or an
+ * access-denied page. Returns the matched text, or null for an ordinary page.
+ */
+export function blockPageTitle(html: string): string | null {
+  const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').replace(/\s+/g, ' ').trim();
+  const pattern =
+    /access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot|verify you are (a )?human|request blocked|security check|bot protection/i;
+  return pattern.test(title) ? title : null;
+}

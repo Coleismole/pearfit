@@ -71,15 +71,15 @@ function firstPath(obj: Json, paths: string[]): unknown {
   return undefined;
 }
 
-const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore'];
+const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore', 'rate'];
 const BODY_KEYS = ['body', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
 const TITLE_KEYS = ['title', 'Title', 'reviewTitle', 'review_title', 'headline'];
-const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'date', 'created'];
+const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'date', 'created'];
 const ID_KEYS = ['id', 'Id', 'reviewId', 'review_id', 'ReviewId', 'uuid'];
 const AUTHOR_PATHS = [
   'user.displayName', 'user.display_name', 'user.name', 'author.name', 'author.displayName', 'author.display_name',
   'reviewer.displayName', 'reviewer.display_name', 'reviewer.name', 'customer.name', 'UserNickname', 'userNickname',
-  'nickname', 'reviewerName', 'reviewer_name', 'displayName', 'display_name', 'author',
+  'nickname', 'reviewerName', 'reviewer_name', 'displayName', 'display_name', 'author', 'name',
 ];
 /** Keys that make an object a product or an aggregate rather than one review. */
 const AGGREGATE_KEYS = [
@@ -205,13 +205,13 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
   // A centered range with three labels is a five-point scale: 1–2 small, 3 true, 4–5 large.
   const attrLists = [
     review.attributes, at(review, 'author.attributes'), at(review, 'reviewer.attributes'), review.productAttributes,
-    review.attributesWithRating, review.reviewer_attributes,
+    review.attributesWithRating, review.reviewer_attributes, review.reviewAttributes,
   ];
   for (const list of attrLists) {
     if (!Array.isArray(list)) continue;
     for (const item of list) {
       if (!isObject(item)) continue;
-      const label = first(item, ['label', 'title', 'name', 'question']);
+      const label = first(item, ['label', 'title', 'name', 'question', 'attributeName']);
       const type = str(item.type) ?? '';
       const options = Array.isArray(item.options) ? item.options : [];
       let scale: Scale | null = null;
@@ -226,8 +226,27 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
       } else if (/centered/i.test(type) && options.length === 3 && lowIsSmall !== null) {
         scale = { center: 3, half: 2, lowIsSmall };
       }
-      push(answer(label, first(item, ['value', 'answer', 'values']), scale));
+      push(answer(label, first(item, ['value', 'answer', 'values', 'displayName']), scale));
     }
+  }
+
+  // Answers stated directly on the review: { heightRange: "6'2\" - 6'3\"", weightRange: "200lb or over" }.
+  for (const [key, label] of [['heightRange', 'height'], ['height', 'height'], ['weightRange', 'weight'], ['weight', 'weight'], ['bodyType', 'body type'], ['usualSize', 'usual size'], ['usual_size', 'usual size']]) {
+    const value = review[key];
+    if (typeof value === 'string' || typeof value === 'number') push(answer(label, value));
+  }
+  // A fit word stated directly: { fit: "Runs small" }. A bare number needs a known scale (below).
+  if (typeof review.fit === 'string' && !/^\d+(\.\d+)?$/.test(review.fit.trim())) push(answer('fit', review.fit));
+  // Uniqlo's reviews ({ rate, purchasedSize, fit }) rate fit from 1 (tight) to 5 (loose), centred on 3;
+  // the product summary averages it as "fit": 2.98, shown as true to size.
+  if (typeof review.fit === 'number' && 'purchasedSize' in review && 'rate' in review) {
+    push(answer('fit', review.fit, { center: 3, half: 2, lowIsSmall: true }));
+  }
+
+  // A size stated directly on the review: { size: "M" }, { sizePurchased: "L" }.
+  for (const key of ['size', 'sizePurchased', 'size_purchased', 'purchasedSize', 'purchased_size', 'sizeOrdered', 'size_ordered', 'variantSize', 'variant_size']) {
+    const value = review[key];
+    if (typeof value === 'string' || typeof value === 'number') push(answer('size purchased', value));
   }
 
   // Variant options: product_options [{ name, value }], productVariants { Size: "M" }.
@@ -363,6 +382,16 @@ function verifiedOf(obj: Json): boolean {
   return false;
 }
 
+/** A date as text. Unix timestamps (seconds or milliseconds) become ISO dates. */
+function dateOf(v: unknown): string {
+  if (typeof v === 'number' && Number.isFinite(v) && v > 1e9) {
+    const ms = v > 1e12 ? v : v * 1000;
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+  return str(v) ?? '';
+}
+
 /** One review object to a scraped review. */
 export function reviewFromJson(obj: Json, index: number): JsonReview | null {
   if (!looksLikeReview(obj)) return null;
@@ -380,7 +409,7 @@ export function reviewFromJson(obj: Json, index: number): JsonReview | null {
     rating: Math.min(5, Math.max(1, Math.round(rating))),
     title: str(first(obj, TITLE_KEYS)) ?? '',
     body: bodyOf(obj) ?? str(first(obj, TITLE_KEYS)) ?? '',
-    date: str(first(obj, DATE_KEYS)) ?? '',
+    date: dateOf(first(obj, DATE_KEYS)),
     verifiedPurchase: verifiedOf(obj),
     reviewerHeight: fields.reviewerHeight,
     reviewerBuild: fields.reviewerBuild,
@@ -407,14 +436,30 @@ function reportedTotalOf(root: unknown): number | null {
 }
 
 /** Finds every review in a JSON value. Does not descend into a review once found. */
+/** Totals stated beside a review list: { total: 2, items: [...] }. */
+const CONTAINER_TOTAL_KEYS = ['total', 'totalCount', 'total_count', 'totalResults', 'TotalResults', 'totalReviews', 'total_reviews', 'reviewCount', 'review_count', 'numberOfReviews', 'count'];
+
 export function extractReviewsFromJson(root: unknown): JsonReviewSet {
   const reviews: JsonReview[] = [];
   const seen = new Set<unknown>();
-  const walk = (v: unknown, depth: number) => {
+  let containerTotal: number | null = null;
+  const walk = (v: unknown, depth: number, parent: Json | null = null) => {
     if (depth > 40 || v === null || typeof v !== 'object' || seen.has(v)) return;
     seen.add(v);
     if (Array.isArray(v)) {
+      const before = reviews.length;
       for (const item of v) walk(item, depth + 1);
+      if (reviews.length > before && parent && containerTotal === null) {
+        for (const key of CONTAINER_TOTAL_KEYS) {
+          const total = num(parent[key]);
+          if (total !== null && Number.isInteger(total) && total >= 0) {
+            containerTotal = total;
+            break;
+          }
+        }
+        // Nested beside the list: { pagination: { total }, reviews: [...] }.
+        if (containerTotal === null) containerTotal = reportedTotalOf(parent);
+      }
       return;
     }
     const review = reviewFromJson(v as Json, reviews.length);
@@ -422,10 +467,10 @@ export function extractReviewsFromJson(root: unknown): JsonReviewSet {
       reviews.push(review);
       return;
     }
-    for (const child of Object.values(v)) walk(child, depth + 1);
+    for (const child of Object.values(v)) walk(child, depth + 1, v as Json);
   };
   walk(root, 0);
-  return { reviews, reportedTotal: reviews.length > 0 ? reportedTotalOf(root) : null };
+  return { reviews, reportedTotal: reviews.length > 0 ? (reportedTotalOf(root) ?? containerTotal) : null };
 }
 
 /** Parses a response body, or null when it is not JSON. */
@@ -516,14 +561,20 @@ export function collectJsonReviews(sources: JsonSource[], product: ProductIdenti
   const seen = new Set<string>();
   const hosts = new Set<string>();
   let reportedTotal: number | null = null;
-  for (const source of sources) {
+  const sets = sources.map((source) => {
     const set = extractReviewsFromJson(source.value);
-    if (set.reviews.length === 0) continue;
     const urlKeys = source.url.startsWith('page:') ? [] : keysFromUrl(source.url);
-    const verdicts = set.reviews.map((r) => reviewMatchesProduct(r, urlKeys, product));
+    return { source, set, urlKeys, verdicts: set.reviews.map((r) => reviewMatchesProduct(r, urlKeys, product)) };
+  });
+  // When some response is known to be this product's, a response whose reviews name no product at
+  // all is another widget on the page ("complete the look", recently viewed). Page data is kept.
+  const someSourceMatches = sets.some((s) => s.verdicts.includes(true));
+  for (const { source, set, urlKeys, verdicts } of sets) {
+    if (set.reviews.length === 0) continue;
     const anyMatch = verdicts.includes(true);
     const anyOther = verdicts.includes(false);
     if (anyOther && !anyMatch) continue;
+    if (!anyMatch && someSourceMatches && !source.url.startsWith('page:')) continue;
     // This product's own review list. Stores group reviews of colourways or editions under one product
     // (Okendo "areReviewsGrouped", Klaviyo grouped ids), so its reviews may name sibling products.
     // A list is this product's when its URL names the product, when it states a product total and

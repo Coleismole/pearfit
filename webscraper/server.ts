@@ -1146,11 +1146,17 @@ function scrapeHtmlWithCheerio(
   if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
   const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
 
-  const reviews = mergeScrapedReviews(mergeScrapedReviews(jsonReviews, structured?.reviews ?? []), domReviews);
+  // When the review widget's own data was read, the review cards in the markup are the same reviews
+  // with less reliable fields (a widget's "Was this review helpful?" line can pass for a body), so
+  // they are not added on top. JSON-LD often holds only a few reviews, so it still merges with cards.
+  const useDom = jsonReviews.length === 0;
+  const reviews = useDom
+    ? mergeScrapedReviews(structured?.reviews ?? [], domReviews)
+    : mergeScrapedReviews(jsonReviews, structured?.reviews ?? []);
   const reviewSources = [
     ...fromJson.sources,
     ...(structured?.reviews.length ? ['json-ld'] : []),
-    ...(domReviews.length ? ['dom'] : []),
+    ...(useDom && domReviews.length ? ['dom'] : []),
   ];
 
   // 3. Free-text fallback, only for pasted review text/snippets. On a full fetched page it

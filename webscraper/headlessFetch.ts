@@ -67,7 +67,7 @@ export interface CapturedJson {
   body: string;
 }
 
-const RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating)"\s*:/;
+const RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating|rate)"\s*:/;
 const JSONP = /^[\w$.]+\(\s*([\s\S]*?)\s*\)\s*;?\s*$/;
 
 /** Keeps the review JSON a page receives, within size limits. Script bundles are not kept. */
@@ -230,6 +230,8 @@ const SCROLL_TO_END = `(async () => {
   }
 })()`;
 
+const SCROLL_TO_BOTTOM = `(() => { window.scrollTo(0, document.documentElement.scrollHeight); return 'scroll'; })()`;
+
 /** Brings each review widget into view so widgets that load on visibility start loading. */
 const REVIEW_WIDGETS_INTO_VIEW = `(async () => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -270,9 +272,12 @@ const CLICK_NEXT_REVIEWS = `(() => {
       const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);
       if (!isMore && !isNext) continue;
       if (el.tagName === 'A') {
+        // Same-page links only: "#…", "javascript:…", or "?…" (Okendo's "Show more reviews" is ?okeReviewsNextUrl=…).
         const href = el.getAttribute('href') || '';
-        if (href && !href.startsWith('#') && !href.startsWith('javascript')) continue;
+        if (href && !/^(#|javascript:|\\?)/i.test(href)) continue;
       }
+      // Arrows of a photo carousel or slider are not review paging.
+      if (isNext && !isMore && el.closest('[class*="carousel" i], [class*="slider" i], [class*="swiper" i], [class*="slick" i], [class*="gallery" i], [class*="media" i]')) continue;
       if (!visible(el) || disabled(el)) continue;
       found.push({ el, isMore, label });
     }
@@ -293,6 +298,44 @@ const CLICK_NEXT_REVIEWS = `(() => {
   pick.el.click();
   return pick.label.slice(0, 40) || 'next';
 })()`;
+
+/**
+ * Sorts a review widget by newest first, when it offers that. Widgets often open on "most helpful"
+ * or "highest rated", so the first pages are a biased sample. Returns what it did, or ''.
+ * Step "select": a <select> with a newest option. Step "open": clicks a "Sort" control; step
+ * "pick" (run after a short wait) clicks the newest option of the menu it opened.
+ */
+const SORT_NEWEST = `((step) => {
+  const NEWEST = /^(sort( by)?:?\\s*)?(most recent|newest( first)?|date,? newest|recent|latest)$/i;
+  const boxes = [...document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})];
+  const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  const text = (el) => (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+  if (step === 'select') {
+    for (const box of boxes) {
+      for (const select of box.querySelectorAll('select')) {
+        const option = [...select.options].find((o) => NEWEST.test(o.textContent.trim()));
+        if (!option || select.value === option.value) continue;
+        select.value = option.value;
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        return 'select:' + option.textContent.trim();
+      }
+    }
+    return '';
+  }
+  if (step === 'open') {
+    for (const box of boxes) {
+      for (const el of box.querySelectorAll('button, [role="button"], [role="combobox"], [aria-haspopup]')) {
+        if (/^sort\\b|sort by/i.test(text(el)) && visible(el)) { el.click(); return 'open:' + text(el).slice(0, 30); }
+      }
+    }
+    return '';
+  }
+  for (const el of document.querySelectorAll('[role="option"], [role="menuitem"], [role="menuitemradio"], li, button, a[href^="#"], a:not([href])')) {
+    if (NEWEST.test(text(el)) && visible(el) && el.getAttribute('aria-selected') !== 'true') { el.click(); return 'pick:' + text(el); }
+  }
+  return '';
+})`;
 
 const SERIALIZE_WITH_SHADOW_ROOTS = `(() => {
   const parts = [];
@@ -418,12 +461,17 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
         .catch(() => false));
 
     if (reviewSelectorFound) {
+      if (await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms))) {
+        await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {});
+        await capture.settle();
+      }
       await pageThroughReviews({
         click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
         progress: async () => capture.items.length + (await countReviews(page)),
         enough: async () => Math.max(capture.ratingFields, await countReviews(page)) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep: (ms) => page.waitForTimeout(ms),
+        scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
         stopAt: stopPagingAt,
       });
     }
@@ -454,6 +502,17 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
   }
 }
 
+/** Switches the review widget to newest first when it can. Best effort; returns what it did. */
+async function sortReviewsNewest(evaluate: (script: string) => Promise<unknown>, sleep: (ms: number) => Promise<void>): Promise<string> {
+  const viaSelect = (await evaluate(`${SORT_NEWEST}('select')`)) as string;
+  if (viaSelect) return viaSelect;
+  const opened = (await evaluate(`${SORT_NEWEST}('open')`)) as string;
+  if (!opened) return '';
+  await sleep(600);
+  const picked = (await evaluate(`${SORT_NEWEST}('pick')`)) as string;
+  return picked ? `${opened} ${picked}` : '';
+}
+
 /**
  * Clicks "load more" / "next page" in the review widget until no new reviews arrive twice in a row,
  * enough reviews were seen, or time runs out.
@@ -464,6 +523,8 @@ export async function pageThroughReviews(ops: {
   enough: () => Promise<boolean>;
   settle: () => Promise<void>;
   sleep: (ms: number) => Promise<void>;
+  /** Scrolls to the end of the page; returns 'scroll'. */
+  scroll?: () => Promise<string>;
   stopAt: number;
 }): Promise<number> {
   let pages = 0;
@@ -471,7 +532,8 @@ export async function pageThroughReviews(ops: {
   for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < ops.stopAt; i++) {
     if (await ops.enough()) break;
     const before = await ops.progress();
-    const clicked = await ops.click();
+    // No control left: infinite-scroll lists load the next reviews when the end comes into view.
+    const clicked = (await ops.click()) || (ops.scroll ? await ops.scroll() : '');
     if (!clicked) break;
     let grew = false;
     const until = Math.min(Date.now() + 5000, ops.stopAt);
@@ -611,12 +673,17 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
         .catch(() => false));
 
     if (reviewSelectorFound) {
+      if (await sortReviewsNewest((script) => page.evaluate(script), sleep)) {
+        await page.waitForNetworkIdle({ timeout: 4000 }).catch(() => {});
+        await capture.settle();
+      }
       await pageThroughReviews({
         click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
         progress: async () => capture.items.length + (await countReviews()),
         enough: async () => Math.max(capture.ratingFields, await countReviews()) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep,
+        scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
         stopAt: stopPagingAt,
       });
     }

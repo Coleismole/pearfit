@@ -316,3 +316,74 @@ test('a question summary with a score and a title is not a review', () => {
   // A title-only review with a reviewer still counts.
   assert.equal(extractReviewsFromJson({ reviews: [{ score: 5, title: 'Great', user: { displayName: 'Bo' } }] }).reviews.length, 1);
 });
+
+test('Uniqlo: rate, comment, purchased size, 1-5 fit centred on 3, height and an epoch date', () => {
+  const body = {
+    status: 'ok',
+    result: {
+      pagination: { total: 88, count: 2, offset: 0 },
+      rating: { average: 4.8, count: 88, fit: 2.98 },
+      reviews: [
+        {
+          productId: 'E482305-000',
+          heightRange: '6\'2" - 6\'3"',
+          weightRange: '200lb or over',
+          purchasedSize: '3XL',
+          reviewId: 6312248,
+          comment: 'The Dry-Ex polo shirt is amazing.',
+          fit: 3,
+          name: 'karotZ',
+          rate: 5,
+          title: 'Better material than imagined',
+          createDate: 1793382095,
+        },
+        { productId: 'E482305-000', purchasedSize: 'M', reviewId: 2, comment: 'Tight across the chest.', fit: 1, name: 'Lee', rate: 3, title: 'Tight', createDate: 1793382000 },
+      ],
+    },
+  };
+  const { reviews, reportedTotal } = extractReviewsFromJson(body);
+  assert.equal(reportedTotal, 88);
+  const [a, b] = reviews;
+  assert.equal(a.id, '6312248');
+  assert.equal(a.author, 'karotZ');
+  assert.equal(a.rating, 5);
+  assert.equal(a.sizePurchased, '3XL');
+  assert.equal(a.declaredFitTag, 'True to Size');
+  assert.equal(a.reviewerHeight, '6\'2" - 6\'3"');
+  assert.equal(a.reviewerBuild, '200lb or over');
+  // 1793382095 seconds after the epoch.
+  assert.equal(a.date, new Date(1793382095 * 1000).toISOString());
+  assert.deepEqual(a.productKeys, ['e482305-000']);
+  // 1 on 1..5 centred on 3: |1 - 3| / 2 = 1, toward tight.
+  assert.equal(b.declaredFitTag, 'Runs Small');
+});
+
+test('Quince: slider answers by display name, and another widget whose reviews name no product is dropped', () => {
+  const product = { keys: ['6599'], name: '100% Organic Cotton Heavyweight Relaxed Fit Jersey Tee' };
+  const own = {
+    widgets: [{ reviews: [{
+      id: 2171883, rating: 4, title: 'Best in class', productId: '6599', text: 'One of the best shirts for the money', author: 'Leandre M.',
+      reviewAttributes: [
+        { attributeName: 'Fit', attributeType: 'slider', displayName: 'Runs a little small', percentage: 40 },
+        { attributeName: 'Length', attributeType: 'slider', displayName: 'True to length', percentage: 50 },
+        { attributeName: 'Typical Size', attributeType: 'dropdown', displayName: 'M' },
+      ],
+      createdDate: 1790364386.903, verifiedPurchase: true,
+    }] }],
+  };
+  // Reviews of other products, naming none of them.
+  const other = [{ id: 2641939, rating: 5, title: 'Pants', body: 'Nice pants', author: 'Daniel M.' }];
+  const out = collectJsonReviews(
+    [
+      { url: 'https://api-prod-public.onequince.com/presentation-layer-service/widgets/fetch/v2', value: own },
+      { url: 'https://api.onequince.com/sand-services/products/v2/enrich?productIds=960,2443,962', value: other },
+    ],
+    product,
+  );
+  assert.deepEqual(out.reviews.map((r) => r.id), ['2171883']);
+  const [r] = out.reviews;
+  assert.equal(r.declaredFitTag, 'Slightly Small');
+  assert.equal(r.usualSize, 'M');
+  // No answer says which size was bought, so none is guessed.
+  assert.equal(r.sizePurchased, '');
+});

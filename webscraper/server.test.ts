@@ -286,3 +286,42 @@ test('a re-scrape that finds a chart but no reviews keeps the stored reviews', a
     server.close();
   }
 });
+
+test('when the page holds review data, widget markup is not counted as more reviews', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const nextData = {
+      props: {
+        pageProps: {
+          product: { id: 'NEXT-1', name: 'Next Tee' },
+          reviews: {
+            total: 2,
+            items: [
+              { id: 'r1', rating: 5, title: 'Great', body: 'Soft and true to size.', author: 'Ana', size: 'M' },
+              { id: 'r2', rating: 2, title: 'Small', body: 'Runs small in the chest.', author: 'Bo', size: 'L' },
+            ],
+          },
+        },
+      },
+    };
+    const html = `<!DOCTYPE html><html><head><title>Next Tee</title></head><body><h1>Next Tee</h1>
+      <div class="review-card"><p>Was this review helpful to you?</p></div>
+      <div class="review-card"><p>BobbieLynn,</p></div>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script>
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'NEXT-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as {
+      totalReviews: number;
+      reviews: { id: string; normalizedSize: string | null; rating: number }[];
+      scraperTelemetry: { reportedReviewCount: number | null; reviewSources: string[] };
+    };
+    // The two reviews in the page data, with their sizes and ratings; the two widget lines are not reviews.
+    assert.equal(report.totalReviews, 2);
+    assert.deepEqual(report.reviews.map((r) => [r.id, r.normalizedSize, r.rating]), [['r1', 'M', 5], ['r2', 'L', 2]]);
+    assert.equal(report.scraperTelemetry.reportedReviewCount, 2);
+    assert.deepEqual(report.scraperTelemetry.reviewSources, ['page']);
+  } finally {
+    server.close();
+  }
+});

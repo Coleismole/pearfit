@@ -63,12 +63,39 @@ create table if not exists public.sku_size_chart (
 -- Existing projects created this column as NOT NULL. Re-run this script so an unknown opacity can be null.
 alter table public.commercial_skus alter column fabric_opacity_pct drop not null;
 
+-- Existing projects may have been created without this column. commit_fit_report below writes it.
+alter table public.commercial_skus add column if not exists retail_price text;
+
 alter table public.commercial_skus enable row level security;
 alter table public.sku_size_metrics enable row level security;
 alter table public.sku_size_chart enable row level security;
 revoke all on table public.commercial_skus from anon, authenticated;
 revoke all on table public.sku_size_metrics from anon, authenticated;
 revoke all on table public.sku_size_chart from anon, authenticated;
+
+-- Per-brand correction for length and sleeve: offset = brand chart - our canonical ruler.
+-- engine/cli/export-candidates.ts SUBTRACTS it, so a positive offset means the brand's chart runs bigger.
+-- NULL (or no row for the brand) = convention unconfirmed, so the export leaves that dimension null.
+-- No chest offset: chest is the trusted dimension.
+create table if not exists public.brand_offsets (
+  brand text primary key,
+  length_cm double precision,
+  sleeve_cm double precision
+);
+alter table public.brand_offsets enable row level security;
+revoke all on table public.brand_offsets from anon, authenticated;
+
+-- Read access for `node cli/export-candidates.ts --source supabase`, which runs with the publishable key.
+-- These three tables hold fit values and size charts only (review text has no column). anon may SELECT
+-- them and nothing else; every write still goes through the functions below. This grant comes after the
+-- revokes above on purpose, so re-running the whole file keeps it.
+grant select on table public.commercial_skus, public.sku_size_chart, public.brand_offsets to anon;
+drop policy if exists export_read on public.commercial_skus;
+create policy export_read on public.commercial_skus for select to anon using (true);
+drop policy if exists export_read on public.sku_size_chart;
+create policy export_read on public.sku_size_chart for select to anon using (true);
+drop policy if exists export_read on public.brand_offsets;
+create policy export_read on public.brand_offsets for select to anon using (true);
 
 -- Drop first so the recreated functions are owned by the role running this script.
 do $$

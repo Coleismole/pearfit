@@ -82,7 +82,10 @@ const AUTHOR_PATHS = [
   'nickname', 'reviewerName', 'reviewer_name', 'displayName', 'display_name', 'author',
 ];
 /** Keys that make an object a product or an aggregate rather than one review. */
-const AGGREGATE_KEYS = ['review_count', 'reviewCount', 'totalReviews', 'total_reviews', 'TotalReviewCount', 'rating_histogram', 'ratingHistogram'];
+const AGGREGATE_KEYS = [
+  'review_count', 'reviewCount', 'totalReviews', 'total_reviews', 'TotalReviewCount', 'rating_histogram', 'ratingHistogram',
+  'averageScore', 'average_score', 'averageRating', 'average_rating', 'AverageOverallRating',
+];
 
 /** A 1–5 rating. Ten- and hundred-point scales are scaled down; a stated best rating wins. */
 export function normalizeRating(raw: unknown, best?: unknown): number | null {
@@ -118,7 +121,10 @@ export function looksLikeReview(obj: Json): boolean {
   if (AGGREGATE_KEYS.some((key) => key in obj)) return false;
   const rating = normalizeRating(first(obj, RATING_KEYS), obj.bestRating);
   if (rating === null) return false;
-  return bodyOf(obj) !== null || str(first(obj, TITLE_KEYS)) !== null;
+  if (bodyOf(obj) !== null) return true;
+  // A title-only review still has a reviewer or a date; a question summary ({ title: "Fit", score: 2 }) has neither.
+  if (str(first(obj, TITLE_KEYS)) === null) return false;
+  return authorOf(obj) !== 'Anonymous' || str(first(obj, DATE_KEYS)) !== null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -518,10 +524,17 @@ export function collectJsonReviews(sources: JsonSource[], product: ProductIdenti
     const anyMatch = verdicts.includes(true);
     const anyOther = verdicts.includes(false);
     if (anyOther && !anyMatch) continue;
+    // This product's own review list. Stores group reviews of colourways or editions under one product
+    // (Okendo "areReviewsGrouped", Klaviyo grouped ids), so its reviews may name sibling products.
+    // A list is this product's when its URL names the product, when it states a product total and
+    // holds a review of this product, or when at least half its reviews are this product's.
+    const urlNamesProduct = urlKeys.some((k) => product.keys.includes(k));
+    const matched = verdicts.filter((v) => v === true).length;
+    const ownList = urlNamesProduct || (anyMatch && set.reportedTotal !== null) || matched * 2 >= set.reviews.length;
     let added = 0;
     set.reviews.forEach((review, i) => {
-      if (verdicts[i] === false) return;
-      if (verdicts[i] === null && anyOther) return;
+      if (!ownList && verdicts[i] === false) return;
+      if (!ownList && verdicts[i] === null && anyOther) return;
       const keys = dedupeKey(review);
       if (keys.some((k) => seen.has(k))) return;
       keys.forEach((k) => seen.add(k));

@@ -284,3 +284,35 @@ test('collectJsonReviews keeps reviews that name no product when the source name
   assert.equal(out.reviews.length, 1);
   assert.deepEqual(out.sources, ['page']);
 });
+
+test('collectJsonReviews keeps reviews a store groups under this product (other colourways)', () => {
+  // Klaviyo-style list for the page product 8016253780042: one review names it, two name sibling
+  // colourways, and the list states a product total of 15. All three are this product's reviews.
+  const product = { keys: ['8016253780042', 'fresh-tracks-stretch-selvage-shirt'], name: 'Tahoe Fresh Tracks Flannel Shirt' };
+  const review = (id: number, shopifyId: number, name: string) => ({
+    id, rating: 5, content: `Review ${id} of a flannel`, product: { shopify_id: shopifyId, name },
+  });
+  const list = {
+    summary: { review_count: 15 },
+    reviews: [
+      review(1, 8016253780042, 'Tahoe Fresh Tracks Flannel Shirt'),
+      review(2, 7795908608074, 'Fresh Tracks Flannel in Navy Plaid'),
+      review(3, 7795908608075, 'Fresh Tracks Flannel in Olive'),
+    ],
+  };
+  const out = collectJsonReviews([{ url: 'https://fast.a.klaviyo.com/reviews/api/client_reviews/7795908608074/', value: list }], product);
+  assert.deepEqual(out.reviews.map((r) => r.id), ['1', '2', '3']);
+  assert.equal(out.reportedTotal, 15);
+});
+
+test('a question summary with a score and a title is not a review', () => {
+  // Yotpo bottomline: customFieldsBottomline { "--119743": { title: "Fit", type: "Size", averageScore: 2, score: 2 } }.
+  const body = {
+    bottomline: { totalReview: 18, customFieldsBottomline: { '--119743': { title: 'Fit', type: 'Size', averageScore: 2, score: 2 } } },
+    reviews: [{ id: 1, score: 5, content: 'Soft tee', user: { displayName: 'Ana' } }],
+    other: { title: 'Quality', score: 4 },
+  };
+  assert.deepEqual(extractReviewsFromJson(body).reviews.map((r) => r.id), ['1']);
+  // A title-only review with a reviewer still counts.
+  assert.equal(extractReviewsFromJson({ reviews: [{ score: 5, title: 'Great', user: { displayName: 'Bo' } }] }).reviews.length, 1);
+});

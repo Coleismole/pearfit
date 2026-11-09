@@ -11,13 +11,16 @@
  */
 import type { Browser, Page } from 'playwright';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
+import { extractReviewsFromJson, parseJsonBody } from './reviewJson.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
   '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 
-const USER_AGENT =
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+/**
+ * The browser keeps its own user agent. A desktop-Chrome string on headless Linux contradicts what the
+ * browser reports elsewhere, and some stores answer that with an error page (Roots: HTTP 502).
+ */
 
 const NAV_TIMEOUT_MS = 45_000;
 /** Whole render, including scrolling and paging. One page cannot hold the browser longer than this. */
@@ -40,7 +43,7 @@ export const REVIEW_WIDGET_SELECTOR = [
   '.jdgm-widget', '.jdgm-rev-widg', '#judgeme_product_reviews',
   '#stamped-main-widget', '.stamped-main-widget', '#stamped-reviews-widget',
   '[class*="junip"]', 'junip-product-reviews',
-  '[data-bv-show="reviews"]', '#BVRRContainer', '[data-bv-show="review_highlights"]',
+  '[data-bv-show]', '#BVRRContainer', '[class*="bv-rnr"]', '[class*="bv_main"]', '[class*="bv-pagination"]', '[data-bv-v]',
   '#pr-reviewdisplay', '.pr-review-display',
   '.kl_reviews', '[class*="kl_reviews"]', '#klaviyo-reviews-all',
   '.loox-reviews-default', '#looxReviews', '.reviews-io-widget', '#ReviewsWidget', '#full-page-widget',
@@ -100,6 +103,18 @@ export class JsonCapture {
     this.items.push({ url, body });
     this.bytes += body.length;
     this.ratingFields += (body.match(new RegExp(RATING_FIELD.source, 'g')) ?? []).length;
+  }
+
+  private readonly counted = new Set<string>();
+  private countedItems = 0;
+
+  /** Distinct reviews in the JSON kept so far (by id, else by the start of the text). */
+  reviewCount(): number {
+    for (; this.countedItems < this.items.length; this.countedItems++) {
+      const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
+      for (const r of set.reviews) this.counted.add(r.id.startsWith('json-') ? `b:${r.body.slice(0, 60)}` : `i:${r.id}`);
+    }
+    return this.counted.size;
   }
 
   async settle(timeoutMs = 3000): Promise<void> {
@@ -208,6 +223,35 @@ async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: Reg
   return false;
 }
 
+/**
+ * In-page helper: querySelectorAll that also searches open shadow roots (Bazaarvoice's newer
+ * review app renders inside one). Prepended to the in-page scripts below.
+ */
+const DEEP_QUERY = `const deepAll = (selector, root = document) => {
+  const out = [...root.querySelectorAll(selector)];
+  for (const el of root.querySelectorAll('*')) if (el.shadowRoot) out.push(...deepAll(selector, el.shadowRoot));
+  return out;
+};`;
+
+/**
+ * Clicks the rating summary near the product title ("4.1 out of 5 (84)", "84 reviews") when it is a
+ * same-page control. On many stores it opens the review section (Arc'teryx loads Bazaarvoice from it).
+ */
+const OPEN_RATING_SUMMARY = `(() => {
+  ${DEEP_QUERY}
+  for (const el of deepAll('a, button, [role="button"]')) {
+    const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (label.length > 90 || !/out of 5[^a-z]*\\(?\\d|\\(\\d[\\d,]*\\)|^\\d[\\d,]* reviews?\\b/i.test(label)) continue;
+    const href = el.getAttribute('href') || '';
+    if (el.tagName === 'A' && href && !/^(#|javascript:)/i.test(href)) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    el.click();
+    return label.slice(0, 40);
+  }
+  return '';
+})()`;
+
 /** Scrolls down until the page stops growing (lazy sections load as they come into view). */
 const SCROLL_TO_END = `(async () => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -234,9 +278,10 @@ const SCROLL_TO_BOTTOM = `(() => { window.scrollTo(0, document.documentElement.s
 
 /** Brings each review widget into view so widgets that load on visibility start loading. */
 const REVIEW_WIDGETS_INTO_VIEW = `(async () => {
+  ${DEEP_QUERY}
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const seen = [];
-  for (const el of document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
+  for (const el of deepAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
     if (seen.some((s) => s.contains(el))) continue;
     seen.push(el);
     el.scrollIntoView({ block: 'center' });
@@ -251,7 +296,9 @@ const REVIEW_WIDGETS_INTO_VIEW = `(async () => {
  * leave the page. Returns the control's label, or '' when there is none.
  */
 const CLICK_NEXT_REVIEWS = `(() => {
-  const MORE = /^(load|show|see|view|read) (more|all|\\d+ more)( reviews?)?$|^more reviews$/i;
+  ${DEEP_QUERY}
+  // "Read more" expands one review's text; it never loads more reviews.
+  const MORE = /^(load|show|see|view) (more|all|\\d+ more)( reviews?)?$|^more reviews$/i;
   const NEXT = /^(next|next page|next reviews?|›|»|→|>|go to next page)$/i;
   const visible = (el) => {
     const r = el.getBoundingClientRect();
@@ -262,37 +309,49 @@ const CLICK_NEXT_REVIEWS = `(() => {
     el.disabled || el.getAttribute('aria-disabled') === 'true' || /(^|\\s)(is-)?disabled(\\s|$)/.test(String(el.className || ''));
   const seen = new Set();
   const found = [];
-  for (const box of document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
-    for (const el of box.querySelectorAll('button, a, [role="button"], [role="link"]')) {
+  for (const box of deepAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})) {
+    for (const el of deepAll('button, a, [role="button"], [role="link"]', box)) {
       if (seen.has(el)) continue;
       seen.add(el);
       const aria = el.getAttribute('aria-label') || '';
       const label = (aria || el.textContent || el.getAttribute('title') || '').replace(/\\s+/g, ' ').trim();
+      if (/about this review|this review'?s? (text|content)/i.test(aria)) continue;
       const isMore = MORE.test(label);
       const isNext = NEXT.test(label) || /next (page|reviews?)/i.test(aria) || (/(^|[-_ ])next([-_ ]|$)/i.test(String(el.className || '')) && label.length <= 3);
       if (!isMore && !isNext) continue;
       if (el.tagName === 'A') {
-        // Same-page links only: "#…", "javascript:…", or "?…" (Okendo's "Show more reviews" is ?okeReviewsNextUrl=…).
+        // Same-page links only: "#…", "javascript:…", "?…" (Okendo's ?okeReviewsNextUrl=…), or this page's
+        // own path with other parameters (Bazaarvoice's "Next Reviews" links to ?bvstate=pg:2).
         const href = el.getAttribute('href') || '';
-        if (href && !/^(#|javascript:|\\?)/i.test(href)) continue;
+        if (href && !/^(#|javascript:|\\?)/i.test(href)) {
+          let same = false;
+          try {
+            const target = new URL(href, location.href);
+            same = target.origin === location.origin && target.pathname === location.pathname;
+          } catch (e) {}
+          if (!same) continue;
+        }
       }
       // Arrows of a photo carousel or slider are not review paging.
       if (isNext && !isMore && el.closest('[class*="carousel" i], [class*="slider" i], [class*="swiper" i], [class*="slick" i], [class*="gallery" i], [class*="media" i]')) continue;
       if (!visible(el) || disabled(el)) continue;
-      found.push({ el, isMore, label });
+      // A "next" beside numbered page buttons is the review list's pager, not a picture slider.
+      const pager = isNext && el.parentElement && [...el.parentElement.querySelectorAll('button, a, [role="button"]')]
+        .some((b) => /^(page )?\\d+$/i.test((b.getAttribute('aria-label') || b.textContent || '').trim()));
+      found.push({ el, isMore, label, rank: isMore ? 3 : pager ? 2 : 1 });
     }
   }
   // Fallback: a "load more reviews" button that sits outside the widget (buttons only, never links).
   if (found.length === 0) {
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
+    for (const el of deepAll('button, [role="button"]')) {
       const label = (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
       if (/^(load|show|see|view) more( reviews?)?$/i.test(label) && visible(el) && !disabled(el)) {
-        found.push({ el, isMore: true, label });
+        found.push({ el, isMore: true, label, rank: 3 });
         break;
       }
     }
   }
-  const pick = found.find((f) => f.isMore) || found[0];
+  const pick = found.sort((a, b) => b.rank - a.rank)[0];
   if (!pick) return '';
   pick.el.scrollIntoView({ block: 'center' });
   pick.el.click();
@@ -306,13 +365,14 @@ const CLICK_NEXT_REVIEWS = `(() => {
  * "pick" (run after a short wait) clicks the newest option of the menu it opened.
  */
 const SORT_NEWEST = `((step) => {
+  ${DEEP_QUERY}
   const NEWEST = /^(sort( by)?:?\\s*)?(most recent|newest( first)?|date,? newest|recent|latest)$/i;
-  const boxes = [...document.querySelectorAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)})];
+  const boxes = deepAll(${JSON.stringify(REVIEW_WIDGET_SELECTOR)});
   const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   const text = (el) => (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim();
   if (step === 'select') {
     for (const box of boxes) {
-      for (const select of box.querySelectorAll('select')) {
+      for (const select of deepAll('select', box)) {
         const option = [...select.options].find((o) => NEWEST.test(o.textContent.trim()));
         if (!option || select.value === option.value) continue;
         select.value = option.value;
@@ -325,13 +385,13 @@ const SORT_NEWEST = `((step) => {
   }
   if (step === 'open') {
     for (const box of boxes) {
-      for (const el of box.querySelectorAll('button, [role="button"], [role="combobox"], [aria-haspopup]')) {
+      for (const el of deepAll('button, [role="button"], [role="combobox"], [aria-haspopup]', box)) {
         if (/^sort\\b|sort by/i.test(text(el)) && visible(el)) { el.click(); return 'open:' + text(el).slice(0, 30); }
       }
     }
     return '';
   }
-  for (const el of document.querySelectorAll('[role="option"], [role="menuitem"], [role="menuitemradio"], li, button, a[href^="#"], a:not([href])')) {
+  for (const el of deepAll('[role="option"], [role="menuitem"], [role="menuitemradio"], li, button, a[href^="#"], a:not([href])')) {
     if (NEWEST.test(text(el)) && visible(el) && el.getAttribute('aria-selected') !== 'true') { el.click(); return 'pick:' + text(el); }
   }
   return '';
@@ -390,7 +450,6 @@ async function renderPageHtmlOnce(url: string): Promise<RenderedPage> {
 async function renderWithPlaywright(url: string): Promise<RenderedPage> {
   const browser = (await getBrowser()) as Browser;
   const context = await browser.newContext({
-    userAgent: USER_AGENT,
     locale: 'en-US',
     viewport: { width: 1366, height: 900 },
   });
@@ -446,6 +505,11 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       await waitForMoreReviews(page, reviewsBeforeOpening, REVIEW_WAIT_MS);
     }
 
+    // Still no review data: the rating summary near the title often opens the review section.
+    if (capture.reviewCount() === 0 && (await page.evaluate(OPEN_RATING_SUMMARY))) {
+      await page.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
+    }
+
     // Widgets that load when they come into view (Okendo, Junip, Bazaarvoice) need to be seen.
     await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
     await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
@@ -462,15 +526,18 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     // A review widget whose first reviews came embedded in the page (Okendo) still pages by JavaScript.
     const hasReviewWidget = (await page.locator(REVIEW_WIDGET_SELECTOR).count()) > 0;
 
+    if (process.env.SCRAPER_DEBUG) console.error(`[render] reviewSelectorFound=${reviewSelectorFound} hasReviewWidget=${hasReviewWidget} json=${capture.items.length}`);
     if (reviewSelectorFound || hasReviewWidget) {
-      if (await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms))) {
+      const sorted = await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms));
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] sort=${JSON.stringify(sorted)}`);
+      if (sorted) {
         await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {});
         await capture.settle();
       }
       await pageThroughReviews({
         click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
-        progress: async () => capture.items.length + (await countReviews(page)),
-        enough: async () => Math.max(capture.ratingFields, await countReviews(page)) >= MAX_REVIEWS,
+        progress: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews(page)),
+        enough: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep: (ms) => page.waitForTimeout(ms),
         scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,
@@ -531,11 +598,13 @@ export async function pageThroughReviews(ops: {
 }): Promise<number> {
   let pages = 0;
   let idle = 0;
+  if (process.env.SCRAPER_DEBUG) console.error(`[paging] start: msLeft=${ops.stopAt - Date.now()} enough=${await ops.enough()}`);
   for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < ops.stopAt; i++) {
     if (await ops.enough()) break;
     const before = await ops.progress();
     // No control left: infinite-scroll lists load the next reviews when the end comes into view.
     const clicked = (await ops.click()) || (ops.scroll ? await ops.scroll() : '');
+    if (process.env.SCRAPER_DEBUG) console.error(`[paging] ${i}: clicked=${JSON.stringify(clicked)} before=${before}`);
     if (!clicked) break;
     let grew = false;
     const until = Math.min(Date.now() + 5000, ops.stopAt);
@@ -560,7 +629,6 @@ export async function pageThroughReviews(ops: {
 interface ServerlessPage {
   goto(url: string, opts: { waitUntil: 'domcontentloaded'; timeout: number }): Promise<{ status(): number } | null>;
   url(): string;
-  setUserAgent(ua: string): Promise<void>;
   setRequestInterception(enabled: boolean): Promise<void>;
   on(event: 'request', handler: (req: { url(): string; resourceType(): string; abort(): Promise<void>; continue(): Promise<void> }) => void): void;
   on(event: 'response', handler: (res: { url(): string; status(): number; headers(): Record<string, string>; text(): Promise<string> }) => void): void;
@@ -597,7 +665,6 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
   const page = await browser.newPage();
   const allowPrivate = startUrlAllowsPrivate(url);
   const hostIsBlocked = createRequestHostGuard();
-  await page.setUserAgent(USER_AGENT);
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const type = req.resourceType();
@@ -663,6 +730,9 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
       await waitForMore(reviewsBeforeOpening, REVIEW_WAIT_MS);
     }
 
+    if (capture.reviewCount() === 0 && (await page.evaluate(OPEN_RATING_SUMMARY))) {
+      await page.waitForNetworkIdle({ timeout: 6000 }).catch(() => {});
+    }
     await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
     await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => {});
     await capture.settle();
@@ -682,8 +752,8 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
       }
       await pageThroughReviews({
         click: () => page.evaluate(CLICK_NEXT_REVIEWS) as Promise<string>,
-        progress: async () => capture.items.length + (await countReviews()),
-        enough: async () => Math.max(capture.ratingFields, await countReviews()) >= MAX_REVIEWS,
+        progress: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews()),
+        enough: async () => (capture.items.length > 0 ? capture.reviewCount() : await countReviews()) >= MAX_REVIEWS,
         settle: () => capture.settle(1500),
         sleep,
         scroll: () => page.evaluate(SCROLL_TO_BOTTOM) as Promise<string>,

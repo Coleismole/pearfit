@@ -79,6 +79,8 @@ export function productIdFromUrl(url: string): string | null {
   // An id in the path wins; a query parameter (which may be a tracking code) is the fallback.
   const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
   const m =
+    // Target: /p/<name>/-/A-93249836 (the A- number is Target's item id).
+    url.match(/\/-\/(A-\d{5,})(?:[/?#]|$)/) ||
     url.match(/\/(\d{4,})\.html/) ||
     // A product code with letters and digits as the page name: /edgartown-pocket-tee/1V011322.html.
     url.match(/\/([A-Z0-9]*\d[A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z][A-Z0-9]*\d[A-Z0-9]*)\.html(?:[?#]|$)/i) ||

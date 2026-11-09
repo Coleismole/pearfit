@@ -1172,7 +1172,10 @@ function scrapeHtmlWithCheerio(
         // inside review markup. A card with no rating, no reviewer and mostly snake_case tokens is not a review.
         const words = body.split(/[\s,]+/).filter(Boolean);
         const tokenish = words.filter((w) => /_/.test(w) || /^[a-z]+\d+$/i.test(w)).length;
-        const debugText = !Number.isFinite(parsedRating) && author === 'Anonymous' && tokenish * 2 >= words.length;
+        // Share buttons and widget lines ("facebook Share Review by Anonymous User") are not reviews either.
+        const widgetLine = /\b(facebook|twitter|pinterest|share (this )?review|copy link|was this (review )?helpful|report (this )?review)\b/i.test(body);
+        const debugText =
+          !Number.isFinite(parsedRating) && author === 'Anonymous' && (tokenish * 2 >= words.length || widgetLine);
         if (body.length > 8 && !debugText) {
           // A card with a star rating in its markup and a named reviewer is a real review. Lines a widget
           // repeats around reviews ("Was this review helpful?") have neither.

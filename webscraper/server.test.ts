@@ -357,6 +357,7 @@ test('Bazaarvoice search-engine debug text in review markup is not counted as re
       ${card('y_2026, m_11, d_8, h_6')}
       ${card('bvseo_bulk, prod_bvrr, vn_bulk_3.0.50')}
       ${card('loc_en_CA, sid_39031035, prod, sort_default')}
+      ${card('facebook Share Review by Anonymous User')}
       </body></html>`;
     const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'ROOTS-T', commitToDb: false, render: 'never' });
     assert.equal(scraped.status, 200, JSON.stringify(scraped.json));

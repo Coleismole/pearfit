@@ -9,6 +9,7 @@ import {
   longestFreeText,
   productIdFromUrl,
   blockPageTitle,
+  blockPageText,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -94,4 +95,15 @@ test('blockPageTitle recognises bot checks and access-denied pages', () => {
   // A product named like a block page, and an SVG title in the body, are not block pages.
   assert.equal(blockPageTitle('<title>Access Denied Graphic Tee | Store</title>'), null);
   assert.equal(blockPageTitle('<html><head><title>Logo Tee</title></head><body><svg><title>Security Check</title></svg></body></html>'), null);
+});
+
+test('blockPageText reads a short refusal or maintenance page, and ignores a real page', () => {
+  const nordstrom = '<html><head><title>Nordstrom</title></head><body><h1>We\'ve noticed some unusual activity</h1><p>To keep our site secure, we don’t allow unidentified, automated traffic.</p></body></html>';
+  assert.equal(blockPageText(nordstrom), 'refused');
+  const patagonia = '<html><head><title>Patagonia Outdoor Clothing &amp; Gear</title></head><body><h1>We’re working on it.</h1><p>System maintenance is in progress. Please try again in a few minutes.</p><script>var x = "automated traffic";</script></body></html>';
+  assert.equal(blockPageText(patagonia), 'maintenance');
+  // A long product page that mentions the words in its footer is a product page.
+  const product = `<html><body><h1>Tee</h1><p>${'Soft cotton tee that fits true to size. '.repeat(60)}</p><footer>We block automated traffic.</footer></body></html>`;
+  assert.equal(blockPageText(product), null);
+  assert.equal(blockPageText('<html><body><h1>Logo Tee</h1><p>$25</p></body></html>'), null);
 });

@@ -24,7 +24,7 @@ A scrape reads every place a product page keeps its reviews, then keeps only thi
 
 Size bought, usual size, fit, height and build come from each review's own answers ("Size purchased", "How was the fit?") or from the variant bought ("Small / Navy"). A fit answer becomes "runs small" or "runs large" only on a known scale; otherwise it is left empty. `scraperTelemetry.reportedReviewCount` is the total the store states, so a scrape can be checked against it. Paging stops at about 300 reviews.
 
-Stores that refuse automated requests (HTTP 403/418/429/503, or a block page) are reported and not retried. See `SUPPORTED_STORES.md` for the stores this was tested on.
+Stores that refuse automated requests (HTTP 403/418/429/503, a block page, or a short page saying they do not allow automated traffic) are reported and not retried. A page that says the site is down for maintenance is reported as down. See `SUPPORTED_STORES.md` for the stores this was tested on.
 
 To see what a render does on a store (review data found, sort, each paging click), run the server with `SCRAPER_DEBUG=1`.
 

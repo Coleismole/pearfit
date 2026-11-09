@@ -1,6 +1,6 @@
 # Stores confirmed scrapeable
 
-Tested on 2026-11-09 in three rounds with one live product page per store, through `POST /api/scrape`. "Read / stated" is the
+Tested on 2026-11-09 in four rounds with one live product page per store, through `POST /api/scrape`. "Read / stated" is the
 number of reviews the scraper read against the total the store states for that product. Paging stops at about
 300 reviews or when the render's time runs out (120 s locally, 50 s on Vercel), so a large total is sampled,
 newest first where the store offers that sort.
@@ -42,6 +42,17 @@ newest first where the store offers that sort.
 | Fruit of the Loom | Short Sleeve Crew T-Shirt (3 pack) | BayEngage | 83 / 83 | no field | no field |
 | Quiksilver | Everyday UPF 50 Surf Tee | Yotpo | 12 / 12 | yes | yes |
 | Target | Goodfellow & Co Crew Neck T-Shirt | Reviews embedded in the page (the headless browser gets HTTP 429) | 8 / not stated | no field | no field |
+| Athleta | Move With Ease Tee | Bazaarvoice | 300 / 2798 | rarely stated | yes |
+| Gymshark | Vengeance Long Sleeve T-Shirt | Gymshark's own review service | 8 / 8 | no field | no field |
+| Alo Yoga | Airbrush Splendor Dress | Alo Yoga's own review service | 166 / 438 | rarely stated | rarely stated |
+| Princess Polly | Hibiscus Haven Oversized Tee | Yotpo | 109 / 109 | yes | yes |
+| Beyond Yoga | Featherweight On The Down Low Tee | Yotpo | 300 / 1620 | yes | yes |
+| Outdoor Voices | ThinkFast Mesh Muscle Tank | Reviews embedded in the page | 4 / 4 | yes | yes |
+| UNTUCKit | Wrinkle-Free Black Stone Shirt | Yotpo | 300 / 1555 | yes | no field |
+| Chubbies | The Pit Stop Graphic T-Shirt | Yotpo (the page's review widget names the product) | 300 / 399 | yes | yes |
+| Outerknown | Blanket Shirt | Yotpo | 300 / 1090 | yes | yes |
+| Cuts Clothing | Riviera Knit Textured Tee | Okendo | 60 / 59 | yes | yes |
+| Mack Weldon | Linen Jersey Crew Neck T-Shirt | Junip | 1 / 1 | yes | no field |
 
 Known limits:
 
@@ -62,6 +73,11 @@ Known limits:
 - **Target** refuses the headless browser (HTTP 429), so only the reviews embedded in the page are read, and the
   page states no brand.
 - **Quiksilver** names its products' brand "O5 Quiksilver" in its own data, and the scraper reports what the page states.
+- **Chubbies** serves its page from chubbies.com and chubbiesshorts.com; the scraper follows the redirect.
+- **Alo Yoga** sells mostly women's clothing, so the tested product is a dress. Few of its reviews state a size or fit.
+- **Cuts Clothing** read 60 reviews against a stated 59: the store's total was one behind its list while the page loaded.
+- **Gymshark**, **Mack Weldon** and **Outdoor Voices** had few reviews on the products tested, so those rows show the
+  scraper working, not volume.
 
 ## Size chart only
 
@@ -83,20 +99,25 @@ Known limits:
 | FILA | Product pages answer HTTP 404 (site moved). |
 | Duluth Trading, Lucky Brand | HTTP 403 ("Access Denied"). |
 | Huckberry, Columbia, J.Crew, Rhone, The North Face | HTTP 403 to the page request. |
-| Lululemon | HTTP 403 to the page request. |
+| Lululemon | HTTP 403 to the page request (tried again in round 4, US and CA: still 403). |
+| Tommy John, Ministry of Supply, Fabletics, Hello Molly, Aritzia, Reformation, Madewell, Free People, Urban Outfitters, Macy's, Victoria's Secret, Guess | HTTP 403 to the page request. |
+| Mizzen+Main | HTTP 429 to the page request. |
+| Nordstrom, SHEIN | The page answers HTTP 200 with a short page saying it does not allow automated traffic. |
+| Patagonia | Serves a "System maintenance is in progress" page (HTTP 200). Reported as down, not as a refusal. |
+| Southern Tide, Psycho Bunny, Fashion Nova, White Fox, Stüssy, Kith, Forever 21 | The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says "No reviews yet"). A product with reviews was not found in the time spent. |
 | Carhartt | HTTP 403 to the page request (reviews would come from TurnTo, which the reader supports). |
 | Lands' End, Bombas, MEC, Todd Snyder | HTTP 403 or 429. |
 | American Eagle | The page loads no review data for automated visitors. |
 | Patagonia | Served a "system maintenance" page to the headless browser. |
 
-A store that answers 403, 418, 429 or 503, or shows a bot check or access-denied page, is reported as refusing
-automated requests. The scraper does not try to get around it.
+A store that answers 403, 418, 429 or 503, shows a bot check or access-denied page, or serves a short page that says it
+does not allow automated traffic, is reported as refusing automated requests. The scraper does not try to get around it.
 
 ## Review platforms the reader understands
 
 Tested live: Yotpo, Okendo, Stamped, Klaviyo Reviews, Bazaarvoice (both API styles, and through a store's own
 endpoint at L.L.Bean), PowerReviews (through Vineyard Vines' endpoint), TurnTo (Nike, Puma), BayEngage (Fruit of
 the Loom), Reviews.io data through a store's own endpoint (Vuori), the first-party review services of Uniqlo and
-Quince, and review pages that page by link (Zappos). Junip, Judge.me and Loox
+Quince, Gymshark and Alo Yoga, Junip (Mack Weldon) and review pages that page by link (Zappos). Judge.me and Loox
 have card selectors but no store tested here showed their reviews. Any store's own review JSON with a star rating and review text is read by shape; review cards in
 plain HTML and schema.org JSON-LD reviews are read too.

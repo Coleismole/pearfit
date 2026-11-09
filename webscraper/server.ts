@@ -36,6 +36,7 @@ import {
   longestFreeText,
   productIdFromUrl,
   blockPageTitle,
+  blockPageText,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -1328,6 +1329,14 @@ function pageProductKeys(
   $('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
     add($(el).attr('value'));
   });
+  // The review widget names its product (Yotpo: data-yotpo-product-id, Okendo: data-oke-reviews-product-id).
+  // One distinct id is this page's product. Several (a carousel of rated products) say nothing about it.
+  const widgetIds = new Set<string>();
+  $('[data-yotpo-product-id], [data-oke-reviews-product-id]').each((_i, el) => {
+    const id = ($(el).attr('data-yotpo-product-id') ?? $(el).attr('data-oke-reviews-product-id') ?? '').trim().replace(/^shopify-/, '');
+    if (/^\d{5,}$/.test(id)) widgetIds.add(id);
+  });
+  if (widgetIds.size === 1) widgetIds.forEach(add);
   try {
     const url = new URL(sourceUrl);
     const segments = url.pathname.split('/').filter(Boolean);
@@ -1405,6 +1414,13 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
     const blockedBy = blockPageTitle(html);
     if (blockedBy) {
       return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };
+    }
+    const shortPage = blockPageText(html);
+    if (shortPage === 'refused') {
+      return { status: 400, message: `${url} says it does not allow automated traffic: the store refuses automated requests.`, blocked: true };
+    }
+    if (shortPage === 'maintenance') {
+      return { status: 400, message: `${url} is showing a maintenance page. The store's site is down; try again later.`, blocked: false };
     }
     return { html };
   }
@@ -1694,6 +1710,10 @@ export function createApp() {
           } else if (blockedBy) {
             // A bot check or access-denied page is a refusal, reported as one and not worked around.
             headlessNote = `The store showed the headless browser a block page ("${blockedBy}"): it refuses automated requests.`;
+          } else if (blockPageText(rendered.html) === 'refused') {
+            headlessNote = 'The store told the headless browser it does not allow automated traffic: it refuses automated requests.';
+          } else if (blockPageText(rendered.html) === 'maintenance') {
+            headlessNote = "The store's site is showing a maintenance page. It is down; try again later.";
           } else {
             // The render may end on the product's own review page; product details come from the
             // product page snapshot then.

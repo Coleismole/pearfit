@@ -1394,6 +1394,8 @@ const FETCH_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
 };
 
+const MAX_STATIC_HTML_BYTES = 10_000_000;
+
 async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFetchError> {
   let current = url;
   for (let hop = 0; hop <= 5; hop++) {
@@ -1436,7 +1438,12 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
         blocked: refused,
       };
     }
-    const html = await response.text();
+    const declared = Number(response.headers.get('content-length'));
+    if (Number.isFinite(declared) && declared > MAX_STATIC_HTML_BYTES) {
+      void response.body?.cancel().catch(() => {});
+      return { status: 400, message: `${url} is larger than the ${MAX_STATIC_HTML_BYTES / 1_000_000} MB the scraper reads.`, blocked: false };
+    }
+    const html = (await response.text()).slice(0, MAX_STATIC_HTML_BYTES);
     // A bot check served with HTTP 200 ("Just a moment...") is a refusal too, not a product page.
     const blockedBy = blockPageTitle(html);
     if (blockedBy) {
@@ -1575,6 +1582,10 @@ export function createApp() {
       };
 
       const list = reports || (report ? [report] : []);
+      if (!Array.isArray(list) || list.some((r) => !r || typeof r !== 'object' || typeof r.sku !== 'string' || !r.sku)) {
+        res.status(400).json({ error: 'Each report must be an object with a string sku.' });
+        return;
+      }
       if (list.length === 0) {
         res.status(400).json({ error: 'No scraped SKU report provided to dump into database.' });
         return;

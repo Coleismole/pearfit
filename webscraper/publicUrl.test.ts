@@ -65,3 +65,10 @@ test('request guard lets data:, blob: and about: requests through', async () => 
   assert.equal(await guard('blob:https://shop.example.com/1234'), false);
   assert.equal(await guard('http://127.0.0.1/'), true);
 });
+
+test('blocks benchmarking, IETF-reserved, site-local and 6to4-embedded private addresses', () => {
+  for (const host of ['198.18.0.1', '198.19.255.1', '192.0.0.8', '[fec0::1]', '[2002:7f00:1::]', '[2002:a00:1::1]']) {
+    assert.ok(blockedFetchTarget(`http://${host}/`), host);
+  }
+  assert.equal(blockedFetchTarget('http://198.20.0.1/'), null);
+});

@@ -170,7 +170,8 @@ function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: 
     value: readMeasurement(m[1]),
     unit: (/^c/i.test(m[2]) ? 'cm' : 'in') as Unit,
   }));
-  if (pairs.length > 1) {
+  if (pairs.length >= 1) {
+    // One pair is still read by its own unit: "21.5 (54.6 cm)" is 54.6 cm, not 21.5 cm.
     const pick = pairs.find((p) => p.unit === 'cm' && p.value !== null) ?? pairs.find((p) => p.value !== null);
     return pick && pick.value !== null && pick.value > 0 ? { value: pick.value, unit: pick.unit } : null;
   }
@@ -178,7 +179,7 @@ function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: 
   if (value === null || value <= 0) return null;
   const unit = /cm\b/i.test(text)
     ? 'cm'
-    : /in(?:ch(?:es)?)?\b|"|″/.test(text)
+    : /in(?:ch(?:es)?)?\b|"|″/i.test(text)
       ? 'in'
       : tableUnit;
   if (!unit) return null;
@@ -226,12 +227,13 @@ function parseHtmlTable(
 ): ParsedTable | null {
   let sizeIdx = headers.findIndex((h) => isSizeHeader(h));
   if (sizeIdx < 0) sizeIdx = 0;
-  const cols: { index: number; kind: MeasureCol; chest: ChestKind | null }[] = [];
+  const cols: { index: number; kind: MeasureCol; chest: ChestKind | null; unit: Unit | null }[] = [];
   headers.forEach((header, index) => {
     if (index === sizeIdx) return;
     const kind = measureCol(header);
     if (!kind) return;
-    cols.push({ index, kind, chest: kind === 'chest' ? chestKind(header) : null });
+    // A column that states its own unit ("Chest (in)" beside "Chest (cm)") wins over the table's unit.
+    cols.push({ index, kind, chest: kind === 'chest' ? chestKind(header) : null, unit: unitInText(header) });
   });
   if (cols.length === 0) return null;
 
@@ -250,7 +252,7 @@ function parseHtmlTable(
     };
     let any = false;
     for (const col of cols) {
-      const parsed = parseCell(cells[col.index] ?? '', tableUnit);
+      const parsed = parseCell(cells[col.index] ?? '', col.unit ?? tableUnit);
       if (!parsed) continue;
       if (col.kind === 'chest' && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest);
       if (col.kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));

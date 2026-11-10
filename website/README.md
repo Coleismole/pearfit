@@ -8,6 +8,7 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `index.html` — Page markup.
 - `styles.css` — Stylesheet, including a dark color scheme.
 - `app.js` — Sample silhouette, sample size matrix, ROI model, mobile menu, and the inquiry form.
+- `demo.js` — The live size demo (`#try`): form, validation, the two API calls, the result card.
 - `analytics.js` — The event layer: `PearfitAnalytics.track(name, props)` (see Analytics).
 - `posthog-init.js`, `speed-insights-init.js` — Analytics loaders.
 - `test/` — Unit tests: `npm test` in `website/` (Node 22, no dependencies).
@@ -33,6 +34,17 @@ Both need `npm ci` in `webscraper/` first (esbuild and vite are installed there)
 ## Inquiries
 The form posts the inquiry to `customerservice@pearfit.app` through FormSubmit. The first submission asks that inbox to confirm the address. After that, each form send delivers the email.
 
+## Live demo
+The `#try` section calls the engine through the site's own API (built from `engine/api`, see Generated files): `GET /api/candidates` fills the product list and `POST /api/recommend` with `{ wardrobe, candidateId }` returns `{ size, confidence, matchPercent, fitsLike, verdict, notes }`. Both are same-origin on `www.pearfit.app`; they need `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` on the Vercel project (see `.env.example`), and without them the demo shows its "size service had a problem" state with a retry button.
+
+- **Owned shirts**: name, how it fits (great, too tight, too loose) and chest, length and sleeve. Empty is unknown and goes to the API as `null`. Inches are converted once at input (x 2.54, one decimal). A chest over 80 cm is refused as a probable full circumference, the same limit `engine/cli/validate.ts` warns on. At least one shirt must fit great. "Fill in two example shirts" loads two shirts from `engine/data/wardrobes/sample.json`.
+- **Product**: pick from the list (tees only, as the API offers), or paste a link. The API cannot read a link, so the page matches it in the browser against the candidate ids (lowercased SKUs, at least 5 characters, whole path words, longest wins). A link to a product the fit table does not hold says so with the hostname and points to the scraper; it never guesses. The link is not fetched or stored.
+- **Result**: the engine's verdict is the headline ("Get the M, fits like your white gap tee."), with the size, a confidence badge (low is called out and framed as a hint), the match percent, the closest owned shirt, the engine's notes and the product's size chart. A missing measurement prints as "unknown". If the engine returns no size, the card says so instead of showing one.
+- **States**: product list loading, failed (with retry) and empty; request in flight; failure by kind (network, timeout, rejected, not found, server, unreadable answer); a link that matches nothing. The result card takes focus when an answer arrives, errors are announced, and the whole form works from the keyboard.
+- **Privacy**: the form has `ph-no-capture`, so PostHog autocapture skips it. Events carry the hostname of a pasted link, the public product id, the shirt count and the engine's size and confidence, never a shirt name, a measurement or a link (see Analytics).
+
+The pure parts (parsing, wardrobe building, link matching, response checks, error mapping, the client with an injected `fetch`) are unit-tested in `test/demo.test.mjs` with a mocked `fetch`.
+
 ## Analytics
 PostHog is loaded by `posthog-init.js`, which reads `/api/posthog-config` (`POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` on Vercel). Every event goes through `PearfitAnalytics.track(name, props)` in `analytics.js`. It never throws and does nothing when PostHog is blocked, unconfigured or absent (the GitHub Pages copy has no `/api`): events queue (at most 50) until PostHog starts and are dropped once `posthog:unavailable` fires.
 
@@ -45,6 +57,9 @@ Privacy rule: hostnames and counts only. No review text, names, emails, full URL
 | `section_viewed` | `section` (`hero`, `benefits`, `demo`, `how`, `roi`, `pilot`, `faq`) | Any part of a section is in the top 60% of the screen, once per section per page view |
 | `scraper_link_clicked` | `location` (`header`, `footer`, or a section id) | A link to `/scraper` is clicked |
 | `stores_link_clicked` | `location` | A link to the supported-stores page is clicked |
+| `demo_started` | `source`, `host`, `candidate_id`, `wardrobe_size` | The live demo sends a request (or a pasted link is checked) |
+| `demo_completed` | the above plus `size`, `confidence`, `has_fits_like`, `duration_ms` | The engine answered. Shirt names and measurements are never sent |
+| `demo_failed` | `source`, `host`, `candidate_id`, `reason`, `status`, `duration_ms` | The request failed, the link matched no product (`no_match`), or the product list did not load (`source: candidate_list`) |
 | `fit_size_inspected` | `product_id`, `selected_size` | A size button in the sample product card is pressed |
 | `fit_reference_selected` | `reference_garment_id` | The sample reference garment changes |
 | `fit_recommendation_explored` | `interaction`, `usual_size`, `recommended_size` | The sample size matrix or usual-size picker is used |

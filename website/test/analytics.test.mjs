@@ -66,6 +66,29 @@ test('sanitize only passes plain values: finite numbers, booleans, null and shor
   assert.deepEqual(sanitize('fit_size_inspected', { product_id: 7, selected_size: true }), { product_id: 7, selected_size: true });
 });
 
+test('demo events carry the host and counts, never what the visitor typed', () => {
+  const props = sanitize('demo_completed', {
+    source: 'pasted_url',
+    host: 'uniqlo.com',
+    candidate_id: 'e483970-000',
+    wardrobe_size: 2,
+    size: 'M',
+    confidence: 'high',
+    has_fits_like: true,
+    duration_ms: 212,
+    shirt_names: ['White Gap tee'],
+    measurements: { chest_cm: 52.5 },
+    url: 'https://www.uniqlo.com/ca/en/products/E483970-000/00?token=abc',
+    wardrobe: [{ id: 'white-gap-tee' }],
+  });
+  assert.deepEqual(props, {
+    source: 'pasted_url', host: 'uniqlo.com', candidate_id: 'e483970-000', wardrobe_size: 2,
+    size: 'M', confidence: 'high', has_fits_like: true, duration_ms: 212,
+  });
+  const failed = sanitize('demo_failed', { source: 'candidate_list', reason: 'server', status: 502, error: 'Supabase HTTP 401 secret', message: 'x' });
+  assert.deepEqual(failed, { source: 'candidate_list', reason: 'server', status: 502 });
+});
+
 test('sanitize copes with missing or odd props', () => {
   assert.deepEqual(sanitize('section_viewed'), {});
   assert.deepEqual(sanitize('section_viewed', null), {});

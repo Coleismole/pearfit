@@ -43,6 +43,7 @@
       <nav class="nav-links" id="nav-links" aria-label="Primary">
         <a href="#benefits">Why Pearfit</a>
         <a href="#demo">Sample</a>
+        <a href="#try">Try it</a>
         <a href="#how">Architecture</a>
         <a href="#roi">ROI Calculator</a>
         <a href="#faq">FAQ</a>
@@ -262,10 +263,84 @@
       </div>
     </section>
 
+    <!-- Live demo: the real engine through the site's API -->
+    <section id="try" class="section" data-section="try" aria-labelledby="try-heading">
+      <div class="wrap">
+        <span class="kicker">03. Try it with your own shirts</span>
+        <h2 id="try-heading">Get a size from the real engine.</h2>
+        <p class="muted narrow">
+          Unlike the sample above, this calls the comparison engine. Tell it about shirts you own and
+          how they fit, pick a product from the shared fit table, and it answers with a size and a
+          confidence level. Your measurements are sent to the size service to work out the answer and
+          are not stored.
+        </p>
+
+        <div class="try-grid">
+          <form id="try-form" class="try-form ph-no-capture" novalidate>
+            <noscript><p class="try-error">This demo needs JavaScript.</p></noscript>
+
+            <div class="try-step">
+              <div class="try-step-head">
+                <h3 class="try-step-title">1. Shirts you already own</h3>
+                <label class="try-unit">Measured in
+                  <select id="try-unit" name="unit">
+                    <option value="cm" selected>centimeters</option>
+                    <option value="in">inches</option>
+                  </select>
+                </label>
+              </div>
+              <p class="try-hint">
+                Lay the shirt flat. <b>Chest</b> is armpit to armpit across the front (half the way around).
+                <b>Length</b> is shoulder to hem, <b>sleeve</b> is shoulder seam to cuff. Leave a box empty
+                if you do not know it: it stays unknown and nothing is filled in for you. Mark at least one
+                shirt that fits you great.
+              </p>
+              <div id="try-shirts"></div>
+              <div class="try-actions">
+                <button type="button" class="btn btn-ghost btn-sm" id="try-add">Add another shirt</button>
+                <button type="button" class="try-link" id="try-example">Fill in two example shirts</button>
+              </div>
+              <p class="try-hint try-hint-small">The examples are the documented sample wardrobe from the engine, not a real shopper.</p>
+            </div>
+
+            <div class="try-step">
+              <h3 class="try-step-title">2. The shirt you are thinking of buying</h3>
+              <div class="segmented" id="try-source" role="group" aria-label="How to choose the product">
+                <button type="button" aria-pressed="true" data-source="picked_candidate">Pick a product</button>
+                <button type="button" aria-pressed="false" data-source="pasted_url">Paste a link</button>
+              </div>
+
+              <div id="try-pick" class="try-choose">
+                <label class="try-field">Search products <input type="search" id="try-search" autocomplete="off" placeholder="Name or SKU" /></label>
+                <label class="try-field">Product
+                  <select id="try-product" aria-describedby="try-pick-status"><option value="">Loading products…</option></select>
+                </label>
+                <p class="try-hint try-hint-small" id="try-pick-status" role="status"></p>
+                <button type="button" class="btn btn-ghost btn-sm" id="try-retry" hidden>Try again</button>
+              </div>
+
+              <div id="try-paste" class="try-choose" hidden>
+                <label class="try-field">Product link <input type="url" id="try-url" autocomplete="off" placeholder="https://www.example.com/products/…" aria-describedby="try-paste-hint" /></label>
+                <p class="try-hint try-hint-small" id="try-paste-hint">
+                  The link is matched against products already in the fit table, in your browser. It is not
+                  opened, fetched or stored. A product we have not read yet will say so.
+                </p>
+              </div>
+            </div>
+
+            <p class="try-error" id="try-form-error" role="alert" tabindex="-1"></p>
+            <button type="submit" class="btn" id="try-submit">Get my size</button>
+          </form>
+
+          <div class="try-result" id="try-result" role="region" aria-label="Size answer" aria-live="polite" aria-busy="false" tabindex="-1" data-state="idle"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- How it works — 100% Proprietary Engine -->
     <section id="how" class="section">
       <div class="wrap">
-        <span class="kicker">03. Proprietary Fit Architecture</span>
+        <span class="kicker">04. Proprietary Fit Architecture</span>
         <h2>Proprietary ingestion. Deterministic geometry.</h2>
         <p class="muted narrow">
           The scraper reads a product page and classifies reviews with deterministic rules.
@@ -308,7 +383,7 @@
     <section id="roi" class="section">
       <div class="wrap roi-grid">
         <div>
-          <span class="kicker">04. Business Case &amp; Unit Economics</span>
+          <span class="kicker">05. Business Case &amp; Unit Economics</span>
           <h2>Model your annual return savings with Pearfit.</h2>
           <p class="muted">
             Enter your own monthly orders and return rates. The reduction slider is your
@@ -388,7 +463,7 @@
     <section id="pilot" class="section">
       <div class="wrap pilot-grid">
         <div>
-          <span class="kicker">05. Get Started with Pearfit</span>
+          <span class="kicker">06. Get Started with Pearfit</span>
           <h2 id="pilot-heading">Start a 6-week pilot on one category</h2>
           <div class="inquiry-switch">
             <div class="segmented" id="inquiry-tabs" role="group" aria-label="Inquiry mode">
@@ -426,7 +501,7 @@
     <!-- FAQ -->
     <section id="faq" class="section section-alt">
       <div class="wrap narrow-wrap">
-        <span class="kicker">06. Frequently Asked Questions</span>
+        <span class="kicker">07. Frequently Asked Questions</span>
         <h2>Answers for brands and partners</h2>
         <details>
           <summary>What data does Pearfit need to launch a pilot?</summary>
@@ -434,7 +509,7 @@
         </details>
         <details>
           <summary>How do shoppers tell Pearfit what clothes they already own?</summary>
-          <p>The sample on this page lets you pick one of four reference shirts. Comparing a real catalog with clothes a shopper owns is the separate comparison engine. This page does not store that choice.</p>
+          <p>The sample at the top of this page lets you pick one of four made-up reference shirts. The live demo lets you type in your own shirts and sends them to the comparison engine, which compares them with a product in the fit table. This page does not store what you enter.</p>
         </details>
         <details>
           <summary>How does Pearfit’s proprietary engine work without LLMs?</summary>
@@ -446,7 +521,7 @@
         </details>
         <details>
           <summary>How is shopper privacy handled?</summary>
-          <p>The sample on this page stores nothing. The scraper keeps review text on the machine that scraped it. The shared database receives the fit numbers.</p>
+          <p>Nothing on this page is stored. The live demo sends your measurements to the size service only to work out the answer. The scraper keeps review text on the machine that scraped it. The shared database receives the fit numbers.</p>
         </details>
       </div>
     </section>
@@ -462,6 +537,7 @@
   <script src="speed-insights-init.js"></script>
   <script src="analytics.js"></script>
   <script src="posthog-init.js"></script>
+  <script src="demo.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

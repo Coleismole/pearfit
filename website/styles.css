@@ -44,6 +44,8 @@
 :root[data-theme="light"] { color-scheme: light; }
 
 *, *::before, *::after { box-sizing: border-box; }
+/* Author display rules (.btn, grids) would otherwise beat the browser's [hidden] and show hidden things. */
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; scroll-padding-top: 76px; }
 body {
   margin: 0;
@@ -774,6 +776,149 @@ button:focus-visible {
   margin: 16px 0 0;
 }
 
+/* Live demo */
+.try-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 40px;
+  align-items: start;
+  margin-top: 2rem;
+}
+.try-grid > * { min-width: 0; }
+.try-form {
+  display: grid;
+  gap: 28px;
+}
+.try-step {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  display: grid;
+  gap: 14px;
+}
+.try-step-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.try-step-title { font: 400 1.35rem/1.2 var(--serif); margin: 0; }
+.try-unit { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+.try-unit select { width: auto; }
+.try-hint { font-size: 0.88rem; color: var(--ink-2); margin: 0; }
+.try-hint-small { font-size: 0.8rem; }
+#try-shirts { display: grid; gap: 14px; }
+.try-shirt {
+  margin: 0;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.try-shirt legend { font: 600 0.82rem var(--mono); color: var(--ink-2); padding: 0 6px; }
+.try-shirt-top { display: grid; grid-template-columns: 1fr 11rem; gap: 12px; }
+.try-shirt-dims { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.try-field { min-width: 0; }
+.try-field input[inputmode="decimal"] { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.try-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.try-link {
+  background: none;
+  border: 0;
+  padding: 0 4px;
+  min-height: 44px;
+  color: var(--pear);
+  font: 600 0.88rem var(--sans);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  justify-self: start;
+  text-align: left;
+}
+.try-choose { display: grid; gap: 12px; }
+.try-error {
+  margin: 0;
+  color: var(--small-ink);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.try-error:empty { display: none; }
+.try-form .btn { justify-self: start; }
+.try-form .btn[disabled] { opacity: 0.6; cursor: progress; }
+
+.try-result {
+  position: sticky;
+  top: 92px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 26px;
+  min-height: 220px;
+}
+.try-result:focus-visible { outline: 2.5px solid var(--pear); outline-offset: 3px; }
+.try-result[data-state="result"] { border-color: var(--pear); }
+.try-result[data-state="low"] { border-color: var(--tape); border-width: 2px; }
+.try-result[data-state="error"] { border-color: var(--small-ink); }
+.try-result[aria-busy="true"] { opacity: 0.75; }
+.try-result-empty { color: var(--ink-2); margin: 0; }
+.try-result-product { font: 500 0.8rem var(--mono); color: var(--ink-2); margin: 0 0 0.4rem; overflow-wrap: anywhere; }
+.try-result-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 0.8rem; }
+.try-result-title {
+  font: 400 clamp(1.4rem, 2.4vw, 1.8rem)/1.2 var(--serif);
+  margin: 0 0 0.9rem;
+  overflow-wrap: anywhere;
+}
+.try-size {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.6rem;
+  height: 2.6rem;
+  padding: 0 0.5rem;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 600 1.4rem var(--mono);
+  align-self: center;
+}
+.try-badge {
+  display: inline-block;
+  margin: 0;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font: 600 0.78rem var(--mono);
+}
+.try-badge-high { color: var(--pear); }
+.try-badge-medium { color: var(--ink); }
+.try-badge-low { color: var(--small-ink); }
+.try-verdict { font-size: 1.02rem; margin: 0 0 1rem; overflow-wrap: anywhere; }
+.try-low {
+  margin: 0 0 1rem;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--tape) 22%, var(--card));
+  font-size: 0.9rem;
+}
+.try-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 1rem; padding: 12px 0; border-block: 1px solid var(--line); }
+.try-facts dt { font-size: 0.74rem; color: var(--ink-2); }
+.try-facts dd { margin: 2px 0 0; font: 500 0.92rem var(--mono); overflow-wrap: anywhere; }
+.try-notes { margin: 0 0 1rem; padding-left: 1.1rem; font-size: 0.88rem; color: var(--ink-2); display: grid; gap: 0.35rem; }
+.try-result-error { font-weight: 600; margin: 0 0 0.75rem; color: var(--small-ink); }
+.try-chart { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0 0 0.9rem; }
+.try-chart caption { text-align: left; font: 500 0.74rem var(--mono); color: var(--ink-2); padding-bottom: 6px; }
+.try-chart th, .try-chart td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.try-chart thead th { font: 600 0.74rem var(--mono); color: var(--ink-2); }
+.try-chart tbody th { font-family: var(--mono); font-weight: 600; }
+.try-chart td { font-family: var(--mono); }
+.try-chart td.is-unknown { color: var(--ink-2); font-style: italic; }
+.try-chart tr.is-pick { background: color-mix(in srgb, var(--pear) 12%, transparent); }
+.try-pick-tag { font: 600 0.68rem var(--mono); color: var(--pear); margin-left: 0.3rem; }
+.try-foot { font-size: 0.78rem; color: var(--ink-2); margin: 0; }
+
 /* How It Works Steps */
 .steps {
   list-style: none;
@@ -1153,6 +1298,8 @@ details p {
     gap: 36px;
   }
   .bento-span-2 { grid-column: span 1; }
+  .try-grid { grid-template-columns: 1fr; gap: 28px; }
+  .try-result { position: static; }
   .kpi-strip { grid-template-columns: repeat(2, 1fr); }
   .steps { grid-template-columns: 1fr 1fr; }
   .nav-links { display: none; }
@@ -1180,6 +1327,11 @@ details p {
 @media (max-width: 560px) {
   .wrap { padding: 0 16px; }
   .js .nav-open .nav-links { padding: 8px 16px 16px; }
+  .try-step { padding: 18px; }
+  .try-shirt-top { grid-template-columns: 1fr; }
+  .try-shirt-dims { gap: 8px; }
+  .try-result { padding: 20px; }
+  .try-form .btn { justify-self: stretch; }
   .nav-actions .btn-sm { padding: 0.6rem 0.85rem; }
   .hero-meta { flex-direction: column; align-items: flex-start; }
   .segmented { display: flex; flex-wrap: wrap; width: 100%; }

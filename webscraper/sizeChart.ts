@@ -208,8 +208,12 @@ function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: 
   return { value, unit };
 }
 
+/** Pit to pit in any of its spellings: pit-to-pit, armpit to armpit, underarm to underarm, P2P. */
+const PIT_TO_PIT = /\b(?:arm)?pit[\s-]*(?:to|2)?[\s-]*(?:arm)?pit\b|\bunder[\s-]?arm[\s-]*(?:to|2)?[\s-]*under[\s-]?arm\b|\bp2p\b/;
+
 function chestKind(header: string): ChestKind | null {
   const h = header.toLowerCase();
+  if (PIT_TO_PIT.test(h)) return 'flat';
   if (!/\b(chest|bust|pit)\b|body width/.test(h)) return null;
   if (/pit[\s-]*to[\s-]*pit|body width|chest width|half chest|flat|across chest|laid flat/.test(h)) {
     return 'flat';
@@ -396,35 +400,80 @@ export function saysMeasuredFlat(text: string): boolean {
   return !/body measurements?|circumference|measure around|around the fullest|your (?:body|chest|bust) measure/i.test(t);
 }
 
-/** Text of the chart's surroundings: the highest ancestor (up to 4 levels) that is still a small block. */
-function surroundingText($: cheerio.CheerioAPI, node: unknown): string {
-  let best = '';
+/** The chart's surroundings: the highest ancestor (up to 4 levels) that is still a small block. */
+function surroundingBlock($: cheerio.CheerioAPI, node: unknown): ReturnType<cheerio.CheerioAPI> | null {
+  let best: ReturnType<cheerio.CheerioAPI> | null = null;
   for (const parent of $(node as never).parents().toArray().slice(0, 4)) {
-    const text = $(parent).text();
-    if (text.length > 4000) break;
-    best = text;
+    if ($(parent).text().length > 4000) break;
+    best = $(parent);
   }
   return best;
+}
+
+function surroundingText($: cheerio.CheerioAPI, node: unknown): string {
+  return surroundingBlock($, node)?.text() ?? '';
+}
+
+/** The one unit a block of text names, or null when it names none or both. */
+function soleUnitInText(text: string): Unit | null {
+  const h = text.toLowerCase();
+  const cm = /\bcm\b|centimet(?:er|re)s?/.test(h);
+  const inch = /\binches\b|\binch\b|\(in\)|\bin\./.test(h);
+  if (cm === inch) return null;
+  return cm ? 'cm' : 'in';
+}
+
+/** A chart found in a page, with the heading above it and whether it has a chest column at all. */
+interface ChartCandidate {
+  rows: SizeChartRow[];
+  hasChestColumn: boolean;
+  label: string;
+}
+
+function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
+  const out: ChartCandidate[] = [];
+  let heading = '';
+  $('h1, h2, h3, h4, h5, h6, caption, table').each((_i, el) => {
+    if (el.type !== 'tag') return;
+    const node = $(el);
+    if (el.name !== 'table') {
+      if (el.name !== 'caption') heading = node.text().replace(/\s+/g, ' ').trim();
+      return;
+    }
+    const grid = tableGrid($, el);
+    if (grid.length < 2) return;
+    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
+    if (headerAt < 0) return;
+    const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
+    const block = surroundingBlock($, el);
+    const around = block?.text() ?? '';
+    // A unit toggle in view means the unit is whatever it shows: never read it from the words around it.
+    const hasToggle = (block?.find('input[type="radio"], [data-unit]').length ?? 0) > 0;
+    const unit = unitInText(context) ?? unitFromToggle($, el) ?? (hasToggle ? null : soleUnitInText(around));
+    const flat = saysMeasuredFlat(around);
+    const parsed = preferChart(
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
+      parseTransposedTable(grid[0], grid.slice(1), unit, flat),
+    );
+    if (!parsed) return;
+    const hasChestColumn =
+      grid[headerAt].some((cell) => chestKind(cell)) || grid.slice(1).some((cells) => chestKind(cells[0] ?? ''));
+    const panel = node.closest('[id], [aria-labelledby]');
+    const label = [heading, node.find('caption').text(), panel.attr('id') ?? '', node.attr('class') ?? '']
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    out.push({ rows: parsed.rows, hasChestColumn, label });
+  });
+  return out;
 }
 
 function rowsFromTables(html: string): SizeChartRow[] {
   const $ = cheerio.load(html);
   let best: SizeChartRow[] = [];
-  $('table').each((_i, table) => {
-    const node = $(table);
-    const grid = tableGrid($, table);
-    if (grid.length < 2) return;
-    const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
-    if (headerAt < 0) return;
-    const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
-    const unit = unitInText(context) ?? unitFromToggle($, table);
-    const flat = saysMeasuredFlat(surroundingText($, table));
-    const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
-      parseTransposedTable(grid[0], grid.slice(1), unit, flat),
-    );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
-  });
+  for (const candidate of tableCandidates($)) {
+    if (candidate.rows.length > best.length) best = candidate.rows;
+  }
   return best.length > 0 ? best : rowsFromDivCharts($);
 }
 
@@ -491,6 +540,77 @@ export function parseSizeChartFirst(...pages: (string | null | undefined)[]): Si
   for (const html of pages) {
     if (!html) continue;
     const rows = parseSizeChart(html);
+    if (rows.length > 0) return rows;
+  }
+  return [];
+}
+
+export interface ProductHint {
+  name?: string | null;
+  url?: string | null;
+}
+
+const MEN = /\b(men|mens|man|male)\b/;
+const WOMEN = /\b(women|womens|woman|ladies|female)\b/;
+const TOP_WORDS = /\b(tee|tees|t-shirt|tshirt|shirt|shirts|top|tops|tank|polo|hoodie|sweatshirt|sweater|jacket|coat|vest|blouse|henley|crew|pullover|cardigan|jersey|bodysuit)\b/;
+const BOTTOM_WORDS = /\b(pant|pants|jean|jeans|short|shorts|skirt|skirts|legging|leggings|trouser|trousers|chino|chinos|jogger|joggers|bottom|bottoms)\b/;
+
+function words(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/['’]s\b/g, 's')
+    .replace(/[^a-z0-9]+/g, ' ');
+}
+
+/**
+ * A size guide on a page of its own usually holds the store's tables for every product: men's and
+ * women's, tops and bottoms. Take a table only when it has a chest column and its heading does not
+ * contradict the product (men's chart for a women's top, a bottoms chart for a shirt). If several
+ * tables are left and they differ, the page does not say which one is this product's: no chart.
+ */
+export function parseGuidePageChart(html: string, hint: ProductHint): SizeChartRow[] {
+  const $ = cheerio.load(html);
+  const product = words(`${hint.name ?? ''} ${(hint.url ?? '').split('?')[0].split('/').pop() ?? ''}`.replace(/-/g, ' '));
+  const productMen = MEN.test(product);
+  const productWomen = WOMEN.test(product);
+  const productTop = TOP_WORDS.test(product);
+  const productBottom = BOTTOM_WORDS.test(product);
+  const fits = tableCandidates($)
+    .filter((c) => c.hasChestColumn)
+    .map((c) => {
+      const label = words(c.label);
+      const labelMen = MEN.test(label);
+      const labelWomen = WOMEN.test(label);
+      if (productMen && !productWomen && labelWomen && !labelMen) return null;
+      if (productWomen && !productMen && labelMen && !labelWomen) return null;
+      if (productTop && !productBottom && BOTTOM_WORDS.test(label) && !TOP_WORDS.test(label)) return null;
+      if (productBottom && !productTop && TOP_WORDS.test(label) && !BOTTOM_WORDS.test(label)) return null;
+      // A heading that names the product's own gender or garment is a stronger match than a silent one.
+      let score = 0;
+      if ((productMen && labelMen) || (productWomen && labelWomen)) score += 1;
+      if ((productTop && TOP_WORDS.test(label)) || (productBottom && BOTTOM_WORDS.test(label))) score += 1;
+      return { rows: c.rows, score };
+    })
+    .filter((c): c is { rows: SizeChartRow[]; score: number } => c !== null);
+  if (fits.length === 0) return [];
+  const top = Math.max(...fits.map((c) => c.score));
+  const best = fits.filter((c) => c.score === top);
+  const first = JSON.stringify(best[0].rows);
+  if (best.some((c) => JSON.stringify(c.rows) !== first)) return [];
+  return best[0].rows.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** The chart from the product pages, else from the size-guide pages the product page linked to. */
+export function parseSizeChartWithGuides(
+  pages: (string | null | undefined)[],
+  guidePages: (string | null | undefined)[],
+  hint: ProductHint,
+): SizeChartRow[] {
+  const own = parseSizeChartFirst(...pages);
+  if (own.length > 0) return own;
+  for (const html of guidePages) {
+    if (!html) continue;
+    const rows = parseGuidePageChart(html, hint);
     if (rows.length > 0) return rows;
   }
   return [];

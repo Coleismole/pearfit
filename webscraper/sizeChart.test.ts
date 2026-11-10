@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseSizeChart, parseSizeChartFirst } from './sizeChart.ts';
+import { parseGuidePageChart, parseSizeChart, parseSizeChartFirst, parseSizeChartWithGuides } from './sizeChart.ts';
 
 test('an inch chest chart is stored as pit-to-pit centimeters', () => {
   const html = `
@@ -287,6 +287,21 @@ test('a cell that shows cm and inches in separate elements is read in cm', () =>
   ]);
 });
 
+test('armpit to armpit, underarm to underarm and P2P headers are pit to pit, flat', () => {
+  for (const header of ['Armpit to Armpit', 'Underarm-to-Underarm', 'P2P', 'Chest (Armpit-Armpit)']) {
+    const html = `
+      <table>
+        <caption>Garment measurements (inches)</caption>
+        <tr><th>Size</th><th>${header}</th><th>Body Length</th></tr>
+        <tr><td>M</td><td>21</td><td>29</td></tr>
+      </table>`;
+    // 21 x 2.54 = 53.34 -> 53.3; 29 x 2.54 = 73.66 -> 73.7
+    assert.deepEqual(parseSizeChart(html), [
+      { size: 'M', sortOrder: 2, chest_cm: 53.3, length_cm: 73.7, sleeve_cm: null },
+    ], header);
+  }
+});
+
 test('a cell with its own data-cm value is read in centimeters whatever the toggle shows', () => {
   const html = `
     <div class="size-chart-wrapper">
@@ -327,6 +342,57 @@ test('a cm/inch toggle made of buttons gives the unit of the active one', () => 
   assert.deepEqual(parseSizeChart(inches), [
     { size: 'L', sortOrder: 3, chest_cm: 55.9, length_cm: 73.7, sleeve_cm: null },
   ]);
+});
+
+const GUIDE_PAGE = `
+  <h1>Size guide</h1>
+  <h2>Men's tops</h2>
+  <table>
+    <caption>Measured flat (cm)</caption>
+    <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr>
+    <tr><td>M</td><td>54</td><td>72</td></tr>
+    <tr><td>L</td><td>57</td><td>74</td></tr>
+  </table>
+  <h2>Women's tops</h2>
+  <table>
+    <caption>Measured flat (cm)</caption>
+    <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr>
+    <tr><td>M</td><td>47</td><td>62</td></tr>
+    <tr><td>L</td><td>50</td><td>64</td></tr>
+  </table>
+  <h2>Men's bottoms</h2>
+  <table>
+    <caption>Measured flat (cm)</caption>
+    <tr><th>Size</th><th>Waist</th><th>Length</th></tr>
+    <tr><td>M</td><td>40</td><td>100</td></tr>
+  </table>`;
+
+test('a size guide page gives the table that fits the product, and none when it cannot tell', () => {
+  // A men's shirt: the men's tops table (54/72, 57/74). The women's one and the bottoms table are ruled out.
+  assert.deepEqual(parseGuidePageChart(GUIDE_PAGE, { name: 'Linen Shirt', url: 'https://shop.test/products/mens-linen-shirt' }), [
+    { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+    { size: 'L', sortOrder: 3, chest_cm: 57, length_cm: 74, sleeve_cm: null },
+  ]);
+  // Women's tee: 47/62 and 50/64.
+  assert.deepEqual(parseGuidePageChart(GUIDE_PAGE, { name: "Women's Tee" })[1], {
+    size: 'L',
+    sortOrder: 3,
+    chest_cm: 50,
+    length_cm: 64,
+    sleeve_cm: null,
+  });
+  // A tee with no gender in its name: both tops tables fit and they differ, so no chart. Bottoms have no chest column.
+  assert.deepEqual(parseGuidePageChart(GUIDE_PAGE, { name: 'Crew Tee' }), []);
+  // Chinos: the only table with a chest column is a top, which is ruled out.
+  assert.deepEqual(parseGuidePageChart(GUIDE_PAGE, { name: "Men's Chino Pants" }), []);
+});
+
+test('the product page chart wins; a linked guide page is the fallback', () => {
+  const own = `<table><caption>cm</caption><tr><th>Size</th><th>Pit to pit</th></tr><tr><td>S</td><td>50</td></tr></table>`;
+  const hint = { name: "Men's Shirt" };
+  assert.equal(parseSizeChartWithGuides([own], [GUIDE_PAGE], hint)[0].chest_cm, 50);
+  assert.equal(parseSizeChartWithGuides(['<p>no chart</p>'], [null, GUIDE_PAGE], hint)[0].chest_cm, 54);
+  assert.deepEqual(parseSizeChartWithGuides([], [], hint), []);
 });
 
 test('an unlabeled chest is a flat width when the chart says the garment is measured lying flat', () => {

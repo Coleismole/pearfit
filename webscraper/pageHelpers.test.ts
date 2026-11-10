@@ -7,6 +7,10 @@ import {
   labelledValue,
   leafTexts,
   longestFreeText,
+  looksLikeDate,
+  isBadgeLine,
+  dateFromAttribute,
+  textOutsideLines,
   productIdFromUrl,
   blockPageTitle,
   describeFetchFailure,
@@ -148,4 +152,45 @@ test('a thrown fetch is reported with its cause and may be retried in a browser'
   assert.equal(failure.blocked, false);
   assert.equal(failure.retryInBrowser, true);
   assert.match(failure.message, /fetch failed \(UND_ERR_HEADERS_OVERFLOW\)/);
+});
+
+test('looksLikeDate recognises a line that is only a date, in the layouts stores print', () => {
+  for (const line of ['13 January 2025', '08 September 2026', '8th Sep. 2026', 'Nov 8, 2026', 'September 8th 2026', '2026.08.12', '2025-01-13', '12/05/2025', '12.05.25']) {
+    assert.equal(looksLikeDate(line), true, line);
+  }
+  // A sentence that mentions a date is words, and so is a bare year or a size.
+  for (const line of ['Bought on 13 January 2025 and love it', 'Size: 14', '2025', 'Verified Buyer', 'May', 'Runs small']) {
+    assert.equal(looksLikeDate(line), false, line);
+  }
+});
+
+test('isBadgeLine names the labels a widget prints beside a reviewer, and nothing longer', () => {
+  for (const line of ['Verified Buyer', 'verified purchase', 'Verified', 'Verified Customer']) assert.equal(isBadgeLine(line), true, line);
+  for (const line of ['Verified buyer: runs small', 'Great fit', 'Not verified']) assert.equal(isBadgeLine(line), false, line);
+  // A badge is not the body of a card that has nothing else.
+  assert.equal(longestFreeText(['Hugo T', 'Verified Buyer', '2026.09.01'], ['Hugo T']), '');
+});
+
+test('dateFromAttribute turns a Unix time written as a float into an ISO date and leaves other text alone', () => {
+  // 1788825600000 ms is 2026-09-08 00:00 UTC (20704 days after 1970-01-01).
+  assert.equal(dateFromAttribute('1.7888256E12'), '2026-09-08T00:00:00.000Z');
+  assert.equal(dateFromAttribute('1788825600000'), '2026-09-08T00:00:00.000Z');
+  // Seconds, as some stores write them.
+  assert.equal(dateFromAttribute('1788825600'), '2026-09-08T00:00:00.000Z');
+  assert.equal(dateFromAttribute(' 2026-09-08 '), '2026-09-08');
+  assert.equal(dateFromAttribute('2026'), '2026');
+  assert.equal(dateFromAttribute(''), '');
+});
+
+test('longestFreeText skips dates, and textOutsideLines never takes the whole card for its words', () => {
+  // A card of a date and labelled details has no words.
+  const lines = ['13 January 2025', 'Size: 14', 'Purchased: Web', 'Location: Madinah'];
+  assert.equal(longestFreeText(lines, []), '');
+  assert.equal(textOutsideLines(lines.join(' '), lines), '');
+  // The words win over the date even when the date is longer.
+  assert.equal(longestFreeText(['08 September 2026', 'Lovely'], []), 'Lovely');
+  // Words written straight in the card, beside child elements, are found.
+  assert.equal(textOutsideLines('Jane Great fit overall 2026-01-01', ['Jane', '2026-01-01']), 'Great fit overall');
+  // A card with no child elements at all is its own text.
+  assert.equal(textOutsideLines('Runs small in the chest', []), 'Runs small in the chest');
 });

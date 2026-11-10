@@ -34,6 +34,10 @@ import {
   leafTexts,
   LABEL_LINE,
   longestFreeText,
+  looksLikeDate,
+  isBadgeLine,
+  dateFromAttribute,
+  textOutsideLines,
   productIdFromUrl,
   blockPageTitle,
   describeFetchFailure,
@@ -1141,13 +1145,14 @@ function scrapeHtmlWithCheerio(
         const nodeText = node.text().replace(/\s+/g, ' ').trim();
         const lines = leafTexts($, node);
 
-        const isDate = (l: string) => /^\d{1,2}\/\d{1,2}\/\d{2,4}$|^\d{4}-\d{2}-\d{2}$/.test(l);
+        const isDate = looksLikeDate;
         const author =
           node.attr('data-author') ||
           node.attr('data-reviewer') ||
           node.find('[itemprop="author"]').first().text().trim() ||
           node.find('[class*="feed-item-title"] .title').first().text().trim() ||
-          node.find('[class*="_author"]').first().text().trim() ||
+          // A hashed CSS-module class ends in "_author"; "_authorInfo" wraps the name and a "Verified Buyer" badge.
+          node.find('[class$="_author"], [class*="_author "]').first().text().trim() ||
           node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
           // A masked reviewer name ("1***3", "a***b") alone on its line.
           lines.find((l) => /^[\p{L}\p{N}]{1,4}\*{2,}[\p{L}\p{N}]{1,4}$/u.test(l)) ||
@@ -1155,12 +1160,13 @@ function scrapeHtmlWithCheerio(
         const body =
           node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], [class*="CommentWithEllipsis"], [class*="_reviewContent"], .main-text, [class*="review-message"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
           longestFreeText(lines, [author]) ||
-          nodeText;
+          // Text written directly in the card. A card of only a rating, a date and a size has none: no review.
+          textOutsideLines(nodeText, lines);
         // Unlabelled markup: the first short free-text line before the body is the title.
         const title =
           node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().replace(/\s+/g, ' ').trim() ||
           lines.slice(0, Math.max(0, lines.indexOf(body))).find(
-            (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l)
+            (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l) && !isBadgeLine(l)
           ) ||
           '';
         const sizePurchased = stripSizeLabel(
@@ -1194,7 +1200,7 @@ function scrapeHtmlWithCheerio(
           labelledValue(lines, /^(how it fits|fit|overall fit|sizing)$/i) ||
           undefined;
         const date =
-          node.attr('data-date') ||
+          dateFromAttribute(node.attr('data-date') ?? '') ||
           node.find('[itemprop="datePublished"]').attr('content') ||
           node.find('time').attr('datetime') ||
           lines.find(isDate) ||
@@ -1226,8 +1232,9 @@ function scrapeHtmlWithCheerio(
             author,
             sizePurchased,
             usualSize,
-            // 3 = neutral midpoint when the card shows no rating.
-            rating: Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, Math.round(parsedRating))) : 3,
+            // A card whose stars cannot be read has no rating. Never a stand-in such as 3.
+            // (A widget that prints "0" has no rating to show either.)
+            rating: Number.isFinite(parsedRating) && parsedRating > 0 ? Math.min(5, Math.max(1, Math.round(parsedRating))) : null,
             title,
             body,
             date,

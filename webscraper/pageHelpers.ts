@@ -30,14 +30,75 @@ export function labelledValue(lines: string[], label: RegExp): string {
   return '';
 }
 
-/** Longest leaf text that is not a "Label: value" line: the review body on unlabelled markup. */
+const MONTH = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+const DATE_LINE = new RegExp(
+  [
+    // 12/05/2025, 12.05.2025, 12-5-25
+    '^\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}$',
+    // 2025-05-12, 2025.05.12, 2025/5/12
+    '^\\d{4}[/.-]\\d{1,2}[/.-]\\d{1,2}$',
+    // 08 September 2026, 8th Sep. 2026, 8 of May 2026
+    `^\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?${MONTH}\\.?,?\\s+\\d{4}$`,
+    // September 8, 2026, Sep. 8th 2026
+    `^${MONTH}\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}$`,
+  ].join('|'),
+  'i',
+);
+
+/** A line that is only a date: "13 January 2025", "Nov 8, 2026", "2026.08.12", "12/05/2025". */
+export function looksLikeDate(line: string): boolean {
+  return DATE_LINE.test(line.replace(/\s+/g, ' ').trim());
+}
+
+/** A badge a widget prints beside the reviewer ("Verified Buyer", "Verified Purchase"): a label, never a title or words. */
+export function isBadgeLine(line: string): boolean {
+  return /^verified(?: (?:buyer|purchase|purchaser|customer|reviewer|review))?$/i.test(line.replace(/\s+/g, ' ').trim());
+}
+
+/**
+ * A date stated by a card attribute (data-date). Some storefronts write a Unix time in milliseconds as a float
+ * ("1.7888256E12"); that becomes an ISO date. Any other text is returned as it is.
+ */
+export function dateFromAttribute(value: string): string {
+  const raw = value.trim();
+  if (/^\d+(?:\.\d+)?(?:e\+?\d+)?$/i.test(raw)) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 1e9) {
+      const date = new Date(n > 1e12 ? n : n * 1000);
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+  }
+  return raw;
+}
+
+/**
+ * Longest leaf text that is not a "Label: value" line or a date: the review body on unlabelled markup. A card
+ * with no text of its own (a rating and a date only) has none, so it does not read as a review whose words
+ * are its date.
+ */
 export function longestFreeText(lines: string[], exclude: string[]): string {
   let best = '';
   for (const line of lines) {
-    if (LABEL_LINE.test(line) || exclude.includes(line)) continue;
+    if (LABEL_LINE.test(line) || exclude.includes(line) || looksLikeDate(line) || isBadgeLine(line)) continue;
     if (line.length > best.length) best = line;
   }
   return best;
+}
+
+/**
+ * The words of a card that sit outside every leaf line: text written directly in the card beside its child
+ * elements. Used when no leaf line is free text. A card made only of leaf lines (rating, date, size, place)
+ * has none, so the whole card text is never taken for a review.
+ */
+export function textOutsideLines(cardText: string, lines: string[]): string {
+  let rest = ` ${cardText} `;
+  // Longest lines first, so a line that holds another one is removed whole.
+  for (const line of [...lines].sort((a, b) => b.length - a.length)) {
+    const at = rest.indexOf(line);
+    if (at >= 0) rest = `${rest.slice(0, at)} ${rest.slice(at + line.length)}`;
+  }
+  rest = rest.replace(/\s+/g, ' ').trim();
+  return looksLikeDate(rest) ? '' : rest;
 }
 
 /** Empty stars are drawn transparent or light grey (e.g. #DADADA, #eee). */

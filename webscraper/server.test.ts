@@ -729,3 +729,104 @@ test('mock store pages are found by their own slugs only, and bad body types are
     server.close();
   }
 });
+
+test('Phase Eight: a card with only a rating, a date and a size is not a review whose words are its date', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // Markup as the store writes it: the message element exists and is empty when the shopper wrote nothing.
+    const card = (epochMs: string, score: number, date: string, size: string, text: string) =>
+      `<div class="product-detail__rating__review container review-data-new px-0 show " data-date="${epochMs}" data-score="${score}">` +
+      `<div class="product-detail__rating__review-header row no-gutters"><div class="product-detail__rating__review-score">${'<i class="rating-star"></i>'.repeat(score)}</div>` +
+      `<div class="product-detail__rating__review-date reviewDate review-items">${date}</div></div>` +
+      `<div class="product-detail__rating__review-message row no-gutters review_message">${text}</div>` +
+      `<div class="product-detail__rating__review-footer"><div class="product-detail__rating__review-detail--size">Size: ${size}</div>` +
+      `<div class="product-detail__rating__review-detail">Purchased: Web</div><div class="product-detail__rating__review-detail">Location: Madinah</div></div></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Shirt Dress</title></head><body><h1>Shirt Dress</h1>
+      <div class="review-msg"><span class="product-detail__rating__visible-reviews">4</span> of 10 reviews</div>
+      ${card('1.7888256E12', 5, '08 September 2026', '10', 'Beautiful and elegant')}
+      ${card('1.7367264E12', 4, '13 January 2025', '14', '')}
+      ${card('1.7362944E12', 3, '08 January 2025', '16', 'Material and underskirt was not as in the picture')}
+      ${card('1.7291232E12', 5, '17 October 2024', '16', '')}</body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'PH8-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as {
+      totalReviews: number;
+      reviews: { body: string; title: string; date: string; rating: number }[];
+    };
+    // The two cards with no words are not reviews. Their date used to be taken as the body.
+    assert.equal(report.totalReviews, 2);
+    assert.deepEqual(report.reviews.map((r) => r.body), ['Beautiful and elegant', 'Material and underskirt was not as in the picture']);
+    // The date line is not the title either, and data-date (Unix ms, written as a float) is read as an ISO date.
+    assert.deepEqual(report.reviews.map((r) => r.title), ['', '']);
+    // 1788825600000 ms = 2026-09-08; 1736294400000 ms = 2025-01-08 (both 00:00 UTC).
+    assert.deepEqual(report.reviews.map((r) => r.date), ['2026-09-08T00:00:00.000Z', '2025-01-08T00:00:00.000Z']);
+    assert.deepEqual(report.reviews.map((r) => r.rating), [5, 3]);
+  } finally {
+    server.close();
+  }
+});
+
+test('Nudie Jeans: rating-only cards in the reviews dialog are not reviews and do not leak "Verified Buyer" as a body', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // After "Load more reviews" the dialog holds every review. A card with stars, a name and a date and no
+    // `reviewContent` element is a rating with no words (class "noContent").
+    const withText = (who: string, text: string) =>
+      `<div class="gA1Nqq_review"><div class="gA1Nqq_reviewHeader"><div class="gA1Nqq_authorInfo"><span class="gA1Nqq_author">${who}</span><span class="gA1Nqq_verified">Verified Buyer</span></div><span class="gA1Nqq_date">2026.08.12</span></div>` +
+      `<div class="gA1Nqq_reviewRating"><div class="M6bWGW_stars" aria-hidden="true"><svg></svg></div></div><p class="gA1Nqq_reviewContent">${text}</p></div>`;
+    const ratingOnly = (who: string) =>
+      `<div class="gA1Nqq_review"><div class="gA1Nqq_reviewHeader"><div class="gA1Nqq_authorInfo"><span class="gA1Nqq_author">${who}</span><span class="gA1Nqq_verified">Verified Buyer</span></div><span class="gA1Nqq_date">2026.09.01</span></div>` +
+      `<div class="gA1Nqq_reviewRating gA1Nqq_noContent"><div class="M6bWGW_stars" aria-hidden="true"><svg></svg></div></div></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Logo Hoodie</title></head><body><h1>Logo Hoodie</h1>
+      <dialog open><h2 id="reviews-title">Reviews</h2><sup class="gA1Nqq_count">6</sup><div class="gA1Nqq_reviewsList">
+      ${withText('Pascal', 'As expected, the hoodie fits true to size.')}${withText('David', 'Great fit and nice quality!')}
+      ${ratingOnly('Hugo T')}${ratingOnly('Andras V')}${ratingOnly('Jens L')}${ratingOnly('Henrik I')}
+      </div></dialog></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'TF-2', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { totalReviews: number; reviews: { author: string; body: string; title: string }[] };
+    assert.equal(report.totalReviews, 2);
+    // The author is the name span, not the "name + Verified Buyer" wrapper, and the badge is not a title.
+    assert.deepEqual(report.reviews.map((r) => [r.author, r.title, r.body]), [
+      ['Pascal', '', 'As expected, the hoodie fits true to size.'],
+      ['David', '', 'Great fit and nice quality!'],
+    ]);
+  } finally {
+    server.close();
+  }
+});
+
+test('Rawganique: a hidden Judge.me preview badge that says "2 reviews" holds no review text, so there is nothing to read', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // The page installs only the preview badge (data-auto-install="false", display:none). The review widget is
+    // not on the page and the page asks for no review data, so the two reviews cannot be read from it.
+    const html = `<!DOCTYPE html><html><head><title>Organic Cotton Carpenter Jeans</title></head><body><h1>Organic Cotton Carpenter Jeans</h1>
+      <div class="jdgm-widget jdgm-preview-badge" data-id="5728602652839" data-auto-install="false">
+        <div style="display:none" class="jdgm-prev-badge" data-average-rating="5.00" data-number-of-reviews="2" data-number-of-questions="0">
+          <span class="jdgm-prev-badge__stars" data-score="5.00" aria-label="5.00 stars" role="button"><span class="jdgm-star jdgm--on"></span></span>
+          <span class="jdgm-prev-badge__text">2 reviews</span></div></div></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'RAW-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 422, JSON.stringify(scraped.json));
+    assert.match(String(scraped.json.error), /No reviews found/);
+  } finally {
+    server.close();
+  }
+});
+
+test('a card whose stars cannot be read has no rating, not a neutral 3', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const html = `<!DOCTYPE html><html><head><title>Plain Tee</title></head><body><h1>Plain Tee</h1>
+      <div class="review-card" data-author="Ana"><p class="review-body-copy">Runs a little small, I ordered a medium.</p></div>
+      <div class="review-card" data-author="Bo" data-rating="0"><p class="review-body-copy">True to size and very soft.</p></div>
+      <div class="review-card" data-author="Cy" data-rating="4"><p class="review-body-copy">Great fit, a bit long in the body.</p></div></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'NORATE-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { totalReviews: number; reviews: { author: string; rating: number | null }[] };
+    assert.equal(report.totalReviews, 3);
+    assert.deepEqual(report.reviews.map((r) => [r.author, r.rating]), [['Ana', null], ['Bo', null], ['Cy', 4]]);
+  } finally {
+    server.close();
+  }
+});

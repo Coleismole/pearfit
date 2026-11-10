@@ -15,6 +15,9 @@
     "lint": "tsc --noEmit",
     "test": "tsx --test *.test.ts tools/*.test.ts",
     "saved-html": "tsx tools/read-saved-html.ts",
+    "verify-stores": "tsx tools/verify-stores.ts",
+    "build-verified-list": "tsx tools/build-verified-list.ts",
+    "render-supported-stores": "tsx tools/render-supported-stores.ts",
     "browsers:install": "playwright install chromium"
   },
   "dependencies": {

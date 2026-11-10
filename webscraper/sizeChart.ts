@@ -32,6 +32,11 @@ export function chartSizeCode(raw: string): string | null {
   const cleaned = raw.replace(/\s+/g, ' ').trim().toUpperCase();
   if (!cleaned || cleaned.length > 24) return null;
   const letters: Record<string, string> = {
+    XXXS: 'XXXS',
+    '3XS': 'XXXS',
+    XXS: 'XXS',
+    '2XS': 'XXS',
+    'XX-SMALL': 'XXS',
     XS: 'XS',
     'X-SMALL': 'XS',
     'XSMALL': 'XS',
@@ -57,7 +62,7 @@ export function chartSizeCode(raw: string): string | null {
     '3XL': 'XXXL',
   };
   if (letters[cleaned]) return letters[cleaned];
-  const word = cleaned.match(/\b(XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
+  const word = cleaned.match(/\b(XXXS|3XS|XXS|2XS|XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
   if (word && letters[word[1]]) return letters[word[1]];
   // US women's sizes are one digit (2, 4, 6, 8). A chart that only kept 10+ dropped them.
   const numeric = cleaned.match(/^(?:US|UK|EU|IT|FR|JP)?\s*(\d{1,3})(?:\s*\((?:US|UK|EU|IT|FR|JP)\))?$/);
@@ -66,6 +71,9 @@ export function chartSizeCode(raw: string): string | null {
 }
 
 function sortOrder(size: string, index: number): number {
+  // XXS and XXXS sit below XS (0) so the ranks of the other sizes stay as they were.
+  if (size === 'XXS') return -1;
+  if (size === 'XXXS') return -2;
   const letter = LETTERS.indexOf(size as (typeof LETTERS)[number]);
   if (letter >= 0) return letter;
   // 00 is smaller than 0. Number("00") is 0, so it needs its own rank.
@@ -254,6 +262,8 @@ function chestKind(header: string): ChestKind | null {
 function measureCol(header: string): MeasureCol | null {
   if (chestKind(header)) return 'chest';
   const h = header.toLowerCase();
+  // A glove, hat or sock table measures a hand, head or foot, not a garment's length.
+  if (/\b(hand|head|foot|feet|glove|finger|palm|shoe|sock)\b/.test(h)) return null;
   if (/\bsleeve\b|\barm length\b/.test(h)) return 'sleeve';
   if (/\blength\b/.test(h) && !/\bsleeve\b/.test(h)) return 'length';
   return null;
@@ -499,9 +509,13 @@ function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
     if (grid.length < 2) return;
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
-    // The element just before the table counts only if it is a sentence or label, not a one-word "cm" tab.
-    const before = node.prev().text().replace(/\s+/g, ' ').trim();
-    const context = [node.find('caption').text(), node.attr('class') ?? '', before.length > 6 ? before : '', grid[headerAt].join(' ')].join(' ');
+    // The element just before the table counts, unless it is a control: a "cm" tab or label says which unit
+    // can be chosen, not which one the table shows.
+    const previous = node.prev();
+    const before = previous.is('a, button, label, input, select, [role="tab"], [role="button"], [data-unit]')
+      ? ''
+      : previous.text().replace(/\s+/g, ' ').trim();
+    const context = [node.find('caption').text(), node.attr('class') ?? '', before, grid[headerAt].join(' ')].join(' ');
     // The unit comes from the chart's own words, its markup, its toggle, or the heading above it. Never from
     // the loose words around it: a toggle's "in" and "cm" labels would read as a unit they do not select.
     const around = surroundingText($, el);

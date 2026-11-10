@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseGuidePageChart, parseSizeChart, parseSizeChartFirst, parseSizeChartWithGuides } from './sizeChart.ts';
+import { chartSizeCode, parseGuidePageChart, parseSizeChart, parseSizeChartFirst, parseSizeChartWithGuides } from './sizeChart.ts';
 
 test('an inch chest chart is stored as pit-to-pit centimeters', () => {
   const html = `
@@ -356,6 +356,47 @@ test('a unit drop-down gives the unit of its selected option, and a country drop
   // A drop-down of countries says nothing about the unit.
   const country = chart('<select><option value="us" selected>US</option><option value="uk">UK</option></select>');
   assert.deepEqual(parseSizeChart(country), []);
+});
+
+test('a glove table is not a garment length', () => {
+  const html = `
+    <table>
+      <caption>Glove size (cm)</caption>
+      <tr><th>Size</th><th>Hand - Circumference</th><th>Hand - Length</th></tr>
+      <tr><td>M</td><td>20</td><td>18</td></tr>
+    </table>`;
+  assert.deepEqual(parseSizeChart(html), []);
+});
+
+test('XXS and XXXS are sizes of their own and sort below XS', () => {
+  assert.equal(chartSizeCode('XXS'), 'XXS');
+  assert.equal(chartSizeCode('2XS'), 'XXS');
+  assert.equal(chartSizeCode('XXS | 00'), 'XXS');
+  assert.equal(chartSizeCode('3XS'), 'XXXS');
+  assert.equal(chartSizeCode('XS'), 'XS');
+  const html = `
+    <table>
+      <caption>Size guide (cm)</caption>
+      <tr><th>Size</th><th>Pit to pit</th></tr>
+      <tr><td>XS</td><td>46</td></tr>
+      <tr><td>XXS</td><td>44</td></tr>
+      <tr><td>XXXS</td><td>42</td></tr>
+    </table>`;
+  assert.deepEqual(parseSizeChart(html).map((row) => [row.size, row.sortOrder, row.chest_cm]), [
+    ['XXXS', -2, 42],
+    ['XXS', -1, 44],
+    ['XS', 0, 46],
+  ]);
+});
+
+test('a one-word unit label right before the table gives the unit, unless it is a control', () => {
+  const rows = `<tr><td>Size</td><td>Length</td><td>Sleeve Length</td></tr><tr><td>XXS</td><td>20 1/2</td><td>4 1/2</td></tr>`;
+  // <p>Inches</p> labels the table: 20.5 x 2.54 = 52.07 -> 52.1; 4.5 x 2.54 = 11.43 -> 11.4
+  assert.deepEqual(parseSizeChart(`<h3>Garment Measurements</h3><p>Inches</p><table>${rows}</table>`), [
+    { size: 'XXS', sortOrder: -1, chest_cm: null, length_cm: 52.1, sleeve_cm: 11.4 },
+  ]);
+  // A "cm" button is only a choice on a toggle.
+  assert.deepEqual(parseSizeChart(`<div><button>cm</button><table>${rows}</table></div>`), []);
 });
 
 test('armpit to armpit, underarm to underarm and P2P headers are pit to pit, flat', () => {

@@ -778,3 +778,25 @@ test('serverless render reads no guide page when the product page already shows 
   assert.deepEqual(result.guidePages, []);
   assert.equal(parseSizeChartFirst(result.html, result.chartHtml)[0]?.chest_cm, 54);
 });
+
+// A guide that opens on a men's chart is not the chart of a women's product: the render reads the page against
+// the product's title and address, so it does not take the first table it sees.
+const GENDERED_GUIDE = (title: string) => `<!DOCTYPE html><html><head><title>${title}</title></head><body><h1>${title}</h1>${REVIEW}
+  <button id="open">Size Guide</button><div id="modal"></div>
+  <script>document.getElementById('open').addEventListener('click', () => {
+    document.getElementById('modal').innerHTML = ${JSON.stringify(`<h2>Men's size chart</h2>${GUIDE_TABLE}`)};
+  });</script></body></html>`;
+
+test("renderPageHtml does not take a men's guide chart for a women's product", { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const women = await renderLocalPage({ '/products/tee': GENDERED_GUIDE("Women's Tee") }, '/products/tee');
+  assert.equal(women.chartHtml !== null && parseSizeChart(women.chartHtml).length, 0);
+  const men = await renderLocalPage({ '/products/tee': GENDERED_GUIDE("Men's Tee") }, '/products/tee');
+  assert.equal(men.chartHtml !== null && parseSizeChart(men.chartHtml)[0]?.chest_cm, 54);
+});
+
+test("serverless render does not take a men's guide chart for a women's product", { skip: serverlessSkip }, async () => {
+  const women = await renderServerlessLocalPage({ '/products/tee': GENDERED_GUIDE("Women's Tee") }, '/products/tee');
+  assert.equal(women.chartHtml !== null && parseSizeChart(women.chartHtml).length, 0);
+  const men = await renderServerlessLocalPage({ '/products/tee': GENDERED_GUIDE("Men's Tee") }, '/products/tee');
+  assert.equal(men.chartHtml !== null && parseSizeChart(men.chartHtml)[0]?.chest_cm, 54);
+});

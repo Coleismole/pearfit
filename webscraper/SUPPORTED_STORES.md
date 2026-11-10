@@ -1,6 +1,6 @@
 # Stores confirmed scrapeable
 
-Tested on 2026-11-09 in five rounds with one live product page per store, through `POST /api/scrape`. "Read / stated" is the
+Tested on 2026-11-09 in six rounds with one live product page per store, through `POST /api/scrape`. "Read / stated" is the
 number of reviews the scraper read against the total the store states for that product. Paging stops at about
 300 reviews or when the render's time runs out (120 s locally, 50 s on Vercel), so a large total is sampled,
 newest first where the store offers that sort.
@@ -64,6 +64,16 @@ newest first where the store offers that sort.
 | Summersalt | The High Neck Midi Sports Bra Tank | Yotpo, paged with the widget's "next page" button | 36 / 36 | rarely stated | no field |
 | Knix | SculptRib Cotton Tank | Okendo | 144 / 371 | yes | yes |
 | Spanx | BoostUp Strappy Tank | Spanx's own review data | 29 / 29 | yes | no field |
+| Outdoor Research | Men's Astroman Short Sleeve Sun Shirt | Bazaarvoice | 4 / 4 | rarely stated | no field |
+| Free Fly Apparel | Women's Sol Tee | Reviews embedded in the page | 7 / 7 | yes | yes |
+| Janji | M's Circa Daily Tee | Judge.me | 66 / not stated | no field | no field |
+| Honeylove | BlissWear Long Sleeve Top | Okendo | 10 / 10 | yes | no field |
+| Lunya | Airy Cotton Tie Front Top | Reviews embedded in the page | 1 / 1 | yes | yes |
+| MATE the Label | Men's Organic Heavyweight Cotton Relaxed Tee | Okendo | 8 / 8 | yes | yes |
+| Ibex | Men's GOAT Long Sleeve Tee | Yotpo | 14 / 14 | yes | yes |
+| Oak + Fort | "Refined" Baby Tee | Yotpo | 2 / 2 | yes | yes |
+| Dudley Stephens | Cleo Top in French Terry | Yotpo | 10 / 10 | yes | yes |
+| Oiselle | Float Tank | Page markup | 1 / not stated | no field | no field |
 
 Known limits:
 
@@ -95,6 +105,9 @@ Known limits:
 - **Summersalt** states no brand and no SKU anywhere in its page, so the brand is reported as unknown and the SKU is a hash of
   the URL. Its review requests name Yotpo's own product id, so reviews are matched by the one product id the page requests.
 - **Universal Standard** had one review on the product tested.
+- **Janji** is the first store tested on Judge.me; its page states no review total, so the 66 read cannot be checked.
+  **Honeylove** states no SKU, so its SKU is a hash of the URL.
+- **Lunya** and **Oiselle** had one review on the products tested, so those rows show the scraper working, not volume.
 
 ## Size chart only
 
@@ -118,12 +131,14 @@ Known limits:
 | Huckberry, Columbia, J.Crew, Rhone, The North Face | HTTP 403 to the page request. |
 | Lululemon | HTTP 403 to the page request (tried again in round 4, US and CA: still 403). |
 | Tommy John, Ministry of Supply, Fabletics, Hello Molly, Aritzia, Reformation, Madewell, Free People, Urban Outfitters, Macy's, Victoria's Secret, Guess | HTTP 403 to the page request. |
-| Jockey, Vans, Eileen Fisher, Backcountry | HTTP 403 to the page request. |
+| Jockey, Vans, Eileen Fisher, Backcountry, prAna, Mountain Hardwear, Helly Hansen, Nautica, Eberjey | HTTP 403 to the page request. |
 | Mizzen+Main | HTTP 429 to the page request. |
 | Nordstrom, SHEIN | The page answers HTTP 200 with a short page saying it does not allow automated traffic. |
 | Lane Bryant | Shows the headless browser an "Access to this page has been denied" block page. |
 | Patagonia | Serves a "System maintenance is in progress" page (HTTP 200). Reported as down, not as a refusal. |
 | Southern Tide, Psycho Bunny, Fashion Nova, White Fox, Stüssy, Kith, Forever 21 | The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says "No reviews yet"). A product with reviews was not found in the time spent. |
+| Billabong, Volcom | Both pages carry a Yotpo widget, but behind a cookie-consent dialog no review data loaded for the headless browser on the products tested. |
+| Salty Crew, NVGTN, Southern Marsh, Hylete, Vollebak, Madhappy, Cotton Citizen, Carbon38, Cuyana | The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent. |
 | J.Jill, Skims, Los Angeles Apparel, Vitamin A | The product pages tested showed no review text to the headless browser, or said "No reviews yet" (Vitamin A). A product with reviews was not found in the time spent. |
 | Carhartt | HTTP 403 to the page request (reviews would come from TurnTo, which the reader supports). |
 | Lands' End, Bombas, MEC, Todd Snyder | HTTP 403 or 429. |
@@ -138,6 +153,6 @@ does not allow automated traffic, is reported as refusing automated requests. Th
 Tested live: Yotpo, Okendo, Stamped, Klaviyo Reviews, Bazaarvoice (both API styles, and through a store's own
 endpoint at L.L.Bean), PowerReviews (through Vineyard Vines' endpoint), TurnTo (Nike, Puma), BayEngage (Fruit of
 the Loom), Reviews.io data through a store's own endpoint (Vuori), the first-party review services of Uniqlo and
-Quince, Gymshark and Alo Yoga, Junip (Mack Weldon) and review pages that page by link (Zappos). Judge.me and Loox
-have card selectors but no store tested here showed their reviews. Any store's own review JSON with a star rating and review text is read by shape; review cards in
+Quince, Gymshark and Alo Yoga, Junip (Mack Weldon) and review pages that page by link (Zappos). Judge.me (Janji). Loox
+has card selectors but no store tested here showed its reviews. Any store's own review JSON with a star rating and review text is read by shape; review cards in
 plain HTML and schema.org JSON-LD reviews are read too.

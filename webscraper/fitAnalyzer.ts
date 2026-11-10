@@ -233,9 +233,10 @@ export function normalizeSizeOrNull(rawSize: string | null | undefined): Garment
   if (cleaned.startsWith('XS')) return 'XS';
   if (cleaned.startsWith('XXL') || cleaned.startsWith('2X')) return 'XXL';
   if (cleaned.startsWith('XL')) return 'XL';
-  if (cleaned.startsWith('S')) return 'S';
-  if (cleaned.startsWith('L')) return 'L';
-  if (cleaned.startsWith('M')) return 'M';
+  // A whole leading word only: "SIZE M" and "MEN'S L" are not S and M.
+  if (/^(S|SMALL)\b/.test(cleaned)) return 'S';
+  if (/^(L|LARGE)\b/.test(cleaned)) return 'L';
+  if (/^(M|MEDIUM)\b/.test(cleaned)) return 'M';
   return null;
 }
 
@@ -605,7 +606,11 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
       ) ||
       block.match(new RegExp(`\\[\\s*(${REVIEW_SIZE_TOKEN})\\s*\\]`, 'i')) ||
       block.match(
-        new RegExp(`\\b(?:bought|ordered|wearing|got)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`, 'i')
+        // A bare number after a buying verb is a quantity ("ordered 2"); it is a size only after "size".
+        new RegExp(
+          `\\b(?:bought|ordered|wearing|got)\\s+(?:(?:a|an)\\s+)?(?:size\\s+(${REVIEW_SIZE_TOKEN})|(${REVIEW_SIZE_TOKEN.replace('|\\d{1,2}', '')}))\\b`,
+          'i'
+        )
       );
 
     const ratingMatch =
@@ -631,7 +636,7 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
     results.push({
       id: `parsed-review-${idx + 1}`,
       author: `Reviewer #${idx + 1}`,
-      sizePurchased: sizeMatch ? sizeMatch[1] : '',
+      sizePurchased: sizeMatch ? (sizeMatch[1] ?? sizeMatch[2] ?? '') : '',
       rating,
       title: cleanBody.slice(0, 48) + (cleanBody.length > 48 ? '...' : ''),
       body: cleanBody,

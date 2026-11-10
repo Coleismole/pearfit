@@ -39,6 +39,8 @@ function isBlockedIPv4(host: string): boolean {
   if (a === 172 && b >= 16 && b <= 31) return true;
   if (a === 192 && b === 168) return true;
   if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a === 198 && (b === 18 || b === 19)) return true;
+  if (a === 192 && b === 0 && parts[2] === 0) return true;
   if (a >= 224) return true;
   return false;
 }
@@ -53,9 +55,11 @@ function embeddedIPv4(high: string, low: string): string {
 function isBlockedIPv6(host: string): boolean {
   const bare = host.split('%')[0];
   if (bare === '::' || bare === '::1') return true;
-  if (/^fe[89ab]/.test(bare) || bare.startsWith('fc') || bare.startsWith('fd')) return true;
+  if (/^fe[89abcdef]/.test(bare) || bare.startsWith('fc') || bare.startsWith('fd')) return true;
   // IPv4-mapped (::ffff:a.b.c.d), IPv4-compatible (::a.b.c.d) and NAT64 (64:ff9b::a.b.c.d) addresses
   // reach the embedded IPv4 host. The URL parser rewrites the dotted form to hex, so check both.
+  const sixToFour = bare.match(/^2002:([0-9a-f]{1,4}):([0-9a-f]{1,4})(?::|$)/);
+  if (sixToFour) return isBlockedIPv4(embeddedIPv4(sixToFour[1], sixToFour[2]));
   const embedded = bare.match(/^(?:::(?:ffff:)?|64:ff9b::)(?:(\d{1,3}(?:\.\d{1,3}){3})|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
   if (embedded) return isBlockedIPv4(embedded[1] ?? embeddedIPv4(embedded[2], embedded[3]));
   return false;
@@ -116,6 +120,8 @@ export function createRequestHostGuard(
     } catch {
       return Promise.resolve(false);
     }
+    // data:, blob: and about: requests never leave the browser, and they have no hostname to check.
+    if (/^(?:data|blob|about):/i.test(rawUrl)) return Promise.resolve(false);
     let verdict = cache.get(hostname);
     if (!verdict) {
       verdict = (async () => {

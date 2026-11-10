@@ -380,6 +380,11 @@ interface MockStoreProduct {
   reviews: RawScrapedReview[];
 }
 
+/** Own keys only, so a slug like "constructor" is not found. */
+function mockStoreProduct(slug: string): MockStoreProduct | undefined {
+  return Object.hasOwn(MOCK_STORE_PRODUCTS, slug) ? MOCK_STORE_PRODUCTS[slug] : undefined;
+}
+
 const MOCK_STORE_PRODUCTS: Record<string, MockStoreProduct> = {
   'hm-heavyweight-relaxed-tee': {
     slug: 'hm-heavyweight-relaxed-tee',
@@ -1389,6 +1394,8 @@ const FETCH_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
 };
 
+const MAX_STATIC_HTML_BYTES = 10_000_000;
+
 async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFetchError> {
   let current = url;
   for (let hop = 0; hop <= 5; hop++) {
@@ -1408,12 +1415,19 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location');
       if (!location || hop === 5) {
+        void response.body?.cancel().catch(() => {});
         return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
       }
-      current = new URL(location, current).toString();
+      void response.body?.cancel().catch(() => {});
+      try {
+        current = new URL(location, current).toString();
+      } catch {
+        return { status: 400, message: `${url} redirected to an invalid address.`, blocked: false };
+      }
       continue;
     }
     if (!response.ok) {
+      void response.body?.cancel().catch(() => {});
       // 418 is what some stores (Under Armour) answer an automated request with; it is a refusal too.
       const refused = [403, 418, 429, 503].includes(response.status);
       return {
@@ -1424,7 +1438,12 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
         blocked: refused,
       };
     }
-    const html = await response.text();
+    const declared = Number(response.headers.get('content-length'));
+    if (Number.isFinite(declared) && declared > MAX_STATIC_HTML_BYTES) {
+      void response.body?.cancel().catch(() => {});
+      return { status: 400, message: `${url} is larger than the ${MAX_STATIC_HTML_BYTES / 1_000_000} MB the scraper reads.`, blocked: false };
+    }
+    const html = (await response.text()).slice(0, MAX_STATIC_HTML_BYTES);
     // A bot check served with HTTP 200 ("Just a moment...") is a refusal too, not a product page.
     const blockedBy = blockPageTitle(html);
     if (blockedBy) {
@@ -1506,7 +1525,7 @@ export function createApp() {
 
   // Serve realistic mock e-commerce store pages for live scraping
   app.get('/api/mock-store/:slug', (req, res) => {
-    const product = MOCK_STORE_PRODUCTS[req.params.slug];
+    const product = mockStoreProduct(req.params.slug);
     if (!product) {
       res.status(404).send('Product not found');
       return;
@@ -1516,7 +1535,7 @@ export function createApp() {
   });
 
   app.get('/api/mock-store/:slug/raw', (req, res) => {
-    const product = MOCK_STORE_PRODUCTS[req.params.slug];
+    const product = mockStoreProduct(req.params.slug);
     if (!product) {
       res.status(404).json({ error: 'Preset store page not found' });
       return;
@@ -1543,8 +1562,11 @@ export function createApp() {
 
   // Commercial SQLite Database Query & Inspection Endpoints
   app.get('/api/db/remote', async (_req, res) => {
-    const remote = await listRemoteFitSkus();
-    res.json(remote);
+    try {
+      res.json(await listRemoteFitSkus());
+    } catch (err) {
+      res.status(500).json({ error: err instanceof Error ? err.message : 'Could not list the shared fit store' });
+    }
   });
 
   app.get('/api/db/records', (_req, res) => {
@@ -1560,6 +1582,10 @@ export function createApp() {
       };
 
       const list = reports || (report ? [report] : []);
+      if (!Array.isArray(list) || list.some((r) => !r || typeof r !== 'object' || typeof r.sku !== 'string' || !r.sku)) {
+        res.status(400).json({ error: 'Each report must be an object with a string sku.' });
+        return;
+      }
       if (list.length === 0) {
         res.status(400).json({ error: 'No scraped SKU report provided to dump into database.' });
         return;
@@ -1596,11 +1622,15 @@ export function createApp() {
   });
 
   app.delete('/api/db/sku/:sku', async (req, res) => {
-    const sku = req.params.sku;
-    deleteSkuTransaction(sku);
+    try {
+      const sku = req.params.sku;
+      deleteSkuTransaction(sku);
 
-    const supabase = await deleteRemoteFitSku(sku);
-    res.json({ supabase, ...getDatabaseSummary() });
+      const supabase = await deleteRemoteFitSku(sku);
+      res.json({ supabase, ...getDatabaseSummary() });
+    } catch (err) {
+      res.status(500).json({ error: err instanceof Error ? err.message : 'Delete failed' });
+    }
   });
 
   app.get('/api/db/dump.sql', (_req, res) => {
@@ -1668,6 +1698,11 @@ export function createApp() {
         render?: RenderMode;
       };
 
+      if ((url !== undefined && typeof url !== 'string') || (rawHtml !== undefined && typeof rawHtml !== 'string')) {
+        res.status(400).json({ error: 'url and rawHtml must be strings.' });
+        return;
+      }
+
       const renderMode: RenderMode = render === 'always' || render === 'never' ? render : 'auto';
       let targetHtml = (rawHtml || '').trim();
       let renderedChartHtml: string | null = null; // headless snapshot from before the review steps
@@ -1677,9 +1712,9 @@ export function createApp() {
       let staticError: StaticFetchError | null = null;
 
       if (!targetHtml && url) {
-        const mockMatch = url.match(/\/api\/mock-store\/([a-z0-9-]+)/i);
-        if (mockMatch && MOCK_STORE_PRODUCTS[mockMatch[1]]) {
-          const mockProd = MOCK_STORE_PRODUCTS[mockMatch[1]];
+        const mockMatch = url.match(/^(?:https?:\/\/[^/?#]+)?\/api\/mock-store\/([a-z0-9-]+)\/?(?:[?#].*)?$/i);
+        const mockProd = mockMatch ? mockStoreProduct(mockMatch[1]) : undefined;
+        if (mockProd) {
           targetHtml = renderMockStoreHtml(mockProd);
           sourceUrl = `https://storefront.pearfitscraper.local/api/mock-store/${mockProd.slug}`;
         } else if (/^https?:\/\//i.test(url)) {

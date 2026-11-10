@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tag scanned</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2E5E3E}a:hover{color:#1F4029}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F0; font-family: 'Inter', sans-serif; color: #17251C; display: flex; flex-direction: column; padding: 20px 20px 28px; gap: 16px">
+  <div style="display: flex; align-items: center; gap: 8px">
+    <a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: #17251C"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600">Tag scanned</h1>
+  </div>
+
+  <div style="background: #FFFFFF; border: 1px solid #DDE2D6; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #2E5E3E">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+      Exact item found
+    </div>
+    <div style="display: flex; gap: 14px; align-items: center">
+      <div style="width: 72px; height: 88px; border-radius: 12px; background: #DCE6EF; display: flex; align-items: center; justify-content: center; color: #4A6378; font-size: 11px; font-weight: 600">PHOTO</div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="font-size: 17px; font-weight: 600">Oxford Shirt, Slim Fit</div>
+        <div style="font-size: 14px; color: #56635A">Light blue · Size M</div>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="brand" style="font-size: 13px; font-weight: 600; color: #56635A">Brand</label>
+        <input id="brand" type="text" defaultValue="Northline" style="height: 44px; box-sizing: border-box; border: 1px solid #C9D0C1; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 15px; background: #F9FAF6; color: #17251C">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="sku" style="font-size: 13px; font-weight: 600; color: #56635A">SKU from tag</label>
+        <input id="sku" type="text" defaultValue="NL-24117-M" style="height: 44px; box-sizing: border-box; border: 1px solid #C9D0C1; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 15px; background: #F9FAF6; color: #17251C">
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="cat" style="font-size: 13px; font-weight: 600; color: #56635A">Category</label>
+      <select id="cat" style="height: 44px; border: 1px solid #C9D0C1; border-radius: 10px; padding: 0 10px; font: inherit; font-size: 15px; background: #F9FAF6; color: #17251C">
+        <option>Shirts</option>
+        <option>Pants</option>
+        <option>Jackets</option>
+        <option>+ New category</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border: 1px solid #DDE2D6; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <div style="font-size: 15px; font-weight: 600">How well does it fit you?</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #2E5E3E">85</div>
+    </div>
+    <div style="position: relative; height: 28px; display: flex; align-items: center">
+      <div style="position: absolute; left: 0; right: 0; height: 8px; border-radius: 4px; background: #E3E8DC"></div>
+      <div style="position: absolute; left: 0; width: 85%; height: 8px; border-radius: 4px; background: #2E5E3E"></div>
+      <div style="position: absolute; left: calc(85% - 14px); width: 28px; height: 28px; border-radius: 999px; background: #FFFFFF; border: 3px solid #2E5E3E; box-sizing: border-box"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #56635A"><span>Doesn't fit</span><span>Fits perfectly</span></div>
+  </div>
+
+  <div style="flex: 1"></div>
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 15px; font-weight: 600">Save to wardrobe as</div>
+    <div style="display: flex; gap: 10px">
+      <a href="Wardrobe.dc.html" style="flex: 1; min-height: 54px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: #2E5E3E; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none">I own it</a>
+      <a href="WardrobePlanned.dc.html" style="flex: 1; min-height: 54px; display: flex; align-items: center; justify-content: center; border-radius: 16px; border: 1.5px solid #2E5E3E; background: #FFFFFF; color: #1F4029; font-size: 16px; font-weight: 600; text-decoration: none">Planning to buy</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -808,7 +808,7 @@ export default function App() {
                     Size Rows
                   </div>
                   <div className="font-bold text-slate-900 mt-0.5">
-                    6 (XS–XXL)
+                    {activeReport.sizeSummaries.length} (XS–XXL)
                   </div>
                 </div>
                 <div className="p-2.5 bg-stone-50 border border-stone-200 rounded">

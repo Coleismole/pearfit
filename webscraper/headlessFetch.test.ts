@@ -2,7 +2,7 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { closeHeadlessBrowser, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
+import { closeHeadlessBrowser, embeddedWidgetHtml, JsonCapture, linkStaysOnProduct, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
 import { parseSizeChart, parseSizeChartFirst } from './sizeChart.ts';
 
 // A product page whose reviews exist only after JavaScript runs: one batch appears after
@@ -216,4 +216,31 @@ test('renderPageHtml survives a page that redirects itself while it is being scr
   } finally {
     server.close();
   }
+});
+
+test('a link stays on the product only when it is a hash, the same page, or under the product path', () => {
+  const page = 'https://shop.example/products/black-bra';
+  assert.equal(linkStaysOnProduct(null, page), true);
+  assert.equal(linkStaysOnProduct('#reviews', page), true);
+  assert.equal(linkStaysOnProduct('/products/black-bra?tab=reviews', page), true);
+  assert.equal(linkStaysOnProduct('/products/black-bra/reviews', page), true);
+  // The site-wide reviews page in the header is every product's reviews, not this one's.
+  assert.equal(linkStaysOnProduct('/pages/reviews', page), false);
+  assert.equal(linkStaysOnProduct('/products/other-bra', page), false);
+  assert.equal(linkStaysOnProduct('https://reviews.example/black-bra', page), false);
+});
+
+test('Stamped: review cards sent as HTML inside JSON are found and counted by review id', () => {
+  const card = (id: number) => `<div class="stamped-review" data-review-id="${id}"><a data-review-id="${id}" class="stamped-thumbs-up"></a></div>`;
+  const page1 = JSON.stringify({ rating: 4.4, count: 13, widget: `<div>${card(11)}${card(12)}</div>` });
+  const page2 = JSON.stringify({ rating: 4.4, count: 13, widget: `<div>${card(13)}${card(12)}</div>` });
+  assert.ok(embeddedWidgetHtml(page1)?.includes('data-review-id="11"'));
+  assert.equal(embeddedWidgetHtml(JSON.stringify({ rating: 5, widget: '<div>no cards</div>' })), null);
+  assert.equal(embeddedWidgetHtml('not json'), null);
+  const capture = new JsonCapture();
+  capture.add('https://stamped.io/api/widget?productId=1&page=1', page1);
+  assert.equal(capture.reviewCount(), 2);
+  capture.add('https://stamped.io/api/widget?productId=1&page=2', page2);
+  // Review 12 is on both pages: three distinct reviews.
+  assert.equal(capture.reviewCount(), 3);
 });

@@ -36,6 +36,8 @@ import {
   longestFreeText,
   productIdFromUrl,
   blockPageTitle,
+  isBotCheckRedirect,
+  isRefusalStatus,
   blockPageText,
   decodeHtmlEntities,
   ratingFromLabel,
@@ -1230,6 +1232,11 @@ function scrapeHtmlWithCheerio(
       jsonSources.push({ url: `page:${$(el).attr('id') || `json-${i}`}`, value: parseJsonBody(raw) });
     }
   });
+  // Judge.me writes the widget's first page into a hidden element's attribute, not a script.
+  $('[data-jdgm-json]').each((i, el) => {
+    const value = parseJsonBody($(el).attr('data-jdgm-json') ?? '');
+    if (value !== null) jsonSources.push({ url: `page:jdgm-${i}`, value });
+  });
   const fromJson = collectJsonReviews(
     jsonSources.filter((source) => source.value !== null),
     {
@@ -1407,6 +1414,9 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
     }
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location');
+      if (location && isBotCheckRedirect(location)) {
+        return { status: 400, message: `${url} sent the request to a bot check: the store refuses automated requests.`, blocked: true };
+      }
       if (!location || hop === 5) {
         return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
       }
@@ -1415,7 +1425,7 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
     }
     if (!response.ok) {
       // 418 is what some stores (Under Armour) answer an automated request with; it is a refusal too.
-      const refused = [403, 418, 429, 503].includes(response.status);
+      const refused = isRefusalStatus(response.status);
       return {
         status: 400,
         message: refused

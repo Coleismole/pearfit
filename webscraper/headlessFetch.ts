@@ -16,7 +16,7 @@ import { parseSizeChart } from './sizeChart.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
-  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
+  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], .detailReviewItem, li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 
 /**
  * The browser keeps its own user agent. A desktop-Chrome string on headless Linux contradicts what the
@@ -82,6 +82,17 @@ export interface CapturedJson {
   body: string;
 }
 
+/**
+ * Stamped answers a review request with JSON whose `widget` field holds the rendered review cards as HTML.
+ * Returns that HTML, or null for any other body.
+ */
+export function embeddedWidgetHtml(body: string): string | null {
+  const value = parseJsonBody(body);
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
+  const widget = (value as Record<string, unknown>).widget;
+  return typeof widget === 'string' && /class="stamped-review[ "]/.test(widget) ? widget : null;
+}
+
 const RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating|rate)"\s*:/;
 const JSONP = /^[\w$.]+\(\s*([\s\S]*?)\s*\)\s*;?\s*$/;
 
@@ -128,6 +139,10 @@ export class JsonCapture {
     for (; this.countedItems < this.items.length; this.countedItems++) {
       const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
       for (const r of set.reviews) this.counted.add(reviewIdentity(r));
+      // Reviews that arrive as HTML in the JSON (Stamped) count by review id, so paging that replaces
+      // the cards on the page still shows progress.
+      const widget = embeddedWidgetHtml(this.items[this.countedItems].body);
+      if (widget) for (const m of widget.matchAll(/data-review-id="(\d+)"/g)) this.counted.add(`html:${m[1]}`);
       // The total stated beside the largest review list: a recommendations response can carry its own totals.
       if (set.reportedTotal !== null && set.reviews.length >= this.statedTotalFrom) {
         this.statedTotal = set.reportedTotal;
@@ -235,11 +250,31 @@ export async function closeHeadlessBrowser(): Promise<void> {
   }
 }
 
+/**
+ * Whether following a link keeps the browser on the product: a hash, a query on the same page, or a
+ * path under the product page's own path. A site-wide "Reviews" link in the header or footer
+ * (/pages/reviews, every product's reviews) is not the product's review section.
+ */
+export function linkStaysOnProduct(href: string | null, pageUrl: string): boolean {
+  if (!href || /^(#|javascript:)/i.test(href.trim())) return true;
+  try {
+    const page = new URL(pageUrl);
+    const target = new URL(href, page);
+    if (target.origin !== page.origin) return false;
+    const base = page.pathname.replace(/\/$/, '');
+    const path = target.pathname.replace(/\/$/, '');
+    return path === base || path.startsWith(base + '/');
+  } catch {
+    return false;
+  }
+}
+
 /** Clicks the first visible element matching a role + name pattern. Best effort. */
 async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: RegExp): Promise<boolean> {
   const loc = page.getByRole(role, { name }).first();
   try {
     if (await loc.isVisible({ timeout: 500 })) {
+      if (role === 'link' && !linkStaysOnProduct(await loc.getAttribute('href', { timeout: 500 }), page.url())) return false;
       await loc.click({ timeout: 2000 });
       return true;
     }
@@ -274,6 +309,26 @@ const OPEN_RATING_SUMMARY = `(() => {
     if (!r.width || !r.height) continue;
     el.click();
     return label.slice(0, 40);
+  }
+  return '';
+})()`;
+
+/**
+ * Opens a "Reviews" or "Reviews (13)" heading that is a clickable text and not a tab, button or link
+ * (an Alpine/JS accordion built from spans). Used only when no review card is showing. Returns the label.
+ */
+const OPEN_REVIEWS_HEADING = `(() => {
+  ${DEEP_QUERY}
+  const showing = deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)}).some((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+  if (showing) return '';
+  for (const el of deepAll('span, div, li, h2, h3, h4, p')) {
+    if (el.closest('a, button, [role="tab"]') || el.children.length > 3) continue;
+    const label = (el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!/^(customer )?reviews?( ?\\(\\d[\\d,]*\\))?$/i.test(label)) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || window.getComputedStyle(el).cursor !== 'pointer') continue;
+    el.click();
+    return label;
   }
   return '';
 })()`;
@@ -545,6 +600,11 @@ async function waitForMoreReviews(page: Page, before: number, timeoutMs: number)
   return false;
 }
 
+/** Review cards that came as HTML inside JSON responses, one entry per distinct response. */
+function widgetPages(items: CapturedJson[]): string[] {
+  return [...new Set(items.map((item) => embeddedWidgetHtml(item.body)).filter((html): html is string => html !== null))];
+}
+
 export async function renderPageHtml(url: string): Promise<RenderedPage> {
   const run = renderTail.then(() => renderPageHtmlOnce(url));
   renderTail = run.then(
@@ -615,6 +675,8 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     if (openedSection) {
       await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       await waitForMoreReviews(page, reviewsBeforeOpening, REVIEW_WAIT_MS);
+    } else if (await evaluateStable(page, OPEN_REVIEWS_HEADING)) {
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
     }
 
     // Still no review data: the rating summary near the title often opens the review section.
@@ -746,7 +808,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       reviewSelectorFound,
       chartHtml,
       jsonResponses: capture.items,
-      extraHtml,
+      extraHtml: [...extraHtml, ...widgetPages(capture.items)],
     };
   } catch (err) {
     if (timedOut) {

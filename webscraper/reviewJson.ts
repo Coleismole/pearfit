@@ -73,7 +73,7 @@ function firstPath(obj: Json, paths: string[]): unknown {
 }
 
 const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore', 'rate'];
-const BODY_KEYS = ['body', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
+const BODY_KEYS = ['body', 'body_html', 'bodyHtml', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
 const TITLE_KEYS = ['title', 'Title', 'reviewTitle', 'review_title', 'headline'];
 const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'dateCreatedMillis', 'createdDate', 'created_date', 'reviewed_at', 'reviewedAt', 'date', 'created'];
 const ID_KEYS = ['id', 'Id', 'reviewId', 'review_id', 'ReviewId', 'ugc_id', 'uuid'];
@@ -486,7 +486,7 @@ const TOTAL_PATHS = [
   'bottomline.totalReview', 'bottomline.total_review', 'TotalResults', 'response.TotalResults', 'pagination.total',
   'rollup.review_count', 'data.rollup.review_count', 'results.0.rollup.review_count',
   'summary.review_count', 'reviewAggregate.reviewCount', 'aggregate.reviewCount', 'total_reviews', 'totalReviews',
-  'reviewCount', 'review_count', 'total',
+  'reviewCount', 'review_count', 'number_of_reviews', 'total',
 ];
 
 function reportedTotalOf(root: unknown): number | null {

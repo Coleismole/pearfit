@@ -9,6 +9,8 @@ import {
   longestFreeText,
   productIdFromUrl,
   blockPageTitle,
+  isBotCheckRedirect,
+  isRefusalStatus,
   blockPageText,
   decodeHtmlEntities,
   ratingFromLabel,
@@ -115,4 +117,13 @@ test('decodeHtmlEntities decodes escaped names and leaves plain text alone', () 
   assert.equal(decodeHtmlEntities('Sombra &quot;Sun&quot; Shirt &#x27;24'), `Sombra "Sun" Shirt '24`);
   assert.equal(decodeHtmlEntities('Tee &unknown; 100%'), 'Tee &unknown; 100%');
   assert.equal(decodeHtmlEntities("Men's Tee & Co"), "Men's Tee & Co");
+});
+
+test('bot-protection redirects and refusal statuses are told apart from ordinary redirects and errors', () => {
+  assert.equal(isBotCheckRedirect('/px?url=aHR0cHM6Ly9leGFtcGxl&frame=1'), true);
+  assert.equal(isBotCheckRedirect('https://shop.example/on/demandware.store/Sites-X-Site/default/PX-Show?url=abc'), true);
+  assert.equal(isBotCheckRedirect('/products/px-tee'), false);
+  assert.equal(isBotCheckRedirect('https://shop.example/us/p/tee'), false);
+  for (const status of [403, 406, 418, 429, 503]) assert.equal(isRefusalStatus(status), true);
+  for (const status of [404, 433, 500]) assert.equal(isRefusalStatus(status), false);
 });

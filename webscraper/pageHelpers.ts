@@ -107,6 +107,22 @@ export function ratingFromLabel(label: string | undefined): string {
 
 
 /**
+ * HTTP statuses a store answers an automated request with: forbidden, "access denied" (406, a WAF),
+ * teapot (418), too many requests and unavailable.
+ */
+export function isRefusalStatus(status: number): boolean {
+  return [403, 406, 418, 429, 503].includes(status);
+}
+
+/**
+ * A redirect to a bot-protection challenge (PerimeterX answers with /px?url=… or …/PX-Show). The page
+ * behind it is never served to this client, so it is a refusal, not a redirect loop.
+ */
+export function isBotCheckRedirect(location: string): boolean {
+  return /^\/px(\/|\?|$)|\/PX-Show(\?|$)/i.test(location.split('#')[0].replace(/^https?:\/\/[^/]+/i, ''));
+}
+
+/**
  * The title of a page a store shows automated visitors instead of the product: a bot check or an
  * access-denied page. Returns the matched text, or null for an ordinary page.
  */

@@ -586,3 +586,50 @@ test('AfterShip review cards (hashed class names) are read from the markup', asy
     server.close();
   }
 });
+
+test('Judge.me: the first page of reviews in the widget data attribute is read', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const data = {
+      number_of_reviews: 3,
+      reviews: [
+        { uuid: 'j1', title: '', rating: 5, body_html: '<p>Perfect fit, true to size.</p>', reviewer_name: 'Gil', created_at: '2025-12-30T18:49:40.000Z' },
+        { uuid: 'j2', title: 'Warm', rating: 4, body_html: '<p>Heavy wool, runs a little long.</p>', reviewer_name: 'Dale', created_at: '2025-12-28T18:19:02.987Z' },
+        { uuid: 'j3', title: '', rating: 5, body_html: '<p>He loves it so far.</p>', reviewer_name: 'Morgan', created_at: '2025-10-15T15:25:51.000Z' },
+      ],
+      pagination: { total_pages: 1, current_page: 1, per_page: 3 },
+    };
+    const attr = JSON.stringify(data).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    const html = `<!DOCTYPE html><html><head><title>Wool Jacket</title></head><body><h1>Wool Jacket</h1>
+      <div class="jdgm-review-widget-data-json" hidden data-jdgm-json="${attr}"></div></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'JDGM-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { totalReviews: number; scraperTelemetry: { reportedReviewCount: number | null } };
+    assert.equal(report.totalReviews, 3);
+    assert.equal(report.scraperTelemetry.reportedReviewCount, 3);
+  } finally {
+    server.close();
+  }
+});
+
+test('Halara review items (utility-class markup) are read, with the purchased size', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const item = (who: string, size: string, text: string) =>
+      `<div class="detailReviewItem flex"><div class="text-[12px]">${who}</div><div class="text-[15px]">2026/11/09</div>` +
+      `<div class="font-bold"><span>Size Purchased</span>: ${size}</div>` +
+      `<div class="DetailReviewsOldCommentWithEllipsis"><div class="line-clamp-2">${text}</div></div>` +
+      `<div><span>Fits</span>:<span>True to size</span></div></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Tank Top</title></head><body><h1>Tank Top</h1>
+      ${item('1***3', 'L', 'These tank tops are so lovely. They fit true to your regular size.')}
+      ${item('a***b', 'S', 'Soft fabric, but the straps run a little long for me.')}
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'HALARA-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { totalReviews: number; reviews: { normalizedSize: string | null }[] };
+    assert.equal(report.totalReviews, 2);
+    assert.deepEqual(report.reviews.map((r) => r.normalizedSize).sort(), ['L', 'S']);
+  } finally {
+    server.close();
+  }
+});

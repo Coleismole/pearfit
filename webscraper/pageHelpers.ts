@@ -67,6 +67,34 @@ export function ratingFromStarIcons($: ReturnType<typeof cheerio.load>, node: Ch
   return filled > 0 ? String(filled) : '';
 }
 
+/**
+ * Stars drawn as a row of five identical icons, each one filled by an overlay or a fill image: an overlay
+ * `overflow-hidden` span with `style="width: 70%"` (Halara), or a `...star-fill` image inside each star
+ * (Whistles). Sums the fill of the first five stars. Returns '' when no such row is found.
+ */
+export function ratingFromStarFills($: ReturnType<typeof cheerio.load>, node: CheerioNode): string {
+  // One element per star (class "star" or "x__star"); a star is filled when it holds a "star-fill" image.
+  const stars = node.find('[class*="star" i]').filter((_i, el) => /(^|\s)([\w-]*__)?star(\s|$)/i.test($(el).attr('class') || ''));
+  if (stars.length === 5) {
+    const filled = stars.filter((_i, el) => $(el).find('[class*="star-fill" i]').length > 0).length;
+    if (filled > 0) return String(filled);
+  }
+  const overlays = node
+    .find('[style*="width"][class*="overflow-hidden"]')
+    .filter((_i, el) => $(el).find('svg').length > 0)
+    .slice(0, 5);
+  if (overlays.length === 5) {
+    let sum = 0;
+    overlays.each((_i, el) => {
+      const pct = Number(($(el).attr('style') || '').match(/width:\s*([\d.]+)%/)?.[1]);
+      if (Number.isFinite(pct)) sum += Math.min(100, Math.max(0, pct)) / 100;
+    });
+    const rounded = Math.round(sum);
+    return rounded >= 1 && rounded <= 5 ? String(rounded) : '';
+  }
+  return '';
+}
+
 /** Cleans titles like "Reviews for Women's Parka | UNIQLO CA" -> "Women's Parka". */
 export function cleanProductTitle(title: string | null | undefined): string | null {
   if (!title) return null;
@@ -97,7 +125,8 @@ export function productIdFromUrl(url: string): string | null {
 
 /** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */
 export function ratingFromLabel(label: string | undefined): string {
-  const m = label?.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+)/i);
+  // "4 out of 5 stars", "Rating icons: 5 / 5 star review" (Loox).
+  const m = label?.match(/(\d+(?:\.\d+)?)\s*(?:out\s*of|\/)\s*(\d+)/i);
   if (!m) return '';
   const value = parseFloat(m[1]);
   const best = parseFloat(m[2]);
@@ -105,6 +134,33 @@ export function ratingFromLabel(label: string | undefined): string {
   return best === 5 ? String(value) : String(1 + ((value - 1) / (best - 1)) * 4);
 }
 
+
+/**
+ * A plain fetch that threw (connection reset, response headers over Node's 16 KB limit, timeout). It is
+ * not a refusal: the page may load in a browser. The cause code (UND_ERR_HEADERS_OVERFLOW) is named
+ * because "fetch failed" alone says nothing.
+ */
+export function describeFetchFailure(url: string, error: unknown): { status: number; message: string; blocked: false; retryInBrowser: true } {
+  const err = error instanceof Error ? error : new Error(String(error));
+  const cause = err.cause instanceof Error ? ` (${(err.cause as Error & { code?: string }).code ?? err.cause.message})` : '';
+  return { status: 502, message: `Could not reach ${url}: ${err.message}${cause}.`, blocked: false, retryInBrowser: true };
+}
+
+/**
+ * HTTP statuses a store answers an automated request with: forbidden, "access denied" (406, a WAF),
+ * teapot (418), too many requests and unavailable.
+ */
+export function isRefusalStatus(status: number): boolean {
+  return [403, 406, 418, 429, 503].includes(status);
+}
+
+/**
+ * A redirect to a bot-protection challenge (PerimeterX answers with /px?url=… or …/PX-Show). The page
+ * behind it is never served to this client, so it is a refusal, not a redirect loop.
+ */
+export function isBotCheckRedirect(location: string): boolean {
+  return /^\/px(\/|\?|$)|\/PX-Show(\?|$)/i.test(location.split('#')[0].replace(/^https?:\/\/[^/]+/i, ''));
+}
 
 /**
  * The title of a page a store shows automated visitors instead of the product: a bot check or an

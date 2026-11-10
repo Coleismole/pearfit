@@ -9,14 +9,14 @@
  *
  * Playwright is imported lazily so the server still starts when no browser is installed.
  */
-import type { Browser, Page } from 'playwright';
+import type { Browser, Locator, Page } from 'playwright';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 import { extractReviewsFromJson, parseJsonBody, reviewIdentity } from './reviewJson.ts';
 import { parseSizeChart } from './sizeChart.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
-  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
+  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], .detailReviewItem, [class$="_review"]:has([class*="reviewContent"]), article:has([aria-label="review item"]), .grid-item:has(.main-text), .product-detail__rating__review, .pdp-review, li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 
 /**
  * The browser keeps its own user agent. A desktop-Chrome string on headless Linux contradicts what the
@@ -75,11 +75,28 @@ export interface RenderedPage {
    * `html` is the last page. Each holds its own reviews.
    */
   extraHtml?: string[];
+  /**
+   * Size guides that are pages of their own, linked from the product page ("/pages/size-chart"), loaded when
+   * the product page itself showed no chart. They hold the store's tables for every product: use
+   * parseSizeChartWithGuides, which picks the table that fits the product.
+   */
+  guidePages?: string[];
 }
 
 export interface CapturedJson {
   url: string;
   body: string;
+}
+
+/**
+ * Stamped answers a review request with JSON whose `widget` field holds the rendered review cards as HTML.
+ * Returns that HTML, or null for any other body.
+ */
+export function embeddedWidgetHtml(body: string): string | null {
+  const value = parseJsonBody(body);
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
+  const widget = (value as Record<string, unknown>).widget;
+  return typeof widget === 'string' && /class="stamped-review[ "]/.test(widget) ? widget : null;
 }
 
 const RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating|rate)"\s*:/;
@@ -128,6 +145,10 @@ export class JsonCapture {
     for (; this.countedItems < this.items.length; this.countedItems++) {
       const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
       for (const r of set.reviews) this.counted.add(reviewIdentity(r));
+      // Reviews that arrive as HTML in the JSON (Stamped) count by review id, so paging that replaces
+      // the cards on the page still shows progress.
+      const widget = embeddedWidgetHtml(this.items[this.countedItems].body);
+      if (widget) for (const m of widget.matchAll(/data-review-id="(\d+)"/g)) this.counted.add(`html:${m[1]}`);
       // The total stated beside the largest review list: a recommendations response can carry its own totals.
       if (set.reportedTotal !== null && set.reviews.length >= this.statedTotalFrom) {
         this.statedTotal = set.reportedTotal;
@@ -235,11 +256,31 @@ export async function closeHeadlessBrowser(): Promise<void> {
   }
 }
 
+/**
+ * Whether following a link keeps the browser on the product: a hash, a query on the same page, or a
+ * path under the product page's own path. A site-wide "Reviews" link in the header or footer
+ * (/pages/reviews, every product's reviews) is not the product's review section.
+ */
+export function linkStaysOnProduct(href: string | null, pageUrl: string): boolean {
+  if (!href || /^(#|javascript:)/i.test(href.trim())) return true;
+  try {
+    const page = new URL(pageUrl);
+    const target = new URL(href, page);
+    if (target.origin !== page.origin) return false;
+    const base = page.pathname.replace(/\/$/, '');
+    const path = target.pathname.replace(/\/$/, '');
+    return path === base || path.startsWith(base + '/');
+  } catch {
+    return false;
+  }
+}
+
 /** Clicks the first visible element matching a role + name pattern. Best effort. */
 async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: RegExp): Promise<boolean> {
   const loc = page.getByRole(role, { name }).first();
   try {
     if (await loc.isVisible({ timeout: 500 })) {
+      if (role === 'link' && !linkStaysOnProduct(await loc.getAttribute('href', { timeout: 500 }), page.url())) return false;
       await loc.click({ timeout: 2000 });
       return true;
     }
@@ -247,6 +288,153 @@ async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: Reg
     // not clickable; ignore
   }
   return false;
+}
+
+/** Labels of the controls that open a size guide: "Size Guide", "Size & Fit", "Find your size", "Measurements". */
+export const SIZE_GUIDE_LABEL =
+  /size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|find\s*(your|my)\s*(size|fit)|size\s*(info|help)|how to measure|measurements?$/i;
+/** A label that is nothing but a size guide name: safe to click as plain text (a DIV or SPAN with a handler). */
+const SIZE_GUIDE_TEXT = /^\s*(size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|find\s*(your|my)\s*size|size\s*info(rmation)?|size\s*help)\s*[+–—-]?\s*$/i;
+
+async function clickLocator(loc: Locator): Promise<boolean> {
+  try {
+    if (!(await loc.isVisible({ timeout: 500 }))) return false;
+  } catch {
+    return false;
+  }
+  try {
+    await loc.click({ timeout: 2000 });
+    return true;
+  } catch {
+    // A pop-up or sticky bar sits over it: a scripted click reaches the control anyway.
+    try {
+      await loc.evaluate((el) => (el as HTMLElement).click());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/** In-page: how many tables are showing (open shadow roots included). A size guide that opened has one. */
+const VISIBLE_TABLES = `(() => {
+  let count = 0;
+  const walk = (root) => {
+    for (const t of root.querySelectorAll('table')) if (t.getClientRects().length > 0) count++;
+    for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot);
+  };
+  walk(document);
+  return count;
+})()`;
+
+/**
+ * The controls that can open a size guide, most specific first. Links count only when they stay on the
+ * page (a "#" or script address); a real address would leave the product, so those are read separately.
+ */
+function sizeGuideControls(page: Page): Locator[] {
+  const inPage = 'a:not([href]), a[href^="#"], a[href^="javascript"]';
+  return [
+    page.getByRole('tab', { name: SIZE_GUIDE_LABEL }),
+    page.getByRole('button', { name: SIZE_GUIDE_LABEL }),
+    page.locator('summary').filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.locator(inPage).filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.locator('[aria-haspopup="dialog"], [aria-controls], [data-modal], [data-drawer], [data-toggle], [data-bs-toggle]').filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.getByText(SIZE_GUIDE_TEXT).locator('visible=true'),
+  ];
+}
+
+/** The address without its #fragment: a guide that opens by changing the hash stays on the product page. */
+function withoutHash(url: string): string {
+  return url.split('#')[0];
+}
+
+/**
+ * Opens the page's size guide and returns the page html once it holds a chart, or null. Controls are tried
+ * one after another (an accordion named "Size & Fit" may hold only prose while a "Size Guide" button holds
+ * the table); a try that shows no chart is closed again with Escape. Nothing here leaves the page.
+ */
+export async function openSizeGuide(page: Page, until = Date.now() + 20_000, maxTries = 4): Promise<string | null> {
+  let tries = 0;
+  for (const group of sizeGuideControls(page)) {
+    // The render has a hard deadline: no new try unless one fits in the time left.
+    if (until - Date.now() < 6_000) break;
+    const count = Math.min(await group.count().catch(() => 0), 3);
+    for (let i = 0; i < count && tries < maxTries && until - Date.now() > 6_000; i++) {
+      const control = group.nth(i);
+      const before = withoutHash(page.url());
+      const tablesBefore = (await page.evaluate(VISIBLE_TABLES).catch(() => 0)) as number;
+      if (!(await clickLocator(control))) continue;
+      tries += 1;
+      // A drawer fills in after its animation or a fetch: wait until a table is showing, up to a few seconds.
+      const settleBy = Math.min(Date.now() + 2500, until);
+      do {
+        await page.waitForTimeout(400);
+      } while (Date.now() < settleBy && ((await page.evaluate(VISIBLE_TABLES).catch(() => 0)) as number) <= tablesBefore);
+      if (withoutHash(page.url()) !== before) {
+        // The click left the product page. Come back; this control is not a same-page guide.
+        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 8000 }).catch(() => {});
+        continue;
+      }
+      const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS).catch(() => '')) as string;
+      if (html && parseSizeChart(html).length > 0) return html;
+      await page.keyboard.press('Escape').catch(() => {});
+    }
+    if (tries >= maxTries) break;
+  }
+  return null;
+}
+
+/**
+ * Addresses of size guides that are pages of their own ("/pages/size-chart"): same-site links whose text or
+ * path says size guide. Product, collection and cart addresses are left out, as are links back to this page.
+ */
+const GUIDE_LINKS = `(() => {
+  const labelRe = /size\\s*(guide|chart)|sizing\\s*(guide|chart)|fit\\s*guide|size\\s*(&|and|\\+)\\s*fit|how to measure|measurement guide/i;
+  const pathRe = /size[-_]?(guide|chart)s?\\b|sizing[-_]?(guide|chart)?|fit[-_]?guide|measure/i;
+  const sizeRe = /size\\s*[-_]?\\s*(guide|chart)s?|sizing\\s*[-_]?\\s*(guide|chart)?/i;
+  const site = (h) => h.replace(/^www\\./, '');
+  const found = new Map();
+  for (const a of document.querySelectorAll('a[href]')) {
+    const raw = a.getAttribute('href') || '';
+    if (!raw || raw.startsWith('#') || /^(javascript|mailto|tel):/i.test(raw)) continue;
+    let u;
+    try { u = new URL(raw, location.href); } catch { continue; }
+    if (site(u.host) !== site(location.host) || u.pathname === location.pathname) continue;
+    if (/^\\/([a-z]{2}(-[a-z]{2})?\\/)?(products|collections|cart|account|search)\\b/i.test(u.pathname)) continue;
+    if (/[?&](prefn1|prefv1|filter|sort|variant)=/i.test(u.search)) continue;
+    const label = (a.getAttribute('aria-label') || a.textContent || '').replace(/\\s+/g, ' ').trim();
+    const byLabel = label.length < 60 && labelRe.test(label);
+    if (!byLabel && !pathRe.test(u.pathname)) continue;
+    // A page named size chart / size guide beats a "fit guide" (which usually describes cuts, not measurements).
+    const score = (sizeRe.test(label) ? 2 : 0) + (sizeRe.test(u.pathname) ? 2 : 0) + (byLabel ? 1 : 0);
+    const key = u.origin + u.pathname;
+    if (!found.has(key) || found.get(key).score < score) found.set(key, { href: u.href, score });
+  }
+  return [...found.values()].sort((x, y) => y.score - x.score).map((x) => x.href).slice(0, 3);
+})()`;
+
+/**
+ * Loads the size guides the product page links to, in a second tab of the same context (so the request
+ * guard still applies), and returns each page's html. Stops at the time limit.
+ */
+export async function fetchGuidePages(page: Page, until: number): Promise<string[]> {
+  const pages: string[] = [];
+  const links = ((await page.evaluate(GUIDE_LINKS).catch(() => [])) as string[]) ?? [];
+  for (const href of links.slice(0, 2)) {
+    const left = until - Date.now();
+    if (left < 8_000) break;
+    const guide = await page.context().newPage();
+    try {
+      await guide.goto(href, { waitUntil: 'domcontentloaded', timeout: Math.min(15_000, left - 3_000) });
+      await guide.waitForLoadState('networkidle', { timeout: 3_000 }).catch(() => {});
+      pages.push((await guide.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string);
+    } catch {
+      // A guide that will not load is skipped.
+    } finally {
+      await guide.close().catch(() => {});
+    }
+  }
+  return pages;
 }
 
 /**
@@ -274,6 +462,59 @@ const OPEN_RATING_SUMMARY = `(() => {
     if (!r.width || !r.height) continue;
     el.click();
     return label.slice(0, 40);
+  }
+  return '';
+})()`;
+
+/**
+ * A numbered pager that replaces the review cards on the page (Halara: buttons labelled "Page 1", "Page 2",
+ * the current one marked aria-current="page"). Clicks the next number and returns its label, or '' when
+ * the current page is the last one or no such pager exists. Buttons only; never a link that leaves the page.
+ */
+const CLICK_NEXT_NUMBERED_PAGE = `(() => {
+  ${DEEP_QUERY}
+  const label = (el) => (el.getAttribute('aria-label') || '').trim();
+  const pages = deepAll('button, [role="button"]').filter((el) => /^page \\d+$/i.test(label(el)));
+  const current = pages.find((el) => el.getAttribute('aria-current') === 'page');
+  if (!current) {
+    // Salesforce storefronts: <div class="page-numbers"><div class="page-number active" data-page="1">…
+    const active = deepAll('.page-numbers .page-number.active[data-page]')[0];
+    const nextDiv = active && active.nextElementSibling;
+    if (!nextDiv || !nextDiv.getAttribute('data-page')) return '';
+    nextDiv.click();
+    return 'Page ' + nextDiv.getAttribute('data-page');
+  }
+  const n = Number(label(current).replace(/\\D+/g, ''));
+  const next = pages.find((el) => label(el).toLowerCase() === 'page ' + (n + 1));
+  if (!next) return '';
+  next.click();
+  return label(next);
+})()`;
+
+/** The review cards currently on the page, as markup: a small snapshot of one page of a replacing pager. */
+const REVIEW_CARDS_MARKUP = `(() => {
+  ${DEEP_QUERY}
+  // A wrapper that holds another match is skipped, as the reader does, so a card and its child are not both collected.
+  const cards = deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)});
+  return '<div>' + cards.filter((el) => !cards.some((other) => other !== el && el.contains(other))).map((el) => el.outerHTML).join('') + '</div>';
+})()`;
+
+/**
+ * Opens a "Reviews" or "Reviews (13)" heading that is a clickable text and not a tab, button or link
+ * (an Alpine/JS accordion built from spans). Used only when no review card is showing. Returns the label.
+ */
+const OPEN_REVIEWS_HEADING = `(() => {
+  ${DEEP_QUERY}
+  const showing = deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)}).some((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+  if (showing) return '';
+  for (const el of deepAll('span, div, li, h2, h3, h4, p')) {
+    if (el.closest('a, button, [role="tab"]') || el.children.length > 3) continue;
+    const label = (el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!/^(customer )?reviews?( ?\\(\\d[\\d,]*\\))?$/i.test(label)) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || window.getComputedStyle(el).cursor !== 'pointer') continue;
+    el.click();
+    return label;
   }
   return '';
 })()`;
@@ -511,6 +752,22 @@ const SERIALIZE_WITH_SHADOW_ROOTS = `(() => {
   return '<!DOCTYPE html>' + (idx === -1 ? html + dump : html.slice(0, idx) + dump + html.slice(idx));
 })()`;
 
+/**
+ * page.evaluate that survives the page navigating under it (a locale or geo redirect, a consent reload):
+ * "Execution context was destroyed". Waits for the new page to settle and runs the script again.
+ */
+async function evaluateStable(page: Page, script: string): Promise<unknown> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await page.evaluate(script);
+    } catch (error) {
+      if (attempt >= 2 || !/execution context was destroyed|navigation/i.test(String(error))) throw error;
+      await page.waitForLoadState('domcontentloaded', { timeout: 15_000 }).catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
+    }
+  }
+}
+
 async function countReviews(page: Page): Promise<number> {
   return page.locator(REVIEW_CARD_SELECTOR).count();
 }
@@ -527,6 +784,72 @@ async function waitForMoreReviews(page: Page, before: number, timeoutMs: number)
     await page.waitForTimeout(250);
   }
   return false;
+}
+
+/** A navigation that timed out after the browser had already committed to a page (not a blank tab). */
+export function navigationTimedOutAfterLoading(err: unknown, currentUrl: string): boolean {
+  return err instanceof Error && /Timeout \d+ms exceeded/.test(err.message) && /^https?:/i.test(currentUrl);
+}
+
+/** Hosts whose review widgets render inside an iframe of their own (Loox). */
+export function isReviewWidgetFrame(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname === 'loox.io' && u.pathname.startsWith('/widget/');
+  } catch {
+    return false;
+  }
+}
+
+/** Clicks the review iframe's own "Show more reviews" / "Load more" button; returns its label or ''. */
+const CLICK_FRAME_LOAD_MORE = `(() => {
+  const btn = [...document.querySelectorAll('button')].find((b) => /^(show|load|see|view) more( reviews?)?$/i.test((b.textContent || '').trim()) && b.getBoundingClientRect().width > 0 && !b.disabled);
+  if (!btn) return '';
+  btn.click();
+  return (btn.textContent || '').trim();
+})()`;
+
+/**
+ * Review widgets that live in an iframe: pages the widget through its own "Show more reviews" button, then
+ * returns the frame's markup. Capped at MAX_REVIEWS cards and the paging deadline.
+ */
+async function reviewFramePages(page: Page, stopAt: number): Promise<string[]> {
+  const pages: string[] = [];
+  for (const frame of page.frames()) {
+    if (frame === page.mainFrame() || !isReviewWidgetFrame(frame.url())) continue;
+    // The widget drops cards that scroll out of view, so the cards are collected after every click.
+    const seen = new Set<string>();
+    const collect = async () => {
+      const cards = (await frame.evaluate(
+        `(() => { const all = [...document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)})]; return all.filter((el) => !all.some((o) => o !== el && el.contains(o))).map((el) => el.outerHTML); })()`,
+      )) as string[];
+      for (const card of cards) seen.add(card);
+    };
+    try {
+      await collect();
+      for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < stopAt && seen.size < MAX_REVIEWS; i++) {
+        const clicked = (await frame.evaluate(CLICK_FRAME_LOAD_MORE)) as string;
+        if (process.env.SCRAPER_DEBUG) console.error(`[frame] ${i}: cards=${seen.size} clicked=${JSON.stringify(clicked)}`);
+        if (!clicked) break;
+        const before = seen.size;
+        const until = Math.min(Date.now() + 4000, stopAt);
+        while (Date.now() < until && seen.size <= before) {
+          await page.waitForTimeout(250);
+          await collect();
+        }
+      }
+      await collect();
+    } catch {
+      // the frame went away; keep what was collected
+    }
+    if (seen.size > 0) pages.push(`<div>${[...seen].join('')}</div>`);
+  }
+  return pages;
+}
+
+/** Review cards that came as HTML inside JSON responses, one entry per distinct response. */
+function widgetPages(items: CapturedJson[]): string[] {
+  return [...new Set(items.map((item) => embeddedWidgetHtml(item.body)).filter((html): html is string => html !== null))];
 }
 
 export async function renderPageHtml(url: string): Promise<RenderedPage> {
@@ -573,7 +896,13 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     context.close().catch(() => {});
   }, renderBudgetMs());
   try {
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
+    const response = await page
+      .goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS })
+      .catch((err: unknown) => {
+        // A page that shows up but never finishes parsing (Soffe: DOMContentLoaded never fires) is still read.
+        if (navigationTimedOutAfterLoading(err, page.url())) return null;
+        throw err;
+      });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
       return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
@@ -582,10 +911,10 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
 
     await clickFirst(page, 'button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
 
-    await page.evaluate(SCROLL_TO_END);
+    await evaluateStable(page, SCROLL_TO_END);
 
     // Snapshot before touching reviews: a review click may leave the product view.
-    let chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    let chartHtml = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
 
     // The full review list is often behind a tab or accordion, even when a few highlight
     // reviews are already visible. A link may navigate away, so only use it as a last resort.
@@ -599,15 +928,17 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     if (openedSection) {
       await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       await waitForMoreReviews(page, reviewsBeforeOpening, REVIEW_WAIT_MS);
+    } else if (await evaluateStable(page, OPEN_REVIEWS_HEADING)) {
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
     }
 
     // Still no review data: the rating summary near the title often opens the review section.
-    if (capture.reviewCount() === 0 && (await page.evaluate(OPEN_RATING_SUMMARY))) {
+    if (capture.reviewCount() === 0 && (await evaluateStable(page, OPEN_RATING_SUMMARY))) {
       await page.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
     }
 
     // Widgets that load when they come into view (Okendo, Junip, Bazaarvoice) need to be seen.
-    await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
+    await evaluateStable(page, REVIEW_WIDGETS_INTO_VIEW);
     await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
     await capture.settle();
 
@@ -672,18 +1003,15 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const reviewPage = (await page.evaluate(ALL_REVIEWS_LINK)) as string;
     const timeLeft = stopPagingAt - Date.now();
     if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25_000) {
-      await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-      await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-      // Keep the earlier snapshot unless this one holds a chart (the view may already show reviews only).
-      const withGuide = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
-      if (parseSizeChart(withGuide).length > 0) chartHtml = withGuide;
+      // Keep the earlier snapshot unless the opened guide holds a chart (the view may already show reviews only).
+      if (parseSizeChart(chartHtml).length === 0) chartHtml = (await openSizeGuide(page, Date.now() + 10_000)) ?? chartHtml;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
       // Navigation may not run past the paging stop, so a slow review page cannot hit the hard deadline.
       await page
         .goto(reviewPage, { waitUntil: 'domcontentloaded', timeout: Math.min(NAV_TIMEOUT_MS, timeLeft - 10_000) })
         .catch(() => null);
       await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-      await page.evaluate(REVIEW_WIDGETS_INTO_VIEW).catch(() => {});
+      await evaluateStable(page, REVIEW_WIDGETS_INTO_VIEW).catch(() => {});
       await capture.settle();
       await pageThroughReviews(pagingOps);
     }
@@ -701,7 +1029,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       if (!next) break;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next}`);
       const here = page.url();
-      extraHtml.push((await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string);
+      extraHtml.push((await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string);
       cardsKept += cardsHere;
       const moved = await page
         .goto(next, { waitUntil: 'domcontentloaded', timeout: Math.max(3_000, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3_000)) })
@@ -716,13 +1044,40 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       await capture.settle(1500);
     }
 
-    // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
-    await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-    await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-    await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
+    // A numbered pager that replaces the cards: keep each page's cards, then click the next number.
+    let cardsOnPages = 0;
+    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8_000; i++) {
+      const cardsHere = await countReviews(page).catch(() => 0);
+      if (cardsHere === 0 || cardsOnPages + cardsHere >= MAX_REVIEWS) break;
+      const first = (await evaluateStable(page, REVIEW_CARDS_MARKUP)) as string;
+      const clicked = (await evaluateStable(page, CLICK_NEXT_NUMBERED_PAGE)) as string;
+      if (!clicked) break;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] numbered pager ${clicked}`);
+      extraHtml.push(first);
+      cardsOnPages += cardsHere;
+      // Wait for the cards to change (they are replaced, not added to).
+      const changeUntil = Math.min(Date.now() + 6000, stopPagingAt);
+      while (Date.now() < changeUntil) {
+        await page.waitForTimeout(300);
+        if (((await evaluateStable(page, REVIEW_CARDS_MARKUP)) as string) !== first) break;
+      }
+    }
+
+    // A size chart is often behind a button, tab, accordion or drawer. Only controls that stay on the page
+    // are clicked; a chart already in the snapshot needs no click.
+    if (parseSizeChart(chartHtml).length === 0) {
+      chartHtml = (await openSizeGuide(page, startedAt + renderBudgetMs() - 18_000)) ?? chartHtml;
+      await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
+    }
     await capture.settle(2000);
 
-    const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    const framePages = await reviewFramePages(page, stopPagingAt);
+    const html = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    // Still no chart: the guide may be a page of its own. Read the pages the product page links to.
+    const guidePages =
+      parseSizeChart(chartHtml).length === 0 && parseSizeChart(html).length === 0
+        ? await fetchGuidePages(page, startedAt + renderBudgetMs() - 8_000)
+        : [];
     return {
       html,
       status,
@@ -730,7 +1085,8 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       reviewSelectorFound,
       chartHtml,
       jsonResponses: capture.items,
-      extraHtml,
+      extraHtml: [...extraHtml, ...widgetPages(capture.items), ...framePages],
+      guidePages,
     };
   } catch (err) {
     if (timedOut) {
@@ -989,8 +1345,10 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
       });
     }
 
-    await clickRole('tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-    await clickRole('button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+    if (parseSizeChart(chartHtml).length === 0) {
+      await clickRole('tab', SIZE_GUIDE_LABEL);
+      await clickRole('button', SIZE_GUIDE_LABEL);
+    }
     await sleep(500);
     await capture.settle(2000);
 

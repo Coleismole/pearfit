@@ -32,6 +32,11 @@ export function chartSizeCode(raw: string): string | null {
   const cleaned = raw.replace(/\s+/g, ' ').trim().toUpperCase();
   if (!cleaned || cleaned.length > 24) return null;
   const letters: Record<string, string> = {
+    XXXS: 'XXXS',
+    '3XS': 'XXXS',
+    XXS: 'XXS',
+    '2XS': 'XXS',
+    'XX-SMALL': 'XXS',
     XS: 'XS',
     'X-SMALL': 'XS',
     'XSMALL': 'XS',
@@ -57,7 +62,7 @@ export function chartSizeCode(raw: string): string | null {
     '3XL': 'XXXL',
   };
   if (letters[cleaned]) return letters[cleaned];
-  const word = cleaned.match(/\b(XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
+  const word = cleaned.match(/\b(XXXS|3XS|XXS|2XS|XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
   if (word && letters[word[1]]) return letters[word[1]];
   // US women's sizes are one digit (2, 4, 6, 8). A chart that only kept 10+ dropped them.
   const numeric = cleaned.match(/^(?:US|UK|EU|IT|FR|JP)?\s*(\d{1,3})(?:\s*\((?:US|UK|EU|IT|FR|JP)\))?$/);
@@ -66,6 +71,9 @@ export function chartSizeCode(raw: string): string | null {
 }
 
 function sortOrder(size: string, index: number): number {
+  // XXS and XXXS sit below XS (0) so the ranks of the other sizes stay as they were.
+  if (size === 'XXS') return -1;
+  if (size === 'XXXS') return -2;
   const letter = LETTERS.indexOf(size as (typeof LETTERS)[number]);
   if (letter >= 0) return letter;
   // 00 is smaller than 0. Number("00") is 0, so it needs its own rank.
@@ -77,9 +85,11 @@ function sortOrder(size: string, index: number): number {
 
 function unitInText(text: string): Unit | null {
   const h = text.toLowerCase();
-  if (/\bcm\b|centimet(?:er|re)s?/.test(h)) return 'cm';
-  if (/\binches\b|\binch\b|\(in\)|\bin\./.test(h)) return 'in';
-  return null;
+  const cm = /\bcm\b|centimet(?:er|re)s?/.test(h);
+  const inch = /\binches\b|\binch\b|\(in\)|\bin\./.test(h);
+  // Both named (a cm/inch switch, "in cm and inches"): the text does not say which one the numbers use.
+  if (cm === inch) return null;
+  return cm ? 'cm' : 'in';
 }
 
 /**
@@ -89,6 +99,8 @@ function unitInText(text: string): Unit | null {
  */
 function unitFromToggle($: cheerio.CheerioAPI, node: unknown): Unit | null {
   for (const box of $(node as never).parents().toArray()) {
+    const fromButtons = unitFromButtons($, box) ?? unitFromSelect($, box);
+    if (fromButtons) return fromButtons;
     const checked = new Set<Unit>();
     let found = false;
     $(box)
@@ -114,6 +126,53 @@ function unitFromToggle($: cheerio.CheerioAPI, node: unknown): Unit | null {
     if (found) return checked.size === 1 ? [...checked][0] : null;
   }
   return null;
+}
+
+/**
+ * A cm/inch toggle made of buttons: elements with a data-unit of cm or in (or in/inches), the active one
+ * carrying an "active"/"selected" class or aria-pressed/aria-selected. Several controls that disagree stay unknown.
+ */
+function unitFromButtons($: cheerio.CheerioAPI, box: unknown): Unit | null {
+  const active = new Set<Unit>();
+  let found = 0;
+  $(box as never)
+    .find('[data-unit]')
+    .each((_i, el) => {
+      const raw = ($(el).attr('data-unit') ?? '').trim().toLowerCase();
+      const unit: Unit | null = raw === 'cm' || raw === 'metric' ? 'cm' : raw === 'in' || raw === 'inch' || raw === 'inches' ? 'in' : null;
+      if (!unit) return;
+      found += 1;
+      const aria = $(el).attr('aria-pressed') ?? $(el).attr('aria-selected');
+      const isActive = aria !== undefined ? aria === 'true' : /\b(active|selected|is-active|current)\b/.test($(el).attr('class') ?? '');
+      if (isActive) active.add(unit);
+    });
+  return found >= 2 && active.size === 1 ? [...active][0] : null;
+}
+
+/**
+ * A unit drop-down: a select whose options are all units (cm / inches). The selected option is the unit
+ * shown, or the first option when none is marked. A select with any other kind of option is not a unit control.
+ */
+function unitFromSelect($: cheerio.CheerioAPI, box: unknown): Unit | null {
+  const units = new Set<Unit>();
+  let found = 0;
+  $(box as never)
+    .find('select')
+    .each((_i, select) => {
+      const options = $(select).find('option').toArray();
+      const read = (option: (typeof options)[number]): Unit | null => {
+        const text = `${$(option).attr('value') ?? ''} ${$(option).text()}`.trim().toLowerCase();
+        if (/^(cm|centimet\w*|metric)\b/.test(text)) return 'cm';
+        if (/^(in|inch\w*|imperial)\b/.test(text)) return 'in';
+        return null;
+      };
+      const mapped = options.map(read);
+      if (options.length < 2 || mapped.some((unit) => unit === null) || new Set(mapped).size < 2) return;
+      found += 1;
+      const picked = options.findIndex((option) => $(option).is('[selected]'));
+      units.add(mapped[picked >= 0 ? picked : 0] as Unit);
+    });
+  return found === 1 && units.size === 1 ? [...units][0] : null;
 }
 
 const UNICODE_FRACTIONS: Record<string, number> = {
@@ -160,11 +219,18 @@ function readMeasurement(raw: string): number | null {
 /** Number-unit pairs in a cell such as "61.5cm 24\"" (a cm/inch toggle renders both). */
 const UNIT_PAIR = /(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[½¼¾⅛⅜⅝⅞])?)\s*(cm|centimet(?:er|re)s?|in(?:ch(?:es)?)?\b|"|″)/gi;
 
+/** "21 in - 53.3 cm": the same measurement in two units, not a range. */
+function isDualUnit(text: string): boolean {
+  const units = [...text.matchAll(UNIT_PAIR)].map((m) => (/^c/i.test(m[2]) ? 'cm' : 'in'));
+  return units.length === 2 && units[0] !== units[1];
+}
+
 function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: Unit } | null {
   const text = raw.replace(/\s+/g, ' ').trim();
   if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
   // A range is not one measurement. Leave it null instead of picking an end.
-  if (/[\d½¼¾⅛⅜⅝⅞]\s*[-–—]\s*\d/.test(text)) return null;
+  // Unit marks may sit between the number and the dash: 28" - 30", 86.5 cm - 90 cm.
+  if (/[\d½¼¾⅛⅜⅝⅞]\s*(?:["″”]|in\.?|cm)?\s*[-–—‑]\s*\d/i.test(text) && !isDualUnit(text)) return null;
   // The same measurement in two units: use the centimetre one, else the inch one.
   const pairs = [...text.matchAll(UNIT_PAIR)].map((m) => ({
     value: readMeasurement(m[1]),
@@ -186,10 +252,14 @@ function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: 
   return { value, unit };
 }
 
+/** Pit to pit in any of its spellings: pit-to-pit, armpit to armpit, underarm to underarm, P2P. */
+const PIT_TO_PIT = /\b(?:arm)?pit[\s-]*(?:to|2)?[\s-]*(?:arm)?pit\b|\bunder[\s-]?arm[\s-]*(?:to|2)?[\s-]*under[\s-]?arm\b|\bp2p\b/;
+
 function chestKind(header: string): ChestKind | null {
   const h = header.toLowerCase();
+  if (PIT_TO_PIT.test(h)) return 'flat';
   if (!/\b(chest|bust|pit)\b|body width/.test(h)) return null;
-  if (/pit[\s-]*to[\s-]*pit|body width|chest width|half chest|flat|across chest|laid flat/.test(h)) {
+  if (/pit[\s-]*to[\s-]*pit|body width|chest width|(?:half|1\/2|½)[\s-]*(?:chest|bust)|flat|across chest|laid flat/.test(h)) {
     return 'flat';
   }
   if (/circumference|all around|full chest|around bust|around chest/.test(h)) return 'circumference';
@@ -199,6 +269,8 @@ function chestKind(header: string): ChestKind | null {
 function measureCol(header: string): MeasureCol | null {
   if (chestKind(header)) return 'chest';
   const h = header.toLowerCase();
+  // A glove, hat or sock table measures a hand, head or foot, not a garment's length.
+  if (/\b(hand|head|foot|feet|glove|finger|palm|shoe|sock)\b/.test(h)) return null;
   if (/\bsleeve\b|\barm length\b/.test(h)) return 'sleeve';
   if (/\blength\b/.test(h) && !/\bsleeve\b/.test(h)) return 'length';
   return null;
@@ -209,9 +281,15 @@ function isSizeHeader(header: string): boolean {
   return h === '' || h === 'size' || h === 'sizes' || h === 'size (us)' || /^size\b/.test(h);
 }
 
-/** A header that does not say flat or circumference gives null. We never guess the convention. */
-function chestCm(value: number, unit: Unit, kind: ChestKind): number | null {
-  if (kind === 'unspecified') return null;
+/**
+ * A header that does not say flat or circumference gives null. We never guess the convention,
+ * unless the chart's own surroundings say the garment was measured lying flat (`flatDefault`).
+ */
+function chestCm(value: number, unit: Unit, kind: ChestKind, flatDefault = false): number | null {
+  if (kind === 'unspecified') {
+    if (!flatDefault) return null;
+    return round1(toCm(value, unit));
+  }
   const cm = toCm(value, unit);
   return round1(kind === 'flat' ? cm : cm / 2);
 }
@@ -224,6 +302,7 @@ function parseHtmlTable(
   headers: string[],
   body: string[][],
   tableUnit: Unit | null,
+  flatDefault = false,
 ): ParsedTable | null {
   let sizeIdx = headers.findIndex((h) => isSizeHeader(h));
   if (sizeIdx < 0) sizeIdx = 0;
@@ -254,7 +333,7 @@ function parseHtmlTable(
     for (const col of cols) {
       const parsed = parseCell(cells[col.index] ?? '', col.unit ?? tableUnit);
       if (!parsed) continue;
-      if (col.kind === 'chest' && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest);
+      if (col.kind === 'chest' && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest, flatDefault);
       if (col.kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (col.kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
       if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
@@ -271,6 +350,7 @@ function parseTransposedTable(
   headers: string[],
   body: string[][],
   tableUnit: Unit | null,
+  flatDefault = false,
 ): ParsedTable | null {
   // A size that repeats (XL and 1XL) keeps its first column only, as the row layout does.
   // Two rows with one size would fail the (sku, size) key in the shared store.
@@ -305,7 +385,7 @@ function parseTransposedTable(
       if (!row) return;
       const parsed = parseCell(cells[index + 1] ?? '', rowUnit);
       if (!parsed) return;
-      if (kind === 'chest' && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
+      if (kind === 'chest' && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest, flatDefault);
       if (kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
       if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
@@ -329,6 +409,16 @@ function cellText($: cheerio.CheerioAPI, cell: unknown): string {
   return parts.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * A cell that carries its own metric value (data-cm="50.0") states the unit outright, whatever the
+ * cm/inch toggle shows. Otherwise the cell text is used.
+ */
+function cellValue($: cheerio.CheerioAPI, cell: unknown): string {
+  const metric = ($(cell as never).attr('data-cm') ?? '').trim();
+  if (/^\d+(?:\.\d+)?$/.test(metric)) return `${metric} cm`;
+  return cellText($, cell);
+}
+
 function tableGrid($: cheerio.CheerioAPI, table: unknown): string[][] {
   const grid: string[][] = [];
   $(table as never)
@@ -338,31 +428,215 @@ function tableGrid($: cheerio.CheerioAPI, table: unknown): string[][] {
       $(tr)
         .children('th, td')
         .each((_c, cell) => {
-          cells.push(cellText($, cell));
+          cells.push(cellValue($, cell));
         });
       if (cells.length > 0) grid.push(cells);
     });
   return grid;
 }
 
-function rowsFromTables(html: string): SizeChartRow[] {
-  const $ = cheerio.load(html);
-  let best: SizeChartRow[] = [];
-  $('table').each((_i, table) => {
-    const node = $(table);
-    const grid = tableGrid($, table);
+/**
+ * True when the text around a chart says the garment itself was measured lying flat ("we measure lying
+ * flat"). Then an unlabeled "Chest" is a flat width. Any hint that the numbers are body measurements
+ * or a circumference cancels it: the convention is not confirmed, so the chest stays null.
+ */
+export function saysMeasuredFlat(text: string): boolean {
+  const t = text.replace(/\s+/g, ' ');
+  const flat = /(?:measure[sd]?|measuring|measurements?)[^.]{0,40}\bflat\b|\b(?:laid|lying|lays|laying) flat\b[^.]{0,30}measure|\bflat (?:garment )?measure/i.test(t);
+  if (!flat) return false;
+  return !/body measurements?|circumference|measure around|around the fullest|your (?:body|chest|bust) measure/i.test(t);
+}
+
+/** The chart's surroundings: the highest ancestor (up to 4 levels) that is still a small block holding only this chart. */
+function surroundingBlock($: cheerio.CheerioAPI, node: unknown): ReturnType<cheerio.CheerioAPI> | null {
+  let best: ReturnType<cheerio.CheerioAPI> | null = null;
+  for (const parent of $(node as never).parents().toArray().slice(0, 4)) {
+    if ($(parent).text().replace(/\s+/g, ' ').length > 5000) break;
+    // A block that holds another chart too says nothing about this one.
+    if ($(parent).find('table').length > 1) break;
+    best = $(parent);
+  }
+  return best;
+}
+
+function surroundingText($: cheerio.CheerioAPI, node: unknown): string {
+  return surroundingBlock($, node)?.text() ?? '';
+}
+
+/**
+ * A sentence that states the unit of the chart: "All units are in inches", "Measurements are listed in cm".
+ * Two sentences that disagree, or a unit followed by "and" another unit, give null.
+ */
+function unitStated(text: string): Unit | null {
+  const found = new Set<Unit>();
+  const sentence = /\b(?:units?|measurements?|sizes?|dimensions?)\s+(?:are\s+)?(?:all\s+)?(?:listed\s+|given\s+|shown\s+|stated\s+)?in\s+(inches|inch|centimeters|centimetres|cm)\b(?!\s*(?:and|&|\/|or)\s*(?:inch|in\b|cm|centi))/gi;
+  for (const match of text.replace(/\s+/g, ' ').matchAll(sentence)) found.add(/^c/i.test(match[1]) ? 'cm' : 'in');
+  return found.size === 1 ? [...found][0] : null;
+}
+
+/**
+ * The unit a table's own markup names: id, class and data attributes of the table and its parent, such as
+ * id="size-chart-table--in" or class="chart chart--cm". Both units named, or neither, gives null.
+ */
+function unitFromAttrs($: cheerio.CheerioAPI, table: unknown): Unit | null {
+  const node = $(table as never);
+  const parts: string[] = [];
+  for (const el of [node, node.parent()]) {
+    const attrs = (el.get(0) as { attribs?: Record<string, string> } | undefined)?.attribs ?? {};
+    for (const [name, value] of Object.entries(attrs)) {
+      // A unit-specific name only: a bare class "in" (Bootstrap's "tab-pane fade in") or data-in-stock says nothing.
+      if (/^data-(?:unit|units|measure|measurement|system)$/.test(name)) parts.push(value);
+      else if (name === 'id' || name === 'class') {
+        for (const token of value.split(/\s+/)) if (/[-_]/.test(token)) parts.push(token);
+      }
+    }
+  }
+  const text = parts.join(' ').toLowerCase();
+  const inch = /(?:^|[^a-z])(?:in|inch|inches|imperial)$|(?:^|[^a-z])(?:in|inch|inches|imperial)(?=[^a-z])/.test(text) && !/\bin-(?:stock|active|view)\b/.test(text);
+  const cm = /(?:^|[^a-z])(?:cm|centimeters?|centimetres?|metric)(?:$|[^a-z])/.test(text);
+  if (inch === cm) return null;
+  return cm ? 'cm' : 'in';
+}
+
+/** A size with no measurement at all says nothing: its row is dropped (it would only add an empty row to the store). */
+function withMeasurements(rows: SizeChartRow[]): SizeChartRow[] {
+  return rows.filter((row) => row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null);
+}
+
+/** What the shop tells us about the product a chart is for: its name and the last part of its URL. */
+export interface ProductHint {
+  name?: string | null;
+  url?: string | null;
+}
+
+const MEN = /\b(men|mens|man|male)\b/;
+const WOMEN = /\b(women|womens|woman|ladies|female)\b/;
+const TOP_WORDS = /\b(tee|tees|t-shirt|tshirt|shirt|shirts|top|tops|tank|polo|hoodie|sweatshirt|sweater|jacket|coat|vest|blouse|henley|crew|pullover|cardigan|jersey|bodysuit)\b/;
+const BOTTOM_WORDS = /\b(pant|pants|jean|jeans|short|shorts|skirt|skirts|legging|leggings|trouser|trousers|chino|chinos|jogger|joggers|bottom|bottoms)\b/;
+/**
+ * A bottom garment named right before "length": "Average Skirt Length", "Pants length". Such a table says how long
+ * the garment runs. It is not a size chart, and the numbers in its first column are not sizes.
+ */
+const BOTTOM_LENGTH = /\b(?:skirts?|bottoms?|pants?|shorts|jeans?|leggings?|trousers?|chinos?|joggers?)\s+lengths?\b|\blengths?\s+(?:of|for)\s+(?:a\s+|the\s+)?(?:skirts?|bottoms?|pants?|shorts|jeans?|leggings?|trousers?|chinos?|joggers?)\b/;
+
+function words(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\bshort[- ]sleeves?\b/g, 'shortsleeve')
+    // Layout classes ("border-top", "sticky-bottom") are not a garment.
+    .replace(/\b(?:border|margin|padding|sticky|fixed|offset|scroll|float|align|text|vertical|table)[-_](?:top|bottom)\b/g, ' ')
+    .replace(/['’]s\b/g, 's')
+    .replace(/[^a-z0-9]+/g, ' ');
+}
+
+/** Gender and garment (top or bottom) a product name and URL give. Any of the four can be absent. */
+interface ProductTraits {
+  men: boolean;
+  women: boolean;
+  top: boolean;
+  bottom: boolean;
+}
+
+function productTraits(hint: ProductHint): ProductTraits {
+  const product = words(`${hint.name ?? ''} ${(hint.url ?? '').split('?')[0].split('/').pop() ?? ''}`.replace(/-/g, ' '));
+  return { men: MEN.test(product), women: WOMEN.test(product), top: TOP_WORDS.test(product), bottom: BOTTOM_WORDS.test(product) };
+}
+
+/**
+ * True when a chart's heading, caption, panel id or class names another gender or another kind of garment than
+ * the product: a men's chart for a women's top, a bottoms or skirt chart for a shirt, a shirt chart for jeans.
+ * A label that says nothing about either (no heading at all) contradicts nothing.
+ */
+function contradictsProduct(label: string, product: ProductTraits): boolean {
+  const text = words(label);
+  const labelMen = MEN.test(text);
+  const labelWomen = WOMEN.test(text);
+  if (product.men && !product.women && labelWomen && !labelMen) return true;
+  if (product.women && !product.men && labelMen && !labelWomen) return true;
+  if (product.top && !product.bottom && BOTTOM_WORDS.test(text) && !TOP_WORDS.test(text)) return true;
+  if (product.bottom && !product.top && TOP_WORDS.test(text) && !BOTTOM_WORDS.test(text)) return true;
+  return false;
+}
+
+/** How well a label that does not contradict the product matches it: one point for gender, one for garment. */
+function productMatchScore(label: string, product: ProductTraits): number {
+  const text = words(label);
+  let score = 0;
+  if ((product.men && MEN.test(text)) || (product.women && WOMEN.test(text))) score += 1;
+  if ((product.top && TOP_WORDS.test(text)) || (product.bottom && BOTTOM_WORDS.test(text))) score += 1;
+  return score;
+}
+
+/**
+ * A table that lists only a bottom garment's length ("Average Skirt Length") has no size column: its first column
+ * holds the lengths or waists themselves, and a number such as 17 there is not a size. Only letter sizes stay.
+ * A table with a chest value is a garment chart for a top, so it keeps its numeric sizes.
+ */
+function dropNumericSizesOfLengthTable(rows: SizeChartRow[], text: string): SizeChartRow[] {
+  if (!BOTTOM_LENGTH.test(words(text))) return rows;
+  if (rows.some((row) => row.chest_cm !== null)) return rows;
+  return rows.filter((row) => !/^\d+$/.test(row.size));
+}
+
+/** A chart found in a page, with the heading above it. */
+interface ChartCandidate {
+  rows: SizeChartRow[];
+  label: string;
+}
+
+function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
+  const out: ChartCandidate[] = [];
+  let heading = '';
+  $('h1, h2, h3, h4, h5, h6, caption, table').each((_i, el) => {
+    if (el.type !== 'tag') return;
+    const node = $(el);
+    if (el.name !== 'table') {
+      if (el.name !== 'caption') heading = node.text().replace(/\s+/g, ' ').trim();
+      return;
+    }
+    const grid = tableGrid($, el);
     if (grid.length < 2) return;
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
-    const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
-    const unit = unitInText(context) ?? unitFromToggle($, table);
+    // The element just before the table counts, unless it is a control: a "cm" tab or label says which unit
+    // can be chosen, not which one the table shows.
+    const previous = node.prev();
+    const before = previous.is('a, button, label, input, select, [role="tab"], [role="button"], [data-unit]')
+      ? ''
+      : previous.text().replace(/\s+/g, ' ').trim();
+    const context = [node.find('caption').text(), node.attr('class') ?? '', before, grid[headerAt].join(' ')].join(' ');
+    // The unit comes from the chart's own words, its markup, its toggle, or the heading above it. Never from
+    // the loose words around it: a toggle's "in" and "cm" labels would read as a unit they do not select.
+    const around = surroundingText($, el);
+    const unit =
+      unitInText(context) ?? unitFromToggle($, el) ?? unitFromAttrs($, el) ?? unitInText(heading) ?? unitStated(around);
+    const flat = saysMeasuredFlat(around);
     const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit),
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
+      parseTransposedTable(grid[0], grid.slice(1), unit, flat),
     );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+    if (!parsed) return;
+    const panel = node.closest('[id], [aria-labelledby]');
+    const label = [heading, node.find('caption').text(), panel.attr('id') ?? '', node.attr('class') ?? '']
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const rows = withMeasurements(dropNumericSizesOfLengthTable(parsed.rows, `${label} ${grid[headerAt].join(' ')}`));
+    if (rows.length > 0) out.push({ rows, label });
   });
-  return best.length > 0 ? best : rowsFromDivCharts($);
+  return out;
+}
+
+function rowsFromTables(html: string, hint?: ProductHint): SizeChartRow[] {
+  const $ = cheerio.load(html);
+  const product = hint ? productTraits(hint) : null;
+  let best: SizeChartRow[] = [];
+  for (const candidate of tableCandidates($)) {
+    // The longest table wins, so a men's shirt table must be ruled out before it can beat a jeans table.
+    if (product && contradictsProduct(candidate.label, product)) continue;
+    if (candidate.rows.length > best.length) best = candidate.rows;
+  }
+  return best.length > 0 ? best : rowsFromDivCharts($, product);
 }
 
 function filledMeasurements(rows: SizeChartRow[] | undefined): number {
@@ -391,10 +665,11 @@ function cellTexts($: cheerio.CheerioAPI, node: unknown): string[] {
 }
 
 /** Div and list charts, used when the brand did not mark the chart up as a table. */
-function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
+function rowsFromDivCharts($: cheerio.CheerioAPI, product: ProductTraits | null = null): SizeChartRow[] {
   let best: SizeChartRow[] = [];
   $('[class*="size-chart"], [class*="sizechart"], [class*="size-guide"], [class*="sizeguide"], [id*="size-chart"], [id*="size-guide"]').each((_i, box) => {
     if ($(box).is('table') || $(box).find('table').length > 0) return;
+    if (product && contradictsProduct(`${$(box).attr('id') ?? ''} ${$(box).attr('class') ?? ''}`, product)) return;
     const grid: string[][] = [];
     $(box)
       .find('li, [class*="row"]')
@@ -407,26 +682,84 @@ function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
     const unit = unitInText(context) ?? unitFromToggle($, box);
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
+    const flat = saysMeasuredFlat(surroundingText($, box));
     const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit),
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
+      parseTransposedTable(grid[0], grid.slice(1), unit, flat),
     );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+    if (!parsed) return;
+    const rows = withMeasurements(dropNumericSizesOfLengthTable(parsed.rows, `${context} ${grid[headerAt].join(' ')}`));
+    if (rows.length > best.length) best = rows;
   });
   return best;
 }
 
-/** Reads a size chart from product HTML. Returns [] when the page has no chart, or no stated unit. */
-export function parseSizeChart(html: string): SizeChartRow[] {
-  const rows = rowsFromTables(html);
+/**
+ * Reads a size chart from product HTML. Returns [] when the page has no chart, or no stated unit.
+ * With a product hint, a table whose heading, caption or panel id names another gender or another kind of
+ * garment (a men's shirt table for jeans, a skirt table for a tee) is skipped. A table with no heading is kept.
+ */
+export function parseSizeChart(html: string, hint?: ProductHint): SizeChartRow[] {
+  const rows = rowsFromTables(html, hint);
   return rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 /** The chart from the first page that has one. Later pages are fallbacks, e.g. a snapshot from before navigation. */
 export function parseSizeChartFirst(...pages: (string | null | undefined)[]): SizeChartRow[] {
+  return parseSizeChartFirstFor(pages);
+}
+
+/** parseSizeChartFirst for a known product: each page is read with parseSizeChart's product hint. */
+export function parseSizeChartFirstFor(pages: (string | null | undefined)[], hint?: ProductHint): SizeChartRow[] {
   for (const html of pages) {
     if (!html) continue;
-    const rows = parseSizeChart(html);
+    const rows = parseSizeChart(html, hint);
+    if (rows.length > 0) return rows;
+  }
+  return [];
+}
+
+/** The same chart, allowing for an inch table and a cm table that round differently (under 1 cm apart). */
+function sameChart(a: SizeChartRow[], b: SizeChartRow[]): boolean {
+  if (a.length !== b.length) return false;
+  const close = (x: number | null, y: number | null) => (x === null || y === null ? x === y : Math.abs(x - y) < 1);
+  return a.every((row, i) => row.size === b[i].size && close(row.chest_cm, b[i].chest_cm) && close(row.length_cm, b[i].length_cm) && close(row.sleeve_cm, b[i].sleeve_cm));
+}
+
+/**
+ * A size guide on a page of its own usually holds the store's tables for every product: men's and
+ * women's, tops and bottoms. Take a table only when it has chest values and its heading does not
+ * contradict the product (men's chart for a women's top, a bottoms chart for a shirt). If several
+ * tables are left and they differ, the page does not say which one is this product's: no chart.
+ */
+export function parseGuidePageChart(html: string, hint: ProductHint): SizeChartRow[] {
+  const $ = cheerio.load(html);
+  const product = productTraits(hint);
+  const fits = tableCandidates($)
+    // A chest value anchors the table as a garment chart for a top. Without one (a body chart of ranges, or a
+    // table of sleeve lengths only) nothing on a store-wide page says the table belongs to this product.
+    .filter((c) => c.rows.some((row) => row.chest_cm !== null))
+    .filter((c) => !contradictsProduct(c.label, product))
+    // A heading that names the product's own gender or garment is a stronger match than a silent one.
+    .map((c) => ({ rows: c.rows, score: productMatchScore(c.label, product) }));
+  if (fits.length === 0) return [];
+  const top = Math.max(...fits.map((c) => c.score));
+  const best = fits.filter((c) => c.score === top);
+  if (best.some((c) => !sameChart(c.rows, best[0].rows))) return [];
+  return best[0].rows.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** The chart from the product pages, else from the size-guide pages the product page linked to. */
+export function parseSizeChartWithGuides(
+  pages: (string | null | undefined)[],
+  guidePages: (string | null | undefined)[],
+  hint: ProductHint,
+): SizeChartRow[] {
+  const own = parseSizeChartFirstFor(pages, hint);
+  if (own.length > 0) return own;
+  for (const html of guidePages) {
+    if (!html) continue;
+    const rows = parseGuidePageChart(html, hint);
     if (rows.length > 0) return rows;
   }
   return [];

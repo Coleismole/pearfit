@@ -12,7 +12,10 @@ import { SEED_CATALOG } from './seedCatalog';
 import {
   GarmentSize,
   ProductFitReport,
+  formatReviewStars,
+  formatSentiment,
   generateSqlInsertDump,
+  meanOrNull,
 } from './fitAnalyzer';
 import { ScraperWorkbenchBar } from './ScraperWorkbenchBar';
 import { SizeSentimentMatrix } from './SizeSentimentMatrix';
@@ -548,7 +551,9 @@ export default function App() {
                     Sentiment Index
                   </div>
                   <div className="text-xl font-bold text-slate-900 mt-0.5">
-                    {activeReport.overallSentimentScore}/100
+                    {formatSentiment(
+                      meanOrNull(activeReport.overallSentimentScore, activeReport.ratedReviewCount),
+                    )}
                   </div>
                 </div>
                 <div>
@@ -556,7 +561,9 @@ export default function App() {
                     Mean Star Rating
                   </div>
                   <div className="text-xl font-bold text-slate-900 mt-0.5">
-                    {activeReport.overallAvgRating}★
+                    {formatReviewStars(
+                      meanOrNull(activeReport.overallAvgRating, activeReport.ratedReviewCount),
+                    )}
                   </div>
                 </div>
               </div>

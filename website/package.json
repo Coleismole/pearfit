@@ -4,6 +4,10 @@
   "engines": {
     "node": "22.x"
   },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "audit": "node scripts/audit-site.mjs"
+  },
   "dependencies": {
     "@sparticuz/chromium-min": "153.0.0",
     "@vercel/speed-insights": "^2.1.0",

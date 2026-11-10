@@ -9,6 +9,10 @@ import {
   longestFreeText,
   productIdFromUrl,
   blockPageTitle,
+  describeFetchFailure,
+  isBotCheckRedirect,
+  ratingFromStarFills,
+  isRefusalStatus,
   blockPageText,
   decodeHtmlEntities,
   ratingFromLabel,
@@ -115,4 +119,33 @@ test('decodeHtmlEntities decodes escaped names and leaves plain text alone', () 
   assert.equal(decodeHtmlEntities('Sombra &quot;Sun&quot; Shirt &#x27;24'), `Sombra "Sun" Shirt '24`);
   assert.equal(decodeHtmlEntities('Tee &unknown; 100%'), 'Tee &unknown; 100%');
   assert.equal(decodeHtmlEntities("Men's Tee & Co"), "Men's Tee & Co");
+});
+
+test('bot-protection redirects and refusal statuses are told apart from ordinary redirects and errors', () => {
+  assert.equal(isBotCheckRedirect('/px?url=aHR0cHM6Ly9leGFtcGxl&frame=1'), true);
+  assert.equal(isBotCheckRedirect('https://shop.example/on/demandware.store/Sites-X-Site/default/PX-Show?url=abc'), true);
+  assert.equal(isBotCheckRedirect('/products/px-tee'), false);
+  assert.equal(isBotCheckRedirect('https://shop.example/us/p/tee'), false);
+  for (const status of [403, 406, 418, 429, 503]) assert.equal(isRefusalStatus(status), true);
+  for (const status of [404, 433, 500]) assert.equal(isRefusalStatus(status), false);
+});
+
+test('ratingFromStarFills reads fill images and overlay widths, and nothing else', () => {
+  const $ = cheerio.load(
+    `<div id="a">${[1, 1, 1, 0, 0].map((f) => `<span class="pdp-review__star"><img class="pdp-review__star-empty">${f ? '<img class="pdp-review__star-fill">' : ''}</span>`).join('')}</div>` +
+      `<div id="b">${[100, 100, 100, 100, 0].map((w) => `<span class="relative"><span class="absolute overflow-hidden" style="width: ${w}%;"><svg></svg></span></span>`).join('')}</div>` +
+      `<div id="c"><span class="x">no stars here</span></div>`,
+  );
+  assert.equal(ratingFromStarFills($, $('#a')), '3');
+  assert.equal(ratingFromStarFills($, $('#b')), '4');
+  assert.equal(ratingFromStarFills($, $('#c')), '');
+});
+
+test('a thrown fetch is reported with its cause and may be retried in a browser', () => {
+  const error = new TypeError('fetch failed', { cause: Object.assign(new Error('Headers Overflow Error'), { code: 'UND_ERR_HEADERS_OVERFLOW' }) });
+  const failure = describeFetchFailure('https://shop.example/p/1', error);
+  assert.equal(failure.status, 502);
+  assert.equal(failure.blocked, false);
+  assert.equal(failure.retryInBrowser, true);
+  assert.match(failure.message, /fetch failed \(UND_ERR_HEADERS_OVERFLOW\)/);
 });

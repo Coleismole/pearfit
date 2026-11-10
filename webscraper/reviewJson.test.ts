@@ -646,3 +646,54 @@ test('collectJsonReviews keeps the page\'s only review request when its product 
   const other = { url: 'https://api-cdn.yotpo.com/v1/widget/key/products/6042034798786/reviews.json?page=1', value: { response: { reviews: [{ ...review(9), product_id: 111 }] } } };
   assert.equal(collectJsonReviews([{ url, value: list }, other], { ...product, knownIds: new Set(['6264568643778', '6042034798786']) }).reviews.length, 0);
 });
+
+test('Judge.me: reviews with HTML text and no title are read (body_html)', () => {
+  const body = {
+    number_of_reviews: 3,
+    pagination: { total_pages: 1, current_page: 1, per_page: 3 },
+    reviews: [
+      { uuid: 'a1', title: '', rating: 5, body_html: '<p>Perfect</p>', reviewer_name: 'g.E.', created_at: '2025-12-30T18:49:40.000Z' },
+      { uuid: 'a2', title: 'Nice fit', rating: 4, body_html: '<p>Well made, a little long.</p>', reviewer_name: 'Dale E.', created_at: '2025-12-28T18:19:02.987Z' },
+      { uuid: 'a3', title: '', rating: 5, body_html: '<p>He loves it</p>', reviewer_name: 'Morgan', created_at: '2025-10-15T15:25:51.000Z' },
+    ],
+  };
+  const out = extractReviewsFromJson(body);
+  assert.deepEqual(out.reviews.map((r) => [r.id, r.rating, r.body]), [
+    ['a1', 5, 'Perfect'],
+    ['a2', 4, 'Well made, a little long.'],
+    ['a3', 5, 'He loves it'],
+  ]);
+});
+
+test('Halara: reviewContent, star, userName and Size/Color attributes', () => {
+  const body = {
+    code: 0,
+    data: {
+      ratingSummary: { total: 5576, averageStar: 4.7 },
+      defaultReviews: {
+        items: [
+          {
+            reviewId: '2832508',
+            reviewContent: 'Fits true to your regular size and the colors are so cute.',
+            translationContent: 'It fits true to your regular size and the colors are so cute.',
+            star: 4,
+            createdAt: '2026-11-08 23:01:43',
+            productAttributes: [{ key: 'Color', value: 'Black' }, { key: 'Size', value: 'L' }],
+            userName: '1***',
+          },
+        ],
+        page: 1,
+        pageSize: 3,
+        total: 5576,
+        hasMore: true,
+      },
+    },
+  };
+  const out = extractReviewsFromJson(body);
+  assert.equal(out.reviews.length, 1);
+  assert.equal(out.reviews[0].rating, 4);
+  assert.equal(out.reviews[0].body, 'Fits true to your regular size and the colors are so cute.');
+  assert.equal(out.reviews[0].sizePurchased, 'L');
+  assert.equal(out.reviews[0].author, '1***');
+  assert.equal(out.reportedTotal, 5576);
+});

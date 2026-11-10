@@ -503,6 +503,81 @@ function withMeasurements(rows: SizeChartRow[]): SizeChartRow[] {
   return rows.filter((row) => row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null);
 }
 
+/** What the shop tells us about the product a chart is for: its name and the last part of its URL. */
+export interface ProductHint {
+  name?: string | null;
+  url?: string | null;
+}
+
+const MEN = /\b(men|mens|man|male)\b/;
+const WOMEN = /\b(women|womens|woman|ladies|female)\b/;
+const TOP_WORDS = /\b(tee|tees|t-shirt|tshirt|shirt|shirts|top|tops|tank|polo|hoodie|sweatshirt|sweater|jacket|coat|vest|blouse|henley|crew|pullover|cardigan|jersey|bodysuit)\b/;
+const BOTTOM_WORDS = /\b(pant|pants|jean|jeans|short|shorts|skirt|skirts|legging|leggings|trouser|trousers|chino|chinos|jogger|joggers|bottom|bottoms)\b/;
+/**
+ * A bottom garment named right before "length": "Average Skirt Length", "Pants length". Such a table says how long
+ * the garment runs. It is not a size chart, and the numbers in its first column are not sizes.
+ */
+const BOTTOM_LENGTH = /\b(?:skirts?|bottoms?|pants?|shorts|jeans?|leggings?|trousers?|chinos?|joggers?)\s+lengths?\b|\blengths?\s+(?:of|for)\s+(?:a\s+|the\s+)?(?:skirts?|bottoms?|pants?|shorts|jeans?|leggings?|trousers?|chinos?|joggers?)\b/;
+
+function words(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\bshort[- ]sleeves?\b/g, 'shortsleeve')
+    // Layout classes ("border-top", "sticky-bottom") are not a garment.
+    .replace(/\b(?:border|margin|padding|sticky|fixed|offset|scroll|float|align|text|vertical|table)[-_](?:top|bottom)\b/g, ' ')
+    .replace(/['’]s\b/g, 's')
+    .replace(/[^a-z0-9]+/g, ' ');
+}
+
+/** Gender and garment (top or bottom) a product name and URL give. Any of the four can be absent. */
+interface ProductTraits {
+  men: boolean;
+  women: boolean;
+  top: boolean;
+  bottom: boolean;
+}
+
+function productTraits(hint: ProductHint): ProductTraits {
+  const product = words(`${hint.name ?? ''} ${(hint.url ?? '').split('?')[0].split('/').pop() ?? ''}`.replace(/-/g, ' '));
+  return { men: MEN.test(product), women: WOMEN.test(product), top: TOP_WORDS.test(product), bottom: BOTTOM_WORDS.test(product) };
+}
+
+/**
+ * True when a chart's heading, caption, panel id or class names another gender or another kind of garment than
+ * the product: a men's chart for a women's top, a bottoms or skirt chart for a shirt, a shirt chart for jeans.
+ * A label that says nothing about either (no heading at all) contradicts nothing.
+ */
+function contradictsProduct(label: string, product: ProductTraits): boolean {
+  const text = words(label);
+  const labelMen = MEN.test(text);
+  const labelWomen = WOMEN.test(text);
+  if (product.men && !product.women && labelWomen && !labelMen) return true;
+  if (product.women && !product.men && labelMen && !labelWomen) return true;
+  if (product.top && !product.bottom && BOTTOM_WORDS.test(text) && !TOP_WORDS.test(text)) return true;
+  if (product.bottom && !product.top && TOP_WORDS.test(text) && !BOTTOM_WORDS.test(text)) return true;
+  return false;
+}
+
+/** How well a label that does not contradict the product matches it: one point for gender, one for garment. */
+function productMatchScore(label: string, product: ProductTraits): number {
+  const text = words(label);
+  let score = 0;
+  if ((product.men && MEN.test(text)) || (product.women && WOMEN.test(text))) score += 1;
+  if ((product.top && TOP_WORDS.test(text)) || (product.bottom && BOTTOM_WORDS.test(text))) score += 1;
+  return score;
+}
+
+/**
+ * A table that lists only a bottom garment's length ("Average Skirt Length") has no size column: its first column
+ * holds the lengths or waists themselves, and a number such as 17 there is not a size. Only letter sizes stay.
+ * A table with a chest value is a garment chart for a top, so it keeps its numeric sizes.
+ */
+function dropNumericSizesOfLengthTable(rows: SizeChartRow[], text: string): SizeChartRow[] {
+  if (!BOTTOM_LENGTH.test(words(text))) return rows;
+  if (rows.some((row) => row.chest_cm !== null)) return rows;
+  return rows.filter((row) => !/^\d+$/.test(row.size));
+}
+
 /** A chart found in a page, with the heading above it. */
 interface ChartCandidate {
   rows: SizeChartRow[];
@@ -546,18 +621,22 @@ function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
-    out.push({ rows: withMeasurements(parsed.rows), label });
+    const rows = withMeasurements(dropNumericSizesOfLengthTable(parsed.rows, `${label} ${grid[headerAt].join(' ')}`));
+    if (rows.length > 0) out.push({ rows, label });
   });
   return out;
 }
 
-function rowsFromTables(html: string): SizeChartRow[] {
+function rowsFromTables(html: string, hint?: ProductHint): SizeChartRow[] {
   const $ = cheerio.load(html);
+  const product = hint ? productTraits(hint) : null;
   let best: SizeChartRow[] = [];
   for (const candidate of tableCandidates($)) {
+    // The longest table wins, so a men's shirt table must be ruled out before it can beat a jeans table.
+    if (product && contradictsProduct(candidate.label, product)) continue;
     if (candidate.rows.length > best.length) best = candidate.rows;
   }
-  return best.length > 0 ? best : rowsFromDivCharts($);
+  return best.length > 0 ? best : rowsFromDivCharts($, product);
 }
 
 function filledMeasurements(rows: SizeChartRow[] | undefined): number {
@@ -586,10 +665,11 @@ function cellTexts($: cheerio.CheerioAPI, node: unknown): string[] {
 }
 
 /** Div and list charts, used when the brand did not mark the chart up as a table. */
-function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
+function rowsFromDivCharts($: cheerio.CheerioAPI, product: ProductTraits | null = null): SizeChartRow[] {
   let best: SizeChartRow[] = [];
   $('[class*="size-chart"], [class*="sizechart"], [class*="size-guide"], [class*="sizeguide"], [id*="size-chart"], [id*="size-guide"]').each((_i, box) => {
     if ($(box).is('table') || $(box).find('table').length > 0) return;
+    if (product && contradictsProduct(`${$(box).attr('id') ?? ''} ${$(box).attr('class') ?? ''}`, product)) return;
     const grid: string[][] = [];
     $(box)
       .find('li, [class*="row"]')
@@ -607,43 +687,36 @@ function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
       parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
       parseTransposedTable(grid[0], grid.slice(1), unit, flat),
     );
-    if (parsed && parsed.rows.length > best.length) best = withMeasurements(parsed.rows);
+    if (!parsed) return;
+    const rows = withMeasurements(dropNumericSizesOfLengthTable(parsed.rows, `${context} ${grid[headerAt].join(' ')}`));
+    if (rows.length > best.length) best = rows;
   });
   return best;
 }
 
-/** Reads a size chart from product HTML. Returns [] when the page has no chart, or no stated unit. */
-export function parseSizeChart(html: string): SizeChartRow[] {
-  const rows = rowsFromTables(html);
+/**
+ * Reads a size chart from product HTML. Returns [] when the page has no chart, or no stated unit.
+ * With a product hint, a table whose heading, caption or panel id names another gender or another kind of
+ * garment (a men's shirt table for jeans, a skirt table for a tee) is skipped. A table with no heading is kept.
+ */
+export function parseSizeChart(html: string, hint?: ProductHint): SizeChartRow[] {
+  const rows = rowsFromTables(html, hint);
   return rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 /** The chart from the first page that has one. Later pages are fallbacks, e.g. a snapshot from before navigation. */
 export function parseSizeChartFirst(...pages: (string | null | undefined)[]): SizeChartRow[] {
+  return parseSizeChartFirstFor(pages);
+}
+
+/** parseSizeChartFirst for a known product: each page is read with parseSizeChart's product hint. */
+export function parseSizeChartFirstFor(pages: (string | null | undefined)[], hint?: ProductHint): SizeChartRow[] {
   for (const html of pages) {
     if (!html) continue;
-    const rows = parseSizeChart(html);
+    const rows = parseSizeChart(html, hint);
     if (rows.length > 0) return rows;
   }
   return [];
-}
-
-export interface ProductHint {
-  name?: string | null;
-  url?: string | null;
-}
-
-const MEN = /\b(men|mens|man|male)\b/;
-const WOMEN = /\b(women|womens|woman|ladies|female)\b/;
-const TOP_WORDS = /\b(tee|tees|t-shirt|tshirt|shirt|shirts|top|tops|tank|polo|hoodie|sweatshirt|sweater|jacket|coat|vest|blouse|henley|crew|pullover|cardigan|jersey|bodysuit)\b/;
-const BOTTOM_WORDS = /\b(pant|pants|jean|jeans|short|shorts|skirt|skirts|legging|leggings|trouser|trousers|chino|chinos|jogger|joggers|bottom|bottoms)\b/;
-
-function words(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\bshort[- ]sleeves?\b/g, 'shortsleeve')
-    .replace(/['’]s\b/g, 's')
-    .replace(/[^a-z0-9]+/g, ' ');
 }
 
 /** The same chart, allowing for an inch table and a cm table that round differently (under 1 cm apart). */
@@ -661,30 +734,14 @@ function sameChart(a: SizeChartRow[], b: SizeChartRow[]): boolean {
  */
 export function parseGuidePageChart(html: string, hint: ProductHint): SizeChartRow[] {
   const $ = cheerio.load(html);
-  const product = words(`${hint.name ?? ''} ${(hint.url ?? '').split('?')[0].split('/').pop() ?? ''}`.replace(/-/g, ' '));
-  const productMen = MEN.test(product);
-  const productWomen = WOMEN.test(product);
-  const productTop = TOP_WORDS.test(product);
-  const productBottom = BOTTOM_WORDS.test(product);
+  const product = productTraits(hint);
   const fits = tableCandidates($)
     // A chest value anchors the table as a garment chart for a top. Without one (a body chart of ranges, or a
     // table of sleeve lengths only) nothing on a store-wide page says the table belongs to this product.
     .filter((c) => c.rows.some((row) => row.chest_cm !== null))
-    .map((c) => {
-      const label = words(c.label);
-      const labelMen = MEN.test(label);
-      const labelWomen = WOMEN.test(label);
-      if (productMen && !productWomen && labelWomen && !labelMen) return null;
-      if (productWomen && !productMen && labelMen && !labelWomen) return null;
-      if (productTop && !productBottom && BOTTOM_WORDS.test(label) && !TOP_WORDS.test(label)) return null;
-      if (productBottom && !productTop && TOP_WORDS.test(label) && !BOTTOM_WORDS.test(label)) return null;
-      // A heading that names the product's own gender or garment is a stronger match than a silent one.
-      let score = 0;
-      if ((productMen && labelMen) || (productWomen && labelWomen)) score += 1;
-      if ((productTop && TOP_WORDS.test(label)) || (productBottom && BOTTOM_WORDS.test(label))) score += 1;
-      return { rows: c.rows, score };
-    })
-    .filter((c): c is { rows: SizeChartRow[]; score: number } => c !== null);
+    .filter((c) => !contradictsProduct(c.label, product))
+    // A heading that names the product's own gender or garment is a stronger match than a silent one.
+    .map((c) => ({ rows: c.rows, score: productMatchScore(c.label, product) }));
   if (fits.length === 0) return [];
   const top = Math.max(...fits.map((c) => c.score));
   const best = fits.filter((c) => c.score === top);
@@ -698,7 +755,7 @@ export function parseSizeChartWithGuides(
   guidePages: (string | null | undefined)[],
   hint: ProductHint,
 ): SizeChartRow[] {
-  const own = parseSizeChartFirst(...pages);
+  const own = parseSizeChartFirstFor(pages, hint);
   if (own.length > 0) return own;
   for (const html of guidePages) {
     if (!html) continue;

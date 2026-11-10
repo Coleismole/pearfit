@@ -39,7 +39,8 @@ export interface RawScrapedReview {
   author: string;
   sizePurchased: string;
   usualSize?: string;
-  rating: number; // 1 to 5
+  /** 1 to 5. Null when the page showed no readable star rating. Never a stand-in such as 3. */
+  rating: number | null;
   title: string;
   body: string;
   date: string;
@@ -53,8 +54,9 @@ export interface AnalyzedReview extends RawScrapedReview {
   normalizedSize: GarmentSize | null; // null = reviewer's size unknown; excluded from per-size stats
   fitDirection: FitDirection;
   fitSkew: number; // -1.0 (very small) to +1.0 (very large)
-  sentimentScore: number; // 0 to 100
-  sentimentPolarity: 'positive' | 'mixed' | 'negative';
+  /** 0 to 100, built from the star rating plus the review's wording. Null when the review has no rating. */
+  sentimentScore: number | null;
+  sentimentPolarity: 'positive' | 'mixed' | 'negative' | null;
   extractedPhrases: string[];
   anatomicalMentions: AnatomicalMention[];
   sizedUpOrDownMention: 'sized_up' | 'sized_down' | 'kept_usual' | null;
@@ -84,8 +86,12 @@ export interface SizeSentimentSummary {
   runsLargePct: number;
   fitSkew: number; // -1.00 to +1.00
   verdict: FitVerdictLabel;
+  /** Mean of the star ratings that exist. 0 when ratedReviewCount is 0 (stars run 1 to 5, so 0 means none). */
   avgRating: number;
-  sentimentScore: number; // 0 to 100
+  /** Reviews of this size that carry a star rating. Only these feed avgRating and sentimentScore. */
+  ratedReviewCount: number;
+  /** 0 to 100, mean over rated reviews. 0 when ratedReviewCount is 0 (real scores are 5 or more). */
+  sentimentScore: number;
   returnRisk: 'Low' | 'Moderate' | 'High';
   primaryFitNote: string;
   trendSummary: string;
@@ -156,8 +162,12 @@ export interface ProductFitReport {
     trueToSizeCount: number;
     runsLargeCount: number;
   };
+  /** Mean sentiment over rated reviews. 0 when ratedReviewCount is 0. */
   overallSentimentScore: number;
+  /** Mean of the star ratings that exist. 0 when ratedReviewCount is 0. */
   overallAvgRating: number;
+  /** Reviews that carry a star rating. A review whose stars could not be read is left out of both means. */
+  ratedReviewCount: number;
   merchandisingTakeaway: string;
   sizingGradingAlert: string;
   tshirtSignals: GarmentFabricAndWashSignals;
@@ -247,6 +257,39 @@ export function normalizeSize(rawSize: string): GarmentSize {
   return normalizeSizeOrNull(rawSize) ?? 'M';
 }
 
+/**
+ * Reads a star rating from whatever a scraper handed over: a number, a numeric string, "", null.
+ * Returns a whole number 1 to 5, or null when there is no readable rating. Unreadable is never 3.
+ * 0 and below are null: a widget that renders "0" has no rating to show.
+ */
+export function normalizeReviewRating(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : NaN;
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.min(5, Math.max(1, Math.round(n)));
+}
+
+/** What a table shows where a rating or a score is unknown. */
+export const NO_RATING_DASH = '—';
+
+/** "4.0★" for a rating, a dash for a review without one. Also a dash for a legacy row with no field. */
+export function formatReviewStars(rating: number | null | undefined): string {
+  return typeof rating === 'number' ? `${rating.toFixed(1)}★` : NO_RATING_DASH;
+}
+
+/** "73/100", or a dash when the review has no rating to build a score from. */
+export function formatSentiment(score: number | null | undefined): string {
+  return typeof score === 'number' ? `${score}/100` : NO_RATING_DASH;
+}
+
+/**
+ * A mean rating or sentiment from a report or a size summary, or null when no review under it carries stars.
+ * Reports and summaries store 0 there; ratedReviewCount tells "no ratings" from a real value. An older stored
+ * report has no ratedReviewCount, and its numbers are shown as they are.
+ */
+export function meanOrNull(value: number, ratedReviewCount: number | undefined): number | null {
+  return ratedReviewCount === 0 ? null : value;
+}
+
 interface CueRule {
   pattern: RegExp;
   label: string;
@@ -315,13 +358,13 @@ const ZONE_PATTERNS: Record<AnatomicalZone, RegExp> = {
  */
 export function classifyReviewFitAndSentiment(
   text: string,
-  rating = 4,
+  rating: number | null = null,
   declaredFitTag?: string
 ): {
   fitDirection: FitDirection;
   fitSkew: number;
-  sentimentScore: number;
-  sentimentPolarity: 'positive' | 'mixed' | 'negative';
+  sentimentScore: number | null;
+  sentimentPolarity: 'positive' | 'mixed' | 'negative' | null;
   extractedPhrases: string[];
   anatomicalMentions: AnatomicalMention[];
   sizedUpOrDownMention: 'sized_up' | 'sized_down' | 'kept_usual' | null;
@@ -485,16 +528,18 @@ export function classifyReviewFitAndSentiment(
     sizedUpOrDownMention = 'kept_usual';
   }
 
-  const clampedRating = Math.max(1, Math.min(5, rating || 4));
-  const ratingBase = ((clampedRating - 1) / 4) * 76 + 12;
-  const posMatches = (fullText.match(POSITIVE_SENTIMENT_WORDS) || []).length;
-  const negMatches = (fullText.match(NEGATIVE_SENTIMENT_WORDS) || []).length;
-  const sentimentScore = Math.round(
-    Math.max(5, Math.min(99, ratingBase + posMatches * 5 - negMatches * 9))
-  );
-
-  const sentimentPolarity: 'positive' | 'mixed' | 'negative' =
-    sentimentScore >= 68 ? 'positive' : sentimentScore >= 45 ? 'mixed' : 'negative';
+  // The score starts from the stars. A review with no readable rating has no starting point, and 3 would be
+  // an invented one, so it gets no score. Its fit direction above does not depend on stars and still counts.
+  const stars = normalizeReviewRating(rating);
+  let sentimentScore: number | null = null;
+  let sentimentPolarity: 'positive' | 'mixed' | 'negative' | null = null;
+  if (stars !== null) {
+    const ratingBase = ((stars - 1) / 4) * 76 + 12;
+    const posMatches = (fullText.match(POSITIVE_SENTIMENT_WORDS) || []).length;
+    const negMatches = (fullText.match(NEGATIVE_SENTIMENT_WORDS) || []).length;
+    sentimentScore = Math.round(Math.max(5, Math.min(99, ratingBase + posMatches * 5 - negMatches * 9)));
+    sentimentPolarity = sentimentScore >= 68 ? 'positive' : sentimentScore >= 45 ? 'mixed' : 'negative';
+  }
 
   return {
     fitDirection,
@@ -580,7 +625,7 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
         id: `scraped-html-${index}`,
         author: author.trim(),
         sizePurchased: attrSize.trim(),
-        rating: Math.min(5, Math.max(1, Math.round(parseFloat(attrRating) || 3))),
+        rating: normalizeReviewRating(attrRating),
         title: title.trim(),
         body: bodyText,
         date: '',
@@ -618,14 +663,10 @@ export function parseRawReviewBatch(rawInput: string): RawScrapedReview[] {
       block.match(/\b(\d)\s*\/\s*5\s*stars?\b/i) ||
       block.match(/★{1,5}/);
 
-    // 3 is the neutral midpoint when the paste does not state a rating.
-    let rating = 3;
+    // A paste that states no rating has none: null, not a neutral 3.
+    let rating: number | null = null;
     if (ratingMatch) {
-      if (ratingMatch[0].includes('★')) {
-        rating = ratingMatch[0].length;
-      } else if (ratingMatch[1]) {
-        rating = Math.min(5, Math.max(1, Math.round(parseFloat(ratingMatch[1]))));
-      }
+      rating = normalizeReviewRating(ratingMatch[0].includes('★') ? ratingMatch[0].length : ratingMatch[1]);
     }
 
     const cleanBody = block
@@ -670,6 +711,28 @@ export function roundedShares(left: number, middle: number, right: number): [num
 }
 
 /**
+ * Mean star rating (1 decimal) and mean sentiment (whole number) over the reviews that carry a rating.
+ * Both are 0 when no review does, which ratedCount shows; real values are never below 1 and 5.
+ */
+function starStats(reviews: AnalyzedReview[]): { ratedCount: number; avgRating: number; sentiment: number } {
+  let ratedCount = 0;
+  let starSum = 0;
+  let sentimentSum = 0;
+  for (const r of reviews) {
+    if (r.rating === null || r.sentimentScore === null) continue;
+    ratedCount += 1;
+    starSum += r.rating;
+    sentimentSum += r.sentimentScore;
+  }
+  if (ratedCount === 0) return { ratedCount, avgRating: 0, sentiment: 0 };
+  return {
+    ratedCount,
+    avgRating: Number((starSum / ratedCount).toFixed(1)),
+    sentiment: Math.round(sentimentSum / ratedCount),
+  };
+}
+
+/**
  * Synthesizes a complete ProductFitReport across all sizes XS-XXL from raw scraped reviews.
  */
 export function aggregateProductFitReport(
@@ -688,9 +751,12 @@ export function aggregateProductFitReport(
 ): ProductFitReport {
   const analyzedReviews: AnalyzedReview[] = rawReviews.map((r) => {
     const normalizedSize = normalizeSizeOrNull(r.sizePurchased);
-    const classification = classifyReviewFitAndSentiment(r.body, r.rating, r.declaredFitTag);
+    // A scraper may hand over "", undefined or NaN for stars it could not read. Those are no rating.
+    const rating = normalizeReviewRating(r.rating);
+    const classification = classifyReviewFitAndSentiment(r.body, rating, r.declaredFitTag);
     return {
       ...r,
+      rating,
       normalizedSize,
       ...classification,
     };
@@ -714,16 +780,11 @@ export function aggregateProductFitReport(
       : 0;
 
   const overallVerdict = skewToVerdict(overallFitIndex, totalReviews);
-  const overallSentimentScore =
-    totalReviews > 0
-      ? Math.round(analyzedReviews.reduce((acc, r) => acc + r.sentimentScore, 0) / totalReviews)
-      : 0;
-  const overallAvgRating =
-    totalReviews > 0
-      ? Number(
-          (analyzedReviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1)
-        )
-      : 0;
+  // Star means divide by the reviews that have stars. A review with no rating is not a 3.
+  const overallStars = starStats(analyzedReviews);
+  const ratedReviewCount = overallStars.ratedCount;
+  const overallSentimentScore = overallStars.sentiment;
+  const overallAvgRating = overallStars.avgRating;
 
   // Compute T-Shirt & Garment Wash Shrinkage + Fabric Weight/Opacity Signals
   const shrinkageReviewCount = analyzedReviews.filter((r) => r.mentionsShrinkage).length;
@@ -776,6 +837,7 @@ export function aggregateProductFitReport(
         fitSkew: 0,
         verdict: 'Insufficient Data',
         avgRating: 0,
+        ratedReviewCount: 0,
         sentimentScore: 0,
         returnRisk: 'Low',
         primaryFitNote: 'No scraped reviews for this size yet',
@@ -799,12 +861,11 @@ export function aggregateProductFitReport(
       (group.reduce((acc, r) => acc + r.fitSkew, 0) / count).toFixed(2)
     );
     const verdict = skewToVerdict(fitSkew, count);
-    const avgRating = Number(
-      (group.reduce((acc, r) => acc + r.rating, 0) / count).toFixed(1)
-    );
-    const sentimentScore = Math.round(
-      group.reduce((acc, r) => acc + r.sentimentScore, 0) / count
-    );
+    const {
+      ratedCount: sizeRatedCount,
+      avgRating,
+      sentiment: sentimentScore,
+    } = starStats(group);
 
     const shrinkageMentionCount = group.filter((r) => r.mentionsShrinkage).length;
     const shrinkageMentionPct = Math.round((shrinkageMentionCount / count) * 100);
@@ -858,8 +919,14 @@ export function aggregateProductFitReport(
     }
     zoneStats.sort((a, b) => b.pct - a.pct);
 
+    // With no rated review there is no sentiment to weigh, so the clauses that read it are skipped:
+    // risk then comes from fit skew alone and never reaches High (High needs unhappy reviewers).
     const returnRisk: 'Low' | 'Moderate' | 'High' =
-      sentimentScore < 62 || (Math.abs(fitSkew) >= 0.55 && sentimentScore < 76)
+      sizeRatedCount === 0
+        ? Math.abs(fitSkew) >= 0.28
+          ? 'Moderate'
+          : 'Low'
+        : sentimentScore < 62 || (Math.abs(fitSkew) >= 0.55 && sentimentScore < 76)
         ? 'High'
         : Math.abs(fitSkew) >= 0.28 || sentimentScore < 75
         ? 'Moderate'
@@ -872,16 +939,17 @@ export function aggregateProductFitReport(
 
     let primaryFitNote = '';
     let trendSummary = '';
+    const sentimentNote = sizeRatedCount > 0 ? `Sentiment is ${sentimentScore}/100 (${avgRating}★).` : '';
 
     if (verdict === 'Runs Small' || verdict === 'Slightly Small') {
       primaryFitNote = `${sSmallPct}% report small fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews small (Fit Index ${formatSigned(fitSkew)}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ''}Sentiment is ${sentimentScore}/100 (${avgRating}★).`;
+      trendSummary = `Size ${size} skews small (Fit Index ${formatSigned(fitSkew)}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ''}${sentimentNote}`.trim();
     } else if (verdict === 'Runs Large' || verdict === 'Slightly Large') {
       primaryFitNote = `${sLargePct}% report relaxed/large fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews roomy/large (Fit Index ${formatSigned(fitSkew)}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention shrinkage. ` : ''}Sentiment is ${sentimentScore}/100 (${avgRating}★).`;
+      trendSummary = `Size ${size} skews roomy/large (Fit Index ${formatSigned(fitSkew)}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention shrinkage. ` : ''}${sentimentNote}`.trim();
     } else {
       primaryFitNote = `${sTtsPct}% confirm true-to-size fit`;
-      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${formatSigned(fitSkew)}): ${sTtsPct}% of reviewers report accurate proportions with ${sentimentScore}/100 positive sentiment.`;
+      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${formatSigned(fitSkew)}): ${sTtsPct}% of reviewers report accurate proportions${sizeRatedCount > 0 ? ` with ${sentimentScore}/100 positive sentiment` : ''}.`;
     }
 
     const bestSample = group.find((r) => r.fitDirection !== 'true_to_size') || group[0];
@@ -898,6 +966,7 @@ export function aggregateProductFitReport(
       fitSkew,
       verdict,
       avgRating,
+      ratedReviewCount: sizeRatedCount,
       sentimentScore,
       returnRisk,
       primaryFitNote,
@@ -991,7 +1060,7 @@ export function aggregateProductFitReport(
       ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}.`
       : overallVerdict === 'Runs Large' || overallVerdict === 'Slightly Large'
       ? `Runs Large (${runsLargePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || 'shoulders & chest'}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.`
-      : `True to Size (${trueToSizePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Mean sentiment score: ${overallSentimentScore}/100.`;
+      : `True to Size (${trueToSizePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}).${ratedReviewCount > 0 ? ` Mean sentiment score: ${overallSentimentScore}/100.` : ''}`;
 
   return {
     id: meta.id,
@@ -1016,6 +1085,7 @@ export function aggregateProductFitReport(
     },
     overallSentimentScore,
     overallAvgRating,
+    ratedReviewCount,
     merchandisingTakeaway,
     sizingGradingAlert,
     tshirtSignals: {
@@ -1059,6 +1129,7 @@ export interface DumpSizeChartRow {
  * Generates deterministic relational SQL DDL + INSERT statements for dumping scraped SKU reports
  * into an external commercial PostgreSQL / SQLite / MySQL data warehouse.
  * fabric_opacity_pct is nullable: an unknown opacity is NULL, never a made-up number.
+ * avg_rating and sentiment_score are nullable for the same reason: no star ratings means NULL, not 0.
  */
 export function generateSqlInsertDump(reports: ProductFitReport[], charts: DumpSizeChartRow[] = []): string {
   const esc = (val: string) => (val || '').replace(/'/g, "''");
@@ -1085,8 +1156,8 @@ export function generateSqlInsertDump(reports: ProductFitReport[], charts: DumpS
     '  runs_large_pct INT NOT NULL,',
     '  shrinkage_mention_pct INT NOT NULL,',
     '  fabric_opacity_pct INT,',
-    '  sentiment_score INT NOT NULL,',
-    '  avg_rating DECIMAL(3,1) NOT NULL,',
+    '  sentiment_score INT,',
+    '  avg_rating DECIMAL(3,1),',
     '  source_url TEXT,',
     '  scraped_at TIMESTAMP NOT NULL',
     ');',
@@ -1101,8 +1172,8 @@ export function generateSqlInsertDump(reports: ProductFitReport[], charts: DumpS
     '  true_to_size_pct INT NOT NULL,',
     '  runs_large_pct INT NOT NULL,',
     '  shrinkage_pct INT NOT NULL,',
-    '  sentiment_score INT NOT NULL,',
-    '  avg_rating DECIMAL(3,1) NOT NULL,',
+    '  sentiment_score INT,',
+    '  avg_rating DECIMAL(3,1),',
     '  return_risk VARCHAR(16) NOT NULL,',
     '  primary_fit_note TEXT,',
     '  PRIMARY KEY (sku, size_code)',
@@ -1122,12 +1193,12 @@ export function generateSqlInsertDump(reports: ProductFitReport[], charts: DumpS
 
   for (const r of reports) {
     lines.push(
-      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${num(r.overallFitIndex)}, '${esc(r.overallVerdict)}', ${num(r.gradingDelta)}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${num(r.tshirtSignals.fabricOpacityPct)}, ${r.overallSentimentScore}, ${num(r.overallAvgRating)}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
+      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${num(r.overallFitIndex)}, '${esc(r.overallVerdict)}', ${num(r.gradingDelta)}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${num(r.tshirtSignals.fabricOpacityPct)}, ${num(meanOrNull(r.overallSentimentScore, r.ratedReviewCount))}, ${num(meanOrNull(r.overallAvgRating, r.ratedReviewCount))}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
     );
     for (const s of r.sizeSummaries) {
       if (s.reviewCount > 0) {
         lines.push(
-          `INSERT INTO sku_size_metrics (sku, size_code, review_count, fit_skew, fit_verdict, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_pct, sentiment_score, avg_rating, return_risk, primary_fit_note) VALUES ('${esc(r.sku)}', '${s.size}', ${s.reviewCount}, ${s.fitSkew}, '${esc(s.verdict)}', ${s.runsSmallPct}, ${s.trueToSizePct}, ${s.runsLargePct}, ${s.shrinkageMentionPct}, ${s.sentimentScore}, ${s.avgRating}, '${s.returnRisk}', '${esc(s.primaryFitNote)}');`
+          `INSERT INTO sku_size_metrics (sku, size_code, review_count, fit_skew, fit_verdict, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_pct, sentiment_score, avg_rating, return_risk, primary_fit_note) VALUES ('${esc(r.sku)}', '${s.size}', ${s.reviewCount}, ${s.fitSkew}, '${esc(s.verdict)}', ${s.runsSmallPct}, ${s.trueToSizePct}, ${s.runsLargePct}, ${s.shrinkageMentionPct}, ${num(meanOrNull(s.sentimentScore, s.ratedReviewCount))}, ${num(meanOrNull(s.avgRating, s.ratedReviewCount))}, '${s.returnRisk}', '${esc(s.primaryFitNote)}');`
         );
       }
     }

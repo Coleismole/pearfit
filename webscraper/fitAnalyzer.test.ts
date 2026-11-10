@@ -9,6 +9,11 @@ import {
   generateSqlInsertDump,
   formatSigned,
   roundedShares,
+  normalizeReviewRating,
+  formatReviewStars,
+  formatSentiment,
+  meanOrNull,
+  NO_RATING_DASH,
 } from './fitAnalyzer';
 
 test('normalizeSize maps diverse size strings and numeric sizes into canonical XS-XXL', () => {
@@ -261,7 +266,7 @@ test('pasted reviews do not invent a date, a verified flag, or a star rating', (
   assert.equal(parsed.length, 1);
   assert.equal(parsed[0].date, '');
   assert.equal(parsed[0].verifiedPurchase, false);
-  assert.equal(parsed[0].rating, 3);
+  assert.equal(parsed[0].rating, null);
 });
 
 test('rounded shares add to 100 when both ends round up', () => {
@@ -337,4 +342,180 @@ test('a quantity after a buying verb is not a size, and "SIZE M" is not S', () =
   assert.equal(b.sizePurchased, 'medium');
   assert.equal(normalizeSizeOrNull('SIZE M'), null);
   assert.equal(normalizeSizeOrNull('Small Tall'), 'S');
+});
+
+test('normalizeReviewRating returns a whole 1 to 5 rating, or null when there is none to read', () => {
+  assert.equal(normalizeReviewRating(4), 4);
+  assert.equal(normalizeReviewRating('4'), 4);
+  assert.equal(normalizeReviewRating(' 3 '), 3);
+  assert.equal(normalizeReviewRating(4.4), 4);
+  assert.equal(normalizeReviewRating(4.5), 5);
+  assert.equal(normalizeReviewRating(7), 5);
+  // None of these is a rating, and none becomes a neutral 3.
+  assert.equal(normalizeReviewRating(''), null);
+  assert.equal(normalizeReviewRating('   '), null);
+  assert.equal(normalizeReviewRating(null), null);
+  assert.equal(normalizeReviewRating(undefined), null);
+  assert.equal(normalizeReviewRating(NaN), null);
+  assert.equal(normalizeReviewRating('abc'), null);
+  assert.equal(normalizeReviewRating(0), null);
+  assert.equal(normalizeReviewRating('0'), null);
+  assert.equal(normalizeReviewRating(-2), null);
+});
+
+test('pasted reviews with no readable stars have a null rating; stated stars are still read', () => {
+  const html = parseRawReviewBatch(
+    `<div class="review-card" data-size="M" data-author="Ana"><p>Fits well enough, ordered my usual size.</p></div>
+     <div class="review-card" data-size="L" data-rating="" data-author="Bo"><p>Runs a little small across the chest.</p></div>
+     <div class="review-card" data-size="S" data-rating="4" data-author="Cy"><p>Fits as expected, nice cut.</p></div>`
+  );
+  assert.deepEqual(html.map((r) => r.rating), [null, null, 4]);
+
+  const text = parseRawReviewBatch(
+    'Size: M | Rating: 0\nFits fine overall.\n\nSize: S ★★★★ Nice cut and fabric.\n\nSize: L | Rating: 2/5\nToo big on me.'
+  );
+  assert.deepEqual(text.map((r) => r.rating), [null, 4, 2]);
+});
+
+test('a review with no rating has no sentiment score, but its fit direction still counts', () => {
+  const unrated = classifyReviewFitAndSentiment('Runs small.', null);
+  assert.equal(unrated.sentimentScore, null);
+  assert.equal(unrated.sentimentPolarity, null);
+  assert.equal(unrated.fitDirection, 'runs_small');
+  assert.equal(unrated.fitSkew, -0.85);
+  // Leaving the rating out is the same as null. It used to read as 4 stars.
+  assert.equal(classifyReviewFitAndSentiment('Runs small.').sentimentScore, null);
+  // 5 stars: ((5 - 1) / 4) * 76 + 12 = 88, and the wording has no sentiment words.
+  assert.equal(classifyReviewFitAndSentiment('Standard cut, nothing unusual here.', 5).sentimentScore, 88);
+});
+
+const ratingMeta = {
+  id: 'rating-tee',
+  name: 'Rating Tee',
+  brand: 'Example',
+  category: 'T-Shirts & Tops' as const,
+  sku: 'RATE-1',
+  price: 'Unknown',
+  fabricComposition: 'Unknown',
+  sourceUrl: 'https://example.test/rating-tee',
+};
+
+const plainReview = (id: string, size: string, rating: number | null, body: string) => ({
+  id,
+  author: id,
+  sizePurchased: size,
+  rating,
+  title: '',
+  body,
+  date: '',
+  verifiedPurchase: false,
+});
+
+test('a null rating is left out of the means, not counted as a 3', () => {
+  // Size M: ratings 5, null, 4. None of the bodies has a fit cue or a sentiment word.
+  // Stars: (5 + 4) / 2 = 4.5. A null read as 3 would give (5 + 3 + 4) / 3 = 4.0.
+  // Sentiment per rated review: 5 stars -> ((5 - 1) / 4) * 76 + 12 = 88, 4 stars -> ((4 - 1) / 4) * 76 + 12 = 69.
+  // Mean (88 + 69) / 2 = 78.5, rounded to 79. A null read as 3 (50) would give (88 + 50 + 69) / 3 = 69.
+  // Size L: one review, no rating, says "Runs small." (fit skew -0.85).
+  const report = aggregateProductFitReport(ratingMeta, [
+    plainReview('r1', 'M', 5, 'Standard cut, nothing unusual here.'),
+    plainReview('r2', 'M', null, 'Standard cut, nothing unusual here too.'),
+    plainReview('r3', 'M', 4, 'Standard cut, nothing unusual here as well.'),
+    plainReview('r4', 'L', null, 'Runs small.'),
+  ]);
+
+  assert.equal(report.totalReviews, 4);
+  assert.equal(report.ratedReviewCount, 2);
+  assert.equal(report.overallAvgRating, 4.5);
+  assert.equal(report.overallSentimentScore, 79);
+
+  const sizeM = report.sizeSummaries.find((s) => s.size === 'M')!;
+  assert.equal(sizeM.reviewCount, 3);
+  assert.equal(sizeM.ratedReviewCount, 2);
+  assert.equal(sizeM.avgRating, 4.5);
+  assert.equal(sizeM.sentimentScore, 79);
+  assert.equal(sizeM.returnRisk, 'Low');
+
+  // L has a review and no stars: both means are "none" (0, shown as a dash), not a 3 or a 50.
+  const sizeL = report.sizeSummaries.find((s) => s.size === 'L')!;
+  assert.equal(sizeL.reviewCount, 1);
+  assert.equal(sizeL.ratedReviewCount, 0);
+  assert.equal(sizeL.avgRating, 0);
+  assert.equal(sizeL.sentimentScore, 0);
+  assert.equal(sizeL.verdict, 'Runs Small');
+  // No sentiment to weigh: risk comes from the fit skew alone (0.85 is at least 0.28) and never reaches High.
+  // A made-up 3 stars would have scored sentiment 50, under 62, which is High.
+  assert.equal(sizeL.returnRisk, 'Moderate');
+  assert.equal(sizeL.trendSummary.includes('Sentiment'), false);
+  assert.equal(meanOrNull(sizeL.avgRating, sizeL.ratedReviewCount), null);
+
+  // The review itself keeps null, and has no score.
+  const r2 = report.reviews.find((r) => r.id === 'r2')!;
+  assert.equal(r2.rating, null);
+  assert.equal(r2.sentimentScore, null);
+  assert.equal(r2.sentimentPolarity, null);
+  const r1 = report.reviews.find((r) => r.id === 'r1')!;
+  assert.equal(r1.rating, 5);
+  assert.equal(r1.sentimentScore, 88);
+  assert.equal(r1.sentimentPolarity, 'positive');
+});
+
+test('a scraper that hands over "" or NaN for stars is read as no rating', () => {
+  const messy = [
+    { ...plainReview('a', 'M', 5, 'Standard cut, nothing unusual here.') },
+    { ...plainReview('b', 'M', null, 'Standard cut, nothing unusual here too.'), rating: '' as unknown as null },
+    { ...plainReview('c', 'M', null, 'Standard cut, nothing unusual here as well.'), rating: Number.NaN },
+  ];
+  const report = aggregateProductFitReport(ratingMeta, messy);
+  assert.equal(report.ratedReviewCount, 1);
+  assert.equal(report.overallAvgRating, 5);
+  assert.deepEqual(report.reviews.map((r) => r.rating), [5, null, null]);
+});
+
+test('a report where no review has stars shows no rating anywhere and says nothing about sentiment', () => {
+  const report = aggregateProductFitReport(ratingMeta, [
+    plainReview('a', 'M', null, 'Standard cut, nothing unusual here.'),
+    plainReview('b', 'M', null, 'Standard cut, nothing unusual here too.'),
+  ]);
+  assert.equal(report.totalReviews, 2);
+  assert.equal(report.ratedReviewCount, 0);
+  assert.equal(report.overallAvgRating, 0);
+  assert.equal(report.overallSentimentScore, 0);
+  assert.equal(report.overallVerdict, 'True to Size');
+  assert.equal(report.merchandisingTakeaway, 'True to Size (100% of reviews, Fit Index 0.00).');
+  const sizeM = report.sizeSummaries.find((s) => s.size === 'M')!;
+  assert.equal(sizeM.ratedReviewCount, 0);
+  assert.equal(sizeM.returnRisk, 'Low');
+  assert.equal(sizeM.trendSummary, 'Size M tracks true to standard grading (Fit Index 0.00): 100% of reviewers report accurate proportions.');
+});
+
+test('the SQL dump writes NULL, not 0, for a rating and sentiment that do not exist', () => {
+  const report = aggregateProductFitReport(ratingMeta, [
+    plainReview('r1', 'M', 5, 'Standard cut, nothing unusual here.'),
+    plainReview('r2', 'M', 4, 'Standard cut, nothing unusual here too.'),
+    plainReview('r3', 'L', null, 'Runs small.'),
+  ]);
+  const dump = generateSqlInsertDump([report]);
+  assert.ok(dump.includes('  avg_rating DECIMAL(3,1),'));
+  assert.ok(dump.includes('  sentiment_score INT,'));
+  // M: sentiment (88 + 69) / 2 = 78.5 -> 79, stars 4.5. L has no stars.
+  assert.ok(dump.includes("0, 79, 4.5, 'Low'"));
+  assert.ok(dump.includes("0, NULL, NULL, 'Moderate'"));
+  // Overall: 2 of 3 reviews rated, so the SKU row keeps 79 and 4.5.
+  assert.ok(dump.includes(', 79, 4.5, \'https://example.test/rating-tee\''));
+  const noStars = generateSqlInsertDump([aggregateProductFitReport(ratingMeta, [plainReview('x', 'M', null, 'Runs small.')])]);
+  assert.ok(noStars.includes(', NULL, NULL, \'https://example.test/rating-tee\''));
+});
+
+test('rating text helpers show a dash for a missing rating', () => {
+  assert.equal(formatReviewStars(4), '4.0★');
+  assert.equal(formatReviewStars(null), NO_RATING_DASH);
+  assert.equal(formatReviewStars(undefined), NO_RATING_DASH);
+  assert.equal(formatSentiment(79), '79/100');
+  assert.equal(formatSentiment(null), NO_RATING_DASH);
+  assert.equal(NO_RATING_DASH, '—');
+  // 0 stored beside a count of 0 is "none". An older report with no count keeps its numbers.
+  assert.equal(meanOrNull(0, 0), null);
+  assert.equal(meanOrNull(4.5, 2), 4.5);
+  assert.equal(meanOrNull(4.5, undefined), 4.5);
 });

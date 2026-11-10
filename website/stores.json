@@ -1,0 +1,1569 @@
+{
+  "source": "webscraper/SUPPORTED_STORES.md",
+  "tested_on": "2026-11-09",
+  "platforms": [
+    "BayEngage",
+    "Bazaarvoice",
+    "Embedded in the page",
+    "Judge.me",
+    "Junip",
+    "Klaviyo Reviews",
+    "Okendo",
+    "PowerReviews",
+    "Review pages",
+    "Reviews.io",
+    "Stamped",
+    "Store's own service",
+    "TurnTo",
+    "Yotpo"
+  ],
+  "supported": [
+    {
+      "id": "uniqlo-ca",
+      "name": "Uniqlo (CA)",
+      "status": "reviews",
+      "product_tested": "Men's AIRism Cotton Oversized T-Shirt, Men's DRY-EX Polo",
+      "reviews_from": "Uniqlo's own review service",
+      "platform": "Store's own service",
+      "read_stated": "300 / 7455, 88 / 88",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes (1–5 scale)",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "arc-teryx",
+      "name": "Arc'teryx",
+      "status": "reviews",
+      "product_tested": "Cormac Crew Neck Shirt SS",
+      "reviews_from": "Bazaarvoice (opened from the rating summary)",
+      "platform": "Bazaarvoice",
+      "read_stated": "84 / 84",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "gap",
+      "name": "Gap",
+      "status": "reviews",
+      "product_tested": "Classic T-Shirt",
+      "reviews_from": "Bazaarvoice",
+      "platform": "Bazaarvoice",
+      "read_stated": "307 / 1460",
+      "size_bought": "sometimes",
+      "size_bought_text": "from review text only",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Gap and Roots reviews carry no size field; a size is taken only when the review text states it (\"I ordered a large\")."
+      ]
+    },
+    {
+      "id": "roots-ca",
+      "name": "Roots (CA)",
+      "status": "reviews",
+      "product_tested": "Organic Cooper Beaver Long Sleeve T",
+      "reviews_from": "Bazaarvoice",
+      "platform": "Bazaarvoice",
+      "read_stated": "6 / 6",
+      "size_bought": "sometimes",
+      "size_bought_text": "from review text only",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Gap and Roots reviews carry no size field; a size is taken only when the review text states it (\"I ordered a large\")."
+      ]
+    },
+    {
+      "id": "frank-and-oak",
+      "name": "Frank And Oak",
+      "status": "reviews",
+      "product_tested": "Jasper Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "26 / 26",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Frank And Oak labels its own products with the brand \"ThreadC\" in its page data, and the scraper reports what the page states."
+      ]
+    },
+    {
+      "id": "everlane",
+      "name": "Everlane",
+      "status": "reviews",
+      "product_tested": "Brushed Flannel Shirt, Tissue Crew",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "4 / 4, 18 / 18",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "taylor-stitch",
+      "name": "Taylor Stitch",
+      "status": "reviews",
+      "product_tested": "The Cutter Overshirt",
+      "reviews_from": "Stamped",
+      "platform": "Stamped",
+      "read_stated": "24 / 24",
+      "size_bought": "yes",
+      "size_bought_text": "yes (variant)",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "tentree",
+      "name": "Tentree",
+      "status": "reviews",
+      "product_tested": "Northern Aurora T-Shirt, Kessler Sweater",
+      "reviews_from": "Okendo (first page in the HTML, rest as data)",
+      "platform": "Okendo",
+      "read_stated": "3 / 3, 13 / 13",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "duer",
+      "name": "Duer",
+      "status": "reviews",
+      "product_tested": "PurePima Only Tee",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "115 / 373",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "marine-layer",
+      "name": "Marine Layer",
+      "status": "reviews",
+      "product_tested": "Tahoe Fresh Tracks Flannel Shirt",
+      "reviews_from": "Klaviyo Reviews (colourways grouped)",
+      "platform": "Klaviyo Reviews",
+      "read_stated": "15 / 15",
+      "size_bought": "yes",
+      "size_bought_text": "yes (variant)",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "vuori",
+      "name": "Vuori",
+      "status": "reviews",
+      "product_tested": "Strato Tech Tee",
+      "reviews_from": "Vuori's own endpoint (Reviews.io data)",
+      "platform": "Reviews.io",
+      "read_stated": "274 / 14715",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "quince",
+      "name": "Quince",
+      "status": "reviews",
+      "product_tested": "Organic Cotton Heavyweight Tee",
+      "reviews_from": "Quince's own review service",
+      "platform": "Store's own service",
+      "read_stated": "157 / 610",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes (worded)",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Quince opens its review list on top-rated reviews and its sort control did not open for the headless browser, so a large product is sampled from the top-rated end (all 5 stars in the test).",
+        "Treat its averages as biased upward."
+      ]
+    },
+    {
+      "id": "nike",
+      "name": "Nike",
+      "status": "reviews",
+      "product_tested": "Sportswear Club Men's T-Shirt",
+      "reviews_from": "TurnTo, on the product's own review page (followed from \"See Reviews\")",
+      "platform": "TurnTo",
+      "read_stated": "311 / 2008",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "sometimes",
+      "fit_answer_text": "some",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Nike shows a few reviews on the product page; the scraper follows the product's own review page (/t/<product>/reviews) and takes the product details from the product page."
+      ]
+    },
+    {
+      "id": "l-l-bean",
+      "name": "L.L.Bean",
+      "status": "reviews",
+      "product_tested": "Carefree Unshrinkable Tee",
+      "reviews_from": "Bazaarvoice data through L.L.Bean's own endpoint (\"Load 10 more\" needs a real click)",
+      "platform": "Bazaarvoice",
+      "read_stated": "304 / 4402",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "vineyard-vines",
+      "name": "Vineyard Vines",
+      "status": "reviews",
+      "product_tested": "Edgartown Short-Sleeve Pocket Tee",
+      "reviews_from": "PowerReviews through Vineyard Vines' own endpoint",
+      "platform": "PowerReviews",
+      "read_stated": "16 / 16",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Vineyard Vines states no brand anywhere in its page, so the brand is reported as unknown."
+      ]
+    },
+    {
+      "id": "eddie-bauer",
+      "name": "Eddie Bauer",
+      "status": "reviews",
+      "product_tested": "Legend Wash Pocket T-Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "200 / 341",
+      "size_bought": "sometimes",
+      "size_bought_text": "from review text only",
+      "fit_answer": "sometimes",
+      "fit_answer_text": "few answer it",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "faherty",
+      "name": "Faherty",
+      "status": "reviews",
+      "product_tested": "The Movement Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "21 / 1343",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Faherty's \"Load More Reviews\" button loads nothing for the headless browser (script or real click), so a large product is read from its first page only."
+      ]
+    },
+    {
+      "id": "ten-thousand",
+      "name": "Ten Thousand",
+      "status": "reviews",
+      "product_tested": "Core Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "98 / 98",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "organic-basics",
+      "name": "Organic Basics",
+      "status": "reviews",
+      "product_tested": "Waffle Raglan Long Sleeve",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "14 / 14",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "true-classic",
+      "name": "True Classic",
+      "status": "reviews",
+      "product_tested": "White Stretch Oxford 2.0",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "111 / 111",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "unbound-merino",
+      "name": "Unbound Merino",
+      "status": "reviews",
+      "product_tested": "Merino Knit Long Sleeve Polo",
+      "reviews_from": "Okendo (first page in the HTML, rest as data)",
+      "platform": "Okendo",
+      "read_stated": "40 / 40",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "nobull",
+      "name": "NOBULL",
+      "status": "reviews",
+      "product_tested": "Adapt Polo",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "129 / 129",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "alex-mill",
+      "name": "Alex Mill",
+      "status": "reviews",
+      "product_tested": "Mill Shirt in Oxford",
+      "reviews_from": "Klaviyo Reviews",
+      "platform": "Klaviyo Reviews",
+      "read_stated": "13 / 13",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "adidas-at-zappos",
+      "name": "adidas (at Zappos)",
+      "status": "reviews",
+      "product_tested": "adidas Originals Essential Tee",
+      "reviews_from": "Zappos' own review pages, followed page by page (/product/review/<id>/page/N)",
+      "platform": "Review pages",
+      "read_stated": "236 / 236",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "sometimes",
+      "fit_answer_text": "rarely stated",
+      "size_chart": "not_recorded",
+      "notes": [
+        "adidas refuses automated requests on adidas.com and adidas.ca, so its shirts are read at Zappos, whose review pages list adidas reviews (many syndicated from adidas, without size or fit answers)."
+      ]
+    },
+    {
+      "id": "banana-republic",
+      "name": "Banana Republic",
+      "status": "reviews",
+      "product_tested": "Authentic Supima Midweight T-Shirt",
+      "reviews_from": "Bazaarvoice",
+      "platform": "Bazaarvoice",
+      "read_stated": "192 / 192",
+      "size_bought": "sometimes",
+      "size_bought_text": "from review text only",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "gap-factory",
+      "name": "Gap Factory",
+      "status": "reviews",
+      "product_tested": "Everyday Soft Crewneck T-Shirt",
+      "reviews_from": "Bazaarvoice",
+      "platform": "Bazaarvoice",
+      "read_stated": "305 / 2649",
+      "size_bought": "sometimes",
+      "size_bought_text": "from review text only",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "champion",
+      "name": "Champion",
+      "status": "reviews",
+      "product_tested": "Classic Graphic T-Shirt, Script Logo",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "128 / 128",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "puma",
+      "name": "Puma",
+      "status": "reviews",
+      "product_tested": "Essentials No. 1 Logo Tee",
+      "reviews_from": "TurnTo",
+      "platform": "TurnTo",
+      "read_stated": "5 / 5",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "reebok",
+      "name": "Reebok",
+      "status": "reviews",
+      "product_tested": "Identity Small Logo T-Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "42 / 42",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "dickies",
+      "name": "Dickies",
+      "status": "reviews",
+      "product_tested": "Heavyweight Heathered Pocket T-Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "65 / 639",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "fruit-of-the-loom",
+      "name": "Fruit of the Loom",
+      "status": "reviews",
+      "product_tested": "Short Sleeve Crew T-Shirt (3 pack)",
+      "reviews_from": "BayEngage",
+      "platform": "BayEngage",
+      "read_stated": "83 / 83",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "quiksilver",
+      "name": "Quiksilver",
+      "status": "reviews",
+      "product_tested": "Everyday UPF 50 Surf Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "12 / 12",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Quiksilver names its products' brand \"O5 Quiksilver\" in its own data, and the scraper reports what the page states."
+      ]
+    },
+    {
+      "id": "target",
+      "name": "Target",
+      "status": "reviews",
+      "product_tested": "Goodfellow & Co Crew Neck T-Shirt",
+      "reviews_from": "Reviews embedded in the page (the headless browser gets HTTP 429)",
+      "platform": "Embedded in the page",
+      "read_stated": "8 / not stated",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Target refuses the headless browser (HTTP 429), so only the reviews embedded in the page are read, and the page states no brand."
+      ]
+    },
+    {
+      "id": "athleta",
+      "name": "Athleta",
+      "status": "reviews",
+      "product_tested": "Move With Ease Tee",
+      "reviews_from": "Bazaarvoice",
+      "platform": "Bazaarvoice",
+      "read_stated": "300 / 2798",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "gymshark",
+      "name": "Gymshark",
+      "status": "reviews",
+      "product_tested": "Vengeance Long Sleeve T-Shirt",
+      "reviews_from": "Gymshark's own review service",
+      "platform": "Store's own service",
+      "read_stated": "8 / 8",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Gymshark, Mack Weldon and Outdoor Voices had few reviews on the products tested, so those rows show the scraper working, not volume."
+      ]
+    },
+    {
+      "id": "alo-yoga",
+      "name": "Alo Yoga",
+      "status": "reviews",
+      "product_tested": "Airbrush Splendor Dress",
+      "reviews_from": "Alo Yoga's own review service",
+      "platform": "Store's own service",
+      "read_stated": "166 / 438",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "sometimes",
+      "fit_answer_text": "rarely stated",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Alo Yoga sells mostly women's clothing, so the tested product is a dress.",
+        "Few of its reviews state a size or fit."
+      ]
+    },
+    {
+      "id": "princess-polly",
+      "name": "Princess Polly",
+      "status": "reviews",
+      "product_tested": "Hibiscus Haven Oversized Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "109 / 109",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "beyond-yoga",
+      "name": "Beyond Yoga",
+      "status": "reviews",
+      "product_tested": "Featherweight On The Down Low Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "300 / 1620",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "outdoor-voices",
+      "name": "Outdoor Voices",
+      "status": "reviews",
+      "product_tested": "ThinkFast Mesh Muscle Tank",
+      "reviews_from": "Reviews embedded in the page",
+      "platform": "Embedded in the page",
+      "read_stated": "4 / 4",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Gymshark, Mack Weldon and Outdoor Voices had few reviews on the products tested, so those rows show the scraper working, not volume."
+      ]
+    },
+    {
+      "id": "untuckit",
+      "name": "UNTUCKit",
+      "status": "reviews",
+      "product_tested": "Wrinkle-Free Black Stone Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "300 / 1555",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "chubbies",
+      "name": "Chubbies",
+      "status": "reviews",
+      "product_tested": "The Pit Stop Graphic T-Shirt",
+      "reviews_from": "Yotpo (the page's review widget names the product)",
+      "platform": "Yotpo",
+      "read_stated": "300 / 399",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Chubbies serves its page from chubbies.com and chubbiesshorts.com; the scraper follows the redirect."
+      ]
+    },
+    {
+      "id": "outerknown",
+      "name": "Outerknown",
+      "status": "reviews",
+      "product_tested": "Blanket Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "300 / 1090",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "cuts-clothing",
+      "name": "Cuts Clothing",
+      "status": "reviews",
+      "product_tested": "Riviera Knit Textured Tee",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "60 / 59",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Cuts Clothing read 60 reviews against a stated 59: the store's total was one behind its list while the page loaded."
+      ]
+    },
+    {
+      "id": "mack-weldon",
+      "name": "Mack Weldon",
+      "status": "reviews",
+      "product_tested": "Linen Jersey Crew Neck T-Shirt",
+      "reviews_from": "Junip",
+      "platform": "Junip",
+      "read_stated": "1 / 1",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Gymshark, Mack Weldon and Outdoor Voices had few reviews on the products tested, so those rows show the scraper working, not volume."
+      ]
+    },
+    {
+      "id": "tommy-bahama",
+      "name": "Tommy Bahama",
+      "status": "reviews",
+      "product_tested": "Big & Tall Nova Wave Cotton-Blend Long-Sleeve Shirt",
+      "reviews_from": "Bazaarvoice",
+      "platform": "Bazaarvoice",
+      "read_stated": "4 / 4",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "cotopaxi",
+      "name": "Cotopaxi",
+      "status": "reviews",
+      "product_tested": "Sombra Long-Sleeve Sun Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "7 / 7",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "girlfriend-collective",
+      "name": "Girlfriend Collective",
+      "status": "reviews",
+      "product_tested": "Black Meredith Bow Tank",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "24 / 24",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "naadam",
+      "name": "Naadam",
+      "status": "reviews",
+      "product_tested": "Lightweight Brushed Relaxed Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "4 / 4",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "universal-standard",
+      "name": "Universal Standard",
+      "status": "reviews",
+      "product_tested": "Roxy ComfortDenim Drawstring Jeans",
+      "reviews_from": "Reviews in the page markup",
+      "platform": "Embedded in the page",
+      "read_stated": "1 / 1",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Universal Standard had one review on the product tested."
+      ]
+    },
+    {
+      "id": "smartwool",
+      "name": "Smartwool",
+      "status": "reviews",
+      "product_tested": "Men's Merino Short Sleeve Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "185 / 372",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "sometimes",
+      "fit_answer_text": "some",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "icebreaker-north-america",
+      "name": "Icebreaker (North America)",
+      "status": "reviews",
+      "product_tested": "Men's Merino 150 Tech Lite Short Sleeve T-Shirt",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "135 / 134",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "marmot",
+      "name": "Marmot",
+      "status": "reviews",
+      "product_tested": "Men's Coastal Short-Sleeve T-Shirt",
+      "reviews_from": "Bazaarvoice (first page only, see limits)",
+      "platform": "Bazaarvoice",
+      "read_stated": "8 / 23",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Marmot: Bazaarvoice's review list opens behind a \"Read N reviews\" button and showed only its first page to the headless browser (8 of 23)."
+      ]
+    },
+    {
+      "id": "summersalt",
+      "name": "Summersalt",
+      "status": "reviews",
+      "product_tested": "The High Neck Midi Sports Bra Tank",
+      "reviews_from": "Yotpo, paged with the widget's \"next page\" button",
+      "platform": "Yotpo",
+      "read_stated": "36 / 36",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Summersalt states no brand and no SKU anywhere in its page, so the brand is reported as unknown and the SKU is a hash of the URL.",
+        "Its review requests name Yotpo's own product id, so reviews are matched by the one product id the page requests."
+      ]
+    },
+    {
+      "id": "knix",
+      "name": "Knix",
+      "status": "reviews",
+      "product_tested": "SculptRib Cotton Tank",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "144 / 371",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "spanx",
+      "name": "Spanx",
+      "status": "reviews",
+      "product_tested": "BoostUp Strappy Tank",
+      "reviews_from": "Spanx's own review data",
+      "platform": "Store's own service",
+      "read_stated": "29 / 29",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "outdoor-research",
+      "name": "Outdoor Research",
+      "status": "reviews",
+      "product_tested": "Men's Astroman Short Sleeve Sun Shirt",
+      "reviews_from": "Bazaarvoice",
+      "platform": "Bazaarvoice",
+      "read_stated": "4 / 4",
+      "size_bought": "sometimes",
+      "size_bought_text": "rarely stated",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "free-fly-apparel",
+      "name": "Free Fly Apparel",
+      "status": "reviews",
+      "product_tested": "Women's Sol Tee",
+      "reviews_from": "Reviews embedded in the page",
+      "platform": "Embedded in the page",
+      "read_stated": "7 / 7",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "janji",
+      "name": "Janji",
+      "status": "reviews",
+      "product_tested": "M's Circa Daily Tee",
+      "reviews_from": "Judge.me",
+      "platform": "Judge.me",
+      "read_stated": "66 / not stated",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Janji is the first store tested on Judge.me; its page states no review total, so the 66 read cannot be checked."
+      ]
+    },
+    {
+      "id": "honeylove",
+      "name": "Honeylove",
+      "status": "reviews",
+      "product_tested": "BlissWear Long Sleeve Top",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "10 / 10",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Honeylove states no SKU, so its SKU is a hash of the URL."
+      ]
+    },
+    {
+      "id": "lunya",
+      "name": "Lunya",
+      "status": "reviews",
+      "product_tested": "Airy Cotton Tie Front Top",
+      "reviews_from": "Reviews embedded in the page",
+      "platform": "Embedded in the page",
+      "read_stated": "1 / 1",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Lunya and Oiselle had one review on the products tested, so those rows show the scraper working, not volume."
+      ]
+    },
+    {
+      "id": "mate-the-label",
+      "name": "MATE the Label",
+      "status": "reviews",
+      "product_tested": "Men's Organic Heavyweight Cotton Relaxed Tee",
+      "reviews_from": "Okendo",
+      "platform": "Okendo",
+      "read_stated": "8 / 8",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "ibex",
+      "name": "Ibex",
+      "status": "reviews",
+      "product_tested": "Men's GOAT Long Sleeve Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "14 / 14",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "oak-fort",
+      "name": "Oak + Fort",
+      "status": "reviews",
+      "product_tested": "\"Refined\" Baby Tee",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "2 / 2",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "dudley-stephens",
+      "name": "Dudley Stephens",
+      "status": "reviews",
+      "product_tested": "Cleo Top in French Terry",
+      "reviews_from": "Yotpo",
+      "platform": "Yotpo",
+      "read_stated": "10 / 10",
+      "size_bought": "yes",
+      "size_bought_text": "yes",
+      "fit_answer": "yes",
+      "fit_answer_text": "yes",
+      "size_chart": "not_recorded",
+      "notes": []
+    },
+    {
+      "id": "oiselle",
+      "name": "Oiselle",
+      "status": "reviews",
+      "product_tested": "Float Tank",
+      "reviews_from": "Page markup",
+      "platform": "Embedded in the page",
+      "read_stated": "1 / not stated",
+      "size_bought": "no",
+      "size_bought_text": "no field",
+      "fit_answer": "no",
+      "fit_answer_text": "no field",
+      "size_chart": "not_recorded",
+      "notes": [
+        "Lunya and Oiselle had one review on the products tested, so those rows show the scraper working, not volume."
+      ]
+    },
+    {
+      "id": "kotn",
+      "name": "Kotn",
+      "status": "size_chart_only",
+      "product_tested": null,
+      "reviews_from": null,
+      "platform": null,
+      "read_stated": null,
+      "size_bought": null,
+      "size_bought_text": null,
+      "fit_answer": null,
+      "fit_answer_text": null,
+      "size_chart": "yes",
+      "notes": [
+        "Product pages show no reviews. The size chart (flat chest and length, cm) is read."
+      ]
+    }
+  ],
+  "not_supported": [
+    {
+      "id": "old-navy",
+      "name": "Old Navy",
+      "reason": "The page shows \"1975 ratings\", but no review data loads for the headless browser (Gap, on the same platform, works).",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "adidas-adidas-com-adidas-ca",
+      "name": "adidas (adidas.com, adidas.ca)",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "h-m-us-and-ca",
+      "name": "H&M (US and CA)",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "garage-us-and-ca",
+      "name": "Garage (US and CA)",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "levi-s",
+      "name": "Levi's",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "tommy-hilfiger",
+      "name": "Tommy Hilfiger",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "calvin-klein",
+      "name": "Calvin Klein",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "hanes",
+      "name": "Hanes",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "wrangler",
+      "name": "Wrangler",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "new-balance",
+      "name": "New Balance",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "lacoste",
+      "name": "Lacoste",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "lululemon-us-and-ca",
+      "name": "lululemon (US and CA)",
+      "reason": "HTTP 403 to the page request (tried again in round 4, US and CA: still 403).",
+      "kind": "refused"
+    },
+    {
+      "id": "sport-chek",
+      "name": "Sport Chek",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "kohl-s",
+      "name": "Kohl's",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "express",
+      "name": "Express",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "dick-s-sporting-goods",
+      "name": "Dick's Sporting Goods",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "under-armour",
+      "name": "Under Armour",
+      "reason": "HTTP 418 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "ralph-lauren",
+      "name": "Ralph Lauren",
+      "reason": "Redirects automated requests in a loop to a challenge page.",
+      "kind": "refused"
+    },
+    {
+      "id": "hollister",
+      "name": "Hollister",
+      "reason": "Show the headless browser a \"Client Challenge\" bot check.",
+      "kind": "refused"
+    },
+    {
+      "id": "abercrombie-fitch",
+      "name": "Abercrombie & Fitch",
+      "reason": "Show the headless browser a \"Client Challenge\" bot check.",
+      "kind": "refused"
+    },
+    {
+      "id": "jcpenney",
+      "name": "JCPenney",
+      "reason": "HTTP 502 to the headless browser.",
+      "kind": "unavailable"
+    },
+    {
+      "id": "asos",
+      "name": "ASOS",
+      "reason": "Did not answer.",
+      "kind": "unavailable"
+    },
+    {
+      "id": "fila",
+      "name": "FILA",
+      "reason": "Product pages answer HTTP 404 (site moved).",
+      "kind": "unavailable"
+    },
+    {
+      "id": "duluth-trading",
+      "name": "Duluth Trading",
+      "reason": "HTTP 403 (\"Access Denied\").",
+      "kind": "refused"
+    },
+    {
+      "id": "lucky-brand",
+      "name": "Lucky Brand",
+      "reason": "HTTP 403 (\"Access Denied\").",
+      "kind": "refused"
+    },
+    {
+      "id": "huckberry",
+      "name": "Huckberry",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "columbia",
+      "name": "Columbia",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "j-crew",
+      "name": "J.Crew",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "rhone",
+      "name": "Rhone",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "the-north-face",
+      "name": "The North Face",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "tommy-john",
+      "name": "Tommy John",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "ministry-of-supply",
+      "name": "Ministry of Supply",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "fabletics",
+      "name": "Fabletics",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "hello-molly",
+      "name": "Hello Molly",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "aritzia",
+      "name": "Aritzia",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "reformation",
+      "name": "Reformation",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "madewell",
+      "name": "Madewell",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "free-people",
+      "name": "Free People",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "urban-outfitters",
+      "name": "Urban Outfitters",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "macy-s",
+      "name": "Macy's",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "victoria-s-secret",
+      "name": "Victoria's Secret",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "guess",
+      "name": "Guess",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "jockey",
+      "name": "Jockey",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "vans",
+      "name": "Vans",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "eileen-fisher",
+      "name": "Eileen Fisher",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "backcountry",
+      "name": "Backcountry",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "prana",
+      "name": "prAna",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "mountain-hardwear",
+      "name": "Mountain Hardwear",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "helly-hansen",
+      "name": "Helly Hansen",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "nautica",
+      "name": "Nautica",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "eberjey",
+      "name": "Eberjey",
+      "reason": "HTTP 403 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "mizzen-main",
+      "name": "Mizzen+Main",
+      "reason": "HTTP 429 to the page request.",
+      "kind": "refused"
+    },
+    {
+      "id": "nordstrom",
+      "name": "Nordstrom",
+      "reason": "The page answers HTTP 200 with a short page saying it does not allow automated traffic.",
+      "kind": "refused"
+    },
+    {
+      "id": "shein",
+      "name": "SHEIN",
+      "reason": "The page answers HTTP 200 with a short page saying it does not allow automated traffic.",
+      "kind": "refused"
+    },
+    {
+      "id": "lane-bryant",
+      "name": "Lane Bryant",
+      "reason": "Shows the headless browser an \"Access to this page has been denied\" block page.",
+      "kind": "refused"
+    },
+    {
+      "id": "patagonia",
+      "name": "Patagonia",
+      "reason": "Serves a \"System maintenance is in progress\" page (HTTP 200). Reported as down, not as a refusal.",
+      "kind": "unavailable"
+    },
+    {
+      "id": "southern-tide",
+      "name": "Southern Tide",
+      "reason": "The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says \"No reviews yet\"). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "psycho-bunny",
+      "name": "Psycho Bunny",
+      "reason": "The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says \"No reviews yet\"). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "fashion-nova",
+      "name": "Fashion Nova",
+      "reason": "The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says \"No reviews yet\"). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "white-fox",
+      "name": "White Fox",
+      "reason": "The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says \"No reviews yet\"). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "st-ssy",
+      "name": "Stüssy",
+      "reason": "The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says \"No reviews yet\"). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "kith",
+      "name": "Kith",
+      "reason": "The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says \"No reviews yet\"). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "forever-21",
+      "name": "Forever 21",
+      "reason": "The product pages tested showed no reviews (Psycho Bunny's own data states 0, Fashion Nova's page says \"No reviews yet\"). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "billabong",
+      "name": "Billabong",
+      "reason": "Both pages carry a Yotpo widget, but behind a cookie-consent dialog no review data loaded for the headless browser on the products tested.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "volcom",
+      "name": "Volcom",
+      "reason": "Both pages carry a Yotpo widget, but behind a cookie-consent dialog no review data loaded for the headless browser on the products tested.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "salty-crew",
+      "name": "Salty Crew",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "nvgtn",
+      "name": "NVGTN",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "southern-marsh",
+      "name": "Southern Marsh",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "hylete",
+      "name": "Hylete",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "vollebak",
+      "name": "Vollebak",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "madhappy",
+      "name": "Madhappy",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "cotton-citizen",
+      "name": "Cotton Citizen",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "carbon38",
+      "name": "Carbon38",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "cuyana",
+      "name": "Cuyana",
+      "reason": "The product pages tested showed no reviews to the headless browser. A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "j-jill",
+      "name": "J.Jill",
+      "reason": "The product pages tested showed no review text to the headless browser, or said \"No reviews yet\" (Vitamin A). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "skims",
+      "name": "Skims",
+      "reason": "The product pages tested showed no review text to the headless browser, or said \"No reviews yet\" (Vitamin A). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "los-angeles-apparel",
+      "name": "Los Angeles Apparel",
+      "reason": "The product pages tested showed no review text to the headless browser, or said \"No reviews yet\" (Vitamin A). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "vitamin-a",
+      "name": "Vitamin A",
+      "reason": "The product pages tested showed no review text to the headless browser, or said \"No reviews yet\" (Vitamin A). A product with reviews was not found in the time spent.",
+      "kind": "no_reviews"
+    },
+    {
+      "id": "carhartt",
+      "name": "Carhartt",
+      "reason": "HTTP 403 to the page request (reviews would come from TurnTo, which the reader supports).",
+      "kind": "refused"
+    },
+    {
+      "id": "lands-end",
+      "name": "Lands' End",
+      "reason": "HTTP 403 or 429.",
+      "kind": "refused"
+    },
+    {
+      "id": "bombas",
+      "name": "Bombas",
+      "reason": "HTTP 403 or 429.",
+      "kind": "refused"
+    },
+    {
+      "id": "mec",
+      "name": "MEC",
+      "reason": "HTTP 403 or 429.",
+      "kind": "refused"
+    },
+    {
+      "id": "todd-snyder",
+      "name": "Todd Snyder",
+      "reason": "HTTP 403 or 429.",
+      "kind": "refused"
+    },
+    {
+      "id": "american-eagle",
+      "name": "American Eagle",
+      "reason": "The page loads no review data for automated visitors.",
+      "kind": "no_reviews"
+    }
+  ]
+}

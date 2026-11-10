@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chartSizeCode, parseGuidePageChart, parseSizeChart, parseSizeChartFirst, parseSizeChartWithGuides } from './sizeChart.ts';
+import {
+  chartSizeCode,
+  parseGuidePageChart,
+  parseSizeChart,
+  parseSizeChartFirst,
+  parseSizeChartFirstFor,
+  parseSizeChartWithGuides,
+} from './sizeChart.ts';
 
 test('an inch chest chart is stored as pit-to-pit centimeters', () => {
   const html = `
@@ -584,4 +591,154 @@ test('a single stated unit in a cell wins over the leading number', () => {
   const html = `<table><caption>Size chart (in)</caption><tr><th>Size</th><th>Chest Width</th></tr>
     <tr><td>M</td><td>21.5 (54.6 cm)</td></tr></table>`;
   assert.equal(parseSizeChart(html)[0].chest_cm, 54.6);
+});
+
+// A product page that carries a men's shirt table (3 rows) and a jeans table (2 rows). Without a product, the
+// longer table wins, which is how a men's shirt table was stored for a pair of jeans.
+const JEANS_PAGE = `<html><body>
+  <h1>The Icon Skinny Jeans</h1>
+  <div id="size-chart">
+    <h3>Men's Shirts</h3>
+    <table>
+      <caption>Measured flat (cm)</caption>
+      <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr>
+      <tr><td>S</td><td>52</td><td>70</td></tr>
+      <tr><td>M</td><td>54</td><td>72</td></tr>
+      <tr><td>L</td><td>57</td><td>74</td></tr>
+    </table>
+    <h3>Women's Jeans</h3>
+    <table>
+      <caption>Measured flat (in)</caption>
+      <tr><th>Size</th><th>Inseam Length</th></tr>
+      <tr><td>M</td><td>32</td></tr>
+      <tr><td>L</td><td>33</td></tr>
+    </table>
+  </div></body></html>`;
+
+const MENS_SHIRT_ROWS = [
+  { size: 'S', sortOrder: 1, chest_cm: 52, length_cm: 70, sleeve_cm: null },
+  { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+  { size: 'L', sortOrder: 3, chest_cm: 57, length_cm: 74, sleeve_cm: null },
+];
+
+test('a product page with a men\'s shirt table and a jeans table gives the jeans table for a jeans product', () => {
+  // No product known: the longest table wins, as before.
+  assert.deepEqual(parseSizeChart(JEANS_PAGE), MENS_SHIRT_ROWS);
+  // Women's jeans: the men's table is another gender. Inseam 32 in x 2.54 = 81.28 -> 81.3, 33 in -> 83.82 -> 83.8.
+  const womensJeans = [
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 81.3, sleeve_cm: null },
+    { size: 'L', sortOrder: 3, chest_cm: null, length_cm: 83.8, sleeve_cm: null },
+  ];
+  assert.deepEqual(parseSizeChart(JEANS_PAGE, { name: "Women's Skinny Jeans" }), womensJeans);
+  // No gender in the name: a shirt table is still the wrong garment for jeans.
+  assert.deepEqual(parseSizeChart(JEANS_PAGE, { name: 'Icon Skinny Jeans' }), womensJeans);
+  // The product can come from the URL alone.
+  assert.deepEqual(parseSizeChart(JEANS_PAGE, { url: 'https://shop.test/products/the-icon-skinny-jeans?variant=1' }), womensJeans);
+  // A men's shirt keeps the men's table.
+  assert.deepEqual(parseSizeChart(JEANS_PAGE, { name: "Men's Linen Shirt" }), MENS_SHIRT_ROWS);
+});
+
+test('a product page whose only table is another garment or gender gives no chart', () => {
+  const onlyShirts = JEANS_PAGE.slice(0, JEANS_PAGE.indexOf("<h3>Women's Jeans</h3>")) + '</div></body></html>';
+  assert.deepEqual(parseSizeChart(onlyShirts), MENS_SHIRT_ROWS);
+  assert.deepEqual(parseSizeChart(onlyShirts, { name: "Women's Skinny Jeans" }), []);
+  assert.deepEqual(parseSizeChart(onlyShirts, { name: 'Skinny Jeans' }), []);
+  // The same through the page-list readers the server uses.
+  assert.deepEqual(parseSizeChartFirstFor([null, onlyShirts], { name: "Women's Skinny Jeans" }), []);
+  assert.deepEqual(parseSizeChartWithGuides([onlyShirts], [], { name: "Women's Skinny Jeans" }), []);
+  assert.deepEqual(parseSizeChartWithGuides([onlyShirts], [], { name: "Men's Shirt" }), MENS_SHIRT_ROWS);
+  // parseSizeChartFirst has no product to check, so it reads the table as before.
+  assert.deepEqual(parseSizeChartFirst(onlyShirts), MENS_SHIRT_ROWS);
+});
+
+test('a table with no heading is kept whatever the product', () => {
+  const bare = `<table><caption>Measured flat (cm)</caption>
+    <tr><th>Size</th><th>Pit to pit</th></tr><tr><td>S</td><td>50</td></tr></table>`;
+  const rows = [{ size: 'S', sortOrder: 1, chest_cm: 50, length_cm: null, sleeve_cm: null }];
+  assert.deepEqual(parseSizeChart(bare, { name: "Women's Skinny Jeans" }), rows);
+  assert.deepEqual(parseSizeChart(bare, {}), rows);
+  assert.deepEqual(parseSizeChart(bare, { name: null, url: null }), rows);
+});
+
+test('a skirt table is not a chart for a tee, and a tee table is not one for a skirt', () => {
+  const page = `<html><body>
+    <h3>Skirts</h3>
+    <table><caption>Measured flat (cm)</caption>
+      <tr><th>Size</th><th>Length</th></tr>
+      <tr><td>S</td><td>50</td></tr><tr><td>M</td><td>52</td></tr><tr><td>L</td><td>54</td></tr>
+    </table>
+    <h3>Tops</h3>
+    <table><caption>Measured flat (cm)</caption>
+      <tr><th>Size</th><th>Pit to pit</th></tr>
+      <tr><td>M</td><td>47</td></tr><tr><td>L</td><td>50</td></tr>
+    </table></body></html>`;
+  const skirt = [
+    { size: 'S', sortOrder: 1, chest_cm: null, length_cm: 50, sleeve_cm: null },
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 52, sleeve_cm: null },
+    { size: 'L', sortOrder: 3, chest_cm: null, length_cm: 54, sleeve_cm: null },
+  ];
+  const tee = [
+    { size: 'M', sortOrder: 2, chest_cm: 47, length_cm: null, sleeve_cm: null },
+    { size: 'L', sortOrder: 3, chest_cm: 50, length_cm: null, sleeve_cm: null },
+  ];
+  assert.deepEqual(parseSizeChart(page), skirt); // the longer table, with no product
+  assert.deepEqual(parseSizeChart(page, { name: 'Ribbed Tee' }), tee);
+  assert.deepEqual(parseSizeChart(page, { name: 'Mini Skirt' }), skirt);
+  // A jacket-and-pants set is both: neither table is ruled out, so the longer one stays.
+  assert.deepEqual(parseSizeChart(page, { name: 'Jacket and Pants Set' }), skirt);
+});
+
+test('a layout class such as border-top does not make a table a tops table', () => {
+  const html = `<table class="table border-top"><caption>Size chart (in)</caption>
+    <tr><th>Size</th><th>Inseam Length</th></tr><tr><td>M</td><td>32</td></tr></table>`;
+  assert.deepEqual(parseSizeChart(html, { name: 'Skinny Jeans' }), [
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 81.3, sleeve_cm: null },
+  ]);
+});
+
+test('a div chart whose class names another gender is skipped for the product', () => {
+  const html = `
+    <div class="size-chart size-chart--mens">
+      <div class="row"><span>Size</span><span>Pit to pit (cm)</span></div>
+      <div class="row"><span>L</span><span>58</span></div>
+    </div>`;
+  const rows = [{ size: 'L', sortOrder: 3, chest_cm: 58, length_cm: null, sleeve_cm: null }];
+  assert.deepEqual(parseSizeChart(html), rows);
+  assert.deepEqual(parseSizeChart(html, { name: "Women's Tee" }), []);
+  assert.deepEqual(parseSizeChart(html, { name: "Men's Tee" }), rows);
+});
+
+test('an average skirt length table is not a size chart: its numbers are lengths, not sizes', () => {
+  const lengthTable = `<html><body>
+    <h3>Average Skirt Length</h3>
+    <table>
+      <tr><th>Size</th><th>Average Skirt Length (in)</th></tr>
+      <tr><td>17</td><td>21</td></tr>
+      <tr><td>19</td><td>23</td></tr>
+    </table></body></html>`;
+  // 21 in x 2.54 = 53.34 cm: this table used to give { size: '17', length_cm: 53.3 }.
+  assert.deepEqual(parseSizeChart(lengthTable), []);
+  assert.deepEqual(parseSizeChart(lengthTable, { name: 'Mini Skirt' }), []);
+  assert.deepEqual(parseSizeChart(lengthTable, { name: 'Ribbed Tee' }), []);
+  // The same table with a waist column first: the 17 and 19 are waists, still not sizes.
+  const byWaist = lengthTable.replace('<th>Size</th>', '<th>Waist (in)</th>');
+  assert.deepEqual(parseSizeChart(byWaist), []);
+  // The header alone says it, with no heading above the table.
+  const noHeading = lengthTable.replace('<h3>Average Skirt Length</h3>', '');
+  assert.deepEqual(parseSizeChart(noHeading), []);
+});
+
+test('in a skirt length table letter sizes stay, and a table with a chest value keeps numeric sizes', () => {
+  const mixed = `<h3>Skirt Length</h3><table><caption>Length (cm)</caption>
+    <tr><th>Size</th><th>Length</th></tr>
+    <tr><td>S</td><td>50</td></tr><tr><td>17</td><td>53</td></tr></table>`;
+  assert.deepEqual(parseSizeChart(mixed), [{ size: 'S', sortOrder: 1, chest_cm: null, length_cm: 50, sleeve_cm: null }]);
+  const withChest = `<h3>Skirt Length</h3><table><caption>cm</caption>
+    <tr><th>Size</th><th>Pit to pit</th><th>Skirt Length</th></tr>
+    <tr><td>2</td><td>48</td><td>55</td></tr></table>`;
+  assert.deepEqual(parseSizeChart(withChest), [{ size: '2', sortOrder: 1002, chest_cm: 48, length_cm: 55, sleeve_cm: null }]);
+  // A plain "Length" column in a jeans chart is not a skirt length table.
+  const jeans = `<table><caption>Measured flat (in)</caption>
+    <tr><th>Size</th><th>Inseam Length</th></tr><tr><td>28</td><td>30</td></tr></table>`;
+  assert.deepEqual(parseSizeChart(jeans), [{ size: '28', sortOrder: 1028, chest_cm: null, length_cm: 76.2, sleeve_cm: null }]);
 });

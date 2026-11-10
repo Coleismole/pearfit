@@ -1,0 +1,12 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local environment files. Only .env.example is committed.
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store

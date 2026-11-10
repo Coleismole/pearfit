@@ -198,7 +198,7 @@ function renderHeroPdp() {
   sizesHost.innerHTML = Object.keys(TARGET_OXFORD_SHIRT.sizes)
     .map(
       (sz) =>
-        `<button type="button" class="${displayedSize === sz ? 'on' : ''}" data-sz="${sz}">${sz}</button>`
+        `<button type="button" class="${displayedSize === sz ? 'on' : ''}" aria-pressed="${displayedSize === sz}" data-sz="${sz}">${sz}</button>`
     )
     .join('');
 
@@ -234,6 +234,30 @@ function renderHeroPdp() {
   `;
 }
 
+// Narrow screens: the primary links live in a menu under the bar, opened by the menu button.
+function initNavMenu() {
+  const nav = document.querySelector('.nav');
+  const toggle = document.getElementById('nav-toggle');
+  const links = document.getElementById('nav-links');
+  if (!nav || !toggle || !links) return;
+  const setOpen = (open) => {
+    toggle.setAttribute('aria-expanded', String(open));
+    nav.classList.toggle('nav-open', open);
+  };
+  toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  links.addEventListener('click', (event) => {
+    if (event.target.closest('a')) setOpen(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || toggle.getAttribute('aria-expanded') !== 'true') return;
+    setOpen(false);
+    toggle.focus();
+  });
+  window.matchMedia('(min-width: 961px)').addEventListener('change', (event) => {
+    if (event.matches) setOpen(false);
+  });
+}
+
 // Audience Bento Filter
 function initStakeholderTabs() {
   const tabsHost = document.getElementById('stakeholder-tabs');
@@ -243,7 +267,7 @@ function initStakeholderTabs() {
       const filter = btn.dataset.filter;
       capture('stakeholder_audience_selected', { audience: filter });
       tabsHost.querySelectorAll('button').forEach((b) => {
-        b.setAttribute('aria-selected', String(b === btn));
+        b.setAttribute('aria-pressed', String(b === btn));
       });
       cards.forEach((card) => {
         const aud = card.dataset.audience;
@@ -287,7 +311,7 @@ function renderMatrix() {
   const host = document.getElementById('matrix-rows');
   host.innerHTML = SAMPLE_SIZES.map(
     (r, i) => `
-    <div class="mrow${i === activeIdx ? ' active' : ''}" role="button" tabindex="0" data-i="${i}">
+    <div class="mrow${i === activeIdx ? ' active' : ''}" role="button" tabindex="0" aria-pressed="${i === activeIdx}" data-i="${i}">
       <span class="msize">${r.size}</span>
       <div class="mbar" role="img" aria-label="${r.size}: ${r.small}% runs small, ${r.tts}% true to size, ${r.large}% runs large">
         <span class="s" style="width:${r.small}%"></span><span class="t" style="width:${r.tts}%"></span><span class="l" style="width:${r.large}%"></span>
@@ -331,7 +355,7 @@ function renderReco() {
 function renderUsual() {
   const host = document.getElementById('usual-size');
   host.innerHTML = SAMPLE_SIZES.map(
-    (r, i) => `<button type="button" role="radio" aria-checked="${i === activeIdx}" data-i="${i}">${r.size}</button>`
+    (r, i) => `<button type="button" aria-pressed="${i === activeIdx}" data-i="${i}">${r.size}</button>`
   ).join('');
   host.querySelectorAll('button').forEach((b) =>
     b.addEventListener('click', () => {
@@ -405,7 +429,7 @@ function setInquiryMode(mode) {
   inquiryMode = mode;
   capture('inquiry_mode_selected', { inquiry_mode: inquiryMode });
   document.querySelectorAll('#inquiry-tabs button').forEach((b) => {
-    b.setAttribute('aria-selected', String(b.dataset.mode === mode));
+    b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
   });
 
   document.getElementById('pilot-heading').textContent =
@@ -519,6 +543,7 @@ document.querySelectorAll('[data-inquiry-switch]').forEach((link) => {
   link.addEventListener('click', () => setInquiryMode(link.dataset.inquirySwitch));
 });
 
+initNavMenu();
 renderHeroPdp();
 initStakeholderTabs();
 renderUsual();

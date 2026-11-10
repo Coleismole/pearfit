@@ -37,6 +37,7 @@ import {
   productIdFromUrl,
   blockPageTitle,
   blockPageText,
+  decodeHtmlEntities,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -1029,6 +1030,11 @@ function scrapeHtmlWithCheerio(
    * /t/<product>/reviews). Product details and ids come from it; reviews come from `html`.
    */
   productHtml: string | null = null,
+  /**
+   * The page source as the server sent it, when `html` is the rendered page. A rendered page can lose
+   * the product ids that the source stated (framework state scripts); they still name this product.
+   */
+  sourceHtml: string | null = null,
 ) {
   const startTime = Date.now();
   const $ = cheerio.load(html);
@@ -1056,7 +1062,7 @@ function scrapeHtmlWithCheerio(
 
   const extractedName =
     overrides?.productName ||
-    structured?.name ||
+    (structured?.name ? decodeHtmlEntities(structured.name) : null) ||
     cleanProductTitle(meta('meta[property="og:title"]')) ||
     firstText('h1.product-title') ||
     cleanProductTitle($p('title').first().text()) ||
@@ -1065,7 +1071,7 @@ function scrapeHtmlWithCheerio(
 
   const extractedBrand =
     overrides?.brand ||
-    structured?.brand ||
+    (structured?.brand ? decodeHtmlEntities(structured.brand) : null) ||
     meta('meta[name="product:brand"]') ||
     meta('meta[property="product:brand"]') ||
     meta('meta[property="og:site_name"]') ||
@@ -1226,7 +1232,11 @@ function scrapeHtmlWithCheerio(
   });
   const fromJson = collectJsonReviews(
     jsonSources.filter((source) => source.value !== null),
-    { keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
+    {
+      keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku, sourceHtml ?? ''),
+      name: extractedName,
+      knownIds: new Set(`${productPageHtml} ${sourceHtml ?? ''}`.match(/\d{9,}/g) ?? []),
+    },
   );
   if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
   const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
@@ -1316,6 +1326,7 @@ function pageProductKeys(
   sourceUrl: string,
   structuredIds: string[],
   sku: string,
+  sourceHtml = '',
 ): string[] {
   const keys = new Set<string>();
   const add = (value: unknown) => {
@@ -1337,6 +1348,10 @@ function pageProductKeys(
     if (/^\d{5,}$/.test(id)) widgetIds.add(id);
   });
   if (widgetIds.size === 1) widgetIds.forEach(add);
+  // Shopify's own product reference ("gid://shopify/Product/123") in the page or its source. One distinct
+  // id is this page's product; several (related products listed in the page) say nothing about it.
+  const gids = new Set([...`${html} ${sourceHtml}`.matchAll(/gid:\/\/shopify\/Product\/(\d{5,})/g)].map((m) => m[1]));
+  if (gids.size === 1) gids.forEach(add);
   try {
     const url = new URL(sourceUrl);
     const segments = url.pathname.split('/').filter(Boolean);
@@ -1724,6 +1739,7 @@ export function createApp() {
               overrides,
               rendered.jsonResponses,
               leftProductPage ? rendered.chartHtml : null,
+              targetHtml,
             );
             // Earlier pages of a review list that pages by link each hold their own reviews. Merge them in
             // page order, then the last page, so the list keeps the store's order (newest first).

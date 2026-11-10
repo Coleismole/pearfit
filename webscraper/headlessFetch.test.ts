@@ -156,3 +156,41 @@ test('renderPageHtml keeps the size chart from before a review click leaves the 
     server.close();
   }
 });
+
+test('renderPageHtml pages through a review list whose pager sits outside the review container', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const review = (n: number) => ({ id: 1000 + n, score: 5, content: `Great fit, review number ${n}.`, title: `Title ${n}`, created_at: '2026-05-21T05:42:16.000Z', user: { display_name: `Buyer ${n}` } });
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url ?? '/', 'http://x');
+    if (url.pathname === '/widget/reviews.json') {
+      const page = Number(url.searchParams.get('page') ?? '1');
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ response: { pagination: { page, total: 6 }, reviews: [review(page * 2 - 1), review(page * 2)] } }));
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end(`<!DOCTYPE html><html><head><title>Tank</title></head><body><h1>Tank</h1>
+      <div class="reviews-container" id="list">Loading</div>
+      <div class="pager-box"><button aria-label="Go to reviews page 1">1</button><button aria-label="Go to reviews page 2">2</button>
+      <button aria-label="Go to reviews page 3">3</button><button id="nx" aria-label="Go to next page">&gt;&gt;</button></div>
+      <script>
+        let page = 1;
+        async function load() {
+          const r = await fetch('/widget/reviews.json?page=' + page); const j = await r.json();
+          document.getElementById('list').textContent = j.response.reviews.map((x) => x.content).join(' | ');
+        }
+        document.getElementById('nx').addEventListener('click', () => { if (page < 3) { page++; load(); } });
+        load();
+      </script></body></html>`);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const result = await renderPageHtml(`http://127.0.0.1:${port}/product`);
+    const bodies = result.jsonResponses.map((j) => String(j.body)).join(' ');
+    assert.match(bodies, /review number 1\./);
+    assert.match(bodies, /review number 3\./);
+    assert.match(bodies, /review number 6\./); // page 3, reached through the pager outside the container
+  } finally {
+    server.close();
+  }
+});

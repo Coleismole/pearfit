@@ -551,3 +551,21 @@ test('reviews are kept for the product id the page names in its review widget', 
     server.close();
   }
 });
+
+test('a page that states one Shopify product id names its product, a page that states several does not', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const items = [1, 2, 3].map((n) => ({ id: `r${n}`, rating: 5, body: `Runs small but I love it, review ${n}.`, author: `Buyer ${n}`, product_id: '6264568643778' }));
+    const page = (state: string) => `<!DOCTYPE html><html><head><title>Tank</title></head><body><h1>Tank</h1>
+      <script>window.__STATE__ = ${JSON.stringify(state)};</script>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { reviews: { total: 3, items } } })}</script></body></html>`;
+    const total = async (html: string) => {
+      const res = await request(port, 'POST', '/api/scrape', { rawHtml: html, commitToDb: false, render: 'never', sku: 'TANK-1' });
+      return (res.json.report as { totalReviews: number } | undefined)?.totalReviews ?? 0;
+    };
+    assert.equal(await total(page('gid://shopify/Product/6264568643778')), 3);
+    assert.equal(await total(page('gid://shopify/Product/6264568643778 gid://shopify/Product/7777777777777')), 0);
+  } finally {
+    server.close();
+  }
+});

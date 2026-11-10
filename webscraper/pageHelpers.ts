@@ -143,3 +143,18 @@ export function blockPageText(html: string): 'refused' | 'maintenance' | null {
   }
   return null;
 }
+
+/**
+ * Text from a JSON-LD string that holds HTML entities ("Men&#39;s Tee", "Big &amp; Tall"): stores that
+ * escape their markup twice. Only the common named entities and numeric ones; a plain name is unchanged.
+ */
+export function decodeHtmlEntities(text: string): string {
+  const named: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body: string) => {
+    if (body[0] === '#') {
+      const code = body[1].toLowerCase() === 'x' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : whole;
+    }
+    return named[body.toLowerCase()] ?? whole;
+  });
+}

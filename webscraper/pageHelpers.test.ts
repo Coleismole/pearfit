@@ -10,6 +10,7 @@ import {
   productIdFromUrl,
   blockPageTitle,
   blockPageText,
+  decodeHtmlEntities,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -106,4 +107,12 @@ test('blockPageText reads a short refusal or maintenance page, and ignores a rea
   const product = `<html><body><h1>Tee</h1><p>${'Soft cotton tee that fits true to size. '.repeat(60)}</p><footer>We block automated traffic.</footer></body></html>`;
   assert.equal(blockPageText(product), null);
   assert.equal(blockPageText('<html><body><h1>Logo Tee</h1><p>$25</p></body></html>'), null);
+});
+
+test('decodeHtmlEntities decodes escaped names and leaves plain text alone', () => {
+  assert.equal(decodeHtmlEntities('Men&#39;s Merino Short Sleeve Tee'), "Men's Merino Short Sleeve Tee");
+  assert.equal(decodeHtmlEntities('Big &amp; Tall Nova Wave'), 'Big & Tall Nova Wave');
+  assert.equal(decodeHtmlEntities('Sombra &quot;Sun&quot; Shirt &#x27;24'), `Sombra "Sun" Shirt '24`);
+  assert.equal(decodeHtmlEntities('Tee &unknown; 100%'), 'Tee &unknown; 100%');
+  assert.equal(decodeHtmlEntities("Men's Tee & Co"), "Men's Tee & Co");
 });

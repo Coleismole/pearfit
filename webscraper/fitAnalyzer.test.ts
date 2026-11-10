@@ -330,3 +330,11 @@ test('mild fit answers ("A bit loose", "A little tight") skew less than "Runs la
   assert.ok(mildLoose > 0 && mildLoose < runsLarge, `${mildLoose} vs ${runsLarge}`);
   assert.ok(mildTight < 0, String(mildTight));
 });
+
+test('a quantity after a buying verb is not a size, and "SIZE M" is not S', () => {
+  const [a, b] = parseRawReviewBatch('I ordered 2 of these and love them, great shirt.\n\nI bought a medium and it fits well enough.');
+  assert.equal(a.sizePurchased, '');
+  assert.equal(b.sizePurchased, 'medium');
+  assert.equal(normalizeSizeOrNull('SIZE M'), null);
+  assert.equal(normalizeSizeOrNull('Small Tall'), 'S');
+});

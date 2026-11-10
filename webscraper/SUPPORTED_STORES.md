@@ -341,7 +341,6 @@ promo pages; no product was found.
 | Carhartt | HTTP 403 to the page request (reviews would come from TurnTo, which the reader supports). |
 | Lands' End, Bombas, MEC, Todd Snyder | HTTP 403 or 429. |
 | American Eagle | The page loads no review data for automated visitors. |
-| Patagonia | Served a "system maintenance" page to the headless browser. |
 
 A store that answers 403, 418, 429 or 503, shows a bot check or access-denied page, or serves a short page that says it
 does not allow automated traffic, is reported as refusing automated requests. The scraper does not try to get around it.

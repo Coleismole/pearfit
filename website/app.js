@@ -210,6 +210,7 @@ function renderHeroPdp() {
         selected_size: manualPdpSize,
       });
       renderHeroPdp();
+      document.querySelector(`#pdp-sizes [data-sz="${manualPdpSize}"]`)?.focus();
     });
   });
 
@@ -306,6 +307,7 @@ function renderMatrix() {
       renderUsual();
       renderMatrix();
       renderReco();
+      host.querySelector(`.mrow[data-i="${activeIdx}"]`)?.focus();
     };
     rowEl.addEventListener('click', selectRow);
     rowEl.addEventListener('keydown', (event) => {

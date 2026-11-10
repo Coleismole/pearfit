@@ -37,7 +37,7 @@
         },
       });
       window.dispatchEvent(new Event('posthog:initialized'));
-      window.posthog.logger.info('marketing site initialized', { entry_point: 'page_load' });
+      window.posthog.logger?.info?.('marketing site initialized', { entry_point: 'page_load' });
     };
     document.head.appendChild(script);
   } catch (error) {

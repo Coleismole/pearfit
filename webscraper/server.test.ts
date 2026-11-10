@@ -717,3 +717,15 @@ test('Review cards with hashed CSS-module class names are read (Testfreaks dialo
     server.close();
   }
 });
+
+test('mock store pages are found by their own slugs only, and bad body types are a 400', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const missing = await request(port, 'GET', '/api/mock-store/constructor/raw');
+    assert.equal(missing.status, 404);
+    const badBody = await request(port, 'POST', '/api/scrape', { url: 42 });
+    assert.equal(badBody.status, 400);
+  } finally {
+    server.close();
+  }
+});

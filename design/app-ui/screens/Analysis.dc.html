@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Suitability analysis</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2E5E3E}a:hover{color:#1F4029}
+</style>
+</helmet>
+<div style="width: 390px; height: 1360px; box-sizing: border-box; background: #F5F6F0; font-family: 'Inter', sans-serif; color: #17251C; display: flex; flex-direction: column; padding: 20px 20px 28px; gap: 16px">
+  <div style="display: flex; align-items: center; gap: 8px">
+    <a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: #17251C"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600">Suitability analysis</h1>
+  </div>
+
+  <div style="display: flex; gap: 14px; align-items: center">
+    <div style="width: 80px; height: 96px; border-radius: 12px; background: #E2ECE0; display: flex; align-items: center; justify-content: center; color: #4E6B53; font-size: 11px; font-weight: 600">PHOTO</div>
+    <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+      <div style="font-size: 18px; font-weight: 600">Everyday Oxford Shirt</div>
+      <div style="font-size: 14px; color: #56635A">Harbor &amp; Co · Shirts</div>
+      <div style="font-size: 13px; color: #56635A">From your pasted link</div>
+    </div>
+  </div>
+
+  <div style="background: #17251C; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px; color: #FFFFFF">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 13px; font-weight: 600; color: #B9C6BC">Suitability in size {{ size }}</div>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-size: 56px; font-weight: 700; line-height: 1; color: #C9DB5A">{{ pct }}</div>
+      </div>
+      <div style="font-size: 14px; color: #DCE4DE; text-align: right; max-width: 150px; line-height: 1.4">{{ verdict }}</div>
+    </div>
+    <div style="height: 8px; border-radius: 4px; background: #34463A; position: relative">
+      <div style="{{ barStyle }}"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 13px; font-weight: 600; color: #B9C6BC">Pick a size · we suggest M</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+          <button type="button" aria-pressed="{{ s.pressed }}" onClick="{{ s.pick }}" style="{{ s.style }}">
+            <span style="font-size: 16px; font-weight: 700">{{ s.label }}</span>
+            <span style="font-size: 12px">{{ s.pct }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 600">Most similar in your wardrobe</h2>
+      <div style="font-size: 13px; color: #56635A">Tap to compare</div>
+    </div>
+    <a href="Compare.dc.html" style="background: #FFFFFF; border: 1.5px solid #2E5E3E; border-radius: 16px; padding: 12px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: #17251C">
+      <div style="width: 52px; height: 60px; border-radius: 10px; background: #DCE6EF"></div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 15px; font-weight: 600">Oxford Shirt, Slim Fit</div>
+        <div style="font-size: 13px; color: #56635A">Northline · M · you scored 85</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+        <div style="font-size: 16px; font-weight: 700; color: #2E5E3E">94%</div>
+        <div style="font-size: 11px; color: #56635A">similar</div>
+      </div>
+    </a>
+    <a href="Compare.dc.html" style="background: #FFFFFF; border: 1px solid #DDE2D6; border-radius: 16px; padding: 12px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: #17251C">
+      <div style="width: 52px; height: 60px; border-radius: 10px; background: #EFE6D8"></div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 15px; font-weight: 600">Poplin Shirt</div>
+        <div style="font-size: 13px; color: #56635A">Coastline · M · you scored 70</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+        <div style="font-size: 16px; font-weight: 700; color: #2E5E3E">81%</div>
+        <div style="font-size: 11px; color: #56635A">similar</div>
+      </div>
+    </a>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 600">Customer reviews</h2>
+      <div style="font-size: 14px; font-weight: 600">4.4 <span style="font-weight: 400; color: #56635A">· [N] reviews</span></div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #DDE2D6; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 13px; font-weight: 600; color: #56635A">How reviewers say it fits</div>
+      <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px">
+        <div style="width: 12%; background: #B4531F"></div>
+        <div style="width: 63%; background: #2E5E3E"></div>
+        <div style="width: 25%; background: #2F5D8A"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 12px; color: #56635A"><span>Runs small 12%</span><span>True to size 63%</span><span>Runs large 25%</span></div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #DDE2D6; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">★★★★★</span><span style="color: #56635A">Bought M · usually M</span></div>
+      <div style="font-size: 14px; line-height: 1.45">[Review text from the product page goes here.]</div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #DDE2D6; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">★★★★☆</span><span style="color: #56635A">Bought L · usually L</span></div>
+      <div style="font-size: 14px; line-height: 1.45">[Review text from the product page goes here.]</div>
+    </div>
+    <button type="button" style="min-height: 44px; border: none; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #2E5E3E; cursor: pointer">See all reviews</button>
+  </div>
+
+  <div style="flex: 1"></div>
+  <a href="WardrobePlanned.dc.html" style="min-height: 54px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: #2E5E3E; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none">Save to Planning to buy</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1360}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { size: 'M' }; }
+  renderVals() {
+    const data = {
+      S: { pct: 61, verdict: 'Likely tight in the chest and short in the sleeve' },
+      M: { pct: 88, verdict: 'Should fit like your Oxford Shirt, a bit roomier' },
+      L: { pct: 72, verdict: 'Likely loose in the waist and long in the body' },
+      XL: { pct: 48, verdict: 'Likely too big overall' }
+    };
+    const cur = this.state.size;
+    const d = data[cur];
+    const sizes = Object.keys(data).map((k) => {
+      const on = k === cur;
+      return {
+        label: k,
+        pct: data[k].pct + '%',
+        pressed: on ? 'true' : 'false',
+        pick: () => this.setState({ size: k }),
+        style: 'min-height: 56px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; cursor: pointer; ' + (on ? 'background: #C9DB5A; color: #17251C; border: 2px solid #C9DB5A;' : 'background: transparent; color: #DCE4DE; border: 1px solid #4A5E50;')
+      };
+    });
+    return {
+      size: cur,
+      pct: d.pct + '%',
+      verdict: d.verdict,
+      barStyle: 'position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: #C9DB5A; width: ' + d.pct + '%;',
+      sizes
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@sparticuz/chromium-min": "153.0.0",
+    "@vercel/speed-insights": "^2.1.0",
     "better-sqlite3": "^13.0.3",
     "posthog-js": "^1.447.3",
     "puppeteer-core": "25.16.0"

@@ -19,3 +19,4 @@ The Vercel project now deploys from `Coleismole/pearfit`.
 ## Inquiries
 The form posts the inquiry to `customerservice@pearfit.app` through FormSubmit. The first submission asks that inbox to confirm the address. After that, each form send delivers the email.
 
+

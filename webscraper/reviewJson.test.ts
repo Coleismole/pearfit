@@ -664,3 +664,36 @@ test('Judge.me: reviews with HTML text and no title are read (body_html)', () =>
     ['a3', 5, 'He loves it'],
   ]);
 });
+
+test('Halara: reviewContent, star, userName and Size/Color attributes', () => {
+  const body = {
+    code: 0,
+    data: {
+      ratingSummary: { total: 5576, averageStar: 4.7 },
+      defaultReviews: {
+        items: [
+          {
+            reviewId: '2832508',
+            reviewContent: 'Fits true to your regular size and the colors are so cute.',
+            translationContent: 'It fits true to your regular size and the colors are so cute.',
+            star: 4,
+            createdAt: '2026-11-08 23:01:43',
+            productAttributes: [{ key: 'Color', value: 'Black' }, { key: 'Size', value: 'L' }],
+            userName: '1***',
+          },
+        ],
+        page: 1,
+        pageSize: 3,
+        total: 5576,
+        hasMore: true,
+      },
+    },
+  };
+  const out = extractReviewsFromJson(body);
+  assert.equal(out.reviews.length, 1);
+  assert.equal(out.reviews[0].rating, 4);
+  assert.equal(out.reviews[0].body, 'Fits true to your regular size and the colors are so cute.');
+  assert.equal(out.reviews[0].sizePurchased, 'L');
+  assert.equal(out.reviews[0].author, '1***');
+  assert.equal(out.reportedTotal, 5576);
+});

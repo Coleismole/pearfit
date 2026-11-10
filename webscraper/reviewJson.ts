@@ -72,15 +72,15 @@ function firstPath(obj: Json, paths: string[]): unknown {
   return undefined;
 }
 
-const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore', 'rate'];
-const BODY_KEYS = ['body', 'body_html', 'bodyHtml', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
+const RATING_KEYS = ['rating', 'score', 'Rating', 'reviewRating', 'stars', 'starRating', 'star_rating', 'overallRating', 'ratingValue', 'reviewScore', 'rate', 'star'];
+const BODY_KEYS = ['body', 'body_html', 'bodyHtml', 'reviewContent', 'content', 'comments', 'ReviewText', 'reviewText', 'reviewMessage', 'reviewBody', 'review_body', 'review_text', 'text', 'comment', 'review', 'message'];
 const TITLE_KEYS = ['title', 'Title', 'reviewTitle', 'review_title', 'headline'];
 const DATE_KEYS = ['createdAt', 'created_at', 'dateCreated', 'date_created', 'SubmissionTime', 'submissionTime', 'reviewDate', 'datePublished', 'publishedAt', 'published_at', 'submittedAt', 'createDate', 'dateCreatedMillis', 'createdDate', 'created_date', 'reviewed_at', 'reviewedAt', 'date', 'created'];
 const ID_KEYS = ['id', 'Id', 'reviewId', 'review_id', 'ReviewId', 'ugc_id', 'uuid'];
 const AUTHOR_PATHS = [
   'user.displayName', 'user.display_name', 'user.name', 'author.name', 'author.displayName', 'author.display_name',
   'reviewer.displayName', 'reviewer.display_name', 'reviewer.name', 'customer.name', 'UserNickname', 'userNickname',
-  'nickname', 'reviewerName', 'reviewer_name', 'displayName', 'display_name', 'author', 'name',
+  'nickname', 'reviewerName', 'reviewer_name', 'userName', 'user_name', 'displayName', 'display_name', 'author', 'name',
 ];
 /** Keys that make an object a product or an aggregate rather than one review. */
 const AGGREGATE_KEYS = [
@@ -234,7 +234,7 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
     if (!Array.isArray(list)) continue;
     for (const item of list) {
       if (!isObject(item)) continue;
-      const label = first(item, ['label', 'title', 'name', 'question', 'attributeName']);
+      const label = first(item, ['label', 'title', 'name', 'key', 'question', 'attributeName']);
       const type = str(item.type) ?? '';
       const options = Array.isArray(item.options) ? item.options : [];
       let scale: Scale | null = null;

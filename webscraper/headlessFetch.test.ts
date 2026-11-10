@@ -2,7 +2,7 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { closeHeadlessBrowser, embeddedWidgetHtml, JsonCapture, linkStaysOnProduct, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
+import { closeHeadlessBrowser, embeddedWidgetHtml, isReviewWidgetFrame, navigationTimedOutAfterLoading, JsonCapture, linkStaysOnProduct, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
 import { parseSizeChart, parseSizeChartFirst } from './sizeChart.ts';
 
 // A product page whose reviews exist only after JavaScript runs: one batch appears after
@@ -243,4 +243,109 @@ test('Stamped: review cards sent as HTML inside JSON are found and counted by re
   capture.add('https://stamped.io/api/widget?productId=1&page=2', page2);
   // Review 12 is on both pages: three distinct reviews.
   assert.equal(capture.reviewCount(), 3);
+});
+
+const PAGER_PAGE = `<!DOCTYPE html><html><head><title>Pager Tee</title></head><body>
+<h1>Pager Tee</h1>
+<div id="list"></div>
+<div id="pager"></div>
+<script>
+  const pages = [['Ana', 'First page review about the fit.'], ['Ben', 'Second page review, true to size.'], ['Cy', 'Third page review, runs large.']];
+  let current = 1;
+  const draw = () => {
+    const [who, text] = pages[current - 1];
+    document.getElementById('list').innerHTML =
+      '<div class="review-card" data-author="' + who + '" data-rating="4"><p class="review-body-copy">' + text + '</p></div>';
+    document.getElementById('pager').innerHTML = pages
+      .map((_p, i) => '<button type="button" aria-label="Page ' + (i + 1) + '"' + (i + 1 === current ? ' aria-current="page"' : '') + '>' + (i + 1) + '</button>')
+      .join('');
+    document.querySelectorAll('#pager button').forEach((b) => b.addEventListener('click', () => { current = Number(b.textContent); draw(); }));
+  };
+  draw();
+</script></body></html>`;
+
+test('renderPageHtml keeps every page of a numbered pager that replaces the cards', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const server = http.createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end(PAGER_PAGE);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const result = await renderPageHtml(`http://127.0.0.1:${port}/product`);
+    const all = [...(result.extraHtml ?? []), result.html].join('\n');
+    for (const author of ['Ana', 'Ben', 'Cy']) assert.match(all, new RegExp(`data-author="${author}"`));
+  } finally {
+    server.close();
+  }
+});
+
+const SPAN_TAB_PAGE = `<!DOCTYPE html><html><head><title>Span Tee</title></head><body>
+<a href="/pages/reviews">Reviews</a>
+<h1>Span Tee</h1>
+<span id="tab" style="cursor:pointer;display:inline-block;padding:8px">Reviews (2)</span>
+<div id="panel" style="display:none"><div class="review-card" data-author="Dee" data-rating="5"><p class="review-body-copy">Panel review that was hidden until the heading was clicked.</p></div></div>
+<script>document.getElementById('tab').addEventListener('click', () => { document.getElementById('panel').style.display = 'block'; });</script>
+</body></html>`;
+
+test('renderPageHtml opens a clickable "Reviews (n)" span and ignores the site-wide Reviews link', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end(req.url?.startsWith('/pages/reviews') ? '<html><body>Store-wide reviews</body></html>' : SPAN_TAB_PAGE);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const result = await renderPageHtml(`http://127.0.0.1:${port}/products/span-tee`);
+    assert.match(result.finalUrl, /\/products\/span-tee$/);
+    assert.match(result.html, /data-author="Dee"/);
+  } finally {
+    server.close();
+  }
+});
+
+test('isReviewWidgetFrame accepts the Loox widget iframe and nothing else', () => {
+  assert.equal(isReviewWidgetFrame('https://loox.io/widget/VkcbTL2fZ/reviews/22605561863?limit=4'), true);
+  assert.equal(isReviewWidgetFrame('https://loox.io/other'), false);
+  assert.equal(isReviewWidgetFrame('https://evil.example/loox.io/widget/x'), false);
+  assert.equal(isReviewWidgetFrame('about:blank'), false);
+});
+
+const DIV_PAGER_PAGE = `<!DOCTYPE html><html><head><title>Div Pager Tee</title></head><body>
+<h1>Div Pager Tee</h1>
+<div id="list"></div>
+<div class="page-numbers" id="nums"></div>
+<script>
+  const pages = [['Ana', 'Division pager first review about the fit.'], ['Ben', 'Division pager second review, true to size.']];
+  let current = 1;
+  const draw = () => {
+    const [who, text] = pages[current - 1];
+    document.getElementById('list').innerHTML = '<div class="review-card" data-author="' + who + '" data-rating="4"><p class="review-body-copy">' + text + '</p></div>';
+    document.getElementById('nums').innerHTML = pages.map((_p, i) => '<div class="page-number' + (i + 1 === current ? ' active' : '') + '" data-page="' + (i + 1) + '">' + (i + 1) + '</div>').join('');
+    document.querySelectorAll('#nums .page-number').forEach((d) => d.addEventListener('click', () => { current = Number(d.getAttribute('data-page')); draw(); }));
+  };
+  draw();
+</script></body></html>`;
+
+test('renderPageHtml keeps every page of a div-based numbered pager', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const server = http.createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end(DIV_PAGER_PAGE);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const result = await renderPageHtml(`http://127.0.0.1:${port}/product`);
+    const all = [...(result.extraHtml ?? []), result.html].join('\n');
+    for (const author of ['Ana', 'Ben']) assert.match(all, new RegExp(`data-author="${author}"`));
+  } finally {
+    server.close();
+  }
+});
+
+test('a navigation timeout after the page committed is not fatal; other errors and blank tabs are', () => {
+  const timeout = new Error('page.goto: Timeout 45000ms exceeded.');
+  assert.equal(navigationTimedOutAfterLoading(timeout, 'https://shop.example/products/x'), true);
+  assert.equal(navigationTimedOutAfterLoading(timeout, 'about:blank'), false);
+  assert.equal(navigationTimedOutAfterLoading(new Error('net::ERR_NAME_NOT_RESOLVED'), 'https://shop.example/'), false);
 });

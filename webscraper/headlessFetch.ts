@@ -16,7 +16,7 @@ import { parseSizeChart } from './sizeChart.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
-  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], .detailReviewItem, li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
+  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], .detailReviewItem, [class$="_review"]:has([class*="reviewContent"]), article:has([aria-label="review item"]), .grid-item:has(.main-text), .product-detail__rating__review, .pdp-review, li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 
 /**
  * The browser keeps its own user agent. A desktop-Chrome string on headless Linux contradicts what the
@@ -314,6 +314,37 @@ const OPEN_RATING_SUMMARY = `(() => {
 })()`;
 
 /**
+ * A numbered pager that replaces the review cards on the page (Halara: buttons labelled "Page 1", "Page 2",
+ * the current one marked aria-current="page"). Clicks the next number and returns its label, or '' when
+ * the current page is the last one or no such pager exists. Buttons only; never a link that leaves the page.
+ */
+const CLICK_NEXT_NUMBERED_PAGE = `(() => {
+  ${DEEP_QUERY}
+  const label = (el) => (el.getAttribute('aria-label') || '').trim();
+  const pages = deepAll('button, [role="button"]').filter((el) => /^page \\d+$/i.test(label(el)));
+  const current = pages.find((el) => el.getAttribute('aria-current') === 'page');
+  if (!current) {
+    // Salesforce storefronts: <div class="page-numbers"><div class="page-number active" data-page="1">…
+    const active = deepAll('.page-numbers .page-number.active[data-page]')[0];
+    const nextDiv = active && active.nextElementSibling;
+    if (!nextDiv || !nextDiv.getAttribute('data-page')) return '';
+    nextDiv.click();
+    return 'Page ' + nextDiv.getAttribute('data-page');
+  }
+  const n = Number(label(current).replace(/\\D+/g, ''));
+  const next = pages.find((el) => label(el).toLowerCase() === 'page ' + (n + 1));
+  if (!next) return '';
+  next.click();
+  return label(next);
+})()`;
+
+/** The review cards currently on the page, as markup: a small snapshot of one page of a replacing pager. */
+const REVIEW_CARDS_MARKUP = `(() => {
+  ${DEEP_QUERY}
+  return '<div>' + deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)}).map((el) => el.outerHTML).join('') + '</div>';
+})()`;
+
+/**
  * Opens a "Reviews" or "Reviews (13)" heading that is a clickable text and not a tab, button or link
  * (an Alpine/JS accordion built from spans). Used only when no review card is showing. Returns the label.
  */
@@ -600,6 +631,67 @@ async function waitForMoreReviews(page: Page, before: number, timeoutMs: number)
   return false;
 }
 
+/** A navigation that timed out after the browser had already committed to a page (not a blank tab). */
+export function navigationTimedOutAfterLoading(err: unknown, currentUrl: string): boolean {
+  return err instanceof Error && /Timeout \d+ms exceeded/.test(err.message) && /^https?:/i.test(currentUrl);
+}
+
+/** Hosts whose review widgets render inside an iframe of their own (Loox). */
+export function isReviewWidgetFrame(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname === 'loox.io' && u.pathname.startsWith('/widget/');
+  } catch {
+    return false;
+  }
+}
+
+/** Clicks the review iframe's own "Show more reviews" / "Load more" button; returns its label or ''. */
+const CLICK_FRAME_LOAD_MORE = `(() => {
+  const btn = [...document.querySelectorAll('button')].find((b) => /^(show|load|see|view) more( reviews?)?$/i.test((b.textContent || '').trim()) && b.getBoundingClientRect().width > 0 && !b.disabled);
+  if (!btn) return '';
+  btn.click();
+  return (btn.textContent || '').trim();
+})()`;
+
+/**
+ * Review widgets that live in an iframe: pages the widget through its own "Show more reviews" button, then
+ * returns the frame's markup. Capped at MAX_REVIEWS cards and the paging deadline.
+ */
+async function reviewFramePages(page: Page, stopAt: number): Promise<string[]> {
+  const pages: string[] = [];
+  for (const frame of page.frames()) {
+    if (frame === page.mainFrame() || !isReviewWidgetFrame(frame.url())) continue;
+    // The widget drops cards that scroll out of view, so the cards are collected after every click.
+    const seen = new Set<string>();
+    const collect = async () => {
+      const cards = (await frame.evaluate(
+        `[...document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)})].map((el) => el.outerHTML)`,
+      )) as string[];
+      for (const card of cards) seen.add(card);
+    };
+    try {
+      await collect();
+      for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < stopAt && seen.size < MAX_REVIEWS; i++) {
+        const clicked = (await frame.evaluate(CLICK_FRAME_LOAD_MORE)) as string;
+        if (process.env.SCRAPER_DEBUG) console.error(`[frame] ${i}: cards=${seen.size} clicked=${JSON.stringify(clicked)}`);
+        if (!clicked) break;
+        const before = seen.size;
+        const until = Math.min(Date.now() + 4000, stopAt);
+        while (Date.now() < until && seen.size <= before) {
+          await page.waitForTimeout(250);
+          await collect();
+        }
+      }
+      await collect();
+    } catch {
+      // the frame went away; keep what was collected
+    }
+    if (seen.size > 0) pages.push(`<div>${[...seen].join('')}</div>`);
+  }
+  return pages;
+}
+
 /** Review cards that came as HTML inside JSON responses, one entry per distinct response. */
 function widgetPages(items: CapturedJson[]): string[] {
   return [...new Set(items.map((item) => embeddedWidgetHtml(item.body)).filter((html): html is string => html !== null))];
@@ -649,7 +741,13 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     context.close().catch(() => {});
   }, renderBudgetMs());
   try {
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
+    const response = await page
+      .goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS })
+      .catch((err: unknown) => {
+        // A page that shows up but never finishes parsing (Soffe: DOMContentLoaded never fires) is still read.
+        if (navigationTimedOutAfterLoading(err, page.url())) return null;
+        throw err;
+      });
     const status = response?.status() ?? null;
     if (status !== null && status >= 400) {
       return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
@@ -794,12 +892,32 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       await capture.settle(1500);
     }
 
+    // A numbered pager that replaces the cards: keep each page's cards, then click the next number.
+    let cardsOnPages = 0;
+    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8_000; i++) {
+      const cardsHere = await countReviews(page).catch(() => 0);
+      if (cardsHere === 0 || cardsOnPages + cardsHere >= MAX_REVIEWS) break;
+      const first = (await evaluateStable(page, REVIEW_CARDS_MARKUP)) as string;
+      const clicked = (await evaluateStable(page, CLICK_NEXT_NUMBERED_PAGE)) as string;
+      if (!clicked) break;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] numbered pager ${clicked}`);
+      extraHtml.push(first);
+      cardsOnPages += cardsHere;
+      // Wait for the cards to change (they are replaced, not added to).
+      const changeUntil = Math.min(Date.now() + 6000, stopPagingAt);
+      while (Date.now() < changeUntil) {
+        await page.waitForTimeout(300);
+        if (((await evaluateStable(page, REVIEW_CARDS_MARKUP)) as string) !== first) break;
+      }
+    }
+
     // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
     await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
     await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
     await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
     await capture.settle(2000);
 
+    const framePages = await reviewFramePages(page, stopPagingAt);
     const html = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     return {
       html,
@@ -808,7 +926,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       reviewSelectorFound,
       chartHtml,
       jsonResponses: capture.items,
-      extraHtml: [...extraHtml, ...widgetPages(capture.items)],
+      extraHtml: [...extraHtml, ...widgetPages(capture.items), ...framePages],
     };
   } catch (err) {
     if (timedOut) {

@@ -36,7 +36,9 @@ import {
   longestFreeText,
   productIdFromUrl,
   blockPageTitle,
+  describeFetchFailure,
   isBotCheckRedirect,
+  ratingFromStarFills,
   isRefusalStatus,
   blockPageText,
   decodeHtmlEntities,
@@ -1139,10 +1141,14 @@ function scrapeHtmlWithCheerio(
           node.attr('data-author') ||
           node.attr('data-reviewer') ||
           node.find('[itemprop="author"]').first().text().trim() ||
+          node.find('[class*="feed-item-title"] .title').first().text().trim() ||
+          node.find('[class*="_author"]').first().text().trim() ||
           node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
+          // A masked reviewer name ("1***3", "a***b") alone on its line.
+          lines.find((l) => /^[\p{L}\p{N}]{1,4}\*{2,}[\p{L}\p{N}]{1,4}$/u.test(l)) ||
           'Anonymous';
         const body =
-          node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
+          node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], [class*="CommentWithEllipsis"], [class*="_reviewContent"], .main-text, [class*="review-message"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
           longestFreeText(lines, [author]) ||
           nodeText;
         // Unlabelled markup: the first short free-text line before the body is the title.
@@ -1156,17 +1162,22 @@ function scrapeHtmlWithCheerio(
           node.attr('data-size') ||
           node.find('.review-size-tag strong').text().trim() ||
           labelledValue(lines, /^(purchased size|size purchased|size ordered|size bought|size)$/i) ||
+          // Loox "Item type: GLACIER / XX-LARGE": the size is the last part.
+          node.find('.item-type-value').first().text().split('/').pop()?.trim() ||
           nodeText.match(/Size(?:\s+(?:Purchased|Ordered|Bought))?:\s*([A-Za-z0-9]+)/i)?.[1] ||
           extractSizeFromReviewText(body);
         const ratingStr =
           node.attr('data-rating') ||
+          node.attr('data-score') ||
           node.find('[itemprop="ratingValue"]').attr('content') ||
           node.find('[itemprop="ratingValue"]').text().trim() ||
           node.find('[data-score]').attr('data-score') ||
           node.find('.review-rating').text().match(/(\d(?:\.\d)?)/)?.[1] ||
           // Accessible star widgets: aria-label/title like "4 out of 5 stars".
           ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr('aria-label') ?? node.find('[title*="out of 5" i]').first().attr('title')) ||
+          ratingFromLabel(node.find('[aria-label*="/ 5" i]').first().attr('aria-label')) ||
           ratingFromStarIcons($, node) ||
+          ratingFromStarFills($, node) ||
           // Screen-reader text such as "Rated 5 out of 5" (Okendo and others).
           nodeText.match(/\brated\s+(\d(?:\.\d)?)\s+out of\s+5\b/i)?.[1] ||
           '';
@@ -1387,6 +1398,8 @@ interface StaticFetchError {
   status: number;
   message: string;
   blocked: boolean;
+  /** The request itself failed (reset, oversized headers). A browser may still load the page. */
+  retryInBrowser?: boolean;
 }
 
 const FETCH_HEADERS = {
@@ -1409,8 +1422,7 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
         signal: AbortSignal.timeout(20000),
       });
     } catch (fetchErr) {
-      const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-      return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+      return describeFetchFailure(url, fetchErr);
     }
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location');
@@ -1722,7 +1734,7 @@ export function createApp() {
       const needsRender = shouldUseHeadlessRender({
         isRemoteUrl,
         renderMode,
-        staticFailed: staticError !== null,
+        staticFailed: staticError !== null && !staticError.retryInBrowser,
         reviewCount: scraped ? scraped.reviews.length : null,
         reportedReviewCount: scraped?.meta.scraperTelemetry.reportedReviewCount ?? null,
       });

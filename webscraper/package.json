@@ -18,6 +18,7 @@
     "verify-stores": "tsx tools/verify-stores.ts",
     "build-verified-list": "tsx tools/build-verified-list.ts",
     "render-supported-stores": "tsx tools/render-supported-stores.ts",
+    "discover-products": "tsx tools/discover-products.ts",
     "browsers:install": "playwright install chromium"
   },
   "dependencies": {

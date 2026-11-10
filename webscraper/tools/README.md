@@ -9,6 +9,7 @@ code and only talk to it over HTTP, the way the front end does. Run them from `w
 | Weekly check | `npm run verify-stores` | Re-scrapes one product per confirmed store and compares with what was expected. See below. |
 | Store list | `npm run build-verified-list` | Builds `tools/verified-stores.json` from the tables in `SUPPORTED_STORES.md`. |
 | Tables | `npm run render-supported-stores` | Checks (or with `--write` rewrites) the "Reviews and fit" tables from that list. |
+| Discovery | `npm run discover-products -- <domain> ...` | Finds a real product page per store, refusing category, promo, cart, account and blog pages. See below. |
 
 All of them respect the scraper's rule: a store that refuses automated requests is reported, never worked around.
 Tests for these tools are the `tools/*.test.ts` files; `npm test` runs them with the scraper's own.
@@ -153,3 +154,35 @@ and rebuild. `has_size_chart` comes from the "Size charts." paragraph of the rou
 `npm run render-supported-stores` compares the markdown tables with the list; `--write` rewrites the table bodies from the
 list (the list keeps each row's cell text, so the round trip is exact; the current file renders back byte for byte).
 It refuses to write when the markdown has a row the list lacks, so a hand edit is never silently dropped.
+
+## Finding product pages (`npm run discover-products`)
+
+```
+npm run discover-products -- --domains domains.txt --out discovered.jsonl
+npm run discover-products -- example.com
+npm run discover-products -- --classify https://example.com/products/blue-shirt
+```
+
+For each store: its Shopify feed (`/collections/all/products.json`, `/products.json`) if it has one (garments in
+stock only), else its sitemap (from `robots.txt`, `sitemap.xml`, following an index to the product sitemaps).
+Output is one JSON line per store with `urls` (the accepted product pages, the field scrape batches read),
+`accepted` (each with its `signals` and `confidence`), `rejected` (each with the reason) and a `note` when nothing was found.
+
+A sitemap candidate is **accepted** only when
+
+- its address is on the store's own site (the same registrable domain; a sitemap that lists another site's pages, as
+  Eloquii, Full Beauty, Woman Within and King Size did with `onestopplus.com`, gives nothing),
+- its address is not a category, collection, promo, cart, account, blog, search or file address (`/featured/shop-by-brand/...`,
+  `/collections/x`, `...-credit-threshold-75-earn-25-a-3996.html` as the Romwe promos were), and
+- its page has a product signal: JSON-LD `Product` at the top level (products nested in an `ItemList` are a list, not
+  the page's product), `og:type` product, or one to four add-to-cart controls (more is a list's quick-add buttons);
+  a product-shaped address alone (`/products/x`, `/p/x`, `-p-123.html`, a style code, `?pid=`) is accepted as `weak`,
+  and only when nothing on the page says it is a listing (JSON-LD collection or list, a collection page type or class,
+  many product links on an `og:type` website page).
+
+A feed product needs no page check: the feed is the signal. A candidate whose request is redirected to another site is rejected.
+
+Politeness: plain `fetch` requests with no browser headers (the JSON feeds are asked for with `accept: application/json`);
+four stores at a time by default (at most eight); one request at a time per store with a pause (default 1 s, or the larger of
+that and the store's robots.txt `Crawl-delay`, up to 10 s); 15 s timeout; addresses that robots.txt disallows for `*`
+are not requested; HTTP 401, 403, 418, 429 or 503 ends the visit to that store and is not retried.

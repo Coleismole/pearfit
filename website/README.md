@@ -16,6 +16,16 @@ Open `website/index.html` in a browser, or run `npx serve website`.
 
 The Vercel project now deploys from `Coleismole/pearfit`.
 
+## Generated files
+`api/recommend.js`, `api/candidates.js`, `api/scraper/` and `scraper/` are build output, committed because the Vercel project is rooted at `website/`. Do not edit them by hand.
+
+| Output | Rebuild with (repo root) |
+| --- | --- |
+| `api/recommend.js`, `api/candidates.js` | `(cd engine && npm run build:api)` |
+| `scraper/`, `api/scraper/` | `node scripts/assemble-site.mjs` |
+
+Both need `npm ci` in `webscraper/` first (esbuild and vite are installed there). The `Check generated bundles` workflow (`.github/workflows/check-bundles.yml`) rebuilds both on every pull request and push to `main` and fails, listing the changed files and the diff stat, when the committed copies are stale. Run the same check locally with `node scripts/check-bundles.mjs` from a tree where those paths are committed. The Vite file names are content hashes, so with the lockfile installed the rebuild is byte-for-byte reproducible and a plain diff is a fair test.
+
 ## Inquiries
 The form posts the inquiry to `customerservice@pearfit.app` through FormSubmit. The first submission asks that inbox to confirm the address. After that, each form send delivers the email.
 

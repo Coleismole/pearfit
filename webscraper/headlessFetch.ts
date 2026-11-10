@@ -16,7 +16,7 @@ import { parseSizeChart } from './sizeChart.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
-  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
+  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
 
 /**
  * The browser keeps its own user agent. A desktop-Chrome string on headless Linux contradicts what the

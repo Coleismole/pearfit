@@ -569,3 +569,20 @@ test('a page that states one Shopify product id names its product, a page that s
     server.close();
   }
 });
+
+test('AfterShip review cards (hashed class names) are read from the markup', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const card = (name: string, text: string) => `<div class="aftership-reviews-widget-v2_cardContainer--ZKekts3b"><div>Aug 31, 2025</div><div><div>${name}</div></div><div class="aftership-reviews-widget-v2_reviewTitle--OmAWeh0V">Perfect fit</div><div><div>${text}</div></div></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Kids Zip Jumper</title></head><body><h1>Kids Zip Jumper</h1>
+      ${card('Miriam L.', 'This jumper fits perfectly. The arm length is just right.')}
+      ${card('Jon K.', 'Runs a little small, order one size up for my son.')}
+      </body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'AFTERSHIP-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { totalReviews: number };
+    assert.equal(report.totalReviews, 2);
+  } finally {
+    server.close();
+  }
+});

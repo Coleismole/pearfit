@@ -68,28 +68,14 @@ function formatDelta(val) {
   return '0.0 cm';
 }
 
-const pendingPostHogCalls = [];
-let posthogReady = false;
-
-function callPostHog(callback) {
-  if (posthogReady) {
-    callback(window.posthog);
-  } else {
-    pendingPostHogCalls.push(callback);
-  }
-}
-
-window.addEventListener('posthog:initialized', () => {
-  posthogReady = true;
-  pendingPostHogCalls.splice(0).forEach((callback) => callback(window.posthog));
-});
-
+// Events go through analytics.js (window.PearfitAnalytics), which allow-lists them, queues until PostHog has
+// started and does nothing when it never does. If that script is missing, these still do nothing instead of throwing.
 function capture(event, properties) {
-  callPostHog((posthog) => posthog.capture(event, properties));
+  window.PearfitAnalytics?.track(event, properties);
 }
 
 function logPostHog(level, message, attributes) {
-  callPostHog((posthog) => posthog.logger?.[level]?.(message, attributes));
+  window.PearfitAnalytics?.log(level, message, attributes);
 }
 
 function buildShirtSvgPath(m) {
@@ -198,7 +184,7 @@ function renderHeroPdp() {
   sizesHost.innerHTML = Object.keys(TARGET_OXFORD_SHIRT.sizes)
     .map(
       (sz) =>
-        `<button type="button" class="${displayedSize === sz ? 'on' : ''}" data-sz="${sz}">${sz}</button>`
+        `<button type="button" class="${displayedSize === sz ? 'on' : ''}" aria-pressed="${displayedSize === sz}" data-sz="${sz}">${sz}</button>`
     )
     .join('');
 
@@ -243,7 +229,7 @@ function initStakeholderTabs() {
       const filter = btn.dataset.filter;
       capture('stakeholder_audience_selected', { audience: filter });
       tabsHost.querySelectorAll('button').forEach((b) => {
-        b.setAttribute('aria-selected', String(b === btn));
+        b.setAttribute('aria-pressed', String(b === btn));
       });
       cards.forEach((card) => {
         const aud = card.dataset.audience;
@@ -287,7 +273,7 @@ function renderMatrix() {
   const host = document.getElementById('matrix-rows');
   host.innerHTML = SAMPLE_SIZES.map(
     (r, i) => `
-    <div class="mrow${i === activeIdx ? ' active' : ''}" role="button" tabindex="0" data-i="${i}">
+    <div class="mrow${i === activeIdx ? ' active' : ''}" role="button" tabindex="0" aria-pressed="${i === activeIdx}" data-i="${i}">
       <span class="msize">${r.size}</span>
       <div class="mbar" role="img" aria-label="${r.size}: ${r.small}% runs small, ${r.tts}% true to size, ${r.large}% runs large">
         <span class="s" style="width:${r.small}%"></span><span class="t" style="width:${r.tts}%"></span><span class="l" style="width:${r.large}%"></span>
@@ -331,7 +317,7 @@ function renderReco() {
 function renderUsual() {
   const host = document.getElementById('usual-size');
   host.innerHTML = SAMPLE_SIZES.map(
-    (r, i) => `<button type="button" role="radio" aria-checked="${i === activeIdx}" data-i="${i}">${r.size}</button>`
+    (r, i) => `<button type="button" aria-pressed="${i === activeIdx}" data-i="${i}">${r.size}</button>`
   ).join('');
   host.querySelectorAll('button').forEach((b) =>
     b.addEventListener('click', () => {
@@ -405,7 +391,7 @@ function setInquiryMode(mode) {
   inquiryMode = mode;
   capture('inquiry_mode_selected', { inquiry_mode: inquiryMode });
   document.querySelectorAll('#inquiry-tabs button').forEach((b) => {
-    b.setAttribute('aria-selected', String(b.dataset.mode === mode));
+    b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
   });
 
   document.getElementById('pilot-heading').textContent =

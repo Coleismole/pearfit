@@ -5,6 +5,8 @@ import {
   GARMENT_SIZES,
   GarmentSize,
   ProductFitReport,
+  formatReviewStars,
+  formatSentiment,
 } from './fitAnalyzer';
 
 interface Props {
@@ -324,11 +326,11 @@ export const ReviewCorpusTable: React.FC<Props> = ({
                   </span>
                   <span aria-hidden="true">·</span>
                   <span className="font-mono tabular-nums text-slate-700">
-                    {review.rating}.0★
+                    {formatReviewStars(review.rating)}
                   </span>
                   <span aria-hidden="true">·</span>
                   <span className="font-mono tabular-nums text-slate-500">
-                    Sentiment {review.sentimentScore}/100
+                    Sentiment {formatSentiment(review.sentimentScore)}
                   </span>
                   {review.mentionsShrinkage && (
                     <>

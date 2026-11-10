@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supported stores — Pearfit</title>
+  <meta name="description" content="The stores Pearfit's scraper reads reviews from, which review platform each uses, what the reviews state about size and fit, and the stores not supported yet." />
+  <link rel="canonical" href="https://www.pearfit.app/stores.html" />
+  <meta name="theme-color" content="#f6f4ee" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#131512" media="(prefers-color-scheme: dark)" />
+  <meta property="og:site_name" content="Pearfit" />
+  <meta property="og:title" content="Supported stores — Pearfit" />
+  <meta property="og:description" content="The stores Pearfit's scraper reads reviews from, which review platform each uses, what the reviews state about size and fit, and the stores not supported yet." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.pearfit.app/stores.html" />
+  <meta property="og:image" content="https://www.pearfit.app/apple-touch-icon.png" />
+  <meta property="og:image:width" content="180" />
+  <meta property="og:image:height" content="180" />
+  <meta property="og:image:alt" content="The Pearfit pear logo" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Supported stores — Pearfit" />
+  <meta name="twitter:description" content="The stores Pearfit's scraper reads reviews from, which review platform each uses, what the reviews state about size and fit, and the stores not supported yet." />
+  <meta name="twitter:image" content="https://www.pearfit.app/apple-touch-icon.png" />
+  <meta name="twitter:image:alt" content="The Pearfit pear logo" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    document.documentElement.classList.add('js');
+    window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="nav" id="top">
+    <div class="wrap nav-inner">
+      <a href="./" class="brand-wordmark"><img class="brand-mark" src="logo-mark.svg" alt="" width="20" height="30" />Pearfit</a>
+      <nav class="nav-links" id="nav-links" aria-label="Primary">
+        <a href="./#benefits">Why Pearfit</a>
+        <a href="./#demo">Sample</a>
+        <a href="./#try">Try it</a>
+        <a href="stores.html" aria-current="page">Stores</a>
+        <a href="./#faq">FAQ</a>
+        <a href="/scraper">Scraper</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="./#pilot" class="btn btn-sm">Book Brand Pilot</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="nav-links"><span class="nav-toggle-bars" aria-hidden="true"></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section class="section stores-intro" data-section="stores">
+      <div class="wrap">
+        <span class="kicker">Supported stores</span>
+        <h1>Which stores the scraper can read.</h1>
+        <p class="lede">
+          Each store below was tested with one live product page through the scraper. The list says which review platform the
+          store uses, how many reviews were read against the total the store states, and whether those reviews carry the
+          size bought and a fit answer.
+        </p>
+        <p class="muted narrow">
+          A store that refuses automated requests (HTTP 403, a bot check, an access-denied page) is listed under “Not
+          supported yet” with what happened. The scraper does not try to get around it.
+        </p>
+        <p class="try-hint stores-tested" id="stores-tested"></p>
+      </div>
+    </section>
+
+    <section class="section section-alt stores-list-section" aria-labelledby="supported-heading" aria-busy="true">
+      <div class="wrap">
+        <h2 id="supported-heading">Supported stores <span class="stores-count" id="stores-supported-count"></span></h2>
+
+        <p id="stores-loading" class="muted" role="status">Loading the list…</p>
+        <div id="stores-error" hidden>
+          <p class="try-error" role="alert">The store list could not be loaded.</p>
+          <button type="button" class="btn btn-ghost btn-sm" id="stores-retry">Try again</button>
+        </div>
+        <noscript><p class="muted">The searchable list needs JavaScript. The same list is in <a href="https://github.com/Coleismole/pearfit/blob/main/webscraper/SUPPORTED_STORES.md">SUPPORTED_STORES.md</a>.</p></noscript>
+
+        <form id="stores-filters" class="stores-filters" role="search" aria-label="Search and filter the stores" hidden onsubmit="return false">
+          <label class="try-field stores-search">Search stores
+            <input type="search" id="stores-search" autocomplete="off" placeholder="Store, platform or product" />
+          </label>
+          <label class="try-field">Review platform
+            <select id="stores-platform"><option value="">Any</option></select>
+          </label>
+          <label class="try-field">Size chart
+            <select id="stores-chart">
+              <option value="">Any</option>
+              <option value="yes">Read</option>
+              <option value="not_recorded">Not recorded yet</option>
+            </select>
+          </label>
+          <label class="try-field">Reviews state the size bought
+            <select id="stores-size">
+              <option value="">Any</option>
+              <option value="yes">Yes, in a field</option>
+              <option value="sometimes">Sometimes or in the text</option>
+              <option value="no">No field</option>
+            </select>
+          </label>
+          <label class="try-field">Reviews carry a fit answer
+            <select id="stores-fit">
+              <option value="">Any</option>
+              <option value="yes">Yes</option>
+              <option value="sometimes">Sometimes</option>
+              <option value="no">No field</option>
+            </select>
+          </label>
+          <button type="button" class="btn btn-ghost btn-sm" id="stores-reset">Clear</button>
+        </form>
+        <p class="try-hint try-hint-small stores-note">
+          The platform, size chart and review filters apply to supported stores; the search covers both lists. A size chart is
+          recorded only for stores listed as size chart only so far. Everywhere else it reads “Not recorded yet”, which means
+          the list does not say, not that the store has none.
+        </p>
+        <p id="stores-status" class="stores-status" role="status"></p>
+
+        <ul id="stores-supported" class="store-list"></ul>
+        <p id="stores-empty" class="muted" hidden>No supported store matches. If the store you want is under “Not supported yet”, see why; otherwise it has not been tested.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="unsupported-heading">
+      <div class="wrap">
+        <h2 id="unsupported-heading">Not supported yet <span class="stores-count" id="stores-unsupported-count"></span></h2>
+        <p class="muted narrow">
+          These stores were tried and could not be read, with the reason. Refusals are reported, not retried: the scraper
+          does not bypass a bot check, a block page or an access-denied response.
+        </p>
+        <div id="stores-unsupported"></div>
+        <p id="stores-unsupported-empty" class="muted" hidden>No store here matches your search.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="brand-wordmark"><img class="brand-mark" src="logo-mark.svg" alt="" width="20" height="30" loading="lazy" decoding="async" />Pearfit</span>
+      <span class="muted">Proprietary size intelligence that cuts returns for brands and delivers better-fitting clothes for shoppers.</span>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="./#try">Try it</a>
+        <a href="stores.html">Supported stores</a>
+        <a href="/scraper">Scraper</a>
+        <a href="./#faq">FAQ</a>
+        <a href="./#pilot">Book a pilot</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="speed-insights-init.js"></script>
+  <script src="analytics.js"></script>
+  <script src="posthog-init.js"></script>
+  <script src="nav.js"></script>
+  <script src="stores.js"></script>
+</body>
+</html>

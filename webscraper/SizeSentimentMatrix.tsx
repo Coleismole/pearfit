@@ -9,6 +9,7 @@ import {
 import {
   GARMENT_SIZES,
   GarmentSize,
+  NO_RATING_DASH,
   ProductFitReport,
   SizeSentimentSummary,
 } from './fitAnalyzer';
@@ -239,7 +240,7 @@ export const SizeSentimentMatrix: React.FC<Props> = ({
                     )}
                   </td>
                   <td className="py-3.5 px-3 text-right font-mono tabular-nums whitespace-nowrap">
-                    {s.reviewCount > 0 ? (
+                    {s.reviewCount > 0 && s.ratedReviewCount !== 0 ? (
                       <span className="text-slate-900">
                         {s.sentimentScore}/100{' '}
                         <span className="text-slate-500 text-xs">
@@ -247,7 +248,7 @@ export const SizeSentimentMatrix: React.FC<Props> = ({
                         </span>
                       </span>
                     ) : (
-                      '—'
+                      NO_RATING_DASH
                     )}
                   </td>
                   <td className="py-3.5 pl-3 text-xs text-slate-700 max-w-md">

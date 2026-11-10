@@ -12,35 +12,61 @@
     }
   }
 
+  // Tells analytics.js that PostHog is not coming (no config, no /api, a blocked script), so it drops queued events.
+  function reportUnavailable() {
+    window.dispatchEvent(new Event('posthog:unavailable'));
+  }
+
   try {
     const response = await fetch('/api/posthog-config');
+    if (!response.ok) {
+      reportUnavailable();
+      return;
+    }
     const { projectToken, host } = await response.json();
 
     if (!projectToken) reportMissing('POSTHOG_PROJECT_TOKEN');
     if (!host) reportMissing('POSTHOG_HOST');
-    if (!projectToken || !host) return;
+    if (!projectToken || !host) {
+      reportUnavailable();
+      return;
+    }
 
     const script = document.createElement('script');
     script.src = `${host.replace(/\/$/, '')}/static/array.js`;
     script.async = true;
     script.onload = () => {
-      window.posthog.init(projectToken, {
-        api_host: host,
-        capture_exceptions: {
-          capture_unhandled_errors: true,
-          capture_unhandled_rejections: true,
-          capture_console_errors: false,
-        },
-        logs: {
-          serviceName: 'pearfit-marketing-site',
-          environment: isDevelopment ? 'development' : 'production',
-        },
-      });
+      try {
+        window.posthog.init(projectToken, {
+          api_host: host,
+          capture_exceptions: {
+            capture_unhandled_errors: true,
+            capture_unhandled_rejections: true,
+            capture_console_errors: false,
+          },
+          logs: {
+            serviceName: 'pearfit-marketing-site',
+            environment: isDevelopment ? 'development' : 'production',
+          },
+        });
+        // Tells marketing-site events from scraper events (the scraper registers app: 'pearfit-scraper').
+        window.posthog.register?.({ app: 'pearfit-marketing-site', environment: isDevelopment ? 'development' : 'production' });
+      } catch (error) {
+        reportUnavailable();
+        if (isDevelopment) console.error(error);
+        return;
+      }
       window.dispatchEvent(new Event('posthog:initialized'));
-      window.posthog.logger?.info?.('marketing site initialized', { entry_point: 'page_load' });
+      try {
+        window.posthog.logger?.info?.('marketing site initialized', { entry_point: 'page_load' });
+      } catch {
+        // The logger is optional; losing it must not mark PostHog as unavailable.
+      }
     };
+    script.onerror = reportUnavailable;
     document.head.appendChild(script);
   } catch (error) {
+    reportUnavailable();
     if (isDevelopment) console.error(error);
   }
 })();

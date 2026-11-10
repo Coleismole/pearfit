@@ -120,3 +120,41 @@ export function blockPageTitle(html: string): string | null {
     /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
   return pattern.test(title) ? title : null;
 }
+
+/**
+ * A short page whose visible text says the store refuses automated visitors, or is down for maintenance
+ * (Nordstrom: "we don't allow unidentified, automated traffic"; Patagonia: "System maintenance is in
+ * progress"), served with HTTP 200 and an ordinary title. A long page is a real page that mentions these
+ * words in passing, so only short ones count.
+ */
+export function blockPageText(html: string): 'refused' | 'maintenance' | null {
+  const text = html
+    .replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;|&#160;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (text.length > 1500) return null;
+  if (/automated (traffic|requests|access)|unusual (activity|traffic)|verify (that )?you are (a )?human|not a robot|enable javascript and cookies to continue/i.test(text)) {
+    return 'refused';
+  }
+  if (/system maintenance is in progress|(down|closed) for (scheduled )?maintenance|be right back|we.ll be back (soon|shortly)/i.test(text)) {
+    return 'maintenance';
+  }
+  return null;
+}
+
+/**
+ * Text from a JSON-LD string that holds HTML entities ("Men&#39;s Tee", "Big &amp; Tall"): stores that
+ * escape their markup twice. Only the common named entities and numeric ones; a plain name is unchanged.
+ */
+export function decodeHtmlEntities(text: string): string {
+  const named: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body: string) => {
+    if (body[0] === '#') {
+      const code = body[1].toLowerCase() === 'x' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : whole;
+    }
+    return named[body.toLowerCase()] ?? whole;
+  });
+}

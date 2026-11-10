@@ -429,6 +429,20 @@ const CLICK_NEXT_REVIEWS = `((skip) => {
       }
     }
   }
+  // A pager outside the widget whose numbered buttons name the reviews ("Go to reviews page 2"): its
+  // "next" button pages the review list. Only a pager that says "reviews" counts, not a product grid's.
+  if (found.length === 0) {
+    for (const marker of deepAll('button, [role="button"]')) {
+      if (!/^go to reviews? page \\d+$/i.test((marker.getAttribute('aria-label') || '').trim())) continue;
+      for (const el of deepAll('button, [role="button"]', marker.parentElement || document)) {
+        const aria = el.getAttribute('aria-label') || '';
+        const label = (aria || el.textContent || '').replace(/\\s+/g, ' ').trim();
+        if (!(NEXT.test(label) || /next (page|reviews?)/i.test(aria))) continue;
+        if (visible(el) && !disabled(el)) found.push({ el, isMore: false, label, rank: 2 });
+      }
+      if (found.length > 0) break;
+    }
+  }
   // A control that loaded nothing last time is skipped, so the next candidate gets a turn.
   const pick = found.filter((f) => !skip.includes(f.label.slice(0, 40) || 'next')).sort((a, b) => b.rank - a.rank)[0];
   if (!pick) return '';

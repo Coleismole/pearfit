@@ -557,6 +557,11 @@ export interface ProductIdentity {
   keys: string[];
   /** The product name on the page. */
   name: string | null;
+  /**
+   * Every long number in the page source (ids in framework state, analytics, widgets). Used only to
+   * recognise the page's own review widget when the page states its product id nowhere else.
+   */
+  knownIds?: ReadonlySet<string>;
 }
 
 function normName(s: string): string {
@@ -641,6 +646,13 @@ export function collectJsonReviews(sources: JsonSource[], product: ProductIdenti
   // When some response is known to be this product's, a response whose reviews name no product at
   // all is another widget on the page ("complete the look", recently viewed). Page data is kept.
   const someSourceMatches = sets.some((s) => s.verdicts.includes(true));
+  // No response names this product by the page's ids, yet every review request the page made is for one
+  // product, and that id is in the page source: that is the page's own review widget (the reviews carry
+  // the review service's own product ids, which the page never states). A carousel asks for several.
+  const requested = sets.filter((s) => s.set.reviews.length > 0 && s.urlKeys.length > 0);
+  const requestedIds = new Set(requested.flatMap((s) => s.urlKeys));
+  const widgetNamed =
+    !someSourceMatches && requestedIds.size === 1 && !!product.knownIds && product.knownIds.has([...requestedIds][0]);
   // This product's own review list. Stores group reviews of colourways or editions under one product
   // (Okendo "areReviewsGrouped", Klaviyo grouped ids), so its reviews may name sibling products.
   // A list is this product's when its URL names the product, when it states a product total and
@@ -650,6 +662,7 @@ export function collectJsonReviews(sources: JsonSource[], product: ProductIdenti
     const matched = verdicts.filter((v) => v === true).length;
     return (
       urlKeys.some((k) => product.keys.includes(k)) ||
+      (widgetNamed && urlKeys.length > 0) ||
       (matched > 0 && set.reportedTotal !== null) ||
       (set.reviews.length > 0 && matched * 2 >= set.reviews.length)
     );

@@ -89973,9 +89973,12 @@ function collectJsonReviews(sources, product) {
     return { source, set, urlKeys, verdicts: set.reviews.map((r) => reviewMatchesProduct(r, urlKeys, product)) };
   });
   const someSourceMatches = sets.some((s) => s.verdicts.includes(true));
+  const requested = sets.filter((s) => s.set.reviews.length > 0 && s.urlKeys.length > 0);
+  const requestedIds = new Set(requested.flatMap((s) => s.urlKeys));
+  const widgetNamed = !someSourceMatches && requestedIds.size === 1 && !!product.knownIds && product.knownIds.has([...requestedIds][0]);
   const ownListOf = ({ set, urlKeys, verdicts }) => {
     const matched = verdicts.filter((v) => v === true).length;
-    return urlKeys.some((k) => product.keys.includes(k)) || matched > 0 && set.reportedTotal !== null || set.reviews.length > 0 && matched * 2 >= set.reviews.length;
+    return urlKeys.some((k) => product.keys.includes(k)) || widgetNamed && urlKeys.length > 0 || matched > 0 && set.reportedTotal !== null || set.reviews.length > 0 && matched * 2 >= set.reviews.length;
   };
   const sharedEndpoint = (url) => /graphql|\/batch(\.json)?\/?$|\/widgets?\/fetch/i.test(pathOf(url));
   const ownPaths = new Set(
@@ -90679,6 +90682,20 @@ var CLICK_NEXT_REVIEWS = `((skip) => {
       }
     }
   }
+  // A pager outside the widget whose numbered buttons name the reviews ("Go to reviews page 2"): its
+  // "next" button pages the review list. Only a pager that says "reviews" counts, not a product grid's.
+  if (found.length === 0) {
+    for (const marker of deepAll('button, [role="button"]')) {
+      if (!/^go to reviews? page \\d+$/i.test((marker.getAttribute('aria-label') || '').trim())) continue;
+      for (const el of deepAll('button, [role="button"]', marker.parentElement || document)) {
+        const aria = el.getAttribute('aria-label') || '';
+        const label = (aria || el.textContent || '').replace(/\\s+/g, ' ').trim();
+        if (!(NEXT.test(label) || /next (page|reviews?)/i.test(aria))) continue;
+        if (visible(el) && !disabled(el)) found.push({ el, isMore: false, label, rank: 2 });
+      }
+      if (found.length > 0) break;
+    }
+  }
   // A control that loaded nothing last time is skipped, so the next candidate gets a turn.
   const pick = found.filter((f) => !skip.includes(f.label.slice(0, 40) || 'next')).sort((a, b) => b.rank - a.rank)[0];
   if (!pick) return '';
@@ -91202,6 +91219,27 @@ function blockPageTitle(html3) {
   const title = (head2.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "").replace(/\s+/g, " ").trim();
   const pattern = /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
   return pattern.test(title) ? title : null;
+}
+function blockPageText(html3) {
+  const text4 = html3.replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/\s+/g, " ").trim();
+  if (text4.length > 1500) return null;
+  if (/automated (traffic|requests|access)|unusual (activity|traffic)|verify (that )?you are (a )?human|not a robot|enable javascript and cookies to continue/i.test(text4)) {
+    return "refused";
+  }
+  if (/system maintenance is in progress|(down|closed) for (scheduled )?maintenance|be right back|we.ll be back (soon|shortly)/i.test(text4)) {
+    return "maintenance";
+  }
+  return null;
+}
+function decodeHtmlEntities(text4) {
+  const named = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  return text4.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body) => {
+    if (body[0] === "#") {
+      const code = body[1].toLowerCase() === "x" ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      return Number.isFinite(code) && code > 0 && code < 1114112 ? String.fromCodePoint(code) : whole;
+    }
+    return named[body.toLowerCase()] ?? whole;
+  });
 }
 
 // webscraper/node_modules/@supabase/supabase-js/dist/index.mjs
@@ -100473,7 +100511,7 @@ function chartRowsFromClient(value) {
   }
   return rows;
 }
-function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], productHtml = null) {
+function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], productHtml = null, sourceHtml = null) {
   const startTime = Date.now();
   const $2 = load(html3);
   const $p = productHtml ? load(productHtml) : $2;
@@ -100491,8 +100529,8 @@ function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], 
   if (structured) selectorsUsed.push('script[type="application/ld+json"] Product');
   const meta = (selector) => $p(selector).attr("content")?.trim() || null;
   const firstText = (selector) => $p(selector).first().text().replace(/\s+/g, " ").trim() || null;
-  const extractedName = overrides?.productName || structured?.name || cleanProductTitle(meta('meta[property="og:title"]')) || firstText("h1.product-title") || cleanProductTitle($p("title").first().text()) || firstText("h1") || "Unknown product";
-  const extractedBrand = overrides?.brand || structured?.brand || meta('meta[name="product:brand"]') || meta('meta[property="product:brand"]') || meta('meta[property="og:site_name"]') || firstText(".product-brand") || // A single-brand store names itself; used only when nothing names the product's brand.
+  const extractedName = overrides?.productName || (structured?.name ? decodeHtmlEntities(structured.name) : null) || cleanProductTitle(meta('meta[property="og:title"]')) || firstText("h1.product-title") || cleanProductTitle($p("title").first().text()) || firstText("h1") || "Unknown product";
+  const extractedBrand = overrides?.brand || (structured?.brand ? decodeHtmlEntities(structured.brand) : null) || meta('meta[name="product:brand"]') || meta('meta[property="product:brand"]') || meta('meta[property="og:site_name"]') || firstText(".product-brand") || // A single-brand store names itself; used only when nothing names the product's brand.
   structured?.organizationName || "Unknown brand";
   const category = overrides?.category || inferCategory(
     meta('meta[name="product:category"]'),
@@ -100569,7 +100607,11 @@ function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], 
   });
   const fromJson = collectJsonReviews(
     jsonSources.filter((source) => source.value !== null),
-    { keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName }
+    {
+      keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku, sourceHtml ?? ""),
+      name: extractedName,
+      knownIds: new Set(`${productPageHtml} ${sourceHtml ?? ""}`.match(/\d{9,}/g) ?? [])
+    }
   );
   if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(", ")})`);
   const jsonReviews = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
@@ -100623,7 +100665,7 @@ function shopifyProductId(html3) {
   const match = html3.match(/(?:var meta|ShopifyAnalytics\.meta)\s*=\s*\{\s*"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/) ?? html3.match(/"product"\s*:\s*\{\s*"id"\s*:\s*"?(\d{5,})/);
   return match ? match[1] : null;
 }
-function pageProductKeys($2, html3, sourceUrl, structuredIds, sku) {
+function pageProductKeys($2, html3, sourceUrl, structuredIds, sku, sourceHtml = "") {
   const keys = /* @__PURE__ */ new Set();
   const add2 = (value) => {
     const t = String(value ?? "").trim().toLowerCase().replace(/^shopify-/, "");
@@ -100636,6 +100678,14 @@ function pageProductKeys($2, html3, sourceUrl, structuredIds, sku) {
   $2('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
     add2($2(el).attr("value"));
   });
+  const widgetIds = /* @__PURE__ */ new Set();
+  $2("[data-yotpo-product-id], [data-oke-reviews-product-id]").each((_i, el) => {
+    const id = ($2(el).attr("data-yotpo-product-id") ?? $2(el).attr("data-oke-reviews-product-id") ?? "").trim().replace(/^shopify-/, "");
+    if (/^\d{5,}$/.test(id)) widgetIds.add(id);
+  });
+  if (widgetIds.size === 1) widgetIds.forEach(add2);
+  const gids = new Set([...`${html3} ${sourceHtml}`.matchAll(/gid:\/\/shopify\/Product\/(\d{5,})/g)].map((m) => m[1]));
+  if (gids.size === 1) gids.forEach(add2);
   try {
     const url = new URL(sourceUrl);
     const segments = url.pathname.split("/").filter(Boolean);
@@ -100693,6 +100743,13 @@ async function fetchStaticHtml(url) {
     const blockedBy = blockPageTitle(html3);
     if (blockedBy) {
       return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };
+    }
+    const shortPage = blockPageText(html3);
+    if (shortPage === "refused") {
+      return { status: 400, message: `${url} says it does not allow automated traffic: the store refuses automated requests.`, blocked: true };
+    }
+    if (shortPage === "maintenance") {
+      return { status: 400, message: `${url} is showing a maintenance page. The store's site is down; try again later.`, blocked: false };
     }
     return { html: html3 };
   }
@@ -100919,6 +100976,10 @@ function createApp() {
             headlessNote = `Headless browser got HTTP ${rendered.status}.`;
           } else if (blockedBy) {
             headlessNote = `The store showed the headless browser a block page ("${blockedBy}"): it refuses automated requests.`;
+          } else if (blockPageText(rendered.html) === "refused") {
+            headlessNote = "The store told the headless browser it does not allow automated traffic: it refuses automated requests.";
+          } else if (blockPageText(rendered.html) === "maintenance") {
+            headlessNote = "The store's site is showing a maintenance page. It is down; try again later.";
           } else {
             const leftProductPage = rendered.chartHtml !== null && new URL(rendered.finalUrl).pathname !== new URL(url).pathname;
             const renderedScrape = scrapeHtmlWithCheerio(
@@ -100926,7 +100987,8 @@ function createApp() {
               sourceUrl,
               overrides,
               rendered.jsonResponses,
-              leftProductPage ? rendered.chartHtml : null
+              leftProductPage ? rendered.chartHtml : null,
+              targetHtml
             );
             if (rendered.extraHtml?.length) {
               let earlierReviews = [];

@@ -630,3 +630,19 @@ test('BayEngage: score, content, user display name, reviewed_at and the reviewed
   assert.deepEqual(r.productKeys, ['2828']);
   assert.equal(r.productName, "Men's Short Sleeve Crew T-Shirt, White 3 Pack");
 });
+
+test('collectJsonReviews keeps the page\'s only review request when its product id is in the page source', () => {
+  const review = (id: number) => ({ id, score: 5, content: `Runs small but I love it, review ${id}`, product_id: 225730654, user: { display_name: `Buyer ${id}` } });
+  const list = { response: { pagination: { total: 3 }, reviews: [review(1), review(2), review(3)] } };
+  const url = 'https://api-cdn.yotpo.com/v1/widget/key/products/6264568643778/reviews.json?page=1';
+  const product = { keys: ['the-high-neck-tank'], name: null };
+  // The review service's id (225730654) is not the page's; the request's id is in the page source.
+  const withId = { ...product, knownIds: new Set(['6264568643778', '6042034798786']) };
+  assert.equal(collectJsonReviews([{ url, value: list }], withId).reviews.length, 3);
+  // The id is not in the page source: nothing says the request is for this page.
+  assert.equal(collectJsonReviews([{ url, value: list }], { ...product, knownIds: new Set(['6042034798786']) }).reviews.length, 0);
+  assert.equal(collectJsonReviews([{ url, value: list }], product).reviews.length, 0);
+  // A second request for another product (a carousel) makes the page's own widget unknowable.
+  const other = { url: 'https://api-cdn.yotpo.com/v1/widget/key/products/6042034798786/reviews.json?page=1', value: { response: { reviews: [{ ...review(9), product_id: 111 }] } } };
+  assert.equal(collectJsonReviews([{ url, value: list }, other], { ...product, knownIds: new Set(['6264568643778', '6042034798786']) }).reviews.length, 0);
+});

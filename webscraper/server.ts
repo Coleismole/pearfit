@@ -36,6 +36,8 @@ import {
   longestFreeText,
   productIdFromUrl,
   blockPageTitle,
+  blockPageText,
+  decodeHtmlEntities,
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
@@ -1028,6 +1030,11 @@ function scrapeHtmlWithCheerio(
    * /t/<product>/reviews). Product details and ids come from it; reviews come from `html`.
    */
   productHtml: string | null = null,
+  /**
+   * The page source as the server sent it, when `html` is the rendered page. A rendered page can lose
+   * the product ids that the source stated (framework state scripts); they still name this product.
+   */
+  sourceHtml: string | null = null,
 ) {
   const startTime = Date.now();
   const $ = cheerio.load(html);
@@ -1055,7 +1062,7 @@ function scrapeHtmlWithCheerio(
 
   const extractedName =
     overrides?.productName ||
-    structured?.name ||
+    (structured?.name ? decodeHtmlEntities(structured.name) : null) ||
     cleanProductTitle(meta('meta[property="og:title"]')) ||
     firstText('h1.product-title') ||
     cleanProductTitle($p('title').first().text()) ||
@@ -1064,7 +1071,7 @@ function scrapeHtmlWithCheerio(
 
   const extractedBrand =
     overrides?.brand ||
-    structured?.brand ||
+    (structured?.brand ? decodeHtmlEntities(structured.brand) : null) ||
     meta('meta[name="product:brand"]') ||
     meta('meta[property="product:brand"]') ||
     meta('meta[property="og:site_name"]') ||
@@ -1225,7 +1232,11 @@ function scrapeHtmlWithCheerio(
   });
   const fromJson = collectJsonReviews(
     jsonSources.filter((source) => source.value !== null),
-    { keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku), name: extractedName },
+    {
+      keys: pageProductKeys($p, productPageHtml, sourceUrl, structured?.identifiers ?? [], sku, sourceHtml ?? ''),
+      name: extractedName,
+      knownIds: new Set(`${productPageHtml} ${sourceHtml ?? ''}`.match(/\d{9,}/g) ?? []),
+    },
   );
   if (fromJson.reviews.length > 0) selectorsUsed.push(`review JSON (${fromJson.sources.join(', ')})`);
   const jsonReviews: RawScrapedReview[] = fromJson.reviews.map(({ productKeys: _k, productName: _n, ...review }) => review);
@@ -1315,6 +1326,7 @@ function pageProductKeys(
   sourceUrl: string,
   structuredIds: string[],
   sku: string,
+  sourceHtml = '',
 ): string[] {
   const keys = new Set<string>();
   const add = (value: unknown) => {
@@ -1328,6 +1340,18 @@ function pageProductKeys(
   $('form[action*="/cart/add"] [name="product-id"], form[action*="/cart/add"] input[name="product_id"]').each((_i, el) => {
     add($(el).attr('value'));
   });
+  // The review widget names its product (Yotpo: data-yotpo-product-id, Okendo: data-oke-reviews-product-id).
+  // One distinct id is this page's product. Several (a carousel of rated products) say nothing about it.
+  const widgetIds = new Set<string>();
+  $('[data-yotpo-product-id], [data-oke-reviews-product-id]').each((_i, el) => {
+    const id = ($(el).attr('data-yotpo-product-id') ?? $(el).attr('data-oke-reviews-product-id') ?? '').trim().replace(/^shopify-/, '');
+    if (/^\d{5,}$/.test(id)) widgetIds.add(id);
+  });
+  if (widgetIds.size === 1) widgetIds.forEach(add);
+  // Shopify's own product reference ("gid://shopify/Product/123") in the page or its source. One distinct
+  // id is this page's product; several (related products listed in the page) say nothing about it.
+  const gids = new Set([...`${html} ${sourceHtml}`.matchAll(/gid:\/\/shopify\/Product\/(\d{5,})/g)].map((m) => m[1]));
+  if (gids.size === 1) gids.forEach(add);
   try {
     const url = new URL(sourceUrl);
     const segments = url.pathname.split('/').filter(Boolean);
@@ -1405,6 +1429,13 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
     const blockedBy = blockPageTitle(html);
     if (blockedBy) {
       return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };
+    }
+    const shortPage = blockPageText(html);
+    if (shortPage === 'refused') {
+      return { status: 400, message: `${url} says it does not allow automated traffic: the store refuses automated requests.`, blocked: true };
+    }
+    if (shortPage === 'maintenance') {
+      return { status: 400, message: `${url} is showing a maintenance page. The store's site is down; try again later.`, blocked: false };
     }
     return { html };
   }
@@ -1694,6 +1725,10 @@ export function createApp() {
           } else if (blockedBy) {
             // A bot check or access-denied page is a refusal, reported as one and not worked around.
             headlessNote = `The store showed the headless browser a block page ("${blockedBy}"): it refuses automated requests.`;
+          } else if (blockPageText(rendered.html) === 'refused') {
+            headlessNote = 'The store told the headless browser it does not allow automated traffic: it refuses automated requests.';
+          } else if (blockPageText(rendered.html) === 'maintenance') {
+            headlessNote = "The store's site is showing a maintenance page. It is down; try again later.";
           } else {
             // The render may end on the product's own review page; product details come from the
             // product page snapshot then.
@@ -1704,6 +1739,7 @@ export function createApp() {
               overrides,
               rendered.jsonResponses,
               leftProductPage ? rendered.chartHtml : null,
+              targetHtml,
             );
             // Earlier pages of a review list that pages by link each hold their own reviews. Merge them in
             // page order, then the last page, so the list keeps the store's order (newest first).

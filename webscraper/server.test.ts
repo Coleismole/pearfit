@@ -527,3 +527,45 @@ test('/api/posthog-config hands the browser the public PostHog settings, empty w
     server.close();
   }
 });
+
+test('reviews are kept for the product id the page names in its review widget', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const items = [1, 2, 3].map((n) => ({ id: `r${n}`, rating: 5, body: `Fits well, review number ${n}, true to size.`, author: `Shopper ${n}`, product_id: '15436121243721' }));
+    const page = (widgets: string) => `<!DOCTYPE html><html><head><title>The Pit Stop</title>
+      <script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'Product', name: 'The Pit Stop', sku: '502261-132' })}</script></head>
+      <body><h1>The Pit Stop</h1>${widgets}
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { reviews: { total: 3, items } } })}</script></body></html>`;
+    const total = async (html: string) => {
+      const res = await request(port, 'POST', '/api/scrape', { rawHtml: html, commitToDb: false, render: 'never' });
+      return (res.json.report as { totalReviews: number } | undefined)?.totalReviews ?? 0;
+    };
+    // The widget names the product the reviews belong to.
+    assert.equal(await total(page('<div class="yotpo-widget-instance" data-yotpo-product-id="15436121243721"></div>')), 3);
+    // A carousel of several rated products names none of them as this page's product.
+    assert.equal(
+      await total(page('<div data-yotpo-product-id="15436121243721"></div><div data-yotpo-product-id="99999999999"></div>')),
+      0,
+    );
+  } finally {
+    server.close();
+  }
+});
+
+test('a page that states one Shopify product id names its product, a page that states several does not', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const items = [1, 2, 3].map((n) => ({ id: `r${n}`, rating: 5, body: `Runs small but I love it, review ${n}.`, author: `Buyer ${n}`, product_id: '6264568643778' }));
+    const page = (state: string) => `<!DOCTYPE html><html><head><title>Tank</title></head><body><h1>Tank</h1>
+      <script>window.__STATE__ = ${JSON.stringify(state)};</script>
+      <script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { reviews: { total: 3, items } } })}</script></body></html>`;
+    const total = async (html: string) => {
+      const res = await request(port, 'POST', '/api/scrape', { rawHtml: html, commitToDb: false, render: 'never', sku: 'TANK-1' });
+      return (res.json.report as { totalReviews: number } | undefined)?.totalReviews ?? 0;
+    };
+    assert.equal(await total(page('gid://shopify/Product/6264568643778')), 3);
+    assert.equal(await total(page('gid://shopify/Product/6264568643778 gid://shopify/Product/7777777777777')), 0);
+  } finally {
+    server.close();
+  }
+});

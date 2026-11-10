@@ -286,3 +286,20 @@ test('a cell that shows cm and inches in separate elements is read in cm', () =>
     { size: 'M', sortOrder: 2, chest_cm: 56, length_cm: 64, sleeve_cm: null },
   ]);
 });
+
+test('a bare number under a "(in)" header is inches even when another column says cm', () => {
+  const html = `<table><tr><th>Size</th><th>Chest Width (in)</th><th>Chest Width (cm)</th></tr>
+    <tr><td>M</td><td>21</td><td>53.3</td></tr></table>`;
+  // 21 in x 2.54 = 53.34 -> 53.3; the cm column agrees. Read as cm, 21 would be 21.0.
+  const rows = parseSizeChart(html);
+  assert.equal(rows[0].chest_cm, 53.3);
+  const inchOnly = `<table><tr><th>Size</th><th>Chest Width (in)</th><th>Length (cm)</th></tr>
+    <tr><td>M</td><td>21</td><td>70</td></tr></table>`;
+  assert.deepEqual(parseSizeChart(inchOnly).map((r) => [r.chest_cm, r.length_cm]), [[53.3, 70]]);
+});
+
+test('a single stated unit in a cell wins over the leading number', () => {
+  const html = `<table><caption>Size chart (in)</caption><tr><th>Size</th><th>Chest Width</th></tr>
+    <tr><td>M</td><td>21.5 (54.6 cm)</td></tr></table>`;
+  assert.equal(parseSizeChart(html)[0].chest_cm, 54.6);
+});

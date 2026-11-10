@@ -21,20 +21,33 @@ declare global {
 }
 
 let ready = false;
+let unavailable = false;
 const pending: Array<(posthog: PostHogClient) => void> = [];
 
 function run(callback: (posthog: PostHogClient) => void) {
   if (ready && window.posthog) callback(window.posthog);
-  else pending.push(callback);
+  else if (!unavailable) pending.push(callback);
+}
+
+/** PostHog will not load, so queued and later events are dropped instead of piling up. */
+function giveUp() {
+  unavailable = true;
+  pending.length = 0;
 }
 
 /** Loads PostHog once. Never throws: analytics must not break the app. */
 export async function initAnalytics(configUrl: string): Promise<void> {
   try {
     const response = await fetch(configUrl);
-    if (!response.ok) return;
+    if (!response.ok) {
+      giveUp();
+      return;
+    }
     const { projectToken, host } = (await response.json()) as { projectToken?: string; host?: string };
-    if (!projectToken || !host) return;
+    if (!projectToken || !host) {
+      giveUp();
+      return;
+    }
     const base = host.replace(/\/$/, '');
     const isDevelopment = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
@@ -46,7 +59,10 @@ export async function initAnalytics(configUrl: string): Promise<void> {
       script.onerror = () => reject(new Error('PostHog script did not load'));
       document.head.appendChild(script);
     });
-    if (!window.posthog) return;
+    if (!window.posthog) {
+      giveUp();
+      return;
+    }
     window.posthog.init(projectToken, {
       api_host: base,
       capture_exceptions: {
@@ -60,6 +76,7 @@ export async function initAnalytics(configUrl: string): Promise<void> {
     ready = true;
     pending.splice(0).forEach((callback) => run(callback));
   } catch {
+    giveUp();
     // Blocked by an ad blocker, offline, or misconfigured: the app works the same without it.
   }
 }

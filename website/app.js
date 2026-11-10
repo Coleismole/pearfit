@@ -68,28 +68,14 @@ function formatDelta(val) {
   return '0.0 cm';
 }
 
-const pendingPostHogCalls = [];
-let posthogReady = false;
-
-function callPostHog(callback) {
-  if (posthogReady) {
-    callback(window.posthog);
-  } else {
-    pendingPostHogCalls.push(callback);
-  }
-}
-
-window.addEventListener('posthog:initialized', () => {
-  posthogReady = true;
-  pendingPostHogCalls.splice(0).forEach((callback) => callback(window.posthog));
-});
-
+// Events go through analytics.js (window.PearfitAnalytics), which allow-lists them, queues until PostHog has
+// started and does nothing when it never does. If that script is missing, these still do nothing instead of throwing.
 function capture(event, properties) {
-  callPostHog((posthog) => posthog.capture(event, properties));
+  window.PearfitAnalytics?.track(event, properties);
 }
 
 function logPostHog(level, message, attributes) {
-  callPostHog((posthog) => posthog.logger?.[level]?.(message, attributes));
+  window.PearfitAnalytics?.log(level, message, attributes);
 }
 
 function buildShirtSvgPath(m) {

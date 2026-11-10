@@ -91,6 +91,9 @@ p { margin: 0 0 1rem; }
   height: 68px;
 }
 .brand-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-family: var(--serif);
   font-size: 1.45rem;
   font-weight: 600;
@@ -98,6 +101,12 @@ p { margin: 0 0 1rem; }
   text-decoration: none;
   color: var(--ink);
   white-space: nowrap;
+  flex-shrink: 0;
+}
+/* The pear mark beside the wordmark. Decorative: the text next to it names the brand. */
+.brand-mark {
+  height: 1.75rem;
+  width: auto;
   flex-shrink: 0;
 }
 .nav-links {

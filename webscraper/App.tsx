@@ -22,6 +22,9 @@ import { apiPath } from './clientApi';
 import { track } from './analytics.ts';
 import type { FitChartPayload } from './fitPayload';
 
+/** The pear mark, served from public/. BASE_URL is `/` locally and `/scraper/` on pearfit.app. */
+const LOGO_MARK = `${import.meta.env.BASE_URL}logo-mark.svg`;
+
 export default function App() {
   const [catalog, setCatalog] = useState<ProductFitReport[]>(SEED_CATALOG);
   const [usingSamples, setUsingSamples] = useState(true);
@@ -263,11 +266,12 @@ export default function App() {
       {/* Strict 3-Zone Top Bar Contract */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-stone-200 px-6 py-3.5">
         <div className="max-w-[1360px] mx-auto flex items-center justify-between gap-8">
-          {/* Zone 1: Single text element wordmark */}
+          {/* Zone 1: pear mark and wordmark */}
           <a
             href="#top"
-            className="font-display text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
+            className="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
           >
+            <img src={LOGO_MARK} alt="" width={19} height={28} className="h-7 w-auto" />
             Pearfit Scraper
           </a>
 
@@ -905,7 +909,8 @@ export default function App() {
       {/* Quiet Editorial Footer */}
       <footer className="border-t border-stone-200 bg-white py-6 px-6 mt-12">
         <div className="max-w-[1360px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>
+          <div className="flex items-center gap-2">
+            <img src={LOGO_MARK} alt="" width={11} height={16} className="h-4 w-auto" />
             Pearfit Scraper — numerical fit values are sent to the comparison engine
           </div>
           <div className="flex items-center gap-4">

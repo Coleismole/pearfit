@@ -533,3 +533,38 @@ test('an unlabeled chest is a flat width when the chart says the garment is meas
   const body = html.replace('so you may need to double some measurements.', 'and body measurements are on the next tab.');
   assert.equal(parseSizeChart(body)[0].chest_cm, null);
 });
+
+test('a Bootstrap "in" class or data-in-stock is not an inch unit; the cm toggle wins over table attributes', () => {
+  const table = `<table><tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr><tr><td>M</td><td>53</td><td>71</td></tr></table>`;
+  const pane = parseSizeChart(`<html><body><div class="tab-pane fade in active">${table}</div></body></html>`);
+  // No unit stated anywhere: no guess of inches (53 in would be 134.6 cm).
+  assert.notEqual(pane[0]?.chest_cm, 134.6);
+  const stock = parseSizeChart(`<html><body><table data-in-stock="1" id="size-chart--cm"><tr><th>Size</th><th>Pit to pit</th></tr><tr><td>M</td><td>53</td></tr></table></body></html>`);
+  assert.equal(stock[0]?.chest_cm, 53);
+});
+
+test('a cell with two units joined by a dash is one measurement, not a range', () => {
+  const rows = parseSizeChart(`<html><body><table><caption>Size guide</caption><tr><th>Size</th><th>Chest (pit to pit)</th></tr><tr><td>M</td><td>21 in - 53.3 cm</td></tr></table></body></html>`);
+  assert.equal(rows[0]?.chest_cm, 53.3);
+});
+
+test('a guide page with the same chart in inches and in cm is still unambiguous', () => {
+  const html = `<html><body><h2>Men's tops (in)</h2><table><tr><th>Size</th><th>Pit to pit (in)</th></tr><tr><td>M</td><td>20</td></tr></table>
+    <h2>Men's tops (cm)</h2><table><tr><th>Size</th><th>Pit to pit (cm)</th></tr><tr><td>M</td><td>51</td></tr></table></body></html>`;
+  const rows = parseGuidePageChart(html, { name: "Men's Tee", url: 'http://x/products/mens-tee' });
+  assert.equal(rows.length, 1); // 20 in = 50.8 cm and 51 cm are the same chart (less than 1 cm apart)
+});
+
+test('"short sleeve" in a product name does not make it a bottoms product', () => {
+  const html = `<html><body><h2>Men's shorts</h2><table><tr><th>Size</th><th>Pit to pit (cm)</th></tr><tr><td>M</td><td>47</td></tr></table>
+    <h2>Men's tops</h2><table><tr><th>Size</th><th>Pit to pit (cm)</th></tr><tr><td>M</td><td>54</td></tr></table></body></html>`;
+  const rows = parseGuidePageChart(html, { name: "Men's Short Sleeve Tee", url: 'http://x/products/short-sleeve-tee' });
+  assert.equal(rows[0]?.chest_cm, 54);
+});
+
+test('a flat-measure note near another chart does not make this chart\'s unlabeled Chest a flat width', () => {
+  const html = `<html><body><div><p>Garment measured laid flat.</p>
+    <table><tr><th>Size</th><th>Chest</th></tr><tr><td>M</td><td>54</td></tr></table>
+    <table><tr><th>Size</th><th>Chest</th></tr><tr><td>M</td><td>104</td></tr></table></div></body></html>`;
+  assert.deepEqual(parseSizeChart(html).filter((r) => r.chest_cm !== null), []);
+});

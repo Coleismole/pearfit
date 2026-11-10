@@ -343,6 +343,11 @@ function sizeGuideControls(page: Page): Locator[] {
   ];
 }
 
+/** The address without its #fragment: a guide that opens by changing the hash stays on the product page. */
+function withoutHash(url: string): string {
+  return url.split('#')[0];
+}
+
 /**
  * Opens the page's size guide and returns the page html once it holds a chart, or null. Controls are tried
  * one after another (an accordion named "Size & Fit" may hold only prose while a "Size Guide" button holds
@@ -356,15 +361,16 @@ export async function openSizeGuide(page: Page, until = Date.now() + 20_000, max
     const count = Math.min(await group.count().catch(() => 0), 3);
     for (let i = 0; i < count && tries < maxTries && until - Date.now() > 6_000; i++) {
       const control = group.nth(i);
-      const before = page.url();
+      const before = withoutHash(page.url());
+      const tablesBefore = (await page.evaluate(VISIBLE_TABLES).catch(() => 0)) as number;
       if (!(await clickLocator(control))) continue;
       tries += 1;
       // A drawer fills in after its animation or a fetch: wait until a table is showing, up to a few seconds.
       const settleBy = Math.min(Date.now() + 2500, until);
       do {
         await page.waitForTimeout(400);
-      } while (Date.now() < settleBy && !((await page.evaluate(VISIBLE_TABLES).catch(() => 0)) as number));
-      if (page.url() !== before) {
+      } while (Date.now() < settleBy && ((await page.evaluate(VISIBLE_TABLES).catch(() => 0)) as number) <= tablesBefore);
+      if (withoutHash(page.url()) !== before) {
         // The click left the product page. Come back; this control is not a same-page guide.
         await page.goBack({ waitUntil: 'domcontentloaded', timeout: 8000 }).catch(() => {});
         continue;
@@ -488,7 +494,9 @@ const CLICK_NEXT_NUMBERED_PAGE = `(() => {
 /** The review cards currently on the page, as markup: a small snapshot of one page of a replacing pager. */
 const REVIEW_CARDS_MARKUP = `(() => {
   ${DEEP_QUERY}
-  return '<div>' + deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)}).map((el) => el.outerHTML).join('') + '</div>';
+  // A wrapper that holds another match is skipped, as the reader does, so a card and its child are not both collected.
+  const cards = deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)});
+  return '<div>' + cards.filter((el) => !cards.some((other) => other !== el && el.contains(other))).map((el) => el.outerHTML).join('') + '</div>';
 })()`;
 
 /**
@@ -813,7 +821,7 @@ async function reviewFramePages(page: Page, stopAt: number): Promise<string[]> {
     const seen = new Set<string>();
     const collect = async () => {
       const cards = (await frame.evaluate(
-        `[...document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)})].map((el) => el.outerHTML)`,
+        `(() => { const all = [...document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)})]; return all.filter((el) => !all.some((o) => o !== el && el.contains(o))).map((el) => el.outerHTML); })()`,
       )) as string[];
       for (const card of cards) seen.add(card);
     };

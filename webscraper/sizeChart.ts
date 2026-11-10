@@ -219,12 +219,18 @@ function readMeasurement(raw: string): number | null {
 /** Number-unit pairs in a cell such as "61.5cm 24\"" (a cm/inch toggle renders both). */
 const UNIT_PAIR = /(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[½¼¾⅛⅜⅝⅞])?)\s*(cm|centimet(?:er|re)s?|in(?:ch(?:es)?)?\b|"|″)/gi;
 
+/** "21 in - 53.3 cm": the same measurement in two units, not a range. */
+function isDualUnit(text: string): boolean {
+  const units = [...text.matchAll(UNIT_PAIR)].map((m) => (/^c/i.test(m[2]) ? 'cm' : 'in'));
+  return units.length === 2 && units[0] !== units[1];
+}
+
 function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: Unit } | null {
   const text = raw.replace(/\s+/g, ' ').trim();
   if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
   // A range is not one measurement. Leave it null instead of picking an end.
   // Unit marks may sit between the number and the dash: 28" - 30", 86.5 cm - 90 cm.
-  if (/[\d½¼¾⅛⅜⅝⅞]\s*(?:["″”]|in\.?|cm)?\s*[-–—‑]\s*\d/i.test(text)) return null;
+  if (/[\d½¼¾⅛⅜⅝⅞]\s*(?:["″”]|in\.?|cm)?\s*[-–—‑]\s*\d/i.test(text) && !isDualUnit(text)) return null;
   // The same measurement in two units: use the centimetre one, else the inch one.
   const pairs = [...text.matchAll(UNIT_PAIR)].map((m) => ({
     value: readMeasurement(m[1]),
@@ -439,11 +445,13 @@ export function saysMeasuredFlat(text: string): boolean {
   return !/body measurements?|circumference|measure around|around the fullest|your (?:body|chest|bust) measure/i.test(t);
 }
 
-/** The chart's surroundings: the highest ancestor (up to 4 levels) that is still a small block. */
+/** The chart's surroundings: the highest ancestor (up to 4 levels) that is still a small block holding only this chart. */
 function surroundingBlock($: cheerio.CheerioAPI, node: unknown): ReturnType<cheerio.CheerioAPI> | null {
   let best: ReturnType<cheerio.CheerioAPI> | null = null;
   for (const parent of $(node as never).parents().toArray().slice(0, 4)) {
     if ($(parent).text().replace(/\s+/g, ' ').length > 5000) break;
+    // A block that holds another chart too says nothing about this one.
+    if ($(parent).find('table').length > 1) break;
     best = $(parent);
   }
   return best;
@@ -474,11 +482,15 @@ function unitFromAttrs($: cheerio.CheerioAPI, table: unknown): Unit | null {
   for (const el of [node, node.parent()]) {
     const attrs = (el.get(0) as { attribs?: Record<string, string> } | undefined)?.attribs ?? {};
     for (const [name, value] of Object.entries(attrs)) {
-      if (name === 'id' || name === 'class' || name.startsWith('data-')) parts.push(`${name} ${value}`);
+      // A unit-specific name only: a bare class "in" (Bootstrap's "tab-pane fade in") or data-in-stock says nothing.
+      if (/^data-(?:unit|units|measure|measurement|system)$/.test(name)) parts.push(value);
+      else if (name === 'id' || name === 'class') {
+        for (const token of value.split(/\s+/)) if (/[-_]/.test(token)) parts.push(token);
+      }
     }
   }
   const text = parts.join(' ').toLowerCase();
-  const inch = /(?:^|[^a-z])(?:in|inch|inches|imperial)(?:$|[^a-z])/.test(text);
+  const inch = /(?:^|[^a-z])(?:in|inch|inches|imperial)$|(?:^|[^a-z])(?:in|inch|inches|imperial)(?=[^a-z])/.test(text) && !/\bin-(?:stock|active|view)\b/.test(text);
   const cm = /(?:^|[^a-z])(?:cm|centimeters?|centimetres?|metric)(?:$|[^a-z])/.test(text);
   if (inch === cm) return null;
   return cm ? 'cm' : 'in';
@@ -520,7 +532,7 @@ function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
     // the loose words around it: a toggle's "in" and "cm" labels would read as a unit they do not select.
     const around = surroundingText($, el);
     const unit =
-      unitInText(context) ?? unitFromAttrs($, el) ?? unitFromToggle($, el) ?? unitInText(heading) ?? unitStated(around);
+      unitInText(context) ?? unitFromToggle($, el) ?? unitFromAttrs($, el) ?? unitInText(heading) ?? unitStated(around);
     const flat = saysMeasuredFlat(around);
     const parsed = preferChart(
       parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
@@ -627,8 +639,16 @@ const BOTTOM_WORDS = /\b(pant|pants|jean|jeans|short|shorts|skirt|skirts|legging
 function words(text: string): string {
   return text
     .toLowerCase()
+    .replace(/\bshort[- ]sleeves?\b/g, 'shortsleeve')
     .replace(/['’]s\b/g, 's')
     .replace(/[^a-z0-9]+/g, ' ');
+}
+
+/** The same chart, allowing for an inch table and a cm table that round differently (under 1 cm apart). */
+function sameChart(a: SizeChartRow[], b: SizeChartRow[]): boolean {
+  if (a.length !== b.length) return false;
+  const close = (x: number | null, y: number | null) => (x === null || y === null ? x === y : Math.abs(x - y) < 1);
+  return a.every((row, i) => row.size === b[i].size && close(row.chest_cm, b[i].chest_cm) && close(row.length_cm, b[i].length_cm) && close(row.sleeve_cm, b[i].sleeve_cm));
 }
 
 /**
@@ -666,8 +686,7 @@ export function parseGuidePageChart(html: string, hint: ProductHint): SizeChartR
   if (fits.length === 0) return [];
   const top = Math.max(...fits.map((c) => c.score));
   const best = fits.filter((c) => c.score === top);
-  const first = JSON.stringify(best[0].rows);
-  if (best.some((c) => JSON.stringify(c.rows) !== first)) return [];
+  if (best.some((c) => !sameChart(c.rows, best[0].rows))) return [];
   return best[0].rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 

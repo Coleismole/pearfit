@@ -234,7 +234,7 @@ export function reviewAnswers(review: Json): ReviewAnswer[] {
     if (!Array.isArray(list)) continue;
     for (const item of list) {
       if (!isObject(item)) continue;
-      const label = first(item, ['label', 'title', 'name', 'key', 'question', 'attributeName']);
+      const label = first(item, ['label', 'title', 'name', 'question', 'attributeName', 'key']);
       const type = str(item.type) ?? '';
       const options = Array.isArray(item.options) ? item.options : [];
       let scale: Scale | null = null;

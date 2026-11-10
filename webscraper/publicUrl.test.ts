@@ -55,3 +55,13 @@ test('the headless request guard refuses public names that resolve to private ad
   assert.equal(await guard('https://shop.example.com/p/2'), false);
   assert.equal(lookups, 3);
 });
+
+test('request guard lets data:, blob: and about: requests through', async () => {
+  const guard = createRequestHostGuard(async () => {
+    throw new Error('ENOTFOUND');
+  });
+  assert.equal(await guard('data:text/plain,hello'), false);
+  assert.equal(await guard('about:blank'), false);
+  assert.equal(await guard('blob:https://shop.example.com/1234'), false);
+  assert.equal(await guard('http://127.0.0.1/'), true);
+});

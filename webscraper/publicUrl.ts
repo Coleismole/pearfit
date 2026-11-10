@@ -116,6 +116,8 @@ export function createRequestHostGuard(
     } catch {
       return Promise.resolve(false);
     }
+    // data:, blob: and about: requests never leave the browser, and they have no hostname to check.
+    if (/^(?:data|blob|about):/i.test(rawUrl)) return Promise.resolve(false);
     let verdict = cache.get(hostname);
     if (!verdict) {
       verdict = (async () => {

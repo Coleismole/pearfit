@@ -9,7 +9,7 @@
  *
  * Playwright is imported lazily so the server still starts when no browser is installed.
  */
-import type { Browser, Page } from 'playwright';
+import type { Browser, Locator, Page } from 'playwright';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 import { extractReviewsFromJson, parseJsonBody, reviewIdentity } from './reviewJson.ts';
 import { parseSizeChart } from './sizeChart.ts';
@@ -75,6 +75,12 @@ export interface RenderedPage {
    * `html` is the last page. Each holds its own reviews.
    */
   extraHtml?: string[];
+  /**
+   * Size guides that are pages of their own, linked from the product page ("/pages/size-chart"), loaded when
+   * the product page itself showed no chart. They hold the store's tables for every product: use
+   * parseSizeChartWithGuides, which picks the table that fits the product.
+   */
+  guidePages?: string[];
 }
 
 export interface CapturedJson {
@@ -282,6 +288,126 @@ async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: Reg
     // not clickable; ignore
   }
   return false;
+}
+
+/** Labels of the controls that open a size guide: "Size Guide", "Size & Fit", "Find your size", "Measurements". */
+export const SIZE_GUIDE_LABEL =
+  /size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|find\s*(your|my)\s*(size|fit)|size\s*(info|help)|how to measure|measurements?$/i;
+/** A label that is nothing but a size guide name: safe to click as plain text (a DIV or SPAN with a handler). */
+const SIZE_GUIDE_TEXT = /^\s*(size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|find\s*(your|my)\s*size|size\s*info(rmation)?|size\s*help)\s*[+–—-]?\s*$/i;
+
+async function clickLocator(loc: Locator): Promise<boolean> {
+  try {
+    if (!(await loc.isVisible({ timeout: 500 }))) return false;
+  } catch {
+    return false;
+  }
+  try {
+    await loc.click({ timeout: 2000 });
+    return true;
+  } catch {
+    // A pop-up or sticky bar sits over it: a scripted click reaches the control anyway.
+    try {
+      await loc.evaluate((el) => (el as HTMLElement).click());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * The controls that can open a size guide, most specific first. Links count only when they stay on the
+ * page (a "#" or script address); a real address would leave the product, so those are read separately.
+ */
+function sizeGuideControls(page: Page): Locator[] {
+  const inPage = 'a:not([href]), a[href^="#"], a[href^="javascript"]';
+  return [
+    page.getByRole('tab', { name: SIZE_GUIDE_LABEL }),
+    page.getByRole('button', { name: SIZE_GUIDE_LABEL }),
+    page.locator('summary').filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.locator(inPage).filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.locator('[aria-haspopup="dialog"], [aria-controls], [data-modal], [data-drawer], [data-toggle], [data-bs-toggle]').filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.getByText(SIZE_GUIDE_TEXT).locator('visible=true'),
+  ];
+}
+
+/**
+ * Opens the page's size guide and returns the page html once it holds a chart, or null. Controls are tried
+ * one after another (an accordion named "Size & Fit" may hold only prose while a "Size Guide" button holds
+ * the table); a try that shows no chart is closed again with Escape. Nothing here leaves the page.
+ */
+export async function openSizeGuide(page: Page, maxTries = 4): Promise<string | null> {
+  let tries = 0;
+  for (const group of sizeGuideControls(page)) {
+    const count = Math.min(await group.count().catch(() => 0), 3);
+    for (let i = 0; i < count && tries < maxTries; i++) {
+      const control = group.nth(i);
+      const before = page.url();
+      if (!(await clickLocator(control))) continue;
+      tries += 1;
+      await page.waitForLoadState('networkidle', { timeout: 1500 }).catch(() => {});
+      await page.waitForTimeout(500);
+      if (page.url() !== before) {
+        // The click left the product page. Come back; this control is not a same-page guide.
+        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 8000 }).catch(() => {});
+        continue;
+      }
+      const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS).catch(() => '')) as string;
+      if (html && parseSizeChart(html).length > 0) return html;
+      await page.keyboard.press('Escape').catch(() => {});
+    }
+    if (tries >= maxTries) break;
+  }
+  return null;
+}
+
+/**
+ * Addresses of size guides that are pages of their own ("/pages/size-chart"): same-site links whose text or
+ * path says size guide. Product, collection and cart addresses are left out, as are links back to this page.
+ */
+const GUIDE_LINKS = `(() => {
+  const labelRe = /size\\s*(guide|chart)|sizing\\s*(guide|chart)|fit\\s*guide|size\\s*(&|and|\\+)\\s*fit|how to measure|measurement guide/i;
+  const pathRe = /size[-_]?(guide|chart)s?\\b|sizing[-_]?(guide|chart)?|fit[-_]?guide|measure/i;
+  const found = new Map();
+  for (const a of document.querySelectorAll('a[href]')) {
+    const raw = a.getAttribute('href') || '';
+    if (!raw || raw.startsWith('#') || /^(javascript|mailto|tel):/i.test(raw)) continue;
+    let u;
+    try { u = new URL(raw, location.href); } catch { continue; }
+    if (u.host !== location.host || u.pathname === location.pathname) continue;
+    if (/^\\/([a-z]{2}(-[a-z]{2})?\\/)?(products|collections|cart|account|search)\\b/i.test(u.pathname)) continue;
+    if (/[?&](prefn1|prefv1|filter|sort|variant)=/i.test(u.search)) continue;
+    const label = (a.getAttribute('aria-label') || a.textContent || '').replace(/\\s+/g, ' ').trim();
+    const byLabel = label.length < 60 && labelRe.test(label);
+    if (!byLabel && !pathRe.test(u.pathname)) continue;
+    if (!found.has(u.pathname)) found.set(u.pathname, { href: u.href, byLabel });
+  }
+  return [...found.values()].sort((x, y) => Number(y.byLabel) - Number(x.byLabel)).map((x) => x.href).slice(0, 3);
+})()`;
+
+/**
+ * Loads the size guides the product page links to, in a second tab of the same context (so the request
+ * guard still applies), and returns each page's html. Stops at the time limit.
+ */
+async function fetchGuidePages(page: Page, until: number): Promise<string[]> {
+  const pages: string[] = [];
+  const links = ((await page.evaluate(GUIDE_LINKS).catch(() => [])) as string[]) ?? [];
+  for (const href of links.slice(0, 2)) {
+    const left = until - Date.now();
+    if (left < 8_000) break;
+    const guide = await page.context().newPage();
+    try {
+      await guide.goto(href, { waitUntil: 'domcontentloaded', timeout: Math.min(15_000, left - 3_000) });
+      await guide.waitForLoadState('networkidle', { timeout: 3_000 }).catch(() => {});
+      pages.push((await guide.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string);
+    } catch {
+      // A guide that will not load is skipped.
+    } finally {
+      await guide.close().catch(() => {});
+    }
+  }
+  return pages;
 }
 
 /**
@@ -848,11 +974,8 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const reviewPage = (await page.evaluate(ALL_REVIEWS_LINK)) as string;
     const timeLeft = stopPagingAt - Date.now();
     if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25_000) {
-      await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-      await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-      // Keep the earlier snapshot unless this one holds a chart (the view may already show reviews only).
-      const withGuide = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
-      if (parseSizeChart(withGuide).length > 0) chartHtml = withGuide;
+      // Keep the earlier snapshot unless the opened guide holds a chart (the view may already show reviews only).
+      if (parseSizeChart(chartHtml).length === 0) chartHtml = (await openSizeGuide(page)) ?? chartHtml;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
       // Navigation may not run past the paging stop, so a slow review page cannot hit the hard deadline.
       await page
@@ -911,14 +1034,21 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       }
     }
 
-    // A size chart is often behind a button. Buttons and tabs only: a link can leave the page.
-    await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-    await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-    await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
+    // A size chart is often behind a button, tab, accordion or drawer. Only controls that stay on the page
+    // are clicked; a chart already in the snapshot needs no click.
+    if (parseSizeChart(chartHtml).length === 0) {
+      chartHtml = (await openSizeGuide(page)) ?? chartHtml;
+      await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
+    }
     await capture.settle(2000);
 
     const framePages = await reviewFramePages(page, stopPagingAt);
     const html = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    // Still no chart: the guide may be a page of its own. Read the pages the product page links to.
+    const guidePages =
+      parseSizeChart(chartHtml).length === 0 && parseSizeChart(html).length === 0
+        ? await fetchGuidePages(page, startedAt + renderBudgetMs() - 6_000)
+        : [];
     return {
       html,
       status,
@@ -927,6 +1057,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       chartHtml,
       jsonResponses: capture.items,
       extraHtml: [...extraHtml, ...widgetPages(capture.items), ...framePages],
+      guidePages,
     };
   } catch (err) {
     if (timedOut) {
@@ -1185,8 +1316,10 @@ async function renderWithServerlessChromium(url: string): Promise<RenderedPage> 
       });
     }
 
-    await clickRole('tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-    await clickRole('button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
+    if (parseSizeChart(chartHtml).length === 0) {
+      await clickRole('tab', SIZE_GUIDE_LABEL);
+      await clickRole('button', SIZE_GUIDE_LABEL);
+    }
     await sleep(500);
     await capture.settle(2000);
 

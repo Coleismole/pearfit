@@ -27,7 +27,7 @@ import {
   type CapturedJson,
 } from './headlessFetch.ts';
 import { collectJsonReviews, parseJsonBody, type JsonSource } from './reviewJson.ts';
-import { parseSizeChartFirst, type SizeChartRow } from './sizeChart.ts';
+import { parseSizeChartWithGuides, type SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
   labelledValue,
@@ -1694,6 +1694,7 @@ export function createApp() {
       let targetHtml = (rawHtml || '').trim();
       let renderedChartHtml: string | null = null; // headless snapshot from before the review steps
       let renderedFinalHtml: string | null = null; // headless page at the end, when the source page's reviews won
+      let renderedGuidePages: string[] = []; // size guide pages the product page linked to, read by the headless browser
       let sourceUrl = (url || 'batch://direct-review-payload').trim();
       let isRemoteUrl = false;
       let staticError: StaticFetchError | null = null;
@@ -1783,6 +1784,7 @@ export function createApp() {
             // The render's size chart is kept whichever review set wins.
             renderedChartHtml = rendered.chartHtml;
             renderedFinalHtml = rendered.html;
+            renderedGuidePages = rendered.guidePages ?? [];
             if (
               !scraped ||
               renderedScrape.reviews.length >= scraped.reviews.length ||
@@ -1817,7 +1819,7 @@ export function createApp() {
       const { meta, reviews } = scraped;
 
       if (reviews.length === 0) {
-        const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
+        const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, { name: meta.name, url: sourceUrl });
         // A chart with no parent SKU never shows up and never reaches Supabase.
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
@@ -1854,7 +1856,7 @@ export function createApp() {
       }
 
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
+      const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, { name: meta.name, url: sourceUrl });
 
       let supabase: SupabaseSync | null = null;
       if (commitToDb) {

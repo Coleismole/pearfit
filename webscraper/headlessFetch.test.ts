@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { closeHeadlessBrowser, embeddedWidgetHtml, isReviewWidgetFrame, navigationTimedOutAfterLoading, JsonCapture, linkStaysOnProduct, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
-import { parseSizeChart, parseSizeChartFirst } from './sizeChart.ts';
+import { parseSizeChart, parseSizeChartFirst, parseSizeChartWithGuides } from './sizeChart.ts';
 
 // A product page whose reviews exist only after JavaScript runs: one batch appears after
 // clicking a "Reviews" tab, one lives in a shadow root, and a "Load more" button adds a third.
@@ -348,4 +348,67 @@ test('a navigation timeout after the page committed is not fatal; other errors a
   assert.equal(navigationTimedOutAfterLoading(timeout, 'https://shop.example/products/x'), true);
   assert.equal(navigationTimedOutAfterLoading(timeout, 'about:blank'), false);
   assert.equal(navigationTimedOutAfterLoading(new Error('net::ERR_NAME_NOT_RESOLVED'), 'https://shop.example/'), false);
+});
+
+const GUIDE_TABLE = `<table><caption>Size guide (cm)</caption>
+  <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr>
+  <tr><td>M</td><td>54</td><td>72</td></tr></table>`;
+
+async function renderLocalPage(routes: Record<string, string>, path = '/product') {
+  const server = http.createServer((req, res) => {
+    const body = routes[new URL(req.url ?? '/', 'http://x').pathname];
+    res.writeHead(body === undefined ? 404 : 200, { 'content-type': 'text/html' });
+    res.end(body ?? 'not found');
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    return await renderPageHtml(`http://127.0.0.1:${port}${path}`);
+  } finally {
+    server.close();
+  }
+}
+
+test('renderPageHtml opens a size guide that is a plain element, not a button', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const result = await renderLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>
+      <article class="review-card"><p>Size: M. True to size.</p></article>
+      <span id="open" style="cursor:pointer">Size chart</span><div id="modal"></div>
+      <script>document.getElementById('open').addEventListener('click', () => {
+        document.getElementById('modal').innerHTML = ${JSON.stringify(GUIDE_TABLE)};
+      });</script></body></html>`,
+  });
+  assert.deepEqual(parseSizeChartFirst(result.html, result.chartHtml), [
+    { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+  ]);
+});
+
+test('renderPageHtml opens a size guide button that a sticky overlay covers', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const result = await renderLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>
+      <article class="review-card"><p>Size: M. True to size.</p></article>
+      <button id="open">Find your size</button><div id="modal"></div>
+      <div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99"></div>
+      <script>document.getElementById('open').addEventListener('click', () => {
+        document.getElementById('modal').innerHTML = ${JSON.stringify(GUIDE_TABLE)};
+      });</script></body></html>`,
+  });
+  assert.equal(parseSizeChartFirst(result.html, result.chartHtml)[0]?.chest_cm, 54);
+});
+
+test('renderPageHtml reads a size guide that is a page of its own and picks the table for the product', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const result = await renderLocalPage({
+    '/products/mens-tee': `<!DOCTYPE html><html><body><h1>Men's Tee</h1>
+      <article class="review-card"><p>Size: M. True to size.</p></article>
+      <a href="/pages/size-chart">Size chart</a>
+      <a href="/products/other-tee">Size guide of another product</a></body></html>`,
+    '/pages/size-chart': `<!DOCTYPE html><html><body><h1>Size chart</h1>
+      <h2>Women's</h2>${GUIDE_TABLE.replace('54', '47').replace('72', '62')}
+      <h2>Men's</h2>${GUIDE_TABLE}</body></html>`,
+  }, '/products/mens-tee');
+  assert.equal(parseSizeChart(result.html).length, 0); // the product page itself shows no chart
+  assert.equal(result.guidePages?.length, 1);
+  assert.deepEqual(parseSizeChartWithGuides([result.html, result.chartHtml], result.guidePages ?? [], { name: "Men's Tee", url: 'http://x/products/mens-tee' }), [
+    { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+  ]);
 });

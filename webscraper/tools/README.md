@@ -116,7 +116,10 @@ it came from, cell text as written (`product_tested`, `reviews_from`, `read_stat
 plus `table_section` and `table_row`, its place in the markdown). The names that the website's `stores.json` also has
 (`id`, `name`, `status`, `platform`, `product_tested`, `reviews_from`, `read_stated`, `size_bought_text`, `fit_answer_text`)
 mean the same thing there, and `platform` is computed by the same rules as `platformOf` in
-`website/scripts/build-stores.mjs`, so that script can read this file instead of parsing the markdown.
+`website/scripts/build-stores.mjs`, so that script can read this file instead of parsing the markdown. (Checked against
+`website/stores.json`: for the 66 stores it lists, those eight fields are identical except that the cell text here is as
+written in the markdown, with its backticks, where the script's `clean()` removes them. The script reads only the first
+table, so the 163 round 7 stores in this file are not in `stores.json`.)
 `verify-stores` starts the scraper, scrapes every
 entry (two at a time, 240 s each, one retry for a store that read too few reviews or failed) with `commitToDb: false`,
 and writes `verify-report.md` and `verify-report.json` to `tools/reports/` (ignored by git).

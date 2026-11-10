@@ -3,10 +3,11 @@
 // The Vercel project is rooted at website/, so these outputs are committed instead of built on deploy:
 //   website/api/recommend.js, website/api/candidates.js   <- `npm run build:api` in engine/
 //   website/scraper/ and website/api/scraper/             <- `node scripts/assemble-site.mjs` at the repo root
+//   website/stores.json                                   <- `node website/scripts/build-stores.mjs`, from webscraper/SUPPORTED_STORES.md
 //
 // This script runs both generators and then checks the git tree. A rebuild that changes nothing means the
 // committed files are current. Run it from the repo root after `npm ci` in webscraper/ (esbuild and vite are
-// installed there; neither generator needs the engine's or the repo root's node_modules):
+// installed there; no generator needs the engine's or the repo root's node_modules):
 //
 //   node scripts/check-bundles.mjs
 //
@@ -25,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // Only what the generators own. website/api/posthog-config.js is hand-written and stays out.
-const GENERATED = ['website/api/recommend.js', 'website/api/candidates.js', 'website/api/scraper', 'website/scraper'];
+const GENERATED = ['website/api/recommend.js', 'website/api/candidates.js', 'website/api/scraper', 'website/scraper', 'website/stores.json'];
 
 function run(command, args, cwd = root, capture = false) {
   if (!capture) console.log(`\n$ ${[command, ...args].join(' ')}${cwd === root ? '' : `   (in ${path.relative(root, cwd)}/)`}`);
@@ -51,6 +52,7 @@ if (!inCi && git(['status', '--porcelain', '--untracked-files=all', '--', ...GEN
 for (const [command, args, cwd] of [
   ['npm', ['run', 'build:api'], path.join(root, 'engine')],
   ['node', ['scripts/assemble-site.mjs'], root],
+  ['node', ['website/scripts/build-stores.mjs'], root],
 ]) {
   const built = run(command, args, cwd);
   if (built.status !== 0) {
@@ -71,7 +73,8 @@ const fix = [
   '(cd webscraper && npm ci)',
   '(cd engine && npm run build:api)',
   'node scripts/assemble-site.mjs',
-  'git add website/api website/scraper',
+  'node website/scripts/build-stores.mjs',
+  'git add website/api website/scraper website/stores.json',
 ].join('\n');
 
 console.error('\n=== Generated bundles are stale ===');

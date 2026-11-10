@@ -1,6 +1,6 @@
 # Fails when the generated files committed under website/ no longer match the sources.
-# website/api/recommend.js, candidates.js, website/api/scraper and website/scraper are build output that
-# Vercel serves as committed (the project is rooted at website/). See scripts/check-bundles.mjs for how the
+# website/api/recommend.js, candidates.js, website/api/scraper, website/scraper and website/stores.json are build
+# output that Vercel serves as committed (the project is rooted at website/). See scripts/check-bundles.mjs for how the
 # check works and why a plain rebuild-and-diff is reliable.
 name: Check generated bundles
 

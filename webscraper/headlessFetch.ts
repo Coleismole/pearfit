@@ -511,6 +511,22 @@ const SERIALIZE_WITH_SHADOW_ROOTS = `(() => {
   return '<!DOCTYPE html>' + (idx === -1 ? html + dump : html.slice(0, idx) + dump + html.slice(idx));
 })()`;
 
+/**
+ * page.evaluate that survives the page navigating under it (a locale or geo redirect, a consent reload):
+ * "Execution context was destroyed". Waits for the new page to settle and runs the script again.
+ */
+async function evaluateStable(page: Page, script: string): Promise<unknown> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await page.evaluate(script);
+    } catch (error) {
+      if (attempt >= 2 || !/execution context was destroyed|navigation/i.test(String(error))) throw error;
+      await page.waitForLoadState('domcontentloaded', { timeout: 15_000 }).catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
+    }
+  }
+}
+
 async function countReviews(page: Page): Promise<number> {
   return page.locator(REVIEW_CARD_SELECTOR).count();
 }
@@ -582,10 +598,10 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
 
     await clickFirst(page, 'button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
 
-    await page.evaluate(SCROLL_TO_END);
+    await evaluateStable(page, SCROLL_TO_END);
 
     // Snapshot before touching reviews: a review click may leave the product view.
-    let chartHtml = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    let chartHtml = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
 
     // The full review list is often behind a tab or accordion, even when a few highlight
     // reviews are already visible. A link may navigate away, so only use it as a last resort.
@@ -602,12 +618,12 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     }
 
     // Still no review data: the rating summary near the title often opens the review section.
-    if (capture.reviewCount() === 0 && (await page.evaluate(OPEN_RATING_SUMMARY))) {
+    if (capture.reviewCount() === 0 && (await evaluateStable(page, OPEN_RATING_SUMMARY))) {
       await page.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
     }
 
     // Widgets that load when they come into view (Okendo, Junip, Bazaarvoice) need to be seen.
-    await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
+    await evaluateStable(page, REVIEW_WIDGETS_INTO_VIEW);
     await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
     await capture.settle();
 
@@ -675,7 +691,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       await clickFirst(page, 'tab', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
       await clickFirst(page, 'button', /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
       // Keep the earlier snapshot unless this one holds a chart (the view may already show reviews only).
-      const withGuide = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+      const withGuide = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
       if (parseSizeChart(withGuide).length > 0) chartHtml = withGuide;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
       // Navigation may not run past the paging stop, so a slow review page cannot hit the hard deadline.
@@ -683,7 +699,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
         .goto(reviewPage, { waitUntil: 'domcontentloaded', timeout: Math.min(NAV_TIMEOUT_MS, timeLeft - 10_000) })
         .catch(() => null);
       await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-      await page.evaluate(REVIEW_WIDGETS_INTO_VIEW).catch(() => {});
+      await evaluateStable(page, REVIEW_WIDGETS_INTO_VIEW).catch(() => {});
       await capture.settle();
       await pageThroughReviews(pagingOps);
     }
@@ -701,7 +717,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       if (!next) break;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next}`);
       const here = page.url();
-      extraHtml.push((await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string);
+      extraHtml.push((await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string);
       cardsKept += cardsHere;
       const moved = await page
         .goto(next, { waitUntil: 'domcontentloaded', timeout: Math.max(3_000, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3_000)) })
@@ -722,7 +738,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
     await capture.settle(2000);
 
-    const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    const html = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     return {
       html,
       status,

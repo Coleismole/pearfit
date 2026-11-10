@@ -194,3 +194,26 @@ test('renderPageHtml pages through a review list whose pager sits outside the re
     server.close();
   }
 });
+
+test('renderPageHtml survives a page that redirects itself while it is being scrolled', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    if (req.url?.startsWith('/second')) {
+      res.end(`<!DOCTYPE html><html><head><title>Second</title></head><body><h1>Tee</h1>
+        <div class="review-card" data-author="Dana" data-rating="5"><p class="review-body-copy">Fits great after the redirect, true to size.</p></div></body></html>`);
+      return;
+    }
+    // A locale or consent redirect that fires while the renderer is already scrolling.
+    res.end(`<!DOCTYPE html><html><head><title>First</title></head><body style="height:9000px"><h1>Tee</h1>
+      <script>setTimeout(() => location.replace('/second'), 400);</script></body></html>`);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const result = await renderPageHtml(`http://127.0.0.1:${port}/first`);
+    assert.match(result.html, /data-author="Dana"/);
+    assert.match(result.finalUrl, /\/second$/);
+  } finally {
+    server.close();
+  }
+});

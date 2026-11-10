@@ -217,7 +217,7 @@ function chestKind(header: string): ChestKind | null {
   const h = header.toLowerCase();
   if (PIT_TO_PIT.test(h)) return 'flat';
   if (!/\b(chest|bust|pit)\b|body width/.test(h)) return null;
-  if (/pit[\s-]*to[\s-]*pit|body width|chest width|half chest|flat|across chest|laid flat/.test(h)) {
+  if (/pit[\s-]*to[\s-]*pit|body width|chest width|(?:half|1\/2|½)[\s-]*(?:chest|bust)|flat|across chest|laid flat/.test(h)) {
     return 'flat';
   }
   if (/circumference|all around|full chest|around bust|around chest/.test(h)) return 'circumference';

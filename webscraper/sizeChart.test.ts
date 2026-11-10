@@ -304,6 +304,20 @@ test('the unit comes from the table id or a unit sentence, never from the labels
   assert.deepEqual(parseSizeChart(`<div><p>Measurements are in cm and inches.</p><table>${rows}</table></div>`), []);
 });
 
+test('a half chest row is a flat chest, in a transposed chart', () => {
+  const html = `
+    <table class="size-chart-cm">
+      <caption>Size chart (cm)</caption>
+      <tr><td></td><td>S</td><td>M</td></tr>
+      <tr><td>1/2 Chest</td><td>58</td><td>60</td></tr>
+      <tr><td>Sleeve</td><td>77</td><td>79</td></tr>
+    </table>`;
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'S', sortOrder: 1, chest_cm: 58, length_cm: null, sleeve_cm: 77 },
+    { size: 'M', sortOrder: 2, chest_cm: 60, length_cm: null, sleeve_cm: 79 },
+  ]);
+});
+
 test('armpit to armpit, underarm to underarm and P2P headers are pit to pit, flat', () => {
   for (const header of ['Armpit to Armpit', 'Underarm-to-Underarm', 'P2P', 'Chest (Armpit-Armpit)']) {
     const html = `

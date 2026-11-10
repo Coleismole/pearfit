@@ -390,7 +390,7 @@ const GUIDE_LINKS = `(() => {
  * Loads the size guides the product page links to, in a second tab of the same context (so the request
  * guard still applies), and returns each page's html. Stops at the time limit.
  */
-async function fetchGuidePages(page: Page, until: number): Promise<string[]> {
+export async function fetchGuidePages(page: Page, until: number): Promise<string[]> {
   const pages: string[] = [];
   const links = ((await page.evaluate(GUIDE_LINKS).catch(() => [])) as string[]) ?? [];
   for (const href of links.slice(0, 2)) {

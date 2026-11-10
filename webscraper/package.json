@@ -17,9 +17,11 @@
     "browsers:install": "playwright install chromium"
   },
   "dependencies": {
+    "@sparticuz/chromium-min": "153.0.0",
     "@supabase/supabase-js": "^2.119.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/better-sqlite3": "^9.6.0",
+    "@vercel/speed-insights": "^2.1.0",
     "@vitejs/plugin-react": "^6.1.1",
     "better-sqlite3": "^13.0.3",
     "cheerio": "^1.2.0",
@@ -27,7 +29,6 @@
     "express": "^4.21.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
-    "@sparticuz/chromium-min": "153.0.0",
     "playwright": "^1.63.0",
     "puppeteer-core": "25.16.0",
     "react": "^19.0.1",

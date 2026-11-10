@@ -10,15 +10,22 @@ Out of scope: avatars, 3D, Unity, SMPL-X, MediaPipe, cloth simulation. Do not ad
 
 ## Architecture
 - TypeScript everywhere except SQL.
-- First MVP has no frontend: the matching engine runs from the terminal. Do not add a UI or API
-  server unless the team decides to.
+- First MVP has no frontend of its own: the matching engine runs from the terminal, and from the demo
+  frontend through the API layer below. Do not add a UI or a long-running API server unless the team
+  decides to; the API is Vercel functions.
 - `engine/src/` is the matching engine: pure functions, no I/O, no network, no LLM, no framework
   imports. Shared types live in `engine/src/types.ts`.
 - `engine/cli/` does file loading/validation and the terminal runners. It calls the engine;
   the engine never calls it.
 - `webscraper/` is a separate app with its own `package.json`. Don't mix its code into `engine/`.
-- Later, when there is an API: endpoints exist only where there is a secret or real logic
-  (`/recommend`, `/parse-product`, `/ingest-gmail`), and they import types from the engine.
+- The API layer exists. `engine/api/` holds the handlers for `POST /recommend` and `GET /candidates`, and
+  `engine/scripts/build-api.mjs` (`npm run build:api`) bundles them into `website/api/recommend.js` and
+  `website/api/candidates.js`. The bundles are committed, like `website/api/scraper`, because the Vercel
+  project is rooted at `website/` and cannot import `engine/`. The handlers read candidates from Supabase with
+  `SUPABASE_URL` and the publishable key only (never the secret key), cache them in memory for 5 minutes,
+  validate input with `engine/cli/validate.ts`, call `recommend()`, and send CORS headers only for pearfit.app
+  and localhost. The engine (`engine/src/`) stays pure: no I/O, no network, and it imports nothing from the API.
+  `/parse-product` and `/ingest-gmail` are still future endpoints.
 - Supabase is the team's shared fit store (adopted Nov 2026). The scraper pushes fit values to
   the shared Supabase project via the `commit_fit_report` RPC. Review text stays in SQLite
   (`webscraper/commercial_fit.db`). The candidate export (`engine/cli/export-candidates.ts`) can read
@@ -92,3 +99,4 @@ Candidate garment (used by the Pilot 1 engine; sizes listed smallest to largest)
 - Eval against ground truth: `npm run eval`
 - Tests: `npm test`
 - Typecheck: `npm run typecheck`
+- Rebuild the API bundles in `website/api/` after changing `engine/api`, `engine/src` or `engine/cli`: `npm run build:api`

@@ -77,9 +77,11 @@ function sortOrder(size: string, index: number): number {
 
 function unitInText(text: string): Unit | null {
   const h = text.toLowerCase();
-  if (/\bcm\b|centimet(?:er|re)s?/.test(h)) return 'cm';
-  if (/\binches\b|\binch\b|\(in\)|\bin\./.test(h)) return 'in';
-  return null;
+  const cm = /\bcm\b|centimet(?:er|re)s?/.test(h);
+  const inch = /\binches\b|\binch\b|\(in\)|\bin\./.test(h);
+  // Both named (a cm/inch switch, "in cm and inches"): the text does not say which one the numbers use.
+  if (cm === inch) return null;
+  return cm ? 'cm' : 'in';
 }
 
 /**
@@ -404,7 +406,7 @@ export function saysMeasuredFlat(text: string): boolean {
 function surroundingBlock($: cheerio.CheerioAPI, node: unknown): ReturnType<cheerio.CheerioAPI> | null {
   let best: ReturnType<cheerio.CheerioAPI> | null = null;
   for (const parent of $(node as never).parents().toArray().slice(0, 4)) {
-    if ($(parent).text().length > 4000) break;
+    if ($(parent).text().replace(/\s+/g, ' ').length > 5000) break;
     best = $(parent);
   }
   return best;
@@ -414,12 +416,34 @@ function surroundingText($: cheerio.CheerioAPI, node: unknown): string {
   return surroundingBlock($, node)?.text() ?? '';
 }
 
-/** The one unit a block of text names, or null when it names none or both. */
-function soleUnitInText(text: string): Unit | null {
-  const h = text.toLowerCase();
-  const cm = /\bcm\b|centimet(?:er|re)s?/.test(h);
-  const inch = /\binches\b|\binch\b|\(in\)|\bin\./.test(h);
-  if (cm === inch) return null;
+/**
+ * A sentence that states the unit of the chart: "All units are in inches", "Measurements are listed in cm".
+ * Two sentences that disagree, or a unit followed by "and" another unit, give null.
+ */
+function unitStated(text: string): Unit | null {
+  const found = new Set<Unit>();
+  const sentence = /\b(?:units?|measurements?|sizes?|dimensions?)\s+(?:are\s+)?(?:all\s+)?(?:listed\s+|given\s+|shown\s+|stated\s+)?in\s+(inches|inch|centimeters|centimetres|cm)\b(?!\s*(?:and|&|\/|or)\s*(?:inch|in\b|cm|centi))/gi;
+  for (const match of text.replace(/\s+/g, ' ').matchAll(sentence)) found.add(/^c/i.test(match[1]) ? 'cm' : 'in');
+  return found.size === 1 ? [...found][0] : null;
+}
+
+/**
+ * The unit a table's own markup names: id, class and data attributes of the table and its parent, such as
+ * id="size-chart-table--in" or class="chart chart--cm". Both units named, or neither, gives null.
+ */
+function unitFromAttrs($: cheerio.CheerioAPI, table: unknown): Unit | null {
+  const node = $(table as never);
+  const parts: string[] = [];
+  for (const el of [node, node.parent()]) {
+    const attrs = (el.get(0) as { attribs?: Record<string, string> } | undefined)?.attribs ?? {};
+    for (const [name, value] of Object.entries(attrs)) {
+      if (name === 'id' || name === 'class' || name.startsWith('data-')) parts.push(`${name} ${value}`);
+    }
+  }
+  const text = parts.join(' ').toLowerCase();
+  const inch = /(?:^|[^a-z])(?:in|inch|inches|imperial)(?:$|[^a-z])/.test(text);
+  const cm = /(?:^|[^a-z])(?:cm|centimeters?|centimetres?|metric)(?:$|[^a-z])/.test(text);
+  if (inch === cm) return null;
   return cm ? 'cm' : 'in';
 }
 
@@ -444,12 +468,14 @@ function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
     if (grid.length < 2) return;
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
-    const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
-    const block = surroundingBlock($, el);
-    const around = block?.text() ?? '';
-    // A unit toggle in view means the unit is whatever it shows: never read it from the words around it.
-    const hasToggle = (block?.find('input[type="radio"], [data-unit]').length ?? 0) > 0;
-    const unit = unitInText(context) ?? unitFromToggle($, el) ?? (hasToggle ? null : soleUnitInText(around));
+    // The element just before the table counts only if it is a sentence or label, not a one-word "cm" tab.
+    const before = node.prev().text().replace(/\s+/g, ' ').trim();
+    const context = [node.find('caption').text(), node.attr('class') ?? '', before.length > 6 ? before : '', grid[headerAt].join(' ')].join(' ');
+    // The unit comes from the chart's own words, its markup, its toggle, or the heading above it. Never from
+    // the loose words around it: a toggle's "in" and "cm" labels would read as a unit they do not select.
+    const around = surroundingText($, el);
+    const unit =
+      unitInText(context) ?? unitFromAttrs($, el) ?? unitFromToggle($, el) ?? unitInText(heading) ?? unitStated(around);
     const flat = saysMeasuredFlat(around);
     const parsed = preferChart(
       parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),

@@ -287,6 +287,23 @@ test('a cell that shows cm and inches in separate elements is read in cm', () =>
   ]);
 });
 
+test('the unit comes from the table id or a unit sentence, never from the labels of a toggle', () => {
+  const tabs = `<a href="#t-in" class="active">in</a> <a href="#t-cm">cm</a>`;
+  const rows = `<tr><td>Size</td><td>Pit to pit</td><td>Body Length</td></tr><tr><td>XS</td><td>22 1/4</td><td>24 1/2</td></tr>`;
+  // The table says inches in its id: 22.25 x 2.54 = 56.515 -> 56.5; 24.5 x 2.54 = 62.23 -> 62.2
+  assert.deepEqual(parseSizeChart(`<div>${tabs}<table id="size-chart-table--in">${rows}</table></div>`), [
+    { size: 'XS', sortOrder: 0, chest_cm: 56.5, length_cm: 62.2, sleeve_cm: null },
+  ]);
+  // Only the toggle labels "in" and "cm" around a table that names no unit: unknown, so no rows.
+  assert.deepEqual(parseSizeChart(`<div>${tabs}<table>${rows}</table></div>`), []);
+  // A sentence that states the unit.
+  assert.deepEqual(parseSizeChart(`<div><p>All units are in inches.</p><table>${rows}</table></div>`), [
+    { size: 'XS', sortOrder: 0, chest_cm: 56.5, length_cm: 62.2, sleeve_cm: null },
+  ]);
+  // "in cm and inches" states no single unit.
+  assert.deepEqual(parseSizeChart(`<div><p>Measurements are in cm and inches.</p><table>${rows}</table></div>`), []);
+});
+
 test('armpit to armpit, underarm to underarm and P2P headers are pit to pit, flat', () => {
   for (const header of ['Armpit to Armpit', 'Underarm-to-Underarm', 'P2P', 'Chest (Armpit-Armpit)']) {
     const html = `

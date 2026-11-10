@@ -25,7 +25,7 @@
   /**
    * Event name -> the properties it may carry.
    * @typedef {'section_viewed'|'scraper_link_clicked'|'stores_link_clicked'|'demo_started'|'demo_completed'
-   *   |'demo_failed'|'fit_size_inspected'|'stakeholder_audience_selected'|'fit_recommendation_explored'|'fit_reference_selected'
+   *   |'demo_failed'|'store_search_used'|'store_filter_used'|'fit_size_inspected'|'stakeholder_audience_selected'|'fit_recommendation_explored'|'fit_reference_selected'
    *   |'roi_calculator_adjusted'|'inquiry_mode_selected'|'inquiry_submitted'} EventName
    * @type {Readonly<Record<EventName, readonly string[]>>}
    */
@@ -42,6 +42,10 @@
     demo_started: ['source', 'host', 'candidate_id', 'wardrobe_size'],
     demo_completed: ['source', 'host', 'candidate_id', 'wardrobe_size', 'size', 'confidence', 'has_fits_like', 'duration_ms'],
     demo_failed: ['source', 'host', 'candidate_id', 'reason', 'status', 'duration_ms'],
+    // Supported stores page. The search text is never sent: its length, a hostname when it is a domain name, and how
+    // many stores matched. `filter` is platform, size_chart, size_bought or fit_answer; `value` one of our own options.
+    store_search_used: ['query_length', 'host', 'result_count'],
+    store_filter_used: ['filter', 'value', 'result_count'],
     // The sample preview and calculators already on the page (names unchanged so existing charts keep working).
     fit_size_inspected: ['product_id', 'selected_size'],
     stakeholder_audience_selected: ['audience'],

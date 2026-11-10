@@ -8,6 +8,9 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `index.html` — Page markup.
 - `styles.css` — Stylesheet, including a dark color scheme.
 - `app.js` — Sample silhouette, sample size matrix, ROI model, mobile menu, and the inquiry form.
+- `stores.html`, `stores.js`, `stores.json` — The supported-stores page and its data (see Supported stores).
+- `nav.js` — The mobile menu, shared by the pages.
+- `scripts/build-stores.mjs` — Builds `stores.json` from `webscraper/SUPPORTED_STORES.md`.
 - `demo.js` — The live size demo (`#try`): form, validation, the two API calls, the result card.
 - `analytics.js` — The event layer: `PearfitAnalytics.track(name, props)` (see Analytics).
 - `posthog-init.js`, `speed-insights-init.js` — Analytics loaders.
@@ -22,12 +25,13 @@ Open `website/index.html` in a browser, or run `npx serve website`.
 The Vercel project now deploys from `Coleismole/pearfit`.
 
 ## Generated files
-`api/recommend.js`, `api/candidates.js`, `api/scraper/` and `scraper/` are build output, committed because the Vercel project is rooted at `website/`. Do not edit them by hand.
+`api/recommend.js`, `api/candidates.js`, `api/scraper/`, `scraper/` and `stores.json` are build output, committed because the Vercel project is rooted at `website/`. Do not edit them by hand.
 
 | Output | Rebuild with (repo root) |
 | --- | --- |
 | `api/recommend.js`, `api/candidates.js` | `(cd engine && npm run build:api)` |
 | `scraper/`, `api/scraper/` | `node scripts/assemble-site.mjs` |
+| `stores.json` | `node website/scripts/build-stores.mjs` (from `webscraper/SUPPORTED_STORES.md`) |
 
 Both need `npm ci` in `webscraper/` first (esbuild and vite are installed there). The `Check generated bundles` workflow (`.github/workflows/check-bundles.yml`) rebuilds both on every pull request and push to `main` and fails, listing the changed files and the diff stat, when the committed copies are stale. Run the same check locally with `node scripts/check-bundles.mjs` from a tree where those paths are committed. The Vite file names are content hashes, so with the lockfile installed the rebuild is byte-for-byte reproducible and a plain diff is a fair test.
 
@@ -45,6 +49,20 @@ The `#try` section calls the engine through the site's own API (built from `engi
 
 The pure parts (parsing, wardrobe building, link matching, response checks, error mapping, the client with an injected `fetch`) are unit-tested in `test/demo.test.mjs` with a mocked `fetch`.
 
+## Supported stores
+`stores.html` lists the stores the scraper has read, from `stores.json`, with a search box and filters for the review platform, the size chart, whether reviews state the size bought, and whether they carry a fit answer. Stores that could not be read are under "Not supported yet", grouped by reason, with a note that refusals are never bypassed. It is linked from the header and the footer of both pages. It is a static file, so `vercel.json` needs no rewrite for it.
+
+`stores.json` is generated and committed. The markdown `webscraper/SUPPORTED_STORES.md` stays the source of truth: after it changes, run
+
+```sh
+node website/scripts/build-stores.mjs          # writes website/stores.json
+node website/scripts/build-stores.mjs --check  # exits 1 if the committed file is stale
+```
+
+The `Check generated bundles` workflow runs the same check. The output has no timestamp, so the same markdown always gives the same bytes. When the machine-readable verified-stores list under `webscraper/tools/` lands, switch `loadSource` and the parser in that script to it and keep the output shape.
+
+What the markdown does not say is not made up. It records the review platform and the size bought and fit answer for every store, but a size chart only for the size-chart-only store, so every other store reads "Not recorded yet" for the size chart. "Read / stated" and the "Limits we found" notes are copied from the markdown's table and its "Known limits" list. The review platform is normalised from the "Reviews come from" cell (a named platform wins over wording about how it was reached); `node website/scripts/build-stores.mjs` warns, and a test fails, when a new store's platform is not recognised.
+
 ## Analytics
 PostHog is loaded by `posthog-init.js`, which reads `/api/posthog-config` (`POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` on Vercel). Every event goes through `PearfitAnalytics.track(name, props)` in `analytics.js`. It never throws and does nothing when PostHog is blocked, unconfigured or absent (the GitHub Pages copy has no `/api`): events queue (at most 50) until PostHog starts and are dropped once `posthog:unavailable` fires.
 
@@ -54,12 +72,14 @@ Privacy rule: hostnames and counts only. No review text, names, emails, full URL
 
 | Event | Properties | Sent when |
 | --- | --- | --- |
-| `section_viewed` | `section` (`hero`, `benefits`, `demo`, `how`, `roi`, `pilot`, `faq`) | Any part of a section is in the top 60% of the screen, once per section per page view |
+| `section_viewed` | `section` (`hero`, `benefits`, `demo`, `try`, `how`, `roi`, `pilot`, `faq`, and `stores` on the stores page) | Any part of a section is in the top 60% of the screen, once per section per page view |
 | `scraper_link_clicked` | `location` (`header`, `footer`, or a section id) | A link to `/scraper` is clicked |
 | `stores_link_clicked` | `location` | A link to the supported-stores page is clicked |
 | `demo_started` | `source`, `host`, `candidate_id`, `wardrobe_size` | The live demo sends a request (or a pasted link is checked) |
 | `demo_completed` | the above plus `size`, `confidence`, `has_fits_like`, `duration_ms` | The engine answered. Shirt names and measurements are never sent |
 | `demo_failed` | `source`, `host`, `candidate_id`, `reason`, `status`, `duration_ms` | The request failed, the link matched no product (`no_match`), or the product list did not load (`source: candidate_list`) |
+| `store_search_used` | `query_length`, `host` (only when the query is a domain name), `result_count` | The visitor stops typing in the stores search. The text is not sent |
+| `store_filter_used` | `filter`, `value`, `result_count` | A platform, size chart, size bought or fit answer filter changes |
 | `fit_size_inspected` | `product_id`, `selected_size` | A size button in the sample product card is pressed |
 | `fit_reference_selected` | `reference_garment_id` | The sample reference garment changes |
 | `fit_recommendation_explored` | `interaction`, `usual_size`, `recommended_size` | The sample size matrix or usual-size picker is used |

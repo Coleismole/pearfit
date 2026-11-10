@@ -154,7 +154,8 @@ p { margin: 0 0 1rem; }
   text-underline-offset: 6px;
   transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
-.nav-links a:hover {
+.nav-links a:hover,
+.nav-links a[aria-current="page"] {
   color: var(--ink);
   text-decoration-color: var(--pear);
 }
@@ -919,6 +920,72 @@ button:focus-visible {
 .try-pick-tag { font: 600 0.68rem var(--mono); color: var(--pear); margin-left: 0.3rem; }
 .try-foot { font-size: 0.78rem; color: var(--ink-2); margin: 0; }
 
+/* Supported stores page */
+.stores-intro { padding-bottom: 40px; }
+.stores-intro h1 { margin-bottom: 0.5rem; }
+.stores-intro .lede { max-width: 68ch; }
+.stores-tested { min-height: 1.65em; margin-top: 1rem; } /* filled in once stores.json loads; the height is held so nothing moves */
+.stores-count { font: 500 0.9rem var(--mono); color: var(--ink-2); margin-left: 0.5rem; letter-spacing: 0; }
+.stores-filters {
+  display: grid;
+  grid-template-columns: 2fr repeat(4, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin: 1.5rem 0 0.75rem;
+}
+.stores-filters > * { min-width: 0; }
+.stores-note { margin: 0 0 0.75rem; max-width: 80ch; }
+/* While the list loads, hold the height it will have so the section below does not jump when it arrives. */
+.stores-list-section[aria-busy="true"] { min-height: 100vh; }
+.stores-status { font-size: 0.85rem; color: var(--ink-2); margin: 0 0 1rem; min-height: 1.4em; }
+.store-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.store {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+}
+.store-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.store-name { font: 600 1.05rem/1.3 var(--sans); margin: 0; overflow-wrap: anywhere; }
+.store-tag {
+  font: 600 0.72rem var(--mono);
+  color: var(--pear);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  white-space: nowrap;
+}
+.store-product { font-size: 0.82rem; color: var(--ink-2); margin: 0; overflow-wrap: anywhere; }
+.store-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 0; padding-top: 10px; border-top: 1px solid var(--line); }
+.store-facts dt { font-size: 0.72rem; color: var(--ink-2); }
+.store-facts dd { margin: 1px 0 0; font: 500 0.82rem var(--mono); overflow-wrap: anywhere; }
+.store-notes { border: 0; padding: 0; }
+.store-notes summary { font-size: 0.82rem; color: var(--pear); }
+.store-notes ul { margin: 0.25rem 0 0.5rem; padding-left: 1.1rem; font-size: 0.82rem; color: var(--ink-2); display: grid; gap: 0.35rem; }
+.store-group { margin-top: 2rem; }
+.store-group h3 { font: 600 1rem var(--sans); margin-bottom: 0.75rem; }
+.store-reason { margin-bottom: 1.25rem; }
+.store-reason > p { font-size: 0.88rem; color: var(--ink-2); margin: 0 0 0.5rem; max-width: 80ch; }
+.store-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.store-chips li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.86rem;
+}
+
 /* How It Works Steps */
 .steps {
   list-style: none;
@@ -1285,6 +1352,22 @@ details p {
   gap: 1.5rem;
   flex-wrap: wrap;
 }
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  flex-basis: 100%;
+}
+.footer-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--ink-2);
+}
+.footer-links a:hover { color: var(--ink); }
 
 /* Responsive */
 @media (max-width: 960px) {
@@ -1299,6 +1382,9 @@ details p {
   }
   .bento-span-2 { grid-column: span 1; }
   .try-grid { grid-template-columns: 1fr; gap: 28px; }
+  .stores-filters { grid-template-columns: 1fr 1fr; }
+  .stores-filters .stores-search { grid-column: 1 / -1; }
+  .store-list { grid-template-columns: 1fr 1fr; }
   .try-result { position: static; }
   .kpi-strip { grid-template-columns: repeat(2, 1fr); }
   .steps { grid-template-columns: 1fr 1fr; }
@@ -1328,6 +1414,9 @@ details p {
   .wrap { padding: 0 16px; }
   .js .nav-open .nav-links { padding: 8px 16px 16px; }
   .try-step { padding: 18px; }
+  .stores-filters { grid-template-columns: 1fr; }
+  .store-list { grid-template-columns: 1fr; }
+  .stores-filters .btn { justify-self: start; }
   .try-shirt-top { grid-template-columns: 1fr; }
   .try-shirt-dims { gap: 8px; }
   .try-result { padding: 20px; }

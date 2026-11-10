@@ -220,30 +220,6 @@ function renderHeroPdp() {
   `;
 }
 
-// Narrow screens: the primary links live in a menu under the bar, opened by the menu button.
-function initNavMenu() {
-  const nav = document.querySelector('.nav');
-  const toggle = document.getElementById('nav-toggle');
-  const links = document.getElementById('nav-links');
-  if (!nav || !toggle || !links) return;
-  const setOpen = (open) => {
-    toggle.setAttribute('aria-expanded', String(open));
-    nav.classList.toggle('nav-open', open);
-  };
-  toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
-  links.addEventListener('click', (event) => {
-    if (event.target.closest('a')) setOpen(false);
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || toggle.getAttribute('aria-expanded') !== 'true') return;
-    setOpen(false);
-    toggle.focus();
-  });
-  window.matchMedia('(min-width: 961px)').addEventListener('change', (event) => {
-    if (event.matches) setOpen(false);
-  });
-}
-
 // Audience Bento Filter
 function initStakeholderTabs() {
   const tabsHost = document.getElementById('stakeholder-tabs');
@@ -529,7 +505,6 @@ document.querySelectorAll('[data-inquiry-switch]').forEach((link) => {
   link.addEventListener('click', () => setInquiryMode(link.dataset.inquirySwitch));
 });
 
-initNavMenu();
 renderHeroPdp();
 initStakeholderTabs();
 renderUsual();

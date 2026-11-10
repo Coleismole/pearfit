@@ -91,7 +91,7 @@ function unitInText(text: string): Unit | null {
  */
 function unitFromToggle($: cheerio.CheerioAPI, node: unknown): Unit | null {
   for (const box of $(node as never).parents().toArray()) {
-    const fromButtons = unitFromButtons($, box);
+    const fromButtons = unitFromButtons($, box) ?? unitFromSelect($, box);
     if (fromButtons) return fromButtons;
     const checked = new Set<Unit>();
     let found = false;
@@ -139,6 +139,32 @@ function unitFromButtons($: cheerio.CheerioAPI, box: unknown): Unit | null {
       if (isActive) active.add(unit);
     });
   return found >= 2 && active.size === 1 ? [...active][0] : null;
+}
+
+/**
+ * A unit drop-down: a select whose options are all units (cm / inches). The selected option is the unit
+ * shown, or the first option when none is marked. A select with any other kind of option is not a unit control.
+ */
+function unitFromSelect($: cheerio.CheerioAPI, box: unknown): Unit | null {
+  const units = new Set<Unit>();
+  let found = 0;
+  $(box as never)
+    .find('select')
+    .each((_i, select) => {
+      const options = $(select).find('option').toArray();
+      const read = (option: (typeof options)[number]): Unit | null => {
+        const text = `${$(option).attr('value') ?? ''} ${$(option).text()}`.trim().toLowerCase();
+        if (/^(cm|centimet\w*|metric)\b/.test(text)) return 'cm';
+        if (/^(in|inch\w*|imperial)\b/.test(text)) return 'in';
+        return null;
+      };
+      const mapped = options.map(read);
+      if (options.length < 2 || mapped.some((unit) => unit === null) || new Set(mapped).size < 2) return;
+      found += 1;
+      const picked = options.findIndex((option) => $(option).is('[selected]'));
+      units.add(mapped[picked >= 0 ? picked : 0] as Unit);
+    });
+  return found === 1 && units.size === 1 ? [...units][0] : null;
 }
 
 const UNICODE_FRACTIONS: Record<string, number> = {
@@ -189,7 +215,8 @@ function parseCell(raw: string, tableUnit: Unit | null): { value: number; unit: 
   const text = raw.replace(/\s+/g, ' ').trim();
   if (!text || /^(-|–|—|n\/a|null|unknown)$/i.test(text)) return null;
   // A range is not one measurement. Leave it null instead of picking an end.
-  if (/[\d½¼¾⅛⅜⅝⅞]\s*[-–—]\s*\d/.test(text)) return null;
+  // Unit marks may sit between the number and the dash: 28" - 30", 86.5 cm - 90 cm.
+  if (/[\d½¼¾⅛⅜⅝⅞]\s*(?:["″”]|in\.?|cm)?\s*[-–—‑]\s*\d/i.test(text)) return null;
   // The same measurement in two units: use the centimetre one, else the inch one.
   const pairs = [...text.matchAll(UNIT_PAIR)].map((m) => ({
     value: readMeasurement(m[1]),
@@ -447,6 +474,11 @@ function unitFromAttrs($: cheerio.CheerioAPI, table: unknown): Unit | null {
   return cm ? 'cm' : 'in';
 }
 
+/** A size with no measurement at all says nothing: its row is dropped (it would only add an empty row to the store). */
+function withMeasurements(rows: SizeChartRow[]): SizeChartRow[] {
+  return rows.filter((row) => row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null);
+}
+
 /** A chart found in a page, with the heading above it. */
 interface ChartCandidate {
   rows: SizeChartRow[];
@@ -486,7 +518,7 @@ function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
-    out.push({ rows: parsed.rows, label });
+    out.push({ rows: withMeasurements(parsed.rows), label });
   });
   return out;
 }
@@ -547,7 +579,7 @@ function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
       parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
       parseTransposedTable(grid[0], grid.slice(1), unit, flat),
     );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+    if (parsed && parsed.rows.length > best.length) best = withMeasurements(parsed.rows);
   });
   return best;
 }

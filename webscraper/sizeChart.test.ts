@@ -304,6 +304,22 @@ test('the unit comes from the table id or a unit sentence, never from the labels
   assert.deepEqual(parseSizeChart(`<div><p>Measurements are in cm and inches.</p><table>${rows}</table></div>`), []);
 });
 
+test('a range with unit marks on both ends is a range, not its first number', () => {
+  const html = `
+    <table>
+      <caption>Size guide (inches)</caption>
+      <tr><th>Size</th><th>Body width</th><th>Sleeve</th></tr>
+      <tr><td>S</td><td>19</td><td>28" - 30"</td></tr>
+      <tr><td>M</td><td>20 in - 21 in</td><td>31"</td></tr>
+      <tr><td>L</td><td>22 in - 23 in</td><td>32" - 33"</td></tr>
+    </table>`;
+  // 19 x 2.54 = 48.26 -> 48.3 ; 31 x 2.54 = 78.74 -> 78.7. The ranges stay null, and size L, with nothing but ranges, has no row.
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'S', sortOrder: 1, chest_cm: 48.3, length_cm: null, sleeve_cm: null },
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: null, sleeve_cm: 78.7 },
+  ]);
+});
+
 test('a half chest row is a flat chest, in a transposed chart', () => {
   const html = `
     <table class="size-chart-cm">
@@ -316,6 +332,30 @@ test('a half chest row is a flat chest, in a transposed chart', () => {
     { size: 'S', sortOrder: 1, chest_cm: 58, length_cm: null, sleeve_cm: 77 },
     { size: 'M', sortOrder: 2, chest_cm: 60, length_cm: null, sleeve_cm: 79 },
   ]);
+});
+
+test('a unit drop-down gives the unit of its selected option, and a country drop-down is not one', () => {
+  const chart = (select: string) => `
+    <div class="size-conversion-chart">
+      <label>Unit:</label>${select}
+      <table>
+        <tr><th colspan="2">Measurements</th><th>8</th><th>10</th></tr>
+        <tr><td colspan="2">Length</td><td>51.3</td><td>52.5</td></tr>
+        <tr><td colspan="2">Sleeve Length</td><td>57.8</td><td>58.4</td></tr>
+      </table>
+    </div>`;
+  const cm = chart('<select><option value="cm" selected>cm</option><option value="inches">inches</option></select>');
+  assert.deepEqual(parseSizeChart(cm), [
+    { size: '8', sortOrder: 1008, chest_cm: null, length_cm: 51.3, sleeve_cm: 57.8 },
+    { size: '10', sortOrder: 1010, chest_cm: null, length_cm: 52.5, sleeve_cm: 58.4 },
+  ]);
+  // Inches selected: 51.3 x 2.54 = 130.302 -> 130.3; 57.8 x 2.54 = 146.812 -> 146.8
+  const inches = chart('<select><option value="cm">cm</option><option value="inches" selected>inches</option></select>');
+  assert.equal(parseSizeChart(inches)[0].length_cm, 130.3);
+  assert.equal(parseSizeChart(inches)[0].sleeve_cm, 146.8);
+  // A drop-down of countries says nothing about the unit.
+  const country = chart('<select><option value="us" selected>US</option><option value="uk">UK</option></select>');
+  assert.deepEqual(parseSizeChart(country), []);
 });
 
 test('armpit to armpit, underarm to underarm and P2P headers are pit to pit, flat', () => {

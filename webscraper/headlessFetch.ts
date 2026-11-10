@@ -316,6 +316,17 @@ async function clickLocator(loc: Locator): Promise<boolean> {
   }
 }
 
+/** In-page: how many tables are showing (open shadow roots included). A size guide that opened has one. */
+const VISIBLE_TABLES = `(() => {
+  let count = 0;
+  const walk = (root) => {
+    for (const t of root.querySelectorAll('table')) if (t.getClientRects().length > 0) count++;
+    for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot);
+  };
+  walk(document);
+  return count;
+})()`;
+
 /**
  * The controls that can open a size guide, most specific first. Links count only when they stay on the
  * page (a "#" or script address); a real address would leave the product, so those are read separately.
@@ -337,17 +348,22 @@ function sizeGuideControls(page: Page): Locator[] {
  * one after another (an accordion named "Size & Fit" may hold only prose while a "Size Guide" button holds
  * the table); a try that shows no chart is closed again with Escape. Nothing here leaves the page.
  */
-export async function openSizeGuide(page: Page, maxTries = 4): Promise<string | null> {
+export async function openSizeGuide(page: Page, until = Date.now() + 20_000, maxTries = 4): Promise<string | null> {
   let tries = 0;
   for (const group of sizeGuideControls(page)) {
+    // The render has a hard deadline: no new try unless one fits in the time left.
+    if (until - Date.now() < 6_000) break;
     const count = Math.min(await group.count().catch(() => 0), 3);
-    for (let i = 0; i < count && tries < maxTries; i++) {
+    for (let i = 0; i < count && tries < maxTries && until - Date.now() > 6_000; i++) {
       const control = group.nth(i);
       const before = page.url();
       if (!(await clickLocator(control))) continue;
       tries += 1;
-      await page.waitForLoadState('networkidle', { timeout: 1500 }).catch(() => {});
-      await page.waitForTimeout(500);
+      // A drawer fills in after its animation or a fetch: wait until a table is showing, up to a few seconds.
+      const settleBy = Math.min(Date.now() + 2500, until);
+      do {
+        await page.waitForTimeout(400);
+      } while (Date.now() < settleBy && !((await page.evaluate(VISIBLE_TABLES).catch(() => 0)) as number));
       if (page.url() !== before) {
         // The click left the product page. Come back; this control is not a same-page guide.
         await page.goBack({ waitUntil: 'domcontentloaded', timeout: 8000 }).catch(() => {});
@@ -980,7 +996,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const timeLeft = stopPagingAt - Date.now();
     if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25_000) {
       // Keep the earlier snapshot unless the opened guide holds a chart (the view may already show reviews only).
-      if (parseSizeChart(chartHtml).length === 0) chartHtml = (await openSizeGuide(page)) ?? chartHtml;
+      if (parseSizeChart(chartHtml).length === 0) chartHtml = (await openSizeGuide(page, Date.now() + 10_000)) ?? chartHtml;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
       // Navigation may not run past the paging stop, so a slow review page cannot hit the hard deadline.
       await page
@@ -1042,7 +1058,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     // A size chart is often behind a button, tab, accordion or drawer. Only controls that stay on the page
     // are clicked; a chart already in the snapshot needs no click.
     if (parseSizeChart(chartHtml).length === 0) {
-      chartHtml = (await openSizeGuide(page)) ?? chartHtml;
+      chartHtml = (await openSizeGuide(page, startedAt + renderBudgetMs() - 18_000)) ?? chartHtml;
       await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
     }
     await capture.settle(2000);
@@ -1052,7 +1068,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     // Still no chart: the guide may be a page of its own. Read the pages the product page links to.
     const guidePages =
       parseSizeChart(chartHtml).length === 0 && parseSizeChart(html).length === 0
-        ? await fetchGuidePages(page, startedAt + renderBudgetMs() - 6_000)
+        ? await fetchGuidePages(page, startedAt + renderBudgetMs() - 8_000)
         : [];
     return {
       html,

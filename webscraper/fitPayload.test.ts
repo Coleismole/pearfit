@@ -102,6 +102,9 @@ test('fit payload keeps numerical fit values and drops review text', () => {
   assert.equal(payload.sizes[0].size, 'M');
   assert.equal(payload.sizes[0].fitSkew, -0.4);
   assert.equal(payload.sizes[0].primaryFitNote, '100% report small fit');
+  // This report predates ratedReviewCount: every review is taken to have had stars.
+  assert.equal(payload.ratedReviewCount, 2);
+  assert.equal(payload.sizes[0].ratedReviewCount, 2);
   assert.equal(payload.chart.length, 1);
   assert.equal(payload.chart[0].chest_cm, 54);
   assert.equal(payload.chart[0].length_cm, null);
@@ -155,4 +158,36 @@ test('a scrape with a chart and no reviews is sent as chart-only', () => {
   assert.equal(payload.chartOnly, true);
   assert.deepEqual(payload.sizes, []);
   assert.equal(payload.chart.length, 1);
+});
+
+test('a review with no stars stays out of the payload means, and an unrated report sends 0, never null', () => {
+  const review = (id: string, size: string, rating: number | null) => ({
+    id,
+    author: 'A',
+    sizePurchased: size,
+    rating,
+    title: '',
+    body: 'Standard cut, nothing unusual here.',
+    date: '',
+    verifiedPurchase: false,
+  });
+  // M: ratings 5, null, 4. Stars (5 + 4) / 2 = 4.5. Sentiment (88 + 69) / 2 = 78.5, rounded to 79.
+  // L: one review with no stars.
+  const report = aggregateProductFitReport(meta, [review('1', 'M', 5), review('2', 'M', null), review('3', 'M', 4), review('4', 'L', null)]);
+  const payload = fitPayloadFromReport(report);
+  assert.equal(payload.avgRating, 4.5);
+  assert.equal(payload.sentimentScore, 79);
+  assert.equal(payload.ratedReviewCount, 2);
+  const [sizeM, sizeL] = payload.sizes;
+  assert.deepEqual([sizeM.size, sizeM.reviewCount, sizeM.ratedReviewCount, sizeM.avgRating, sizeM.sentimentScore], ['M', 3, 2, 4.5, 79]);
+  // The store's avg_rating and sentiment_score are NOT NULL, so L is sent as 0, a value no real average or score
+  // takes, and the count says why. A null here would make the whole commit fail.
+  assert.deepEqual([sizeL.size, sizeL.reviewCount, sizeL.ratedReviewCount, sizeL.avgRating, sizeL.sentimentScore], ['L', 1, 0, 0, 0]);
+
+  const unrated = fitPayloadFromReport(aggregateProductFitReport(meta, [review('9', 'M', null)]));
+  assert.equal(unrated.avgRating, 0);
+  assert.equal(unrated.sentimentScore, 0);
+  assert.equal(unrated.ratedReviewCount, 0);
+  assert.equal(JSON.stringify(unrated).includes('"avgRating":null'), false);
+  assert.equal(JSON.stringify(unrated).includes('"sentimentScore":null'), false);
 });

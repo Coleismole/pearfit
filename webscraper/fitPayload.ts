@@ -20,8 +20,15 @@ export interface FitPayload {
   shrinkageMentionPct: number;
   /** Null when reviews never mention opacity. */
   fabricOpacityPct: number | null;
+  /**
+   * Mean sentiment and mean star rating over reviews that carry stars. Both are 0 when ratedReviewCount is 0.
+   * The shared store's sentiment_score and avg_rating columns are NOT NULL today (fit_store.sql), so "no ratings"
+   * is sent as 0, a value no real rating or score takes (stars run 1 to 5, scores start at 5), not as null.
+   */
   sentimentScore: number;
   avgRating: number;
+  /** Reviews that carry stars. 0 means the two numbers above are "none", not a measured zero. */
+  ratedReviewCount: number;
   sourceUrl: string;
   scrapedAt: string;
   sizes: FitSizePayload[];
@@ -52,7 +59,9 @@ export interface FitSizePayload {
   runsLargePct: number;
   shrinkagePct: number;
   sentimentScore: number;
+  /** 0 when ratedReviewCount is 0, for the same NOT NULL reason as on the report. */
   avgRating: number;
+  ratedReviewCount: number;
   returnRisk: string;
   primaryFitNote: string;
 }
@@ -81,6 +90,8 @@ export function fitPayloadFromReport(
     fabricOpacityPct: report.tshirtSignals.fabricOpacityPct,
     sentimentScore: report.overallSentimentScore,
     avgRating: report.overallAvgRating,
+    // A report stored before ratings could be missing has no count; every review then had stars.
+    ratedReviewCount: report.ratedReviewCount ?? report.totalReviews,
     sourceUrl: report.sourceUrl,
     scrapedAt: report.scraperTelemetry.scrapedAt,
     // A size with no reviews has no fit numbers. Sending it would store a zero rating and a "Low" return risk.
@@ -95,6 +106,7 @@ export function fitPayloadFromReport(
       shrinkagePct: size.shrinkageMentionPct,
       sentimentScore: size.sentimentScore,
       avgRating: size.avgRating,
+      ratedReviewCount: size.ratedReviewCount ?? size.reviewCount,
       returnRisk: size.returnRisk,
       primaryFitNote: size.primaryFitNote,
     })),

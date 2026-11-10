@@ -1,0 +1,50 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Account.dc.html": {"h": 844, "is_interactive": true, "title": "9 · Account", "w": 390, "x": 1410, "y": 1464},
+    "Analysis.dc.html": {"h": 1360, "is_interactive": true, "title": "6 · Suitability analysis", "w": 390, "x": 0, "y": 1464},
+    "Compare.dc.html": {"h": 844, "is_interactive": true, "title": "7 · Side-by-side compare", "w": 390, "x": 470, "y": 1464},
+    "ItemDetail.dc.html": {"h": 844, "is_interactive": true, "title": "5 · Item page (planning to buy)", "w": 390, "x": 1880, "y": 260},
+    "LinkError.dc.html": {"h": 844, "is_interactive": true, "title": "8 · Couldn't read link", "w": 390, "x": 940, "y": 1464},
+    "Main.dc.html": {"h": 844, "is_interactive": true, "title": "2 · Home", "w": 390, "x": 470, "y": 260},
+    "Onboarding.dc.html": {"h": 844, "is_interactive": true, "title": "1 · Onboarding", "w": 390, "x": 0, "y": 260},
+    "ScanResult.dc.html": {"h": 844, "is_interactive": true, "title": "3 · Tag scanned", "w": 390, "x": 940, "y": 260},
+    "Wardrobe.dc.html": {"h": 844, "is_interactive": true, "title": "4 · Wardrobe (owned)", "w": 390, "x": 1410, "y": 260},
+    "WardrobePlanned.dc.html": {"h": 844, "is_interactive": true, "title": "10 · Wardrobe (planning to buy)", "w": 390, "x": 0, "y": 3184},
+    "Category.dc.html": {"h": 844, "is_interactive": true, "title": "11 · Category page", "w": 390, "x": 470, "y": 3184},
+    "ItemOwned.dc.html": {"h": 844, "is_interactive": true, "title": "12 · Item page (owned)", "w": 390, "x": 940, "y": 3184},
+    "AddCategory.dc.html": {"h": 844, "is_interactive": true, "title": "13 · Add category", "w": 390, "x": 1410, "y": 3184},
+    "ComparePicker.dc.html": {"h": 844, "is_interactive": true, "title": "14 · Compare picker (pop-up)", "w": 390, "x": 1880, "y": 3184},
+    "CompareResult.dc.html": {"h": 844, "is_interactive": true, "title": "15 · Wardrobe compare result", "w": 390, "x": 2350, "y": 3184},
+    "FlowDiagram.dc.html": {"h": 800, "title": "Screen flow diagram", "w": 2008, "x": 0, "y": 4148}
+  },
+  "createdOnFiles": {"at": "2026-11-09T01:58:00Z", "v": 1},
+  "designSystems": [],
+  "launch": {"view": "canvas"},
+  "notes": {
+    "row1": {"kind": "title1", "maxW": 2270, "text": "Adding clothes: onboarding, scanning tags, wardrobe", "w": 240, "x": 0, "y": 0},
+    "row2": {"kind": "title1", "maxW": 1800, "text": "Checking new clothes, plus account", "w": 240, "x": 0, "y": 1204},
+    "row3": {"kind": "title1", "maxW": 2740, "text": "Wardrobe pages: categories, items, new category, compare", "x": 0, "y": 2944}
+  },
+  "order": [
+    "Main.dc.html",
+    "Onboarding.dc.html",
+    "ScanResult.dc.html",
+    "Wardrobe.dc.html",
+    "ItemDetail.dc.html",
+    "Analysis.dc.html",
+    "Compare.dc.html",
+    "LinkError.dc.html",
+    "Account.dc.html",
+    "WardrobePlanned.dc.html",
+    "Category.dc.html",
+    "ItemOwned.dc.html",
+    "AddCategory.dc.html",
+    "ComparePicker.dc.html",
+    "CompareResult.dc.html",
+    "FlowDiagram.dc.html"
+  ],
+  "pages": [],
+  "title": "Pearfit App Screens"
+}

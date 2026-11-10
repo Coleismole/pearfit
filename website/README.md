@@ -14,5 +14,7 @@ Open `website/index.html` in a browser, or run `npx serve website`.
 
 `website/vercel.json` is what `www.pearfit.app` deploys. `/` is this page and `/scraper` is the built scraper checked in under `website/scraper`. Refresh those files with `node scripts/assemble-site.mjs` from the repo root.
 
+The Vercel project now deploys from `Coleismole/pearfit`.
+
 ## Inquiries
 The form posts the inquiry to `customerservice@pearfit.app` through FormSubmit. The first submission asks that inbox to confirm the address. After that, each form send delivers the email.

@@ -170,7 +170,8 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
         ),
       });
 
-      const data = await response.json();
+      // A gateway timeout or crash page is HTML, not JSON.
+      const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.report) {
         throw new Error(data.error || 'Failed to scrape reviews from target.');
       }
@@ -243,24 +244,28 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
     setCommitBanner(null);
     setIsBatchScraping(true);
     try {
-      let latestDbState = null;
+      let latestDbState: Parameters<Props['onBatchCommitted']>[0] | null = null;
       let totalReviewsScraped = 0;
       let committed = 0;
       let failed = 0;
       for (const preset of SCRAPABLE_PRESET_TARGETS) {
-        const res = await fetch(apiPath('/api/scrape'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: preset.url, commitToDb: true }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.report) {
-            latestDbState = data.dbState;
-            totalReviewsScraped += data.report.totalReviews || 0;
-            committed += 1;
-            continue;
+        try {
+          const res = await fetch(apiPath('/api/scrape'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: preset.url, commitToDb: true }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.report) {
+              latestDbState = data.dbState ?? latestDbState;
+              totalReviewsScraped += data.report.totalReviews || 0;
+              committed += 1;
+              continue;
+            }
           }
+        } catch {
+          // One preset failing (network, non-JSON reply) must not abort the rest.
         }
         failed += 1;
       }
@@ -410,7 +415,7 @@ export const ScraperWorkbenchBar: React.FC<Props> = ({
                 ) : (
                   <>
                     <Layers className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Batch Scrape All 5 Targets</span>
+                    <span>Batch Scrape All {SCRAPABLE_PRESET_TARGETS.length} Targets</span>
                   </>
                 )}
               </button>

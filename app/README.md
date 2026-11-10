@@ -6,7 +6,7 @@ to buy and which of your shirts it fits like.
 It is a static web app (Vite + React + TypeScript). It has no server of its own. All the size logic lives in the
 hosted Pearfit API: this app only shows the answers.
 
-The screens were built from the design in [`design/`](design/README.md).
+The screens were built from the design in [`design/app-ui/`](../design/app-ui/README.md).
 
 ## Requirements
 
@@ -103,8 +103,9 @@ There are no accounts yet, so nothing is stored on a server.
 
 No screen uses mock data. Every number and name on screen comes from the API or from what the person typed in.
 
-The sample products, scores and reviews in the design are not in the app. Parts of the design that have no data
-behind them yet were left out or changed. They are listed below, so nobody takes a missing piece for a bug.
+The sample products, scores and reviews in the design (`design/app-ui/`) are not in the app. Parts of the
+design that have no data behind them yet were left out or changed. They are listed below, so nobody takes a
+missing piece for a bug.
 
 ## Design screens and what the app does with them
 
@@ -165,7 +166,6 @@ src/
   screens/             one file per screen or pair of screens
   styles.css           colours and sizes from the design
 test/                  unit tests for lib/, with hand-computed expected values
-design/                the original design export (reference only, not part of the build)
 ```
 
 The types in `src/lib/types.ts` repeat the API's shapes from `engine/src/types.ts` and

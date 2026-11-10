@@ -286,3 +286,64 @@ test('a cell that shows cm and inches in separate elements is read in cm', () =>
     { size: 'M', sortOrder: 2, chest_cm: 56, length_cm: 64, sleeve_cm: null },
   ]);
 });
+
+test('a cell with its own data-cm value is read in centimeters whatever the toggle shows', () => {
+  const html = `
+    <div class="size-chart-wrapper">
+      <div class="unit-toggle">
+        <button class="unit-btn" data-unit="cm">CM</button>
+        <button class="unit-btn active" data-unit="in">IN</button>
+      </div>
+      <table>
+        <tr><th></th><th>Length from High Shoulder Point (A)</th><th>Sleeve Length from Shoulder (E)</th></tr>
+        <tr><td>M</td><td data-cm="71.0">28</td><td data-cm="26.0">10.2</td></tr>
+      </table>
+    </div>`;
+  // 71.0 and 26.0 come from data-cm; the visible inch text is ignored.
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'M', sortOrder: 2, chest_cm: null, length_cm: 71, sleeve_cm: 26 },
+  ]);
+});
+
+test('a cm/inch toggle made of buttons gives the unit of the active one', () => {
+  const html = `
+    <div class="chart">
+      <button data-unit="cm" class="active">cm</button>
+      <button data-unit="in">in</button>
+      <table>
+        <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr>
+        <tr><td>L</td><td>58</td><td>74</td></tr>
+      </table>
+    </div>`;
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'L', sortOrder: 3, chest_cm: 58, length_cm: 74, sleeve_cm: null },
+  ]);
+  // Inches active: 22 x 2.54 = 55.88 -> 55.9; 29 x 2.54 = 73.66 -> 73.7
+  const inches = html
+    .replace('data-unit="cm" class="active"', 'data-unit="cm"')
+    .replace('data-unit="in"', 'data-unit="in" class="active"')
+    .replace('58', '22')
+    .replace('74', '29');
+  assert.deepEqual(parseSizeChart(inches), [
+    { size: 'L', sortOrder: 3, chest_cm: 55.9, length_cm: 73.7, sleeve_cm: null },
+  ]);
+});
+
+test('an unlabeled chest is a flat width when the chart says the garment is measured lying flat', () => {
+  const html = `
+    <div>
+      <table>
+        <tr><th>Size</th><th>Chest</th><th>Length</th></tr>
+        <tr><td>M</td><td>55 cm</td><td>71 cm</td></tr>
+      </table>
+      <p>We measure lying flat, so you may need to double some measurements.</p>
+    </div>`;
+  assert.deepEqual(parseSizeChart(html), [
+    { size: 'M', sortOrder: 2, chest_cm: 55, length_cm: 71, sleeve_cm: null },
+  ]);
+  // Care text ("lay flat to dry") or a body-measurement hint does not confirm it.
+  const care = html.replace('We measure lying flat, so you may need to double some measurements.', 'Lay flat to dry.');
+  assert.equal(parseSizeChart(care)[0].chest_cm, null);
+  const body = html.replace('so you may need to double some measurements.', 'and body measurements are on the next tab.');
+  assert.equal(parseSizeChart(body)[0].chest_cm, null);
+});

@@ -89,6 +89,8 @@ function unitInText(text: string): Unit | null {
  */
 function unitFromToggle($: cheerio.CheerioAPI, node: unknown): Unit | null {
   for (const box of $(node as never).parents().toArray()) {
+    const fromButtons = unitFromButtons($, box);
+    if (fromButtons) return fromButtons;
     const checked = new Set<Unit>();
     let found = false;
     $(box)
@@ -114,6 +116,27 @@ function unitFromToggle($: cheerio.CheerioAPI, node: unknown): Unit | null {
     if (found) return checked.size === 1 ? [...checked][0] : null;
   }
   return null;
+}
+
+/**
+ * A cm/inch toggle made of buttons: elements with a data-unit of cm or in (or in/inches), the active one
+ * carrying an "active"/"selected" class or aria-pressed/aria-selected. Several controls that disagree stay unknown.
+ */
+function unitFromButtons($: cheerio.CheerioAPI, box: unknown): Unit | null {
+  const active = new Set<Unit>();
+  let found = 0;
+  $(box as never)
+    .find('[data-unit]')
+    .each((_i, el) => {
+      const raw = ($(el).attr('data-unit') ?? '').trim().toLowerCase();
+      const unit: Unit | null = raw === 'cm' || raw === 'metric' ? 'cm' : raw === 'in' || raw === 'inch' || raw === 'inches' ? 'in' : null;
+      if (!unit) return;
+      found += 1;
+      const aria = $(el).attr('aria-pressed') ?? $(el).attr('aria-selected');
+      const isActive = aria !== undefined ? aria === 'true' : /\b(active|selected|is-active|current)\b/.test($(el).attr('class') ?? '');
+      if (isActive) active.add(unit);
+    });
+  return found >= 2 && active.size === 1 ? [...active][0] : null;
 }
 
 const UNICODE_FRACTIONS: Record<string, number> = {
@@ -208,9 +231,15 @@ function isSizeHeader(header: string): boolean {
   return h === '' || h === 'size' || h === 'sizes' || h === 'size (us)' || /^size\b/.test(h);
 }
 
-/** A header that does not say flat or circumference gives null. We never guess the convention. */
-function chestCm(value: number, unit: Unit, kind: ChestKind): number | null {
-  if (kind === 'unspecified') return null;
+/**
+ * A header that does not say flat or circumference gives null. We never guess the convention,
+ * unless the chart's own surroundings say the garment was measured lying flat (`flatDefault`).
+ */
+function chestCm(value: number, unit: Unit, kind: ChestKind, flatDefault = false): number | null {
+  if (kind === 'unspecified') {
+    if (!flatDefault) return null;
+    return round1(toCm(value, unit));
+  }
   const cm = toCm(value, unit);
   return round1(kind === 'flat' ? cm : cm / 2);
 }
@@ -223,6 +252,7 @@ function parseHtmlTable(
   headers: string[],
   body: string[][],
   tableUnit: Unit | null,
+  flatDefault = false,
 ): ParsedTable | null {
   let sizeIdx = headers.findIndex((h) => isSizeHeader(h));
   if (sizeIdx < 0) sizeIdx = 0;
@@ -252,7 +282,7 @@ function parseHtmlTable(
     for (const col of cols) {
       const parsed = parseCell(cells[col.index] ?? '', tableUnit);
       if (!parsed) continue;
-      if (col.kind === 'chest' && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest);
+      if (col.kind === 'chest' && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest, flatDefault);
       if (col.kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (col.kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
       if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
@@ -269,6 +299,7 @@ function parseTransposedTable(
   headers: string[],
   body: string[][],
   tableUnit: Unit | null,
+  flatDefault = false,
 ): ParsedTable | null {
   // A size that repeats (XL and 1XL) keeps its first column only, as the row layout does.
   // Two rows with one size would fail the (sku, size) key in the shared store.
@@ -303,7 +334,7 @@ function parseTransposedTable(
       if (!row) return;
       const parsed = parseCell(cells[index + 1] ?? '', rowUnit);
       if (!parsed) return;
-      if (kind === 'chest' && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
+      if (kind === 'chest' && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest, flatDefault);
       if (kind === 'length') row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (kind === 'sleeve') row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
       if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
@@ -327,6 +358,16 @@ function cellText($: cheerio.CheerioAPI, cell: unknown): string {
   return parts.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * A cell that carries its own metric value (data-cm="50.0") states the unit outright, whatever the
+ * cm/inch toggle shows. Otherwise the cell text is used.
+ */
+function cellValue($: cheerio.CheerioAPI, cell: unknown): string {
+  const metric = ($(cell as never).attr('data-cm') ?? '').trim();
+  if (/^\d+(?:\.\d+)?$/.test(metric)) return `${metric} cm`;
+  return cellText($, cell);
+}
+
 function tableGrid($: cheerio.CheerioAPI, table: unknown): string[][] {
   const grid: string[][] = [];
   $(table as never)
@@ -336,11 +377,34 @@ function tableGrid($: cheerio.CheerioAPI, table: unknown): string[][] {
       $(tr)
         .children('th, td')
         .each((_c, cell) => {
-          cells.push(cellText($, cell));
+          cells.push(cellValue($, cell));
         });
       if (cells.length > 0) grid.push(cells);
     });
   return grid;
+}
+
+/**
+ * True when the text around a chart says the garment itself was measured lying flat ("we measure lying
+ * flat"). Then an unlabeled "Chest" is a flat width. Any hint that the numbers are body measurements
+ * or a circumference cancels it: the convention is not confirmed, so the chest stays null.
+ */
+export function saysMeasuredFlat(text: string): boolean {
+  const t = text.replace(/\s+/g, ' ');
+  const flat = /(?:measure[sd]?|measuring|measurements?)[^.]{0,40}\bflat\b|\b(?:laid|lying|lays|laying) flat\b[^.]{0,30}measure|\bflat (?:garment )?measure/i.test(t);
+  if (!flat) return false;
+  return !/body measurements?|circumference|measure around|around the fullest|your (?:body|chest|bust) measure/i.test(t);
+}
+
+/** Text of the chart's surroundings: the highest ancestor (up to 4 levels) that is still a small block. */
+function surroundingText($: cheerio.CheerioAPI, node: unknown): string {
+  let best = '';
+  for (const parent of $(node as never).parents().toArray().slice(0, 4)) {
+    const text = $(parent).text();
+    if (text.length > 4000) break;
+    best = text;
+  }
+  return best;
 }
 
 function rowsFromTables(html: string): SizeChartRow[] {
@@ -354,9 +418,10 @@ function rowsFromTables(html: string): SizeChartRow[] {
     if (headerAt < 0) return;
     const context = [node.find('caption').text(), node.attr('class') ?? '', node.prev().text(), grid[headerAt].join(' ')].join(' ');
     const unit = unitInText(context) ?? unitFromToggle($, table);
+    const flat = saysMeasuredFlat(surroundingText($, table));
     const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit),
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
+      parseTransposedTable(grid[0], grid.slice(1), unit, flat),
     );
     if (parsed && parsed.rows.length > best.length) best = parsed.rows;
   });
@@ -405,9 +470,10 @@ function rowsFromDivCharts($: cheerio.CheerioAPI): SizeChartRow[] {
     const unit = unitInText(context) ?? unitFromToggle($, box);
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
+    const flat = saysMeasuredFlat(surroundingText($, box));
     const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit),
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
+      parseTransposedTable(grid[0], grid.slice(1), unit, flat),
     );
     if (parsed && parsed.rows.length > best.length) best = parsed.rows;
   });

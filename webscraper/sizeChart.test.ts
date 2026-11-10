@@ -418,6 +418,14 @@ test('a size guide page gives the table that fits the product, and none when it 
   assert.deepEqual(parseGuidePageChart(GUIDE_PAGE, { name: "Men's Chino Pants" }), []);
 });
 
+test('a guide page table with no chest value (body ranges, sleeve lengths only) is not taken', () => {
+  const bodyRanges = `<h2>Men's tops</h2><table><caption>Size guide (inches)</caption>
+    <tr><th>Size</th><th>Chest</th><th>Sleeve</th></tr>
+    <tr><td>M</td><td>38-40</td><td>34</td></tr></table>`;
+  // The range gives no chest, and a sleeve alone does not tie the table to this product.
+  assert.deepEqual(parseGuidePageChart(bodyRanges, { name: "Men's Shirt" }), []);
+});
+
 test('the product page chart wins; a linked guide page is the fallback', () => {
   const own = `<table><caption>cm</caption><tr><th>Size</th><th>Pit to pit</th></tr><tr><td>S</td><td>50</td></tr></table>`;
   const hint = { name: "Men's Shirt" };

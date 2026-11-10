@@ -369,21 +369,26 @@ export async function openSizeGuide(page: Page, maxTries = 4): Promise<string | 
 const GUIDE_LINKS = `(() => {
   const labelRe = /size\\s*(guide|chart)|sizing\\s*(guide|chart)|fit\\s*guide|size\\s*(&|and|\\+)\\s*fit|how to measure|measurement guide/i;
   const pathRe = /size[-_]?(guide|chart)s?\\b|sizing[-_]?(guide|chart)?|fit[-_]?guide|measure/i;
+  const sizeRe = /size\\s*[-_]?\\s*(guide|chart)s?|sizing\\s*[-_]?\\s*(guide|chart)?/i;
+  const site = (h) => h.replace(/^www\\./, '');
   const found = new Map();
   for (const a of document.querySelectorAll('a[href]')) {
     const raw = a.getAttribute('href') || '';
     if (!raw || raw.startsWith('#') || /^(javascript|mailto|tel):/i.test(raw)) continue;
     let u;
     try { u = new URL(raw, location.href); } catch { continue; }
-    if (u.host !== location.host || u.pathname === location.pathname) continue;
+    if (site(u.host) !== site(location.host) || u.pathname === location.pathname) continue;
     if (/^\\/([a-z]{2}(-[a-z]{2})?\\/)?(products|collections|cart|account|search)\\b/i.test(u.pathname)) continue;
     if (/[?&](prefn1|prefv1|filter|sort|variant)=/i.test(u.search)) continue;
     const label = (a.getAttribute('aria-label') || a.textContent || '').replace(/\\s+/g, ' ').trim();
     const byLabel = label.length < 60 && labelRe.test(label);
     if (!byLabel && !pathRe.test(u.pathname)) continue;
-    if (!found.has(u.pathname)) found.set(u.pathname, { href: u.href, byLabel });
+    // A page named size chart / size guide beats a "fit guide" (which usually describes cuts, not measurements).
+    const score = (sizeRe.test(label) ? 2 : 0) + (sizeRe.test(u.pathname) ? 2 : 0) + (byLabel ? 1 : 0);
+    const key = u.origin + u.pathname;
+    if (!found.has(key) || found.get(key).score < score) found.set(key, { href: u.href, score });
   }
-  return [...found.values()].sort((x, y) => Number(y.byLabel) - Number(x.byLabel)).map((x) => x.href).slice(0, 3);
+  return [...found.values()].sort((x, y) => y.score - x.score).map((x) => x.href).slice(0, 3);
 })()`;
 
 /**

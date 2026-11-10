@@ -447,10 +447,9 @@ function unitFromAttrs($: cheerio.CheerioAPI, table: unknown): Unit | null {
   return cm ? 'cm' : 'in';
 }
 
-/** A chart found in a page, with the heading above it and whether it has a chest column at all. */
+/** A chart found in a page, with the heading above it. */
 interface ChartCandidate {
   rows: SizeChartRow[];
-  hasChestColumn: boolean;
   label: string;
 }
 
@@ -482,14 +481,12 @@ function tableCandidates($: cheerio.CheerioAPI): ChartCandidate[] {
       parseTransposedTable(grid[0], grid.slice(1), unit, flat),
     );
     if (!parsed) return;
-    const hasChestColumn =
-      grid[headerAt].some((cell) => chestKind(cell)) || grid.slice(1).some((cells) => chestKind(cells[0] ?? ''));
     const panel = node.closest('[id], [aria-labelledby]');
     const label = [heading, node.find('caption').text(), panel.attr('id') ?? '', node.attr('class') ?? '']
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
-    out.push({ rows: parsed.rows, hasChestColumn, label });
+    out.push({ rows: parsed.rows, label });
   });
   return out;
 }
@@ -590,7 +587,7 @@ function words(text: string): string {
 
 /**
  * A size guide on a page of its own usually holds the store's tables for every product: men's and
- * women's, tops and bottoms. Take a table only when it has a chest column and its heading does not
+ * women's, tops and bottoms. Take a table only when it has chest values and its heading does not
  * contradict the product (men's chart for a women's top, a bottoms chart for a shirt). If several
  * tables are left and they differ, the page does not say which one is this product's: no chart.
  */
@@ -602,7 +599,9 @@ export function parseGuidePageChart(html: string, hint: ProductHint): SizeChartR
   const productTop = TOP_WORDS.test(product);
   const productBottom = BOTTOM_WORDS.test(product);
   const fits = tableCandidates($)
-    .filter((c) => c.hasChestColumn)
+    // A chest value anchors the table as a garment chart for a top. Without one (a body chart of ranges, or a
+    // table of sleeve lengths only) nothing on a store-wide page says the table belongs to this product.
+    .filter((c) => c.rows.some((row) => row.chest_cm !== null))
     .map((c) => {
       const label = words(c.label);
       const labelMen = MEN.test(label);

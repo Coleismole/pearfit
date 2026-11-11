@@ -2,7 +2,30 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { closeHeadlessBrowser, embeddedWidgetHtml, isReviewWidgetFrame, navigationTimedOutAfterLoading, JsonCapture, linkStaysOnProduct, renderPageHtml, shouldUseHeadlessRender } from './headlessFetch.ts';
+import {
+  closeHeadlessBrowser,
+  embeddedWidgetHtml,
+  fetchGuidePagesByHttp,
+  fetchGuidePagesWith,
+  isReviewWidgetFrame,
+  navigationTimedOutAfterLoading,
+  JsonCapture,
+  linkStaysOnProduct,
+  openSizeGuideWith,
+  renderChartOnly,
+  renderPageHtml,
+  renderWithServerlessBrowser,
+  serverlessGuideOps,
+  serverlessGuidePageOps,
+  shouldUseHeadlessRender,
+  SIZE_GUIDE_LABEL,
+  type GuidePageOps,
+  type RenderedPage,
+  type ServerlessBrowser,
+  type ServerlessPage,
+  type SizeGuideOps,
+} from './headlessFetch.ts';
+import { parseSizeChartCached } from './pageHelpers.ts';
 import { parseSizeChart, parseSizeChartFirst, parseSizeChartWithGuides } from './sizeChart.ts';
 
 // A product page whose reviews exist only after JavaScript runs: one batch appears after
@@ -411,4 +434,536 @@ test('renderPageHtml reads a size guide that is a page of its own and picks the 
   assert.deepEqual(parseSizeChartWithGuides([result.html, result.chartHtml], result.guidePages ?? [], { name: "Men's Tee", url: 'http://x/products/mens-tee' }), [
     { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
   ]);
+});
+
+// ---- Size-guide steps shared by the Playwright and the serverless (Puppeteer) render ----
+
+interface FakeGuideState {
+  url: string;
+  tables: number;
+  html: string;
+}
+
+/** A page that records what the size-guide routine asked of it, with a clock that only the fake sleep moves. */
+function fakeGuideOps(script: {
+  /** Controls per group; a group missing here has none. */
+  controls: Record<number, number>;
+  /** Called on every click; changes the page state the way the click would. */
+  onClick?: (group: number, index: number, state: FakeGuideState) => void;
+}) {
+  const state: FakeGuideState = { url: 'https://shop.example/products/tee', tables: 0, html: '<html></html>' };
+  const log: string[] = [];
+  let clock = 1_000_000;
+  const ops: SizeGuideOps = {
+    url: () => state.url,
+    count: async (group) => script.controls[group] ?? 0,
+    click: async (group, index) => {
+      log.push(`click ${group}.${index}`);
+      script.onClick?.(group, index, state);
+      return true;
+    },
+    tables: async () => state.tables,
+    serialize: async () => state.html,
+    escape: async () => {
+      log.push('escape');
+    },
+    back: async () => {
+      log.push('back');
+      state.url = 'https://shop.example/products/tee';
+      state.html = '<html></html>';
+    },
+    sleep: async (ms) => {
+      clock += ms;
+    },
+    now: () => clock,
+  };
+  return { ops, state, log, now: () => clock };
+}
+const CHART_PAGE = `<html><body>${GUIDE_TABLE}</body></html>`;
+
+test('openSizeGuideWith closes a control that shows no chart and takes the next one that does', async () => {
+  const fake = fakeGuideOps({
+    controls: { 1: 2 },
+    onClick: (_g, index, state) => {
+      state.tables = 1;
+      state.html = index === 1 ? CHART_PAGE : '<html><body><table><tr><td>shipping</td></tr></table></body></html>';
+    },
+  });
+  const html = await openSizeGuideWith(fake.ops, fake.now() + 20_000);
+  assert.equal(html, CHART_PAGE);
+  assert.deepEqual(fake.log, ['click 1.0', 'escape', 'click 1.1']);
+});
+
+test('openSizeGuideWith goes back from a control that leaves the product page, and never reads that page', async () => {
+  const fake = fakeGuideOps({
+    controls: { 0: 1, 1: 1 },
+    onClick: (group, _i, state) => {
+      if (group === 0) {
+        state.url = 'https://shop.example/pages/size-chart';
+        state.html = CHART_PAGE; // the page it left for has a chart, but it is not the product view
+      }
+    },
+  });
+  assert.equal(await openSizeGuideWith(fake.ops, fake.now() + 20_000), null);
+  assert.deepEqual(fake.log, ['click 0.0', 'back', 'click 1.0', 'escape']);
+});
+
+test('openSizeGuideWith treats a hash change as the same page', async () => {
+  const fake = fakeGuideOps({
+    controls: { 3: 1 },
+    onClick: (_g, _i, state) => {
+      state.url += '#size-guide';
+      state.tables = 1;
+      state.html = CHART_PAGE;
+    },
+  });
+  assert.equal(await openSizeGuideWith(fake.ops, fake.now() + 20_000), CHART_PAGE);
+  assert.ok(!fake.log.includes('back'));
+});
+
+test('openSizeGuideWith starts no try that does not fit in the time left, and caps the tries', async () => {
+  const late = fakeGuideOps({ controls: { 1: 3 } });
+  assert.equal(await openSizeGuideWith(late.ops, late.now() + 5_000), null);
+  assert.deepEqual(late.log, []); // under 6 s left: not even one click
+
+  const many = fakeGuideOps({ controls: { 0: 3, 1: 3, 2: 3 } });
+  assert.equal(await openSizeGuideWith(many.ops, many.now() + 600_000, 4), null);
+  assert.equal(many.log.filter((entry) => entry.startsWith('click')).length, 4);
+});
+
+test('openSizeGuideWith parses a snapshot once however many tries serialize the same page', async () => {
+  // Three controls that open nothing new: each try serializes the same large page.
+  const page = `<html><body>${'<div class="tile"><a href="/p">Tile</a></div>'.repeat(3000)}<p>${Math.random()}</p></body></html>`;
+  const fake = fakeGuideOps({
+    controls: { 1: 3 },
+    onClick: (_g, _i, state) => {
+      state.tables = 1;
+      state.html = page;
+    },
+  });
+  const before = { ...parseSizeChartCached.stats };
+  assert.equal(await openSizeGuideWith(fake.ops, fake.now() + 60_000), null);
+  assert.equal(fake.log.filter((entry) => entry.startsWith('click')).length, 3);
+  assert.equal(parseSizeChartCached.stats.calls - before.calls, 3);
+  assert.equal(parseSizeChartCached.stats.parses - before.parses, 1);
+});
+
+test('openSizeGuideWith retries with a pointer click only when the script click opened nothing', async () => {
+  // The control ignores the script click: the table appears only after the retry.
+  const stubborn = fakeGuideOps({ controls: { 1: 1 } });
+  let retries = 0;
+  stubborn.ops.retryClick = async () => {
+    retries++;
+    stubborn.state.tables = 1;
+    stubborn.state.html = CHART_PAGE;
+    return true;
+  };
+  assert.equal(await openSizeGuideWith(stubborn.ops, stubborn.now() + 30_000), CHART_PAGE);
+  assert.equal(retries, 1);
+
+  // The script click worked: no retry.
+  const easy = fakeGuideOps({
+    controls: { 1: 1 },
+    onClick: (_g, _i, state) => {
+      state.tables = 1;
+      state.html = CHART_PAGE;
+    },
+  });
+  let easyRetries = 0;
+  easy.ops.retryClick = async () => {
+    easyRetries++;
+    return true;
+  };
+  assert.equal(await openSizeGuideWith(easy.ops, easy.now() + 30_000), CHART_PAGE);
+  assert.equal(easyRetries, 0);
+});
+
+test('fetchGuidePagesWith reads at most two guides, skips one that will not load, and stops at the time limit', async () => {
+  let clock = 5_000_000;
+  const loaded: string[] = [];
+  const ops: GuidePageOps = {
+    now: () => clock,
+    links: async () => ['https://shop.example/a', 'https://shop.example/b', 'https://shop.example/c'],
+    load: async (href, timeoutMs) => {
+      loaded.push(`${href} ${timeoutMs}`);
+      clock += 1_000;
+      return href.endsWith('/a') ? null : `<html>${href}</html>`;
+    },
+  };
+  // /a fails, /b loads; /c is beyond the two-guide cap even though time is left.
+  assert.deepEqual(await fetchGuidePagesWith(ops, clock + 60_000), ['<html>https://shop.example/b</html>']);
+  assert.deepEqual(loaded, ['https://shop.example/a 15000', 'https://shop.example/b 15000']);
+
+  // Under 8 s left: nothing is loaded. With 12 s left the load gets at most 9 s.
+  loaded.length = 0;
+  assert.deepEqual(await fetchGuidePagesWith(ops, clock + 7_999), []);
+  assert.deepEqual(loaded, []);
+  await fetchGuidePagesWith(ops, clock + 12_000);
+  assert.equal(loaded[0], 'https://shop.example/a 9000');
+});
+
+// A Puppeteer-shaped page that answers the in-page scripts from canned values, to check what the serverless
+// adapters send and how they open and close the tabs of linked guides.
+function fakeServerlessPage(overrides: Partial<ServerlessPage> = {}) {
+  const calls: string[] = [];
+  const page: ServerlessPage = {
+    goto: async (url) => {
+      calls.push(`goto ${url}`);
+      return { status: () => 200 };
+    },
+    goBack: async () => {
+      calls.push('goBack');
+    },
+    url: () => 'https://shop.example/products/tee',
+    setRequestInterception: async (enabled) => {
+      calls.push(`intercept ${enabled}`);
+    },
+    on: () => {},
+    evaluate: async () => 0,
+    click: async (selector) => {
+      calls.push(`click ${selector}`);
+    },
+    keyboard: {
+      press: async (key) => {
+        calls.push(`press ${key}`);
+      },
+    },
+    waitForNetworkIdle: async () => {},
+    waitForSelector: async () => null,
+    close: async () => {
+      calls.push('close');
+    },
+    ...overrides,
+  };
+  return { page, calls };
+}
+
+test('serverlessGuideOps asks the page for the same six control groups and the pointer-click retry', async () => {
+  const scripts: string[] = [];
+  const { page, calls } = fakeServerlessPage({
+    evaluate: async (script) => {
+      scripts.push(script);
+      return /"count"/.test(script) ? 2 : true;
+    },
+  });
+  const ops = serverlessGuideOps(page, async () => {});
+  assert.equal(await ops.count(4), 2);
+  assert.equal(await ops.click(4, 1), true);
+  assert.ok(/\(4, 0, "count", /.test(scripts[0]));
+  assert.ok(/\(4, 1, "click", /.test(scripts[1]));
+  // The label the groups match is the one the Playwright locators use.
+  assert.ok(scripts[0].includes(JSON.stringify(SIZE_GUIDE_LABEL.source)));
+  await ops.retryClick?.();
+  await ops.escape();
+  await ops.back();
+  assert.deepEqual(calls, ['click pierce/[data-pearfit-guide="1"]', 'press Escape', 'goBack']);
+});
+
+test('serverlessGuidePageOps loads each guide in a guarded tab and closes the tab', async () => {
+  const tabs: ReturnType<typeof fakeServerlessPage>[] = [];
+  const main = fakeServerlessPage({ evaluate: async () => ['https://shop.example/pages/size-chart'] });
+  const ops = serverlessGuidePageOps(main.page, async () => {
+    const tab = fakeServerlessPage({ evaluate: async () => '<html>guide</html>' });
+    await tab.page.setRequestInterception(true);
+    tabs.push(tab);
+    return tab.page;
+  });
+  assert.deepEqual(await fetchGuidePagesWith(ops, Date.now() + 40_000), ['<html>guide</html>']);
+  assert.equal(tabs.length, 1);
+  assert.deepEqual(tabs[0].calls, ['intercept true', 'goto https://shop.example/pages/size-chart', 'close']);
+
+  // A tab that cannot load the guide is still closed, and the guide is skipped.
+  const failing = fakeServerlessPage({
+    goto: async () => {
+      throw new Error('net::ERR_FAILED');
+    },
+  });
+  const failOps = serverlessGuidePageOps(main.page, async () => failing.page);
+  assert.deepEqual(await fetchGuidePagesWith(failOps, Date.now() + 40_000), []);
+  assert.deepEqual(failing.calls, ['close']);
+});
+
+// The serverless render runs on puppeteer-core. Here it drives the local Chromium that Playwright installed.
+let serverlessBrowser: ServerlessBrowser | null = null;
+let closeServerlessBrowser: () => Promise<void> = async () => {};
+try {
+  const { chromium } = await import('playwright');
+  const puppeteer = (await import('puppeteer-core')).default;
+  const launched = await puppeteer.launch({ executablePath: chromium.executablePath(), headless: true, args: ['--no-sandbox'] });
+  serverlessBrowser = launched as unknown as ServerlessBrowser;
+  closeServerlessBrowser = () => launched.close();
+} catch {
+  serverlessBrowser = null;
+}
+after(async () => {
+  await closeServerlessBrowser();
+});
+const serverlessSkip = !serverlessBrowser && 'no Chromium for puppeteer-core (npx playwright install chromium)';
+
+async function renderServerlessLocalPage(routes: Record<string, string>, path = '/product') {
+  const server = http.createServer((req, res) => {
+    const body = routes[new URL(req.url ?? '/', 'http://x').pathname];
+    res.writeHead(body === undefined ? 404 : 200, { 'content-type': 'text/html' });
+    res.end(body ?? 'not found');
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    return await renderWithServerlessBrowser(serverlessBrowser!, `http://127.0.0.1:${port}${path}`);
+  } finally {
+    server.close();
+  }
+}
+
+const OPENS_GUIDE = `document.getElementById('modal').innerHTML = ${JSON.stringify(GUIDE_TABLE)};`;
+// 300 review cards are the most the render pages for, so it does not spend its idle waits looking for more.
+const REVIEW = `<div id="reviews">${'<article class="review-card"><p>Size: M. True to size.</p></article>'.repeat(300)}</div>`;
+
+test('serverless render opens a size guide that is a plain element, not a button', { skip: serverlessSkip }, async () => {
+  const result = await renderServerlessLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>${REVIEW}
+      <span id="open" style="cursor:pointer">Size chart</span><div id="modal"></div>
+      <script>document.getElementById('open').addEventListener('click', () => { ${OPENS_GUIDE} });</script></body></html>`,
+  });
+  assert.deepEqual(parseSizeChartFirst(result.html, result.chartHtml), [
+    { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+  ]);
+});
+
+test('serverless render skips a "Size & Fit" accordion with prose only and opens the size guide button after it', { skip: serverlessSkip }, async () => {
+  const result = await renderServerlessLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>${REVIEW}
+      <details><summary>Size &amp; Fit</summary><p>Model is 6ft and wears a medium.</p></details>
+      <button id="open">Size Guide</button><div id="modal"></div>
+      <script>document.getElementById('open').addEventListener('click', () => { ${OPENS_GUIDE} });</script></body></html>`,
+  });
+  assert.equal(parseSizeChartFirst(result.html, result.chartHtml)[0]?.chest_cm, 54);
+});
+
+test('serverless render opens a size guide button that a sticky overlay covers', { skip: serverlessSkip }, async () => {
+  const result = await renderServerlessLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>${REVIEW}
+      <button id="open">Find your size</button><div id="modal"></div>
+      <div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99"></div>
+      <script>document.getElementById('open').addEventListener('click', () => { ${OPENS_GUIDE} });</script></body></html>`,
+  });
+  assert.equal(parseSizeChartFirst(result.html, result.chartHtml)[0]?.chest_cm, 54);
+});
+
+test('serverless render sends a pointer click to a size guide button that ignores a script click', { skip: serverlessSkip }, async () => {
+  const result = await renderServerlessLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>${REVIEW}
+      <button id="open">Size Guide</button><div id="modal"></div>
+      <script>document.getElementById('open').addEventListener('click', (e) => { if (e.isTrusted) { ${OPENS_GUIDE} } });</script></body></html>`,
+  });
+  assert.equal(parseSizeChartFirst(result.html, result.chartHtml)[0]?.chest_cm, 54);
+});
+
+test('serverless render goes back from a size guide control that navigates away', { skip: serverlessSkip }, async () => {
+  const result = await renderServerlessLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>${REVIEW}
+      <button onclick="location.href='/elsewhere'">Size Guide</button></body></html>`,
+    '/elsewhere': `<html><body><h1>Somewhere else</h1>${GUIDE_TABLE}</body></html>`,
+  });
+  assert.equal(new URL(result.finalUrl).pathname, '/product');
+  assert.equal(parseSizeChart(result.html).length, 0);
+  assert.equal(result.chartHtml !== null && parseSizeChart(result.chartHtml).length, 0);
+  assert.deepEqual(result.guidePages, []);
+});
+
+test('serverless render reads a size guide that is a page of its own and picks the table for the product', { skip: serverlessSkip }, async () => {
+  const result = await renderServerlessLocalPage(
+    {
+      '/products/mens-tee': `<!DOCTYPE html><html><body><h1>Men's Tee</h1>${REVIEW}
+        <a href="/pages/size-chart">Size chart</a>
+        <a href="/products/other-tee">Size guide of another product</a></body></html>`,
+      '/pages/size-chart': `<!DOCTYPE html><html><body><h1>Size chart</h1>
+        <h2>Women's</h2>${GUIDE_TABLE.replace('54', '47').replace('72', '62')}
+        <h2>Men's</h2>${GUIDE_TABLE}</body></html>`,
+    },
+    '/products/mens-tee',
+  );
+  assert.equal(parseSizeChart(result.html).length, 0); // the product page itself shows no chart
+  assert.equal(new URL(result.finalUrl).pathname, '/products/mens-tee'); // the link was read in another tab
+  assert.equal(result.guidePages?.length, 1);
+  assert.deepEqual(parseSizeChartWithGuides([result.html, result.chartHtml], result.guidePages ?? [], { name: "Men's Tee", url: 'http://x/products/mens-tee' }), [
+    { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+  ]);
+});
+
+test('serverless render reads no guide page when the product page already shows the chart', { skip: serverlessSkip }, async () => {
+  const result = await renderServerlessLocalPage({
+    '/product': `<!DOCTYPE html><html><body><h1>Tee</h1>${REVIEW}${GUIDE_TABLE}<a href="/pages/size-chart">Size chart</a></body></html>`,
+    '/pages/size-chart': `<html><body>${GUIDE_TABLE}</body></html>`,
+  });
+  assert.deepEqual(result.guidePages, []);
+  assert.equal(parseSizeChartFirst(result.html, result.chartHtml)[0]?.chest_cm, 54);
+});
+
+// A guide that opens on a men's chart is not the chart of a women's product: the render reads the page against
+// the product's title and address, so it does not take the first table it sees.
+const GENDERED_GUIDE = (title: string) => `<!DOCTYPE html><html><head><title>${title}</title></head><body><h1>${title}</h1>${REVIEW}
+  <button id="open">Size Guide</button><div id="modal"></div>
+  <script>document.getElementById('open').addEventListener('click', () => {
+    document.getElementById('modal').innerHTML = ${JSON.stringify(`<h2>Men's size chart</h2>${GUIDE_TABLE}`)};
+  });</script></body></html>`;
+
+test("renderPageHtml does not take a men's guide chart for a women's product", { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const women = await renderLocalPage({ '/products/tee': GENDERED_GUIDE("Women's Tee") }, '/products/tee');
+  assert.equal(women.chartHtml !== null && parseSizeChart(women.chartHtml).length, 0);
+  const men = await renderLocalPage({ '/products/tee': GENDERED_GUIDE("Men's Tee") }, '/products/tee');
+  assert.equal(men.chartHtml !== null && parseSizeChart(men.chartHtml)[0]?.chest_cm, 54);
+});
+
+test("serverless render does not take a men's guide chart for a women's product", { skip: serverlessSkip }, async () => {
+  const women = await renderServerlessLocalPage({ '/products/tee': GENDERED_GUIDE("Women's Tee") }, '/products/tee');
+  assert.equal(women.chartHtml !== null && parseSizeChart(women.chartHtml).length, 0);
+  const men = await renderServerlessLocalPage({ '/products/tee': GENDERED_GUIDE("Men's Tee") }, '/products/tee');
+  assert.equal(men.chartHtml !== null && parseSizeChart(men.chartHtml)[0]?.chest_cm, 54);
+});
+
+test('fetchGuidePagesByHttp reads the linked guides without a browser, and a refusal ends it', async () => {
+  const html = `<a href="/pages/size-chart">Size chart</a><a href="/pages/fit-guide">Fit guide</a><a href="https://other.example/size-guide">Size guide</a>`;
+  const asked: string[] = [];
+  const answers: Record<string, { html: string } | { refused: boolean }> = {
+    'https://shop.example/pages/size-chart': { html: '<table>chart</table>' },
+    'https://shop.example/pages/fit-guide': { html: '<p>fit</p>' },
+  };
+  const pages = await fetchGuidePagesByHttp(html, 'https://shop.example/products/tee', async (href) => {
+    asked.push(href);
+    return answers[href] ?? { refused: false };
+  });
+  assert.deepEqual(pages, ['<table>chart</table>', '<p>fit</p>']);
+  assert.deepEqual(asked, ['https://shop.example/pages/size-chart', 'https://shop.example/pages/fit-guide']); // not the other site
+
+  // The first guide is refused: the second is not tried.
+  asked.length = 0;
+  const refused = await fetchGuidePagesByHttp(html, 'https://shop.example/products/tee', async (href) => {
+    asked.push(href);
+    return { refused: true };
+  });
+  assert.deepEqual(refused, []);
+  assert.deepEqual(asked, ['https://shop.example/pages/size-chart']);
+
+  // No time left: nothing is fetched.
+  asked.length = 0;
+  assert.deepEqual(await fetchGuidePagesByHttp(html, 'https://shop.example/products/tee', async (href) => { asked.push(href); return { html: 'x' }; }, Date.now() + 5_000), []);
+  assert.deepEqual(asked, []);
+});
+
+test('renderChartOnly opens the size guide and reads a linked guide page, and never pages reviews', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const server = http.createServer((req, res) => {
+    const path = new URL(req.url ?? '/', 'http://x').pathname;
+    const pages: Record<string, string> = {
+      '/products/button-tee': `<!DOCTYPE html><html><head><title>Tee</title></head><body><h1>Tee</h1>
+        <button id="open">Size Guide</button><div id="modal"></div>
+        <script>document.getElementById('open').addEventListener('click', () => { document.getElementById('modal').innerHTML = ${JSON.stringify(GUIDE_TABLE)}; });</script></body></html>`,
+      '/products/link-tee': `<!DOCTYPE html><html><head><title>Men's Tee</title></head><body><h1>Men's Tee</h1><a href="/pages/size-chart">Size chart</a></body></html>`,
+      '/pages/size-chart': `<!DOCTYPE html><html><body><h1>Size chart</h1>${GUIDE_TABLE}</body></html>`,
+      '/products/nothing': `<!DOCTYPE html><html><head><title>Tee</title></head><body><h1>Tee</h1></body></html>`,
+    };
+    res.writeHead(pages[path] === undefined ? 404 : 200, { 'content-type': 'text/html' });
+    res.end(pages[path] ?? 'not found');
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const started = Date.now();
+    const button = await renderChartOnly(`http://127.0.0.1:${port}/products/button-tee`);
+    assert.equal(parseSizeChartFirst(button.html, button.chartHtml)[0]?.chest_cm, 54);
+    assert.deepEqual(button.guidePages, []);
+    const link = await renderChartOnly(`http://127.0.0.1:${port}/products/link-tee`);
+    assert.equal(parseSizeChart(link.html).length, 0);
+    assert.equal(link.guidePages?.length, 1);
+    assert.equal(parseSizeChartWithGuides([link.html], link.guidePages ?? [], { name: "Men's Tee", url: 'http://x/products/link-tee' })[0]?.chest_cm, 54);
+    const none = await renderChartOnly(`http://127.0.0.1:${port}/products/nothing`);
+    assert.deepEqual(parseSizeChartFirst(none.html, none.chartHtml), []);
+    const missing = await renderChartOnly(`http://127.0.0.1:${port}/products/gone`);
+    assert.equal(missing.status, 404);
+    // Three short renders: no 10 s review wait and no scrolling for more reviews.
+    assert.ok(Date.now() - started < 60_000, `took ${Date.now() - started} ms`);
+  } finally {
+    server.close();
+  }
+});
+
+// ---- Size charts that arrive as HTML inside JSON (Salesforce storefronts: Product-SizeChart) ----
+
+const sfChartJson = (content: string) =>
+  JSON.stringify({ action: 'Product-SizeChart', queryString: 'cid=size-guide', locale: 'default', content: `<style type="text/css">table, td, th { text-align:left; font-size:11px; }</style>${content}` });
+const GARMENT_CHART = `<h2>Men's size chart</h2><table><caption>Size guide (cm)</caption>
+  <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr><tr><td>M</td><td>54</td><td>72</td></tr></table>`;
+// What Hot Topic, BoxLunch and Orvis send: the shopper's body (bust, waist, hip; a chest range), not a garment.
+const BODY_CHART = `<h2>Guy's Tops</h2><table><tr><th>US</th><th>CHEST</th></tr><tr><td>XS</td><td>34" - 36"</td></tr><tr><td>SM</td><td>36" - 38"</td></tr></table>
+  <h2>Girl's Junior Sizes</h2><table><tr><th>US</th><th>BUST</th><th>WAIST</th><th>LOW HIP</th></tr><tr><td>XS</td><td>31"</td><td>25"</td><td>36"</td></tr><tr><td>SM</td><td>34"</td><td>27"</td><td>38"</td></tr></table>`;
+
+test('JsonCapture keeps the tables of a size-chart JSON response and nothing else', () => {
+  const capture = new JsonCapture();
+  const chartUrl = 'https://shop.example/on/demandware.store/Sites-x-Site/default/Product-SizeChart?cid=size-guide';
+  capture.add(chartUrl, sfChartJson(GARMENT_CHART));
+  // The same response with its markup escaped the way some servers write it.
+  capture.add('https://shop.example/other?size-chart=1', JSON.stringify({ content: '<table><tr><td>x</td></tr></table>' }).replace(/</g, '\u003c'));
+  // A table in JSON that is not about size, JSON about size with no table, and a chart past the cap are not kept.
+  capture.add('https://shop.example/api/shipping', JSON.stringify({ content: '<table><tr><td>Shipping</td></tr></table>' }));
+  capture.add('https://shop.example/api/size-guide', JSON.stringify({ content: 'No table here' }));
+  const pages = capture.chartPages();
+  assert.equal(pages.length, 2);
+  assert.deepEqual(parseSizeChartFirst(...pages), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+  assert.equal(capture.ratingFields, 0); // not review data
+  assert.equal(capture.items.length, 0);
+  for (let i = 0; i < 10; i++) capture.add(`${chartUrl}&n=${i}`, sfChartJson(`<table><tr><th>Size</th><th>Chest (cm)</th></tr><tr><td>S</td><td>${50 + i}</td></tr></table>`));
+  assert.equal(capture.chartPages().length, 4); // two bodies were kept before; the cap of four stops the rest
+});
+
+test('a Salesforce size chart that only gives body measurements reads as no chart, so no dimension is invented', () => {
+  const capture = new JsonCapture();
+  capture.add('https://shop.example/on/demandware.store/Sites-x-Site/default/Product-SizeChart?cid=size-guide', sfChartJson(BODY_CHART));
+  assert.equal(capture.chartPages().length, 1); // the table is read...
+  // ...and the chart parser takes no chest, length or sleeve from bust, waist, hip or a chest range.
+  assert.deepEqual(parseSizeChartFirst(...capture.chartPages()), []);
+  assert.deepEqual(parseSizeChartWithGuides([], capture.chartPages(), { name: "Men's Graphic Tee", url: 'https://shop.example/product/tee.html' }), []);
+});
+
+/** A product page whose size guide button fetches the chart as JSON and shows it in a closed shadow root. */
+async function renderChartJsonPage(render: (url: string) => Promise<RenderedPage>) {
+  const server = http.createServer((req, res) => {
+    const path = new URL(req.url ?? '/', 'http://x').pathname;
+    if (path === '/on/demandware.store/Product-SizeChart') {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(sfChartJson(GARMENT_CHART));
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end(`<!DOCTYPE html><html><head><title>Men's Tee</title></head><body><h1>Men's Tee</h1>${REVIEW}
+      <button id="open">Size Guide</button><div id="host"></div>
+      <script>document.getElementById('open').addEventListener('click', async () => {
+        const json = await (await fetch('/on/demandware.store/Product-SizeChart?cid=size-guide')).json();
+        // A closed shadow root is not part of the page html the render saves.
+        document.getElementById('host').attachShadow({ mode: 'closed' }).innerHTML = json.content;
+      });</script></body></html>`);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    return await render(`http://127.0.0.1:${port}/products/tee`);
+  } finally {
+    server.close();
+  }
+}
+
+test('renderPageHtml returns the size chart that came as HTML inside JSON', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const result = await renderChartJsonPage(renderPageHtml);
+  assert.deepEqual(parseSizeChartFirst(result.html, result.chartHtml), []); // the page html has no chart
+  assert.deepEqual(parseSizeChartFirst(...(result.chartJson ?? [])), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+});
+
+test('serverless render returns the size chart that came as HTML inside JSON', { skip: serverlessSkip }, async () => {
+  const result = await renderChartJsonPage((url) => renderWithServerlessBrowser(serverlessBrowser!, url));
+  assert.deepEqual(parseSizeChartFirst(result.html, result.chartHtml), []);
+  assert.deepEqual(parseSizeChartFirst(...(result.chartJson ?? [])), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+});
+
+test('renderChartOnly returns the size chart that came as HTML inside JSON', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const result = await renderChartJsonPage(renderChartOnly);
+  assert.deepEqual(parseSizeChartFirst(...(result.chartJson ?? [])), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
 });

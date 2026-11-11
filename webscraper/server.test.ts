@@ -132,6 +132,44 @@ test('two reviews that share an id still commit', async () => {
   }
 });
 
+test('a review with no star rating commits locally and keeps a null rating', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const report = aggregateProductFitReport(
+      {
+        id: 'unrated',
+        name: 'Unrated Tee',
+        brand: 'Example',
+        category: 'T-Shirts & Tops',
+        sku: 'UNRATED-1',
+        price: 'Unknown',
+        fabricComposition: '100% cotton',
+        sourceUrl: 'https://example.test/unrated',
+      },
+      [
+        {
+          id: 'u1',
+          author: 'A',
+          sizePurchased: 'M',
+          rating: null,
+          title: '',
+          body: 'True to size and fits perfectly in the chest.',
+          date: '',
+          verifiedPurchase: false,
+        },
+      ]
+    );
+    assert.equal(report.reviews[0].rating, null);
+    assert.equal(report.reviews[0].sentimentScore, null);
+    const committed = await request(port, 'POST', '/api/db/commit', { report });
+    assert.equal(committed.status, 200, JSON.stringify(committed.json));
+    const removed = await request(port, 'DELETE', '/api/db/sku/UNRATED-1');
+    assert.equal(removed.status, 200);
+  } finally {
+    server.close();
+  }
+});
+
 test('a failed page fetch does not claim the page was scraped', async () => {
   const { server, port } = await listen(createApp());
   try {
@@ -725,6 +763,231 @@ test('mock store pages are found by their own slugs only, and bad body types are
     assert.equal(missing.status, 404);
     const badBody = await request(port, 'POST', '/api/scrape', { url: 42 });
     assert.equal(badBody.status, 400);
+  } finally {
+    server.close();
+  }
+});
+
+test('Phase Eight: a card with only a rating, a date and a size is not a review whose words are its date', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // Markup as the store writes it: the message element exists and is empty when the shopper wrote nothing.
+    const card = (epochMs: string, score: number, date: string, size: string, text: string) =>
+      `<div class="product-detail__rating__review container review-data-new px-0 show " data-date="${epochMs}" data-score="${score}">` +
+      `<div class="product-detail__rating__review-header row no-gutters"><div class="product-detail__rating__review-score">${'<i class="rating-star"></i>'.repeat(score)}</div>` +
+      `<div class="product-detail__rating__review-date reviewDate review-items">${date}</div></div>` +
+      `<div class="product-detail__rating__review-message row no-gutters review_message">${text}</div>` +
+      `<div class="product-detail__rating__review-footer"><div class="product-detail__rating__review-detail--size">Size: ${size}</div>` +
+      `<div class="product-detail__rating__review-detail">Purchased: Web</div><div class="product-detail__rating__review-detail">Location: Madinah</div></div></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Shirt Dress</title></head><body><h1>Shirt Dress</h1>
+      <div class="review-msg"><span class="product-detail__rating__visible-reviews">4</span> of 10 reviews</div>
+      ${card('1.7888256E12', 5, '08 September 2026', '10', 'Beautiful and elegant')}
+      ${card('1.7367264E12', 4, '13 January 2025', '14', '')}
+      ${card('1.7362944E12', 3, '08 January 2025', '16', 'Material and underskirt was not as in the picture')}
+      ${card('1.7291232E12', 5, '17 October 2024', '16', '')}</body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'PH8-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as {
+      totalReviews: number;
+      reviews: { body: string; title: string; date: string; rating: number }[];
+    };
+    // The two cards with no words are not reviews. Their date used to be taken as the body.
+    assert.equal(report.totalReviews, 2);
+    assert.deepEqual(report.reviews.map((r) => r.body), ['Beautiful and elegant', 'Material and underskirt was not as in the picture']);
+    // The date line is not the title either, and data-date (Unix ms, written as a float) is read as an ISO date.
+    assert.deepEqual(report.reviews.map((r) => r.title), ['', '']);
+    // 1788825600000 ms = 2026-09-08; 1736294400000 ms = 2025-01-08 (both 00:00 UTC).
+    assert.deepEqual(report.reviews.map((r) => r.date), ['2026-09-08T00:00:00.000Z', '2025-01-08T00:00:00.000Z']);
+    assert.deepEqual(report.reviews.map((r) => r.rating), [5, 3]);
+  } finally {
+    server.close();
+  }
+});
+
+test('Nudie Jeans: rating-only cards in the reviews dialog are not reviews and do not leak "Verified Buyer" as a body', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // After "Load more reviews" the dialog holds every review. A card with stars, a name and a date and no
+    // `reviewContent` element is a rating with no words (class "noContent").
+    const withText = (who: string, text: string) =>
+      `<div class="gA1Nqq_review"><div class="gA1Nqq_reviewHeader"><div class="gA1Nqq_authorInfo"><span class="gA1Nqq_author">${who}</span><span class="gA1Nqq_verified">Verified Buyer</span></div><span class="gA1Nqq_date">2026.08.12</span></div>` +
+      `<div class="gA1Nqq_reviewRating"><div class="M6bWGW_stars" aria-hidden="true"><svg></svg></div></div><p class="gA1Nqq_reviewContent">${text}</p></div>`;
+    const ratingOnly = (who: string) =>
+      `<div class="gA1Nqq_review"><div class="gA1Nqq_reviewHeader"><div class="gA1Nqq_authorInfo"><span class="gA1Nqq_author">${who}</span><span class="gA1Nqq_verified">Verified Buyer</span></div><span class="gA1Nqq_date">2026.09.01</span></div>` +
+      `<div class="gA1Nqq_reviewRating gA1Nqq_noContent"><div class="M6bWGW_stars" aria-hidden="true"><svg></svg></div></div></div>`;
+    const html = `<!DOCTYPE html><html><head><title>Logo Hoodie</title></head><body><h1>Logo Hoodie</h1>
+      <dialog open><h2 id="reviews-title">Reviews</h2><sup class="gA1Nqq_count">6</sup><div class="gA1Nqq_reviewsList">
+      ${withText('Pascal', 'As expected, the hoodie fits true to size.')}${withText('David', 'Great fit and nice quality!')}
+      ${ratingOnly('Hugo T')}${ratingOnly('Andras V')}${ratingOnly('Jens L')}${ratingOnly('Henrik I')}
+      </div></dialog></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'TF-2', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { totalReviews: number; reviews: { author: string; body: string; title: string }[] };
+    assert.equal(report.totalReviews, 2);
+    // The author is the name span, not the "name + Verified Buyer" wrapper, and the badge is not a title.
+    assert.deepEqual(report.reviews.map((r) => [r.author, r.title, r.body]), [
+      ['Pascal', '', 'As expected, the hoodie fits true to size.'],
+      ['David', '', 'Great fit and nice quality!'],
+    ]);
+  } finally {
+    server.close();
+  }
+});
+
+test('Rawganique: a hidden Judge.me preview badge that says "2 reviews" holds no review text, so there is nothing to read', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    // The page installs only the preview badge (data-auto-install="false", display:none). The review widget is
+    // not on the page and the page asks for no review data, so the two reviews cannot be read from it.
+    const html = `<!DOCTYPE html><html><head><title>Organic Cotton Carpenter Jeans</title></head><body><h1>Organic Cotton Carpenter Jeans</h1>
+      <div class="jdgm-widget jdgm-preview-badge" data-id="5728602652839" data-auto-install="false">
+        <div style="display:none" class="jdgm-prev-badge" data-average-rating="5.00" data-number-of-reviews="2" data-number-of-questions="0">
+          <span class="jdgm-prev-badge__stars" data-score="5.00" aria-label="5.00 stars" role="button"><span class="jdgm-star jdgm--on"></span></span>
+          <span class="jdgm-prev-badge__text">2 reviews</span></div></div></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'RAW-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 422, JSON.stringify(scraped.json));
+    assert.match(String(scraped.json.error), /No reviews found/);
+  } finally {
+    server.close();
+  }
+});
+
+test('a card whose stars cannot be read has no rating, not a neutral 3', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const html = `<!DOCTYPE html><html><head><title>Plain Tee</title></head><body><h1>Plain Tee</h1>
+      <div class="review-card" data-author="Ana"><p class="review-body-copy">Runs a little small, I ordered a medium.</p></div>
+      <div class="review-card" data-author="Bo" data-rating="0"><p class="review-body-copy">True to size and very soft.</p></div>
+      <div class="review-card" data-author="Cy" data-rating="4"><p class="review-body-copy">Great fit, a bit long in the body.</p></div></body></html>`;
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: html, sku: 'NORATE-1', commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    const report = scraped.json.report as { totalReviews: number; reviews: { author: string; rating: number | null }[] };
+    assert.equal(report.totalReviews, 3);
+    assert.deepEqual(report.reviews.map((r) => [r.author, r.rating]), [['Ana', null], ['Bo', null], ['Cy', 4]]);
+  } finally {
+    server.close();
+  }
+});
+
+/**
+ * Runs `body` with fetch answering for the made-up host shop.example from `pages` (path -> status and html, or a
+ * redirect). Requests to the test server itself go through. Returns the shop.example addresses that were asked.
+ */
+async function withShopFetch(
+  pages: Record<string, { status?: number; html?: string; location?: string }>,
+  body: (asked: string[]) => Promise<void>,
+): Promise<string[]> {
+  const realFetch = globalThis.fetch;
+  const asked: string[] = [];
+  globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    const address = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    if (!address.startsWith('https://shop.example')) return realFetch(input, init);
+    asked.push(address);
+    const page = pages[new URL(address).pathname];
+    if (!page) return new Response('not found', { status: 404 });
+    return new Response(page.html ?? '', {
+      status: page.status ?? 200,
+      headers: { 'content-type': 'text/html', ...(page.location ? { location: page.location } : {}) },
+    });
+  }) as typeof fetch;
+  try {
+    await body(asked);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  return asked;
+}
+
+const SOURCE_REVIEWS = `<article class="review-card" data-author="Ana" data-rating="4"><p class="review-body-copy">Runs a little small, I ordered a medium.</p></article>
+  <article class="review-card" data-author="Bo" data-rating="5"><p class="review-body-copy">True to size and very soft.</p></article>`;
+const productPage = (links: string) => `<!DOCTYPE html><html><head><title>Mens Tee</title></head><body><h1>Mens Tee</h1>${SOURCE_REVIEWS}${links}</body></html>`;
+const GUIDE_TABLE_CM = `<h2>Men's size chart</h2><table><caption>Size guide (cm)</caption>
+  <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr><tr><td>M</td><td>54</td><td>72</td></tr><tr><td>L</td><td>57</td><td>74</td></tr></table>`;
+
+test('a page whose reviews are all in its source still gets its size chart from the guide page it links to', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const asked = await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-chart">Size chart</a><a href="https://other.example/size-guide">Size guide</a><a href="/products/other-tee">Size guide</a>') },
+        '/pages/size-chart': { html: `<!DOCTYPE html><html><body><h1>Size chart</h1>${GUIDE_TABLE_CM}</body></html>` },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 2);
+        assert.deepEqual(scraped.json.sizeChart, [
+          { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+          { size: 'L', sortOrder: 3, chest_cm: 57, length_cm: 74, sleeve_cm: null },
+        ]);
+      },
+    );
+    // The product page and the one guide on the same site; not the other site, not another product.
+    assert.deepEqual(asked, ['https://shop.example/products/tee', 'https://shop.example/pages/size-chart']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a size guide that refuses the request ends the guide fetch, and the reviews still stand', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const asked = await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-chart">Size chart</a><a href="/pages/fit-guide">Fit guide</a>') },
+        '/pages/size-chart': { status: 403, html: 'Forbidden' },
+        '/pages/fit-guide': { html: GUIDE_TABLE_CM },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 2);
+        assert.deepEqual(scraped.json.sizeChart, []);
+      },
+    );
+    assert.deepEqual(asked, ['https://shop.example/products/tee', 'https://shop.example/pages/size-chart']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a size guide that redirects to another site is not followed', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const asked = await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-chart">Size chart</a>') },
+        '/pages/size-chart': { status: 302, location: 'https://elsewhere.example/size-chart' },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.deepEqual(scraped.json.sizeChart, []);
+      },
+    );
+    assert.deepEqual(asked, ['https://shop.example/products/tee', 'https://shop.example/pages/size-chart']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a linked size guide that only gives body ranges leaves the chart empty, not guessed', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-guide">Size guide</a>') },
+        '/pages/size-guide': {
+          html: `<!DOCTYPE html><html><body><h1>Size guide</h1><table><caption>Body measurements (in)</caption>
+            <tr><th>Size</th><th>Chest</th><th>Waist</th></tr><tr><td>M</td><td>38-40</td><td>32-34</td></tr><tr><td>L</td><td>41-43</td><td>35-37</td></tr></table></body></html>`,
+        },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.deepEqual(scraped.json.sizeChart, []);
+      },
+    );
   } finally {
     server.close();
   }

@@ -10,53 +10,25 @@
  * Playwright is imported lazily so the server still starts when no browser is installed.
  */
 import type { Browser, Locator, Page } from 'playwright';
+import {
+  REVIEW_CARD_SELECTOR,
+  NAV_TIMEOUT_MS,
+  RENDER_DEADLINE_MS,
+  RENDER_TAIL_MS,
+  REVIEW_WAIT_MS,
+  MAX_REVIEW_PAGES,
+  MAX_REVIEWS,
+  MAX_LINKED_REVIEW_PAGES,
+  MAX_CAPTURED_BODY_BYTES,
+  MAX_CAPTURED_TOTAL_BYTES,
+  REVIEW_WIDGET_SELECTOR,
+} from './render/constants.ts';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 import { extractReviewsFromJson, parseJsonBody, reviewIdentity } from './reviewJson.ts';
 import { GUIDE_LABEL, GUIDE_NAME, GUIDE_PATH, guideLinksFromHtml, parseSizeChartCached } from './pageHelpers.ts';
 import type { ProductHint } from './sizeChart.ts';
 
-/** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
-export const REVIEW_CARD_SELECTOR =
-  '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], .detailReviewItem, [class$="_review"]:has([class*="reviewContent"]), article:has([aria-label="review item"]), .grid-item:has(.main-text), .product-detail__rating__review, .pdp-review, li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
-
-/**
- * The browser keeps its own user agent. A desktop-Chrome string on headless Linux contradicts what the
- * browser reports elsewhere, and some stores answer that with an error page (Roots: HTTP 502).
- */
-
-const NAV_TIMEOUT_MS = 45_000;
-/** Whole render, including scrolling and paging. One page cannot hold the browser longer than this. */
-export const RENDER_DEADLINE_MS = 120_000;
-/**
- * Time kept back at the end of a render for opening the size chart and serializing the page. A page of
- * several megabytes (Duer: 3 MB) takes seconds to serialize; running into the hard deadline loses
- * everything the render recorded.
- */
-const RENDER_TAIL_MS = 25_000;
-const REVIEW_WAIT_MS = 10_000;
-/** Most "load more" / "next page" clicks in one review widget. */
-const MAX_REVIEW_PAGES = 60;
-/** Stop paging once about this many reviews were seen; enough for fit statistics. */
-const MAX_REVIEWS = 300;
-/** Most review pages followed by link (/…/page/N). */
-const MAX_LINKED_REVIEW_PAGES = 15;
-/** Review JSON kept from one render: per response and in total. */
-const MAX_CAPTURED_BODY_BYTES = 5_000_000;
-const MAX_CAPTURED_TOTAL_BYTES = 30_000_000;
-
-/** Containers of review widgets (vendor and first-party). Used to scroll them into view and to find their paging controls. */
-export const REVIEW_WIDGET_SELECTOR = [
-  '#yotpo-main-widget', '.yotpo-main-widget', '[class*="yotpo-reviews"]', '.yotpo-display-wrapper',
-  '.okeReviews', '[data-oke-reviews-widget]', '[data-oke-widget]',
-  '.jdgm-widget', '.jdgm-rev-widg', '#judgeme_product_reviews',
-  '#stamped-main-widget', '.stamped-main-widget', '#stamped-reviews-widget',
-  '[class*="junip"]', 'junip-product-reviews',
-  '[data-bv-show]', '#BVRRContainer', '[class*="bv-rnr"]', '[class*="bv_main"]', '[class*="bv-pagination"]', '[data-bv-v]',
-  '#pr-reviewdisplay', '.pr-review-display',
-  '.kl_reviews', '[class*="kl_reviews"]', '#klaviyo-reviews-all',
-  '.loox-reviews-default', '#looxReviews', '.reviews-io-widget', '#ReviewsWidget', '#full-page-widget',
-  '#reviews', '#Reviews', '#product-reviews', '[id*="review" i]:not([id*="preview" i])', '[class*="review" i]:not([class*="preview" i])',
-].join(', ');
+export { REVIEW_CARD_SELECTOR, RENDER_DEADLINE_MS, REVIEW_WIDGET_SELECTOR } from './render/constants.ts';
 
 export interface RenderedPage {
   html: string;
@@ -247,7 +219,6 @@ function startUrlAllowsPrivate(raw: string): boolean {
     return false;
   }
 }
-
 
 function renderBudgetMs(): number {
   // The hosted function is capped at 60s, including the Chromium download on a cold start.

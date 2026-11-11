@@ -9,7 +9,7 @@ import {
 import { extractStructuredProduct, parseJsonLdScripts } from '../structuredData.ts';
 import type { CapturedJson } from '../headlessFetch.ts';
 import { collectJsonReviews, parseJsonBody, type JsonSource } from '../reviewJson.ts';
-import { cleanProductTitle, productIdFromUrl, decodeHtmlEntities } from '../pageHelpers.ts';
+import { cleanProductTitle, productIdFromUrl, uniqloProductCode, decodeHtmlEntities } from '../pageHelpers.ts';
 import { mergeScrapedReviews } from './reviewMerge.ts';
 import { readDomReviewCards } from './domReviews.ts';
 
@@ -131,6 +131,9 @@ export function scrapeHtmlWithCheerio(
 
   const sku =
     overrides?.sku ||
+    // uniqlo.com pages carry a colour/size variant id in their data (sometimes another article code), which
+    // would save the product under a different SKU than the rows we already have. The URL's code is stable.
+    uniqloProductCode(sourceUrl) ||
     structured?.sku ||
     meta('meta[name="product:sku"]') ||
     meta('meta[property="product:retailer_item_id"]') ||

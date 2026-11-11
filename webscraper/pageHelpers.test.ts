@@ -19,6 +19,7 @@ import {
   dateFromAttribute,
   textOutsideLines,
   productIdFromUrl,
+  uniqloProductCode,
   blockPageTitle,
   describeFetchFailure,
   isBotCheckRedirect,
@@ -306,4 +307,22 @@ test('sizeChartFromPages answers as parseSizeChartWithGuides does, and reads eac
   assert.equal(parseGuidePageChartCached.stats.parses, guideParses);
   assert.equal(ownParses - beforeOwn.parses, 2); // noChart and withChart, once each
   assert.equal(guideParses - beforeGuide.parses, 2); // noChart as a guide page, and the guide
+});
+
+test('uniqloProductCode reads the E<digits>-000 code from a uniqlo.com product URL', () => {
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-000/00'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-000/00?colorDisplayCode=09&sizeDisplayCode=003'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-000/00/reviews'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://uniqlo.com/ca/en/products/E465193-000/00'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/e465193-000/00'), 'E465193-000'); // stored rows are upper case
+});
+
+test('uniqloProductCode is null for other hosts, look-alike hosts, and Uniqlo URLs without a -000 code', () => {
+  assert.equal(uniqloProductCode('https://shop.example/products/E465193-000'), null);
+  assert.equal(uniqloProductCode('https://www.nike.com/t/some-tee/E465193-000'), null);
+  assert.equal(uniqloProductCode('https://uniqlo.com.evil.example/ca/en/products/E465193-000/00'), null);
+  assert.equal(uniqloProductCode('https://notuniqlo.com/ca/en/products/E465193-000/00'), null);
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/'), null); // no product in the URL
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-09-003-000'), null); // a variant id is not a product code
+  assert.equal(uniqloProductCode('not a url'), null);
 });

@@ -89893,6 +89893,17 @@ function productIdFromUrl(url) {
   const numericSegment = url.match(/^[^?#]*\/(\d{5,})(?:[/?#]|$)/);
   return numericSegment ? numericSegment[1] : null;
 }
+function uniqloProductCode(url) {
+  let host;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  if (host !== "uniqlo.com" && !host.endsWith(".uniqlo.com")) return null;
+  const code = productIdFromUrl(url);
+  return code && /^E\d+-000$/i.test(code) ? code.toUpperCase() : null;
+}
 function ratingFromLabel(label) {
   const m = label?.match(/(\d+(?:\.\d+)?)\s*(?:out\s*of|\/)\s*(\d+)/i);
   if (!m) return "";
@@ -101744,7 +101755,9 @@ function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], 
     structured?.category,
     extractedName
   );
-  const sku = overrides?.sku || structured?.sku || meta('meta[name="product:sku"]') || meta('meta[property="product:retailer_item_id"]') || $p("[data-sku]").attr("data-sku") || // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
+  const sku = overrides?.sku || // uniqlo.com pages carry a colour/size variant id in their data (sometimes another article code), which
+  // would save the product under a different SKU than the rows we already have. The URL's code is stable.
+  uniqloProductCode(sourceUrl) || structured?.sku || meta('meta[name="product:sku"]') || meta('meta[property="product:retailer_item_id"]') || $p("[data-sku]").attr("data-sku") || // No SKU on the page: derive a stable id from the URL so re-scrapes update the same row.
   productIdFromUrl(sourceUrl) || // Shopify names its product in the analytics object: var meta = {"product":{"id":123,...
   shopifyProductId(productPageHtml) || `URL-${stableHash(sourceUrl)}`;
   const priceAmount = meta('meta[property="product:price:amount"]') || meta('meta[property="og:price:amount"]');

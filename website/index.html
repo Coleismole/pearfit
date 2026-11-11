@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pearfit — Size intelligence for brands &amp; shoppers</title>
-  <meta name="description" content="Pearfit turns shopper reviews into numerical fit values for each size and compares a garment with clothes a shopper owns. Missing measurements stay blank." />
+  <title>Pearfit — What size to buy, and which shirt you own it fits like</title>
+  <meta name="description" content="Pearfit tells you what size to buy by comparing a shirt with the shirts you already own. It also turns shopper reviews into fit numbers for each size. Missing measurements stay blank." />
   <link rel="canonical" href="https://www.pearfit.app/" />
   <meta name="theme-color" content="#f6f4ee" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#131512" media="(prefers-color-scheme: dark)" />
   <meta property="og:site_name" content="Pearfit" />
-  <meta property="og:title" content="Pearfit — Size intelligence for brands &amp; shoppers" />
-  <meta property="og:description" content="Pearfit turns shopper reviews into numerical fit values for each size and compares a garment with clothes a shopper owns. Missing measurements stay blank." />
+  <meta property="og:title" content="Pearfit — What size to buy, and which shirt you own it fits like" />
+  <meta property="og:description" content="Pearfit tells you what size to buy by comparing a shirt with the shirts you already own. It also turns shopper reviews into fit numbers for each size. Missing measurements stay blank." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.pearfit.app/" />
   <meta property="og:image" content="https://www.pearfit.app/apple-touch-icon.png" />
@@ -18,8 +18,8 @@
   <meta property="og:image:height" content="180" />
   <meta property="og:image:alt" content="The Pearfit pear logo" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Pearfit — Size intelligence for brands &amp; shoppers" />
-  <meta name="twitter:description" content="Pearfit turns shopper reviews into numerical fit values for each size and compares a garment with clothes a shopper owns. Missing measurements stay blank." />
+  <meta name="twitter:title" content="Pearfit — What size to buy, and which shirt you own it fits like" />
+  <meta name="twitter:description" content="Pearfit tells you what size to buy by comparing a shirt with the shirts you already own. It also turns shopper reviews into fit numbers for each size. Missing measurements stay blank." />
   <meta name="twitter:image" content="https://www.pearfit.app/apple-touch-icon.png" />
   <meta name="twitter:image:alt" content="The Pearfit pear logo" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -45,7 +45,7 @@
         <a href="#demo">Sample</a>
         <a href="#try">Try it</a>
         <a href="stores.html">Stores</a>
-        <a href="#how">Architecture</a>
+        <a href="#how">How it works</a>
         <a href="#roi">ROI Calculator</a>
         <a href="#faq">FAQ</a>
         <a href="/scraper">Scraper</a>
@@ -160,25 +160,23 @@
       <div class="wrap">
         <div class="section-header-row">
           <div>
-            <span class="kicker">01. Two-Sided Value Engine</span>
-            <h2>Built to protect brand margins and<br />eliminate shopper sizing guesswork.</h2>
+            <span class="kicker">01. Shoppers and brands</span>
+            <h2>What Pearfit does for shoppers and for brands.</h2>
           </div>
           <div class="segmented" id="stakeholder-tabs" role="group" aria-label="Filter benefits by audience">
-            <button type="button" aria-pressed="true" data-filter="all">All Benefits</button>
-            <button type="button" aria-pressed="false" data-filter="brands">For Businesses (Lower Returns)</button>
-            <button type="button" aria-pressed="false" data-filter="shoppers">For Consumers (Better Fit)</button>
+            <button type="button" aria-pressed="true" data-filter="all">Both</button>
+            <button type="button" aria-pressed="false" data-filter="brands">For brands</button>
+            <button type="button" aria-pressed="false" data-filter="shoppers">For shoppers</button>
           </div>
         </div>
 
         <div class="bento-grid" id="bento-grid">
           <article class="bento-card bento-span-2" data-audience="brands">
             <div>
-              <span class="bento-index">01 · For Apparel Businesses · Margin Recovery</span>
               <h3>Read how each size actually fits, before you guess from a handful of reviews.</h3>
               <p>
-                Shoppers who are unsure often buy two sizes and send one back. Pearfit counts
-                what reviewers say about each size: runs small, true to size, runs large,
-                shrinkage, and sentiment.
+                Pearfit counts what reviewers say about each size: runs small, true to size,
+                runs large, shrinkage, and sentiment.
               </p>
               <ul class="ticks">
                 <li><strong>One verdict per size:</strong> Review count, fit skew, and the share of reviews in each direction.</li>
@@ -194,7 +192,6 @@
 
           <article class="bento-card" data-audience="shoppers">
             <div>
-              <span class="bento-index">02 · For Consumers · Closet-Anchored Confidence</span>
               <h3>Compare a garment with one the shopper already wears.</h3>
               <p>
                 The comparison engine measures a candidate size against an owned garment. The
@@ -215,7 +212,6 @@
 
           <article class="bento-card" data-audience="network">
             <div>
-              <span class="bento-index">03 · Network Effect · Compounding Fit Graph</span>
               <h3>Each scrape adds that SKU’s fit numbers to the shared table.</h3>
               <p>
                 A second scrape of the same SKU replaces its size rows. Full review text stays
@@ -335,11 +331,11 @@
       </div>
     </section>
 
-    <!-- How it works — 100% Proprietary Engine -->
+    <!-- How it works -->
     <section id="how" class="section">
       <div class="wrap">
-        <span class="kicker">04. Proprietary Fit Architecture</span>
-        <h2>Proprietary ingestion. Deterministic geometry.</h2>
+        <span class="kicker">04. How it works</span>
+        <h2>How a size answer is made.</h2>
         <p class="muted narrow">
           The scraper reads a product page and classifies reviews with deterministic rules.
           Fit numbers are stored per size. A separate comparison engine measures a candidate
@@ -381,8 +377,8 @@
     <section id="roi" class="section">
       <div class="wrap roi-grid">
         <div>
-          <span class="kicker">05. Business Case &amp; Unit Economics</span>
-          <h2>Model your annual return savings with Pearfit.</h2>
+          <span class="kicker">05. Return savings estimate</span>
+          <h2>Estimate what fewer fit returns would be worth to you.</h2>
           <p class="muted">
             Enter your own monthly orders and return rates. The reduction slider is your
             assumption. This calculator does not report a measured Pearfit result.
@@ -437,18 +433,18 @@
             </div>
             <div class="bracketing-compare">
               <div>
-                <strong>Without Pearfit (Multi-Size Cart)</strong>
+                <strong>Without Pearfit</strong>
                 Shopper buys M + L to test fit at home → the extra size is returned, and that unit is out of stock while it travels back.
               </div>
               <div>
-                <strong>With Pearfit (Closet-Matched)</strong>
-                Shopper sees exact cm overlay → orders 1 size with conviction, preserving outbound &amp; return margin.
+                <strong>With Pearfit</strong>
+                Shopper sees one recommended size and can order only that one, so there is no second size to ship back.
               </div>
             </div>
           </div>
 
           <div class="roi-big">
-            <span class="roi-label">Total Annual Margin &amp; Retained GMV Impact (incl. unrefunded orders)</span>
+            <span class="roi-label">Total yearly impact: fees saved, plus orders kept instead of refunded</span>
             <span class="roi-val accent" id="roi-total">—</span>
           </div>
 
@@ -510,8 +506,8 @@
           <p>The sample at the top of this page lets you pick one of four made-up reference shirts. The live demo lets you type in your own shirts and sends them to the comparison engine, which compares them with a product in the fit table. This page does not store what you enter.</p>
         </details>
         <details>
-          <summary>How does Pearfit’s proprietary engine work without LLMs?</summary>
-          <p>The scraper classifies review text with deterministic rules and stores the resulting numbers. When a measurement is missing, it stays blank. The sample score on this page is an illustration, separate from the comparison engine.</p>
+          <summary>Does an AI model pick the size?</summary>
+          <p>No. The scraper classifies review text with deterministic rules and stores the resulting numbers. When a measurement is missing, it stays blank. The sample score on this page is an illustration, separate from the comparison engine.</p>
         </details>
         <details>
           <summary>How do you measure ROI during the 6-week pilot?</summary>
@@ -528,7 +524,7 @@
   <footer class="footer">
     <div class="wrap footer-inner">
       <span class="brand-wordmark"><img class="brand-mark" src="logo-mark.svg" alt="" width="20" height="30" loading="lazy" decoding="async" />Pearfit</span>
-      <span class="muted">Proprietary size intelligence that cuts returns for brands and delivers better-fitting clothes for shoppers.</span>
+      <span class="muted">Pearfit compares a shirt with the shirts you already own, and tells you what size to buy.</span>
       <nav class="footer-links" aria-label="Footer">
         <a href="#try">Try it</a>
         <a href="stores.html">Supported stores</a>

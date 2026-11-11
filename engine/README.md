@@ -104,3 +104,4 @@ All numbers live in `src/config.ts`.
 - `cli/`: file loading/validation, flag parsing, the `recommend` runner, `eval` and its report.
 - `data/`: wardrobes, candidates, cases. The `sample` files are made-up demo data.
 - `test/`: unit tests with hand-computed expected values.
+- `docs/`: model decisions and the real Pilot 1 wardrobe data.

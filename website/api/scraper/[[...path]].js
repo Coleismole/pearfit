@@ -17467,11 +17467,11 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup2(path2) {
-      if (!path2 || typeof path2 !== "string") {
+    function lookup2(path4) {
+      if (!path4 || typeof path4 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path2).toLowerCase().substr(1);
+      var extension2 = extname("x." + path4).toLowerCase().substr(1);
       if (!extension2) {
         return false;
       }
@@ -21256,7 +21256,7 @@ var require_path_to_regexp = __commonJS({
   "webscraper/node_modules/path-to-regexp/index.js"(exports2, module2) {
     module2.exports = pathToRegexp;
     var MATCHING_GROUP_REGEXP = /\\.|\((?:\?<(.*?)>)?(?!\?)/g;
-    function pathToRegexp(path2, keys, options) {
+    function pathToRegexp(path4, keys, options) {
       options = options || {};
       keys = keys || [];
       var strict = options.strict;
@@ -21270,8 +21270,8 @@ var require_path_to_regexp = __commonJS({
       var pos = 0;
       var backtrack = "";
       var m;
-      if (path2 instanceof RegExp) {
-        while (m = MATCHING_GROUP_REGEXP.exec(path2.source)) {
+      if (path4 instanceof RegExp) {
+        while (m = MATCHING_GROUP_REGEXP.exec(path4.source)) {
           if (m[0][0] === "\\") continue;
           keys.push({
             name: m[1] || name++,
@@ -21279,18 +21279,18 @@ var require_path_to_regexp = __commonJS({
             offset: m.index
           });
         }
-        return path2;
+        return path4;
       }
-      if (Array.isArray(path2)) {
-        path2 = path2.map(function(value) {
+      if (Array.isArray(path4)) {
+        path4 = path4.map(function(value) {
           return pathToRegexp(value, keys, options).source;
         });
-        return new RegExp(path2.join("|"), flags);
+        return new RegExp(path4.join("|"), flags);
       }
-      if (typeof path2 !== "string") {
+      if (typeof path4 !== "string") {
         throw new TypeError("path must be a string, array of strings, or regular expression");
       }
-      path2 = path2.replace(
+      path4 = path4.replace(
         /\\.|(\/)?(\.)?:(\w+)(\(.*?\))?(\*)?(\?)?|[.*]|\/\(/g,
         function(match, slash, format, key, capture, star, optional, offset) {
           if (match[0] === "\\") {
@@ -21307,7 +21307,7 @@ var require_path_to_regexp = __commonJS({
           if (slash || format) {
             backtrack = "";
           } else {
-            backtrack += path2.slice(pos, offset);
+            backtrack += path4.slice(pos, offset);
           }
           pos = offset + match.length;
           if (match === "*") {
@@ -21337,7 +21337,7 @@ var require_path_to_regexp = __commonJS({
           return result;
         }
       );
-      while (m = MATCHING_GROUP_REGEXP.exec(path2)) {
+      while (m = MATCHING_GROUP_REGEXP.exec(path4)) {
         if (m[0][0] === "\\") continue;
         if (keysOffset + i === keys.length || keys[keysOffset + i].offset > m.index) {
           keys.splice(keysOffset + i, 0, {
@@ -21349,13 +21349,13 @@ var require_path_to_regexp = __commonJS({
         }
         i++;
       }
-      path2 += strict ? "" : path2[path2.length - 1] === "/" ? "?" : "/?";
+      path4 += strict ? "" : path4[path4.length - 1] === "/" ? "?" : "/?";
       if (end2) {
-        path2 += "$";
-      } else if (path2[path2.length - 1] !== "/") {
-        path2 += lookahead ? "(?=/|$)" : "(?:/|$)";
+        path4 += "$";
+      } else if (path4[path4.length - 1] !== "/") {
+        path4 += lookahead ? "(?=/|$)" : "(?:/|$)";
       }
-      return new RegExp("^" + path2, flags);
+      return new RegExp("^" + path4, flags);
     }
   }
 });
@@ -21368,19 +21368,19 @@ var require_layer = __commonJS({
     var debug = require_src()("express:router:layer");
     var hasOwnProperty = Object.prototype.hasOwnProperty;
     module2.exports = Layer;
-    function Layer(path2, options, fn) {
+    function Layer(path4, options, fn) {
       if (!(this instanceof Layer)) {
-        return new Layer(path2, options, fn);
+        return new Layer(path4, options, fn);
       }
-      debug("new %o", path2);
+      debug("new %o", path4);
       var opts = options || {};
       this.handle = fn;
       this.name = fn.name || "<anonymous>";
       this.params = void 0;
       this.path = void 0;
-      this.regexp = pathRegexp(path2, this.keys = [], opts);
-      this.regexp.fast_star = path2 === "*";
-      this.regexp.fast_slash = path2 === "/" && opts.end === false;
+      this.regexp = pathRegexp(path4, this.keys = [], opts);
+      this.regexp.fast_star = path4 === "*";
+      this.regexp.fast_slash = path4 === "/" && opts.end === false;
     }
     Layer.prototype.handle_error = function handle_error(error, req, res, next2) {
       var fn = this.handle;
@@ -21404,20 +21404,20 @@ var require_layer = __commonJS({
         next2(err);
       }
     };
-    Layer.prototype.match = function match(path2) {
+    Layer.prototype.match = function match(path4) {
       var match2;
-      if (path2 != null) {
+      if (path4 != null) {
         if (this.regexp.fast_slash) {
           this.params = {};
           this.path = "";
           return true;
         }
         if (this.regexp.fast_star) {
-          this.params = { "0": decode_param(path2) };
-          this.path = path2;
+          this.params = { "0": decode_param(path4) };
+          this.path = path4;
           return true;
         }
-        match2 = this.regexp.exec(path2);
+        match2 = this.regexp.exec(path4);
       }
       if (!match2) {
         this.params = void 0;
@@ -21510,10 +21510,10 @@ var require_route = __commonJS({
     var slice2 = Array.prototype.slice;
     var toString2 = Object.prototype.toString;
     module2.exports = Route;
-    function Route(path2) {
-      this.path = path2;
+    function Route(path4) {
+      this.path = path4;
       this.stack = [];
-      debug("new %o", path2);
+      debug("new %o", path4);
       this.methods = {};
     }
     Route.prototype._handles_method = function _handles_method(method) {
@@ -21725,8 +21725,8 @@ var require_router = __commonJS({
         if (++sync > 100) {
           return setImmediate(next2, err);
         }
-        var path2 = getPathname(req);
-        if (path2 == null) {
+        var path4 = getPathname(req);
+        if (path4 == null) {
           return done(layerError);
         }
         var layer;
@@ -21734,7 +21734,7 @@ var require_router = __commonJS({
         var route;
         while (match !== true && idx < stack.length) {
           layer = stack[idx++];
-          match = matchLayer(layer, path2);
+          match = matchLayer(layer, path4);
           route = layer.route;
           if (typeof match !== "boolean") {
             layerError = layerError || match;
@@ -21772,18 +21772,18 @@ var require_router = __commonJS({
           } else if (route) {
             layer.handle_request(req, res, next2);
           } else {
-            trim_prefix(layer, layerError, layerPath, path2);
+            trim_prefix(layer, layerError, layerPath, path4);
           }
           sync = 0;
         });
       }
-      function trim_prefix(layer, layerError, layerPath, path2) {
+      function trim_prefix(layer, layerError, layerPath, path4) {
         if (layerPath.length !== 0) {
-          if (layerPath !== path2.slice(0, layerPath.length)) {
+          if (layerPath !== path4.slice(0, layerPath.length)) {
             next2(layerError);
             return;
           }
-          var c = path2[layerPath.length];
+          var c = path4[layerPath.length];
           if (c && c !== "/" && c !== ".") return next2(layerError);
           debug("trim prefix (%s) from url %s", layerPath, req.url);
           removed = layerPath;
@@ -21861,7 +21861,7 @@ var require_router = __commonJS({
     };
     proto.use = function use(fn) {
       var offset = 0;
-      var path2 = "/";
+      var path4 = "/";
       if (typeof fn !== "function") {
         var arg = fn;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -21869,7 +21869,7 @@ var require_router = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path2 = fn;
+          path4 = fn;
         }
       }
       var callbacks = flatten(slice2.call(arguments, offset));
@@ -21881,8 +21881,8 @@ var require_router = __commonJS({
         if (typeof fn !== "function") {
           throw new TypeError("Router.use() requires a middleware function but got a " + gettype(fn));
         }
-        debug("use %o %s", path2, fn.name || "<anonymous>");
-        var layer = new Layer(path2, {
+        debug("use %o %s", path4, fn.name || "<anonymous>");
+        var layer = new Layer(path4, {
           sensitive: this.caseSensitive,
           strict: false,
           end: false
@@ -21892,9 +21892,9 @@ var require_router = __commonJS({
       }
       return this;
     };
-    proto.route = function route(path2) {
-      var route2 = new Route(path2);
-      var layer = new Layer(path2, {
+    proto.route = function route(path4) {
+      var route2 = new Route(path4);
+      var layer = new Layer(path4, {
         sensitive: this.caseSensitive,
         strict: this.strict,
         end: true
@@ -21904,8 +21904,8 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      proto[method] = function(path2) {
-        var route = this.route(path2);
+      proto[method] = function(path4) {
+        var route = this.route(path4);
         route[method].apply(route, slice2.call(arguments, 1));
         return this;
       };
@@ -21941,9 +21941,9 @@ var require_router = __commonJS({
       }
       return toString2.call(obj).replace(objectRegExp, "$1");
     }
-    function matchLayer(layer, path2) {
+    function matchLayer(layer, path4) {
       try {
-        return layer.match(path2);
+        return layer.match(path4);
       } catch (err) {
         return err;
       }
@@ -22061,13 +22061,13 @@ var require_view = __commonJS({
   "webscraper/node_modules/express/lib/view.js"(exports2, module2) {
     "use strict";
     var debug = require_src()("express:view");
-    var path2 = require("path");
+    var path4 = require("path");
     var fs = require("fs");
-    var dirname = path2.dirname;
-    var basename = path2.basename;
-    var extname = path2.extname;
-    var join = path2.join;
-    var resolve = path2.resolve;
+    var dirname = path4.dirname;
+    var basename = path4.basename;
+    var extname = path4.extname;
+    var join = path4.join;
+    var resolve = path4.resolve;
     module2.exports = View;
     function View(name, options) {
       var opts = options || {};
@@ -22096,17 +22096,17 @@ var require_view = __commonJS({
       this.path = this.lookup(fileName);
     }
     View.prototype.lookup = function lookup2(name) {
-      var path3;
+      var path5;
       var roots = [].concat(this.root);
       debug('lookup "%s"', name);
-      for (var i = 0; i < roots.length && !path3; i++) {
+      for (var i = 0; i < roots.length && !path5; i++) {
         var root2 = roots[i];
         var loc = resolve(root2, name);
         var dir = dirname(loc);
         var file = basename(loc);
-        path3 = this.resolve(dir, file);
+        path5 = this.resolve(dir, file);
       }
-      return path3;
+      return path5;
     };
     View.prototype.render = function render3(options, callback) {
       debug('render "%s"', this.path);
@@ -22114,21 +22114,21 @@ var require_view = __commonJS({
     };
     View.prototype.resolve = function resolve2(dir, file) {
       var ext = this.ext;
-      var path3 = join(dir, file);
-      var stat = tryStat(path3);
+      var path5 = join(dir, file);
+      var stat = tryStat(path5);
       if (stat && stat.isFile()) {
-        return path3;
+        return path5;
       }
-      path3 = join(dir, basename(file, ext), "index" + ext);
-      stat = tryStat(path3);
+      path5 = join(dir, basename(file, ext), "index" + ext);
+      stat = tryStat(path5);
       if (stat && stat.isFile()) {
-        return path3;
+        return path5;
       }
     };
-    function tryStat(path3) {
-      debug('stat "%s"', path3);
+    function tryStat(path5) {
+      debug('stat "%s"', path5);
       try {
-        return fs.statSync(path3);
+        return fs.statSync(path5);
       } catch (e) {
         return void 0;
       }
@@ -22482,7 +22482,7 @@ var require_types = __commonJS({
 // webscraper/node_modules/mime/mime.js
 var require_mime = __commonJS({
   "webscraper/node_modules/mime/mime.js"(exports2, module2) {
-    var path2 = require("path");
+    var path4 = require("path");
     var fs = require("fs");
     function Mime() {
       this.types = /* @__PURE__ */ Object.create(null);
@@ -22512,8 +22512,8 @@ var require_mime = __commonJS({
       this.define(map2);
       this._loading = null;
     };
-    Mime.prototype.lookup = function(path3, fallback) {
-      var ext = path3.replace(/^.*[\.\/\\]/, "").toLowerCase();
+    Mime.prototype.lookup = function(path5, fallback) {
+      var ext = path5.replace(/^.*[\.\/\\]/, "").toLowerCase();
       return this.types[ext] || fallback || this.default_type;
     };
     Mime.prototype.extension = function(mimeType) {
@@ -22747,28 +22747,28 @@ var require_send = __commonJS({
     var ms = require_ms2();
     var onFinished = require_on_finished();
     var parseRange = require_range_parser();
-    var path2 = require("path");
+    var path4 = require("path");
     var statuses = require_statuses();
     var Stream = require("stream");
     var util = require("util");
-    var extname = path2.extname;
-    var join = path2.join;
-    var normalize = path2.normalize;
-    var resolve = path2.resolve;
-    var sep = path2.sep;
+    var extname = path4.extname;
+    var join = path4.join;
+    var normalize = path4.normalize;
+    var resolve = path4.resolve;
+    var sep = path4.sep;
     var BYTES_RANGE_REGEXP = /^ *bytes=/;
     var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1e3;
     var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/;
     module2.exports = send;
     module2.exports.mime = mime;
-    function send(req, path3, options) {
-      return new SendStream(req, path3, options);
+    function send(req, path5, options) {
+      return new SendStream(req, path5, options);
     }
-    function SendStream(req, path3, options) {
+    function SendStream(req, path5, options) {
       Stream.call(this);
       var opts = options || {};
       this.options = opts;
-      this.path = path3;
+      this.path = path5;
       this.req = req;
       this._acceptRanges = opts.acceptRanges !== void 0 ? Boolean(opts.acceptRanges) : true;
       this._cacheControl = opts.cacheControl !== void 0 ? Boolean(opts.cacheControl) : true;
@@ -22814,8 +22814,8 @@ var require_send = __commonJS({
       this._index = index3;
       return this;
     }, "send.index: pass index as option");
-    SendStream.prototype.root = function root2(path3) {
-      this._root = resolve(String(path3));
+    SendStream.prototype.root = function root2(path5) {
+      this._root = resolve(String(path5));
       debug("root %s", this._root);
       return this;
     };
@@ -22928,10 +22928,10 @@ var require_send = __commonJS({
       var lastModified = this.res.getHeader("Last-Modified");
       return parseHttpDate(lastModified) <= parseHttpDate(ifRange);
     };
-    SendStream.prototype.redirect = function redirect(path3) {
+    SendStream.prototype.redirect = function redirect(path5) {
       var res = this.res;
       if (hasListeners(this, "directory")) {
-        this.emit("directory", res, path3);
+        this.emit("directory", res, path5);
         return;
       }
       if (this.hasTrailingSlash()) {
@@ -22951,42 +22951,42 @@ var require_send = __commonJS({
     SendStream.prototype.pipe = function pipe(res) {
       var root2 = this._root;
       this.res = res;
-      var path3 = decode(this.path);
-      if (path3 === -1) {
+      var path5 = decode(this.path);
+      if (path5 === -1) {
         this.error(400);
         return res;
       }
-      if (~path3.indexOf("\0")) {
+      if (~path5.indexOf("\0")) {
         this.error(400);
         return res;
       }
       var parts;
       if (root2 !== null) {
-        if (path3) {
-          path3 = normalize("." + sep + path3);
+        if (path5) {
+          path5 = normalize("." + sep + path5);
         }
-        if (UP_PATH_REGEXP.test(path3)) {
-          debug('malicious path "%s"', path3);
+        if (UP_PATH_REGEXP.test(path5)) {
+          debug('malicious path "%s"', path5);
           this.error(403);
           return res;
         }
-        parts = path3.split(sep);
-        path3 = normalize(join(root2, path3));
+        parts = path5.split(sep);
+        path5 = normalize(join(root2, path5));
       } else {
-        if (UP_PATH_REGEXP.test(path3)) {
-          debug('malicious path "%s"', path3);
+        if (UP_PATH_REGEXP.test(path5)) {
+          debug('malicious path "%s"', path5);
           this.error(403);
           return res;
         }
-        parts = normalize(path3).split(sep);
-        path3 = resolve(path3);
+        parts = normalize(path5).split(sep);
+        path5 = resolve(path5);
       }
       if (containsDotFile(parts)) {
         var access = this._dotfiles;
         if (access === void 0) {
           access = parts[parts.length - 1][0] === "." ? this._hidden ? "allow" : "ignore" : "allow";
         }
-        debug('%s dotfile "%s"', access, path3);
+        debug('%s dotfile "%s"', access, path5);
         switch (access) {
           case "allow":
             break;
@@ -23000,13 +23000,13 @@ var require_send = __commonJS({
         }
       }
       if (this._index.length && this.hasTrailingSlash()) {
-        this.sendIndex(path3);
+        this.sendIndex(path5);
         return res;
       }
-      this.sendFile(path3);
+      this.sendFile(path5);
       return res;
     };
-    SendStream.prototype.send = function send2(path3, stat) {
+    SendStream.prototype.send = function send2(path5, stat) {
       var len = stat.size;
       var options = this.options;
       var opts = {};
@@ -23018,9 +23018,9 @@ var require_send = __commonJS({
         this.headersAlreadySent();
         return;
       }
-      debug('pipe "%s"', path3);
-      this.setHeader(path3, stat);
-      this.type(path3);
+      debug('pipe "%s"', path5);
+      this.setHeader(path5, stat);
+      this.type(path5);
       if (this.isConditionalGET()) {
         if (this.isPreconditionFailure()) {
           this.error(412);
@@ -23069,26 +23069,26 @@ var require_send = __commonJS({
         res.end();
         return;
       }
-      this.stream(path3, opts);
+      this.stream(path5, opts);
     };
-    SendStream.prototype.sendFile = function sendFile(path3) {
+    SendStream.prototype.sendFile = function sendFile(path5) {
       var i = 0;
       var self2 = this;
-      debug('stat "%s"', path3);
-      fs.stat(path3, function onstat(err, stat) {
-        if (err && err.code === "ENOENT" && !extname(path3) && path3[path3.length - 1] !== sep) {
+      debug('stat "%s"', path5);
+      fs.stat(path5, function onstat(err, stat) {
+        if (err && err.code === "ENOENT" && !extname(path5) && path5[path5.length - 1] !== sep) {
           return next2(err);
         }
         if (err) return self2.onStatError(err);
-        if (stat.isDirectory()) return self2.redirect(path3);
-        self2.emit("file", path3, stat);
-        self2.send(path3, stat);
+        if (stat.isDirectory()) return self2.redirect(path5);
+        self2.emit("file", path5, stat);
+        self2.send(path5, stat);
       });
       function next2(err) {
         if (self2._extensions.length <= i) {
           return err ? self2.onStatError(err) : self2.error(404);
         }
-        var p = path3 + "." + self2._extensions[i++];
+        var p = path5 + "." + self2._extensions[i++];
         debug('stat "%s"', p);
         fs.stat(p, function(err2, stat) {
           if (err2) return next2(err2);
@@ -23098,7 +23098,7 @@ var require_send = __commonJS({
         });
       }
     };
-    SendStream.prototype.sendIndex = function sendIndex(path3) {
+    SendStream.prototype.sendIndex = function sendIndex(path5) {
       var i = -1;
       var self2 = this;
       function next2(err) {
@@ -23106,7 +23106,7 @@ var require_send = __commonJS({
           if (err) return self2.onStatError(err);
           return self2.error(404);
         }
-        var p = join(path3, self2._index[i]);
+        var p = join(path5, self2._index[i]);
         debug('stat "%s"', p);
         fs.stat(p, function(err2, stat) {
           if (err2) return next2(err2);
@@ -23117,10 +23117,10 @@ var require_send = __commonJS({
       }
       next2();
     };
-    SendStream.prototype.stream = function stream(path3, options) {
+    SendStream.prototype.stream = function stream(path5, options) {
       var self2 = this;
       var res = this.res;
-      var stream2 = fs.createReadStream(path3, options);
+      var stream2 = fs.createReadStream(path5, options);
       this.emit("stream", stream2);
       stream2.pipe(res);
       function cleanup() {
@@ -23135,10 +23135,10 @@ var require_send = __commonJS({
         self2.emit("end");
       });
     };
-    SendStream.prototype.type = function type(path3) {
+    SendStream.prototype.type = function type(path5) {
       var res = this.res;
       if (res.getHeader("Content-Type")) return;
-      var type2 = mime.lookup(path3);
+      var type2 = mime.lookup(path5);
       if (!type2) {
         debug("no content-type");
         return;
@@ -23147,9 +23147,9 @@ var require_send = __commonJS({
       debug("content-type %s", type2);
       res.setHeader("Content-Type", type2 + (charset ? "; charset=" + charset : ""));
     };
-    SendStream.prototype.setHeader = function setHeader2(path3, stat) {
+    SendStream.prototype.setHeader = function setHeader2(path5, stat) {
       var res = this.res;
-      this.emit("headers", res, path3, stat);
+      this.emit("headers", res, path5, stat);
       if (this._acceptRanges && !res.getHeader("Accept-Ranges")) {
         debug("accept ranges");
         res.setHeader("Accept-Ranges", "bytes");
@@ -23208,9 +23208,9 @@ var require_send = __commonJS({
       }
       return err instanceof Error ? createError(status, err, { expose: false }) : createError(status, err);
     }
-    function decode(path3) {
+    function decode(path5) {
       try {
-        return decodeURIComponent(path3);
+        return decodeURIComponent(path5);
       } catch (err) {
         return -1;
       }
@@ -24135,10 +24135,10 @@ var require_utils2 = __commonJS({
     var querystring = require("querystring");
     exports2.etag = createETagGenerator({ weak: false });
     exports2.wetag = createETagGenerator({ weak: true });
-    exports2.isAbsolute = function(path2) {
-      if ("/" === path2[0]) return true;
-      if (":" === path2[1] && ("\\" === path2[2] || "/" === path2[2])) return true;
-      if ("\\\\" === path2.substring(0, 2)) return true;
+    exports2.isAbsolute = function(path4) {
+      if ("/" === path4[0]) return true;
+      if (":" === path4[1] && ("\\" === path4[2] || "/" === path4[2])) return true;
+      if ("\\\\" === path4.substring(0, 2)) return true;
     };
     exports2.flatten = deprecate.function(
       flatten,
@@ -24350,7 +24350,7 @@ var require_application = __commonJS({
     };
     app2.use = function use(fn) {
       var offset = 0;
-      var path2 = "/";
+      var path4 = "/";
       if (typeof fn !== "function") {
         var arg = fn;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -24358,7 +24358,7 @@ var require_application = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path2 = fn;
+          path4 = fn;
         }
       }
       var fns = flatten(slice2.call(arguments, offset));
@@ -24369,12 +24369,12 @@ var require_application = __commonJS({
       var router = this._router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router.use(path2, fn2);
+          return router.use(path4, fn2);
         }
-        debug(".use app under %s", path2);
-        fn2.mountpath = path2;
+        debug(".use app under %s", path4);
+        fn2.mountpath = path4;
         fn2.parent = this;
-        router.use(path2, function mounted_app(req, res, next2) {
+        router.use(path4, function mounted_app(req, res, next2) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             setPrototypeOf(req, orig.request);
@@ -24386,9 +24386,9 @@ var require_application = __commonJS({
       }, this);
       return this;
     };
-    app2.route = function route(path2) {
+    app2.route = function route(path4) {
       this.lazyrouter();
-      return this._router.route(path2);
+      return this._router.route(path4);
     };
     app2.engine = function engine(ext, fn) {
       if (typeof fn !== "function") {
@@ -24439,7 +24439,7 @@ var require_application = __commonJS({
       }
       return this;
     };
-    app2.path = function path2() {
+    app2.path = function path4() {
       return this.parent ? this.parent.path() + this.mountpath : "";
     };
     app2.enabled = function enabled(setting) {
@@ -24455,19 +24455,19 @@ var require_application = __commonJS({
       return this.set(setting, false);
     };
     methods.forEach(function(method) {
-      app2[method] = function(path2) {
+      app2[method] = function(path4) {
         if (method === "get" && arguments.length === 1) {
-          return this.set(path2);
+          return this.set(path4);
         }
         this.lazyrouter();
-        var route = this._router.route(path2);
+        var route = this._router.route(path4);
         route[method].apply(route, slice2.call(arguments, 1));
         return this;
       };
     });
-    app2.all = function all(path2) {
+    app2.all = function all(path4) {
       this.lazyrouter();
-      var route = this._router.route(path2);
+      var route = this._router.route(path4);
       var args = slice2.call(arguments, 1);
       for (var i = 0; i < methods.length; i++) {
         route[methods[i]].apply(route, args);
@@ -25226,7 +25226,7 @@ var require_request = __commonJS({
       var subdomains2 = !isIP2(hostname) ? hostname.split(".").reverse() : [hostname];
       return subdomains2.slice(offset);
     });
-    defineGetter(req, "path", function path2() {
+    defineGetter(req, "path", function path4() {
       return parse8(this).pathname;
     });
     defineGetter(req, "hostname", function hostname() {
@@ -25548,7 +25548,7 @@ var require_response = __commonJS({
     var http = require("http");
     var isAbsolute = require_utils2().isAbsolute;
     var onFinished = require_on_finished();
-    var path2 = require("path");
+    var path4 = require("path");
     var statuses = require_statuses();
     var merge2 = require_utils_merge();
     var sign = require_cookie_signature().sign;
@@ -25557,9 +25557,9 @@ var require_response = __commonJS({
     var setCharset = require_utils2().setCharset;
     var cookie = require_cookie();
     var send = require_send();
-    var extname = path2.extname;
+    var extname = path4.extname;
     var mime = send.mime;
-    var resolve = path2.resolve;
+    var resolve = path4.resolve;
     var vary = require_vary();
     var res = Object.create(http.ServerResponse.prototype);
     module2.exports = res;
@@ -25736,26 +25736,26 @@ var require_response = __commonJS({
       this.type("txt");
       return this.send(body);
     };
-    res.sendFile = function sendFile(path3, options, callback) {
+    res.sendFile = function sendFile(path5, options, callback) {
       var done = callback;
       var req = this.req;
       var res2 = this;
       var next2 = req.next;
       var opts = options || {};
-      if (!path3) {
+      if (!path5) {
         throw new TypeError("path argument is required to res.sendFile");
       }
-      if (typeof path3 !== "string") {
+      if (typeof path5 !== "string") {
         throw new TypeError("path must be a string to res.sendFile");
       }
       if (typeof options === "function") {
         done = options;
         opts = {};
       }
-      if (!opts.root && !isAbsolute(path3)) {
+      if (!opts.root && !isAbsolute(path5)) {
         throw new TypeError("path must be absolute or specify root to res.sendFile");
       }
-      var pathname = encodeURI(path3);
+      var pathname = encodeURI(path5);
       var file = send(req, pathname, opts);
       sendfile(res2, file, opts, function(err) {
         if (done) return done(err);
@@ -25765,7 +25765,7 @@ var require_response = __commonJS({
         }
       });
     };
-    res.sendfile = function(path3, options, callback) {
+    res.sendfile = function(path5, options, callback) {
       var done = callback;
       var req = this.req;
       var res2 = this;
@@ -25775,7 +25775,7 @@ var require_response = __commonJS({
         done = options;
         opts = {};
       }
-      var file = send(req, path3, opts);
+      var file = send(req, path5, opts);
       sendfile(res2, file, opts, function(err) {
         if (done) return done(err);
         if (err && err.code === "EISDIR") return next2();
@@ -25788,7 +25788,7 @@ var require_response = __commonJS({
       res.sendfile,
       "res.sendfile: Use res.sendFile instead"
     );
-    res.download = function download(path3, filename, options, callback) {
+    res.download = function download(path5, filename, options, callback) {
       var done = callback;
       var name = filename;
       var opts = options || null;
@@ -25805,7 +25805,7 @@ var require_response = __commonJS({
         opts = filename;
       }
       var headers = {
-        "Content-Disposition": contentDisposition(name || path3)
+        "Content-Disposition": contentDisposition(name || path5)
       };
       if (opts && opts.headers) {
         var keys = Object.keys(opts.headers);
@@ -25818,7 +25818,7 @@ var require_response = __commonJS({
       }
       opts = Object.create(opts);
       opts.headers = headers;
-      var fullPath = !opts.root ? resolve(path3) : path3;
+      var fullPath = !opts.root ? resolve(path5) : path5;
       return this.sendFile(fullPath, opts, done);
     };
     res.contentType = res.type = function contentType(type) {
@@ -26119,11 +26119,11 @@ var require_serve_static = __commonJS({
         }
         var forwardError = !fallthrough;
         var originalUrl = parseUrl.original(req);
-        var path2 = parseUrl(req).pathname;
-        if (path2 === "/" && originalUrl.pathname.substr(-1) !== "/") {
-          path2 = "";
+        var path4 = parseUrl(req).pathname;
+        if (path4 === "/" && originalUrl.pathname.substr(-1) !== "/") {
+          path4 = "";
         }
-        var stream = send(req, path2, opts);
+        var stream = send(req, path4, opts);
         stream.on("directory", onDirectory);
         if (setHeaders) {
           stream.on("headers", setHeaders);
@@ -31823,14 +31823,14 @@ var require_util = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol || ""}//${url.hostname || ""}:${port}`;
-        let path2 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path4 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path2 && path2[0] !== "/") {
-          path2 = `/${path2}`;
+        if (path4 && path4[0] !== "/") {
+          path4 = `/${path4}`;
         }
-        return new URL(`${origin}${path2}`);
+        return new URL(`${origin}${path4}`);
       }
       if (!isHttpOrHttpsPrefixed(url.origin || url.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -32665,9 +32665,9 @@ var require_diagnostics = __commonJS({
         "undici:client:sendHeaders",
         (evt) => {
           const {
-            request: { method, path: path2, origin }
+            request: { method, path: path4, origin }
           } = evt;
-          debugLog("sending request to %s %s%s", method, origin, path2);
+          debugLog("sending request to %s %s%s", method, origin, path4);
         }
       );
     }
@@ -32685,14 +32685,14 @@ var require_diagnostics = __commonJS({
         "undici:request:headers",
         (evt) => {
           const {
-            request: { method, path: path2, origin },
+            request: { method, path: path4, origin },
             response: { statusCode }
           } = evt;
           debugLog(
             "received response to %s %s%s - HTTP %d",
             method,
             origin,
-            path2,
+            path4,
             statusCode
           );
         }
@@ -32701,23 +32701,23 @@ var require_diagnostics = __commonJS({
         "undici:request:trailers",
         (evt) => {
           const {
-            request: { method, path: path2, origin }
+            request: { method, path: path4, origin }
           } = evt;
-          debugLog("trailers received from %s %s%s", method, origin, path2);
+          debugLog("trailers received from %s %s%s", method, origin, path4);
         }
       );
       diagnosticsChannel.subscribe(
         "undici:request:error",
         (evt) => {
           const {
-            request: { method, path: path2, origin },
+            request: { method, path: path4, origin },
             error
           } = evt;
           debugLog(
             "request to %s %s%s errored - %s",
             method,
             origin,
-            path2,
+            path4,
             error.message
           );
         }
@@ -32832,7 +32832,7 @@ var require_request2 = __commonJS({
     var kHandler = /* @__PURE__ */ Symbol("handler");
     var Request = class {
       constructor(origin, {
-        path: path2,
+        path: path4,
         method,
         body,
         headers,
@@ -32849,11 +32849,11 @@ var require_request2 = __commonJS({
         maxRedirections,
         typeOfService
       }, handler2) {
-        if (typeof path2 !== "string") {
+        if (typeof path4 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path2[0] !== "/" && !(path2.startsWith("http://") || path2.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path4[0] !== "/" && !(path4.startsWith("http://") || path4.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path2)) {
+        } else if (invalidPathRegex.test(path4)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -32928,7 +32928,7 @@ var require_request2 = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? serializePathWithQuery(path2, query) : path2;
+        this.path = query ? serializePathWithQuery(path4, query) : path4;
         this.origin = origin;
         this.protocol = getProtocolFromUrlString(origin);
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
@@ -38172,7 +38172,7 @@ var require_client_h1 = __commonJS({
       }
     }
     function writeH1(client2, request) {
-      const { method, path: path2, host, upgrade, blocking, reset } = request;
+      const { method, path: path4, host, upgrade, blocking, reset } = request;
       let { body, headers, contentLength } = request;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util.isFormDataLike(body)) {
@@ -38248,7 +38248,7 @@ var require_client_h1 = __commonJS({
         socket[kBlocking] = true;
       }
       setTypeOfService(socket, request);
-      let header = `${method} ${path2} HTTP/1.1\r
+      let header = `${method} ${path4} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -38925,7 +38925,7 @@ var require_client_h2 = __commonJS({
       const headersTimeout = request.headersTimeout ?? client2[kHeadersTimeout];
       const bodyTimeout = request.bodyTimeout ?? client2[kBodyTimeout];
       const session = client2[kHTTP2Session];
-      const { method, path: path2, host, upgrade, expectContinue, signal, protocol, headers: reqHeaders } = request;
+      const { method, path: path4, host, upgrade, expectContinue, signal, protocol, headers: reqHeaders } = request;
       let { body } = request;
       if (upgrade != null && upgrade !== "websocket") {
         util.errorRequest(client2, request, new InvalidArgumentError(`Custom upgrade "${upgrade}" not supported over HTTP/2`));
@@ -38994,7 +38994,7 @@ var require_client_h2 = __commonJS({
           }
           headers[HTTP2_HEADER_METHOD] = "CONNECT";
           headers[HTTP2_HEADER_PROTOCOL] = "websocket";
-          headers[HTTP2_HEADER_PATH] = path2;
+          headers[HTTP2_HEADER_PATH] = path4;
           if (protocol === "ws:" || protocol === "wss:") {
             headers[HTTP2_HEADER_SCHEME] = protocol === "ws:" ? "http" : "https";
           } else {
@@ -39046,7 +39046,7 @@ var require_client_h2 = __commonJS({
         stream.setTimeout(headersTimeout);
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path2;
+      headers[HTTP2_HEADER_PATH] = path4;
       headers[HTTP2_HEADER_SCHEME] = protocol === "http:" ? "http" : "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -41402,10 +41402,10 @@ var require_proxy_agent = __commonJS({
         };
         const {
           origin,
-          path: path2 = "/",
+          path: path4 = "/",
           headers = {}
         } = opts;
-        opts.path = origin + path2;
+        opts.path = origin + path4;
         if (!("host" in headers) && !("Host" in headers)) {
           const { host } = new URL(origin);
           headers.host = host;
@@ -43565,20 +43565,20 @@ var require_mock_utils = __commonJS({
       }
       return normalizedQp;
     }
-    function safeUrl(path2) {
-      if (typeof path2 !== "string") {
-        return path2;
+    function safeUrl(path4) {
+      if (typeof path4 !== "string") {
+        return path4;
       }
-      const pathSegments = path2.split("?", 3);
+      const pathSegments = path4.split("?", 3);
       if (pathSegments.length !== 2) {
-        return path2;
+        return path4;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path2, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path2);
+    function matchKey(mockDispatch2, { path: path4, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path4);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -43603,8 +43603,8 @@ var require_mock_utils = __commonJS({
       const basePath = key.query ? serializePathWithQuery(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
       const resolvedPathWithoutTrailingSlash = removeTrailingSlash(resolvedPath);
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path2, ignoreTrailingSlash }) => {
-        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path2)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path2), resolvedPath);
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path4, ignoreTrailingSlash }) => {
+        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path4)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path4), resolvedPath);
       });
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
@@ -43643,19 +43643,19 @@ var require_mock_utils = __commonJS({
         mockDispatches.splice(index2, 1);
       }
     }
-    function removeTrailingSlash(path2) {
-      while (path2.endsWith("/")) {
-        path2 = path2.slice(0, -1);
+    function removeTrailingSlash(path4) {
+      while (path4.endsWith("/")) {
+        path4 = path4.slice(0, -1);
       }
-      if (path2.length === 0) {
-        path2 = "/";
+      if (path4.length === 0) {
+        path4 = "/";
       }
-      return path2;
+      return path4;
     }
     function buildKey(opts) {
-      const { path: path2, method, body, headers, query } = opts;
+      const { path: path4, method, body, headers, query } = opts;
       return {
-        path: path2,
+        path: path4,
         method,
         body,
         headers,
@@ -44345,10 +44345,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path2, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path4, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path2,
+            Path: path4,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -44430,9 +44430,9 @@ var require_mock_agent = __commonJS({
         const acceptNonStandardSearchParameters = this[kMockAgentAcceptsNonStandardSearchParameters];
         const dispatchOpts = { ...opts };
         if (acceptNonStandardSearchParameters && dispatchOpts.path) {
-          const [path2, searchParams] = dispatchOpts.path.split("?");
+          const [path4, searchParams] = dispatchOpts.path.split("?");
           const normalizedSearchParams = normalizeSearchParams(searchParams, acceptNonStandardSearchParameters);
-          dispatchOpts.path = `${path2}?${normalizedSearchParams}`;
+          dispatchOpts.path = `${path4}?${normalizedSearchParams}`;
         }
         return this[kAgent].dispatch(dispatchOpts, handler2);
       }
@@ -44833,12 +44833,12 @@ var require_snapshot_recorder = __commonJS({
        * @return {Promise<void>} - Resolves when snapshots are loaded
        */
       async loadSnapshots(filePath) {
-        const path2 = filePath || this.#snapshotPath;
-        if (!path2) {
+        const path4 = filePath || this.#snapshotPath;
+        if (!path4) {
           throw new InvalidArgumentError("Snapshot path is required");
         }
         try {
-          const data2 = await readFile(resolve(path2), "utf8");
+          const data2 = await readFile(resolve(path4), "utf8");
           const parsed = JSON.parse(data2);
           if (Array.isArray(parsed)) {
             this.#snapshots.clear();
@@ -44852,7 +44852,7 @@ var require_snapshot_recorder = __commonJS({
           if (error.code === "ENOENT") {
             this.#snapshots.clear();
           } else {
-            throw new UndiciError(`Failed to load snapshots from ${path2}`, { cause: error });
+            throw new UndiciError(`Failed to load snapshots from ${path4}`, { cause: error });
           }
         }
       }
@@ -44863,11 +44863,11 @@ var require_snapshot_recorder = __commonJS({
        * @returns {Promise<void>} - Resolves when snapshots are saved
        */
       async saveSnapshots(filePath) {
-        const path2 = filePath || this.#snapshotPath;
-        if (!path2) {
+        const path4 = filePath || this.#snapshotPath;
+        if (!path4) {
           throw new InvalidArgumentError("Snapshot path is required");
         }
-        const resolvedPath = resolve(path2);
+        const resolvedPath = resolve(path4);
         await mkdir(dirname(resolvedPath), { recursive: true });
         const data2 = Array.from(this.#snapshots.entries()).map(([hash, snapshot]) => ({
           hash,
@@ -45508,15 +45508,15 @@ var require_redirect_handler = __commonJS({
           receivedAt: Date.now()
         });
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path2 = search ? `${pathname}${search}` : pathname;
-        const redirectUrlString = `${origin}${path2}`;
+        const path4 = search ? `${pathname}${search}` : pathname;
+        const redirectUrlString = `${origin}${path4}`;
         for (const historyUrl of this.history) {
           if (historyUrl.toString() === redirectUrlString) {
             throw new InvalidArgumentError(`Redirect loop detected. Cannot redirect to ${origin}. This typically happens when using a Client or Pool with cross-origin redirects. Use an Agent for cross-origin redirects.`);
           }
         }
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path2;
+        this.opts.path = path4;
         this.opts.origin = origin;
         this.opts.query = null;
       }
@@ -47333,10 +47333,10 @@ var require_cache_handler = __commonJS({
       }
       return locationUrl.pathname + locationUrl.search;
     }
-    function deleteCachedUri(store, cacheKey, path2) {
+    function deleteCachedUri(store, cacheKey, path4) {
       deleteCachedValue(store, {
         ...cacheKey,
-        path: path2
+        path: path4
       });
       for (let i = 0; i < util.safeHTTPMethods.length; i++) {
         const method = util.safeHTTPMethods[i];
@@ -47344,7 +47344,7 @@ var require_cache_handler = __commonJS({
           deleteCachedValue(store, {
             ...cacheKey,
             method,
-            path: path2
+            path: path4
           });
         }
       }
@@ -47355,9 +47355,9 @@ var require_cache_handler = __commonJS({
       }
       const values = Array.isArray(headerValue) ? headerValue : [headerValue];
       for (let i = 0; i < values.length; i++) {
-        const path2 = getSameOriginPath(cacheKey, values[i]);
-        if (path2 !== void 0) {
-          deleteCachedUri(store, cacheKey, path2);
+        const path4 = getSameOriginPath(cacheKey, values[i]);
+        if (path4 !== void 0) {
+          deleteCachedUri(store, cacheKey, path4);
         }
       }
     }
@@ -52845,11 +52845,11 @@ var require_fetch = __commonJS({
       function dispatch({ body }) {
         const url = requestCurrentURL(request);
         const agent = fetchParams.controller.dispatcher;
-        const path2 = url.pathname + url.search;
+        const path4 = url.pathname + url.search;
         const hasTrailingQuestionMark = url.search.length === 0 && url.href[url.href.length - url.hash.length - 1] === "?";
         return new Promise((resolve, reject) => agent.dispatch(
           {
-            path: hasTrailingQuestionMark ? `${path2}?` : path2,
+            path: hasTrailingQuestionMark ? `${path4}?` : path4,
             origin: url.origin,
             method: request.method,
             body: agent.isMockActive ? request.body && (request.body.source || request.body.stream) : body,
@@ -53796,9 +53796,9 @@ var require_util4 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path2) {
-      for (let i = 0; i < path2.length; ++i) {
-        const code = path2.charCodeAt(i);
+    function validateCookiePath(path4) {
+      for (let i = 0; i < path4.length; ++i) {
+        const code = path4.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code > 126 || // exclude DEL and non-ascii
         code === 59) {
@@ -57234,11 +57234,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path2 = opts.path;
+          let path4 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path2 = `/${path2}`;
+            path4 = `/${path4}`;
           }
-          url = new URL(util.parseOrigin(url).origin + path2);
+          url = new URL(util.parseOrigin(url).origin + path4);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -57684,325 +57684,6 @@ var require_mime_type = __commonJS({
   }
 });
 
-// webscraper/node_modules/dotenv/lib/main.js
-var require_main = __commonJS({
-  "webscraper/node_modules/dotenv/lib/main.js"(exports2, module2) {
-    var fs = require("fs");
-    var path2 = require("path");
-    var os = require("os");
-    var crypto2 = require("crypto");
-    var TIPS = [
-      "\u25C8 encrypted .env [www.dotenvx.com]",
-      "\u25C8 secrets for agents [www.dotenvx.com]",
-      "\u2301 auth for agents [www.vestauth.com]",
-      "\u2318 custom filepath { path: '/custom/path/.env' }",
-      "\u2318 enable debugging { debug: true }",
-      "\u2318 override existing { override: true }",
-      "\u2318 suppress logs { quiet: true }",
-      "\u2318 multiple files { path: ['.env.local', '.env'] }"
-    ];
-    function _getRandomTip() {
-      return TIPS[Math.floor(Math.random() * TIPS.length)];
-    }
-    function parseBoolean(value) {
-      if (typeof value === "string") {
-        return !["false", "0", "no", "off", ""].includes(value.toLowerCase());
-      }
-      return Boolean(value);
-    }
-    function supportsAnsi() {
-      return process.stdout.isTTY;
-    }
-    function dim(text4) {
-      return supportsAnsi() ? `\x1B[2m${text4}\x1B[0m` : text4;
-    }
-    var LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
-    function parse8(src) {
-      const obj = {};
-      let lines = src.toString();
-      lines = lines.replace(/\r\n?/mg, "\n");
-      let match;
-      while ((match = LINE.exec(lines)) != null) {
-        const key = match[1];
-        let value = match[2] || "";
-        value = value.trim();
-        const maybeQuote = value[0];
-        value = value.replace(/^(['"`])([\s\S]*)\1$/mg, "$2");
-        if (maybeQuote === '"') {
-          value = value.replace(/\\n/g, "\n");
-          value = value.replace(/\\r/g, "\r");
-        }
-        obj[key] = value;
-      }
-      return obj;
-    }
-    function _parseVault(options) {
-      options = options || {};
-      const vaultPath = _vaultPath(options);
-      options.path = vaultPath;
-      const result = DotenvModule.configDotenv(options);
-      if (!result.parsed) {
-        const err = new Error(`MISSING_DATA: Cannot parse ${vaultPath} for an unknown reason`);
-        err.code = "MISSING_DATA";
-        throw err;
-      }
-      const keys = _dotenvKey(options).split(",");
-      const length = keys.length;
-      let decrypted;
-      for (let i = 0; i < length; i++) {
-        try {
-          const key = keys[i].trim();
-          const attrs = _instructions(result, key);
-          decrypted = DotenvModule.decrypt(attrs.ciphertext, attrs.key);
-          break;
-        } catch (error) {
-          if (i + 1 >= length) {
-            throw error;
-          }
-        }
-      }
-      return DotenvModule.parse(decrypted);
-    }
-    function _warn(message) {
-      console.error(`\u26A0 ${message}`);
-    }
-    function _debug(message) {
-      console.log(`\u2506 ${message}`);
-    }
-    function _log(message) {
-      console.log(`\u25C7 ${message}`);
-    }
-    function _dotenvKey(options) {
-      if (options && options.DOTENV_KEY && options.DOTENV_KEY.length > 0) {
-        return options.DOTENV_KEY;
-      }
-      if (process.env.DOTENV_KEY && process.env.DOTENV_KEY.length > 0) {
-        return process.env.DOTENV_KEY;
-      }
-      return "";
-    }
-    function _instructions(result, dotenvKey) {
-      let uri;
-      try {
-        uri = new URL(dotenvKey);
-      } catch (error) {
-        if (error.code === "ERR_INVALID_URL") {
-          const err = new Error("INVALID_DOTENV_KEY: Wrong format. Must be in valid uri format like dotenv://:key_1234@dotenvx.com/vault/.env.vault?environment=development");
-          err.code = "INVALID_DOTENV_KEY";
-          throw err;
-        }
-        throw error;
-      }
-      const key = uri.password;
-      if (!key) {
-        const err = new Error("INVALID_DOTENV_KEY: Missing key part");
-        err.code = "INVALID_DOTENV_KEY";
-        throw err;
-      }
-      const environment = uri.searchParams.get("environment");
-      if (!environment) {
-        const err = new Error("INVALID_DOTENV_KEY: Missing environment part");
-        err.code = "INVALID_DOTENV_KEY";
-        throw err;
-      }
-      const environmentKey = `DOTENV_VAULT_${environment.toUpperCase()}`;
-      const ciphertext = result.parsed[environmentKey];
-      if (!ciphertext) {
-        const err = new Error(`NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment ${environmentKey} in your .env.vault file.`);
-        err.code = "NOT_FOUND_DOTENV_ENVIRONMENT";
-        throw err;
-      }
-      return { ciphertext, key };
-    }
-    function _vaultPath(options) {
-      let possibleVaultPath = null;
-      if (options && options.path && options.path.length > 0) {
-        if (Array.isArray(options.path)) {
-          for (const filepath of options.path) {
-            if (fs.existsSync(filepath)) {
-              possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
-            }
-          }
-        } else {
-          possibleVaultPath = options.path.endsWith(".vault") ? options.path : `${options.path}.vault`;
-        }
-      } else {
-        possibleVaultPath = path2.resolve(process.cwd(), ".env.vault");
-      }
-      if (fs.existsSync(possibleVaultPath)) {
-        return possibleVaultPath;
-      }
-      return null;
-    }
-    function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path2.join(os.homedir(), envPath.slice(1)) : envPath;
-    }
-    function _configVault(options) {
-      const debug = parseBoolean(process.env.DOTENV_CONFIG_DEBUG || options && options.debug);
-      const quiet = parseBoolean(process.env.DOTENV_CONFIG_QUIET || options && options.quiet);
-      if (debug || !quiet) {
-        _log("loading env from encrypted .env.vault");
-      }
-      const parsed = DotenvModule._parseVault(options);
-      let processEnv = process.env;
-      if (options && options.processEnv != null) {
-        processEnv = options.processEnv;
-      }
-      DotenvModule.populate(processEnv, parsed, options);
-      return { parsed };
-    }
-    function configDotenv(options) {
-      const dotenvPath = path2.resolve(process.cwd(), ".env");
-      let encoding = "utf8";
-      let processEnv = process.env;
-      if (options && options.processEnv != null) {
-        processEnv = options.processEnv;
-      }
-      let debug = parseBoolean(processEnv.DOTENV_CONFIG_DEBUG || options && options.debug);
-      let quiet = parseBoolean(processEnv.DOTENV_CONFIG_QUIET || options && options.quiet);
-      if (options && options.encoding) {
-        encoding = options.encoding;
-      } else {
-        if (debug) {
-          _debug("no encoding is specified (UTF-8 is used by default)");
-        }
-      }
-      let optionPaths = [dotenvPath];
-      if (options && options.path) {
-        if (!Array.isArray(options.path)) {
-          optionPaths = [_resolveHome(options.path)];
-        } else {
-          optionPaths = [];
-          for (const filepath of options.path) {
-            optionPaths.push(_resolveHome(filepath));
-          }
-        }
-      }
-      let lastError;
-      const parsedAll = {};
-      for (const path3 of optionPaths) {
-        try {
-          const parsed = DotenvModule.parse(fs.readFileSync(path3, { encoding }));
-          DotenvModule.populate(parsedAll, parsed, options);
-        } catch (e) {
-          if (debug) {
-            _debug(`failed to load ${path3} ${e.message}`);
-          }
-          lastError = e;
-        }
-      }
-      const populated = DotenvModule.populate(processEnv, parsedAll, options);
-      debug = parseBoolean(processEnv.DOTENV_CONFIG_DEBUG || debug);
-      quiet = parseBoolean(processEnv.DOTENV_CONFIG_QUIET || quiet);
-      if (debug || !quiet) {
-        const keysCount = Object.keys(populated).length;
-        const shortPaths = [];
-        for (const filePath of optionPaths) {
-          try {
-            const relative = path2.relative(process.cwd(), filePath);
-            shortPaths.push(relative);
-          } catch (e) {
-            if (debug) {
-              _debug(`failed to load ${filePath} ${e.message}`);
-            }
-            lastError = e;
-          }
-        }
-        _log(`injected env (${keysCount}) from ${shortPaths.join(",")} ${dim(`// tip: ${_getRandomTip()}`)}`);
-      }
-      if (lastError) {
-        return { parsed: parsedAll, error: lastError };
-      } else {
-        return { parsed: parsedAll };
-      }
-    }
-    function config2(options) {
-      if (_dotenvKey(options).length === 0) {
-        return DotenvModule.configDotenv(options);
-      }
-      const vaultPath = _vaultPath(options);
-      if (!vaultPath) {
-        _warn(`you set DOTENV_KEY but you are missing a .env.vault file at ${vaultPath}`);
-        return DotenvModule.configDotenv(options);
-      }
-      return DotenvModule._configVault(options);
-    }
-    function decrypt(encrypted, keyStr) {
-      const key = Buffer.from(keyStr.slice(-64), "hex");
-      let ciphertext = Buffer.from(encrypted, "base64");
-      const nonce = ciphertext.subarray(0, 12);
-      const authTag = ciphertext.subarray(-16);
-      ciphertext = ciphertext.subarray(12, -16);
-      try {
-        const aesgcm = crypto2.createDecipheriv("aes-256-gcm", key, nonce);
-        aesgcm.setAuthTag(authTag);
-        return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
-      } catch (error) {
-        const isRange = error instanceof RangeError;
-        const invalidKeyLength = error.message === "Invalid key length";
-        const decryptionFailed = error.message === "Unsupported state or unable to authenticate data";
-        if (isRange || invalidKeyLength) {
-          const err = new Error("INVALID_DOTENV_KEY: It must be 64 characters long (or more)");
-          err.code = "INVALID_DOTENV_KEY";
-          throw err;
-        } else if (decryptionFailed) {
-          const err = new Error("DECRYPTION_FAILED: Please check your DOTENV_KEY");
-          err.code = "DECRYPTION_FAILED";
-          throw err;
-        } else {
-          throw error;
-        }
-      }
-    }
-    function populate(processEnv, parsed, options = {}) {
-      const debug = Boolean(options && options.debug);
-      const override = Boolean(options && options.override);
-      const populated = {};
-      if (typeof parsed !== "object") {
-        const err = new Error("OBJECT_REQUIRED: Please check the processEnv argument being passed to populate");
-        err.code = "OBJECT_REQUIRED";
-        throw err;
-      }
-      for (const key of Object.keys(parsed)) {
-        if (Object.prototype.hasOwnProperty.call(processEnv, key)) {
-          if (override === true) {
-            processEnv[key] = parsed[key];
-            populated[key] = parsed[key];
-          }
-          if (debug) {
-            if (override === true) {
-              _debug(`"${key}" is already defined and WAS overwritten`);
-            } else {
-              _debug(`"${key}" is already defined and was NOT overwritten`);
-            }
-          }
-        } else {
-          processEnv[key] = parsed[key];
-          populated[key] = parsed[key];
-        }
-      }
-      return populated;
-    }
-    var DotenvModule = {
-      configDotenv,
-      _configVault,
-      _parseVault,
-      config: config2,
-      decrypt,
-      parse: parse8,
-      populate
-    };
-    module2.exports.configDotenv = DotenvModule.configDotenv;
-    module2.exports._configVault = DotenvModule._configVault;
-    module2.exports._parseVault = DotenvModule._parseVault;
-    module2.exports.config = DotenvModule.config;
-    module2.exports.decrypt = DotenvModule.decrypt;
-    module2.exports.parse = DotenvModule.parse;
-    module2.exports.populate = DotenvModule.populate;
-    module2.exports = DotenvModule;
-  }
-});
-
 // webscraper/node_modules/@supabase/functions-js/node_modules/tslib/tslib.es6.mjs
 var tslib_es6_exports = {};
 __export(tslib_es6_exports, {
@@ -58432,13 +58113,13 @@ function __disposeResources(env) {
   }
   return next2();
 }
-function __rewriteRelativeImportExtension(path2, preserveJsx) {
-  if (typeof path2 === "string" && /^\.\.?\//.test(path2)) {
-    return path2.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
+function __rewriteRelativeImportExtension(path4, preserveJsx) {
+  if (typeof path4 === "string" && /^\.\.?\//.test(path4)) {
+    return path4.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
       return tsx ? preserveJsx ? ".jsx" : ".js" : d && (!ext || !cm) ? m : d + ext + "." + cm.toLowerCase() + "js";
     });
   }
-  return path2;
+  return path4;
 }
 var extendStatics, __assign, __createBinding, __setModuleDefault, ownKeys, _SuppressedError, tslib_es6_default;
 var init_tslib_es6 = __esm({
@@ -58891,7 +58572,7 @@ var require_FunctionsClient = __commonJS({
 });
 
 // webscraper/node_modules/@supabase/functions-js/dist/main/index.js
-var require_main2 = __commonJS({
+var require_main = __commonJS({
   "webscraper/node_modules/@supabase/functions-js/dist/main/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -59348,13 +59029,13 @@ function __disposeResources2(env) {
   }
   return next2();
 }
-function __rewriteRelativeImportExtension2(path2, preserveJsx) {
-  if (typeof path2 === "string" && /^\.\.?\//.test(path2)) {
-    return path2.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
+function __rewriteRelativeImportExtension2(path4, preserveJsx) {
+  if (typeof path4 === "string" && /^\.\.?\//.test(path4)) {
+    return path4.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
       return tsx ? preserveJsx ? ".jsx" : ".js" : d && (!ext || !cm) ? m : d + ext + "." + cm.toLowerCase() + "js";
     });
   }
-  return path2;
+  return path4;
 }
 var extendStatics2, __assign2, __createBinding2, __setModuleDefault2, ownKeys3, _SuppressedError2, tslib_es6_default2;
 var init_tslib_es62 = __esm({
@@ -63789,7 +63470,7 @@ var require_RealtimeClient = __commonJS({
 });
 
 // webscraper/node_modules/@supabase/realtime-js/dist/main/index.js
-var require_main3 = __commonJS({
+var require_main2 = __commonJS({
   "webscraper/node_modules/@supabase/realtime-js/dist/main/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -64256,13 +63937,13 @@ function __disposeResources3(env) {
   }
   return next2();
 }
-function __rewriteRelativeImportExtension3(path2, preserveJsx) {
-  if (typeof path2 === "string" && /^\.\.?\//.test(path2)) {
-    return path2.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
+function __rewriteRelativeImportExtension3(path4, preserveJsx) {
+  if (typeof path4 === "string" && /^\.\.?\//.test(path4)) {
+    return path4.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
       return tsx ? preserveJsx ? ".jsx" : ".js" : d && (!ext || !cm) ? m : d + ext + "." + cm.toLowerCase() + "js";
     });
   }
-  return path2;
+  return path4;
 }
 var extendStatics3, __assign3, __createBinding3, __setModuleDefault3, ownKeys5, _SuppressedError3, tslib_es6_default3;
 var init_tslib_es63 = __esm({
@@ -65039,9 +64720,9 @@ var require_helpers = __commonJS({
       const fragment = hashIndex === -1 ? "" : redirectTo.slice(hashIndex);
       const queryIndex = base.indexOf("?");
       if (queryIndex !== -1) {
-        const path2 = base.slice(0, queryIndex);
+        const path4 = base.slice(0, queryIndex);
         const remaining = base.slice(queryIndex + 1).split("&").filter((pair) => pair !== "" && pair !== constants_1.PKCE_FLOW_ID_PARAM && !pair.startsWith(`${constants_1.PKCE_FLOW_ID_PARAM}=`));
-        base = remaining.length > 0 ? `${path2}?${remaining.join("&")}` : path2;
+        base = remaining.length > 0 ? `${path4}?${remaining.join("&")}` : path4;
       }
       const separator = base.includes("?") ? "&" : "?";
       return `${base}${separator}${constants_1.PKCE_FLOW_ID_PARAM}=${encodeURIComponent(flowId)}${fragment}`;
@@ -72965,7 +72646,7 @@ var require_AuthClient = __commonJS({
 });
 
 // webscraper/node_modules/@supabase/auth-js/dist/main/index.js
-var require_main4 = __commonJS({
+var require_main3 = __commonJS({
   "webscraper/node_modules/@supabase/auth-js/dist/main/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -72997,6 +72678,325 @@ var require_main4 = __commonJS({
   }
 });
 
+// webscraper/node_modules/dotenv/lib/main.js
+var require_main4 = __commonJS({
+  "webscraper/node_modules/dotenv/lib/main.js"(exports2, module2) {
+    var fs = require("fs");
+    var path4 = require("path");
+    var os = require("os");
+    var crypto2 = require("crypto");
+    var TIPS = [
+      "\u25C8 encrypted .env [www.dotenvx.com]",
+      "\u25C8 secrets for agents [www.dotenvx.com]",
+      "\u2301 auth for agents [www.vestauth.com]",
+      "\u2318 custom filepath { path: '/custom/path/.env' }",
+      "\u2318 enable debugging { debug: true }",
+      "\u2318 override existing { override: true }",
+      "\u2318 suppress logs { quiet: true }",
+      "\u2318 multiple files { path: ['.env.local', '.env'] }"
+    ];
+    function _getRandomTip() {
+      return TIPS[Math.floor(Math.random() * TIPS.length)];
+    }
+    function parseBoolean(value) {
+      if (typeof value === "string") {
+        return !["false", "0", "no", "off", ""].includes(value.toLowerCase());
+      }
+      return Boolean(value);
+    }
+    function supportsAnsi() {
+      return process.stdout.isTTY;
+    }
+    function dim(text4) {
+      return supportsAnsi() ? `\x1B[2m${text4}\x1B[0m` : text4;
+    }
+    var LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
+    function parse8(src) {
+      const obj = {};
+      let lines = src.toString();
+      lines = lines.replace(/\r\n?/mg, "\n");
+      let match;
+      while ((match = LINE.exec(lines)) != null) {
+        const key = match[1];
+        let value = match[2] || "";
+        value = value.trim();
+        const maybeQuote = value[0];
+        value = value.replace(/^(['"`])([\s\S]*)\1$/mg, "$2");
+        if (maybeQuote === '"') {
+          value = value.replace(/\\n/g, "\n");
+          value = value.replace(/\\r/g, "\r");
+        }
+        obj[key] = value;
+      }
+      return obj;
+    }
+    function _parseVault(options) {
+      options = options || {};
+      const vaultPath = _vaultPath(options);
+      options.path = vaultPath;
+      const result = DotenvModule.configDotenv(options);
+      if (!result.parsed) {
+        const err = new Error(`MISSING_DATA: Cannot parse ${vaultPath} for an unknown reason`);
+        err.code = "MISSING_DATA";
+        throw err;
+      }
+      const keys = _dotenvKey(options).split(",");
+      const length = keys.length;
+      let decrypted;
+      for (let i = 0; i < length; i++) {
+        try {
+          const key = keys[i].trim();
+          const attrs = _instructions(result, key);
+          decrypted = DotenvModule.decrypt(attrs.ciphertext, attrs.key);
+          break;
+        } catch (error) {
+          if (i + 1 >= length) {
+            throw error;
+          }
+        }
+      }
+      return DotenvModule.parse(decrypted);
+    }
+    function _warn(message) {
+      console.error(`\u26A0 ${message}`);
+    }
+    function _debug(message) {
+      console.log(`\u2506 ${message}`);
+    }
+    function _log(message) {
+      console.log(`\u25C7 ${message}`);
+    }
+    function _dotenvKey(options) {
+      if (options && options.DOTENV_KEY && options.DOTENV_KEY.length > 0) {
+        return options.DOTENV_KEY;
+      }
+      if (process.env.DOTENV_KEY && process.env.DOTENV_KEY.length > 0) {
+        return process.env.DOTENV_KEY;
+      }
+      return "";
+    }
+    function _instructions(result, dotenvKey) {
+      let uri;
+      try {
+        uri = new URL(dotenvKey);
+      } catch (error) {
+        if (error.code === "ERR_INVALID_URL") {
+          const err = new Error("INVALID_DOTENV_KEY: Wrong format. Must be in valid uri format like dotenv://:key_1234@dotenvx.com/vault/.env.vault?environment=development");
+          err.code = "INVALID_DOTENV_KEY";
+          throw err;
+        }
+        throw error;
+      }
+      const key = uri.password;
+      if (!key) {
+        const err = new Error("INVALID_DOTENV_KEY: Missing key part");
+        err.code = "INVALID_DOTENV_KEY";
+        throw err;
+      }
+      const environment = uri.searchParams.get("environment");
+      if (!environment) {
+        const err = new Error("INVALID_DOTENV_KEY: Missing environment part");
+        err.code = "INVALID_DOTENV_KEY";
+        throw err;
+      }
+      const environmentKey = `DOTENV_VAULT_${environment.toUpperCase()}`;
+      const ciphertext = result.parsed[environmentKey];
+      if (!ciphertext) {
+        const err = new Error(`NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment ${environmentKey} in your .env.vault file.`);
+        err.code = "NOT_FOUND_DOTENV_ENVIRONMENT";
+        throw err;
+      }
+      return { ciphertext, key };
+    }
+    function _vaultPath(options) {
+      let possibleVaultPath = null;
+      if (options && options.path && options.path.length > 0) {
+        if (Array.isArray(options.path)) {
+          for (const filepath of options.path) {
+            if (fs.existsSync(filepath)) {
+              possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
+            }
+          }
+        } else {
+          possibleVaultPath = options.path.endsWith(".vault") ? options.path : `${options.path}.vault`;
+        }
+      } else {
+        possibleVaultPath = path4.resolve(process.cwd(), ".env.vault");
+      }
+      if (fs.existsSync(possibleVaultPath)) {
+        return possibleVaultPath;
+      }
+      return null;
+    }
+    function _resolveHome(envPath) {
+      return envPath[0] === "~" ? path4.join(os.homedir(), envPath.slice(1)) : envPath;
+    }
+    function _configVault(options) {
+      const debug = parseBoolean(process.env.DOTENV_CONFIG_DEBUG || options && options.debug);
+      const quiet = parseBoolean(process.env.DOTENV_CONFIG_QUIET || options && options.quiet);
+      if (debug || !quiet) {
+        _log("loading env from encrypted .env.vault");
+      }
+      const parsed = DotenvModule._parseVault(options);
+      let processEnv = process.env;
+      if (options && options.processEnv != null) {
+        processEnv = options.processEnv;
+      }
+      DotenvModule.populate(processEnv, parsed, options);
+      return { parsed };
+    }
+    function configDotenv(options) {
+      const dotenvPath = path4.resolve(process.cwd(), ".env");
+      let encoding = "utf8";
+      let processEnv = process.env;
+      if (options && options.processEnv != null) {
+        processEnv = options.processEnv;
+      }
+      let debug = parseBoolean(processEnv.DOTENV_CONFIG_DEBUG || options && options.debug);
+      let quiet = parseBoolean(processEnv.DOTENV_CONFIG_QUIET || options && options.quiet);
+      if (options && options.encoding) {
+        encoding = options.encoding;
+      } else {
+        if (debug) {
+          _debug("no encoding is specified (UTF-8 is used by default)");
+        }
+      }
+      let optionPaths = [dotenvPath];
+      if (options && options.path) {
+        if (!Array.isArray(options.path)) {
+          optionPaths = [_resolveHome(options.path)];
+        } else {
+          optionPaths = [];
+          for (const filepath of options.path) {
+            optionPaths.push(_resolveHome(filepath));
+          }
+        }
+      }
+      let lastError;
+      const parsedAll = {};
+      for (const path5 of optionPaths) {
+        try {
+          const parsed = DotenvModule.parse(fs.readFileSync(path5, { encoding }));
+          DotenvModule.populate(parsedAll, parsed, options);
+        } catch (e) {
+          if (debug) {
+            _debug(`failed to load ${path5} ${e.message}`);
+          }
+          lastError = e;
+        }
+      }
+      const populated = DotenvModule.populate(processEnv, parsedAll, options);
+      debug = parseBoolean(processEnv.DOTENV_CONFIG_DEBUG || debug);
+      quiet = parseBoolean(processEnv.DOTENV_CONFIG_QUIET || quiet);
+      if (debug || !quiet) {
+        const keysCount = Object.keys(populated).length;
+        const shortPaths = [];
+        for (const filePath of optionPaths) {
+          try {
+            const relative = path4.relative(process.cwd(), filePath);
+            shortPaths.push(relative);
+          } catch (e) {
+            if (debug) {
+              _debug(`failed to load ${filePath} ${e.message}`);
+            }
+            lastError = e;
+          }
+        }
+        _log(`injected env (${keysCount}) from ${shortPaths.join(",")} ${dim(`// tip: ${_getRandomTip()}`)}`);
+      }
+      if (lastError) {
+        return { parsed: parsedAll, error: lastError };
+      } else {
+        return { parsed: parsedAll };
+      }
+    }
+    function config2(options) {
+      if (_dotenvKey(options).length === 0) {
+        return DotenvModule.configDotenv(options);
+      }
+      const vaultPath = _vaultPath(options);
+      if (!vaultPath) {
+        _warn(`you set DOTENV_KEY but you are missing a .env.vault file at ${vaultPath}`);
+        return DotenvModule.configDotenv(options);
+      }
+      return DotenvModule._configVault(options);
+    }
+    function decrypt(encrypted, keyStr) {
+      const key = Buffer.from(keyStr.slice(-64), "hex");
+      let ciphertext = Buffer.from(encrypted, "base64");
+      const nonce = ciphertext.subarray(0, 12);
+      const authTag = ciphertext.subarray(-16);
+      ciphertext = ciphertext.subarray(12, -16);
+      try {
+        const aesgcm = crypto2.createDecipheriv("aes-256-gcm", key, nonce);
+        aesgcm.setAuthTag(authTag);
+        return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
+      } catch (error) {
+        const isRange = error instanceof RangeError;
+        const invalidKeyLength = error.message === "Invalid key length";
+        const decryptionFailed = error.message === "Unsupported state or unable to authenticate data";
+        if (isRange || invalidKeyLength) {
+          const err = new Error("INVALID_DOTENV_KEY: It must be 64 characters long (or more)");
+          err.code = "INVALID_DOTENV_KEY";
+          throw err;
+        } else if (decryptionFailed) {
+          const err = new Error("DECRYPTION_FAILED: Please check your DOTENV_KEY");
+          err.code = "DECRYPTION_FAILED";
+          throw err;
+        } else {
+          throw error;
+        }
+      }
+    }
+    function populate(processEnv, parsed, options = {}) {
+      const debug = Boolean(options && options.debug);
+      const override = Boolean(options && options.override);
+      const populated = {};
+      if (typeof parsed !== "object") {
+        const err = new Error("OBJECT_REQUIRED: Please check the processEnv argument being passed to populate");
+        err.code = "OBJECT_REQUIRED";
+        throw err;
+      }
+      for (const key of Object.keys(parsed)) {
+        if (Object.prototype.hasOwnProperty.call(processEnv, key)) {
+          if (override === true) {
+            processEnv[key] = parsed[key];
+            populated[key] = parsed[key];
+          }
+          if (debug) {
+            if (override === true) {
+              _debug(`"${key}" is already defined and WAS overwritten`);
+            } else {
+              _debug(`"${key}" is already defined and was NOT overwritten`);
+            }
+          }
+        } else {
+          processEnv[key] = parsed[key];
+          populated[key] = parsed[key];
+        }
+      }
+      return populated;
+    }
+    var DotenvModule = {
+      configDotenv,
+      _configVault,
+      _parseVault,
+      config: config2,
+      decrypt,
+      parse: parse8,
+      populate
+    };
+    module2.exports.configDotenv = DotenvModule.configDotenv;
+    module2.exports._configVault = DotenvModule._configVault;
+    module2.exports._parseVault = DotenvModule._parseVault;
+    module2.exports.config = DotenvModule.config;
+    module2.exports.decrypt = DotenvModule.decrypt;
+    module2.exports.parse = DotenvModule.parse;
+    module2.exports.populate = DotenvModule.populate;
+    module2.exports = DotenvModule;
+  }
+});
+
 // webscraper/vercelHandler.ts
 var vercelHandler_exports = {};
 __export(vercelHandler_exports, {
@@ -73008,9 +73008,9 @@ module.exports = __toCommonJS(vercelHandler_exports);
 // webscraper/apiPaths.ts
 function rewriteScraperApiUrl(url) {
   const queryAt = url.indexOf("?");
-  const path2 = queryAt === -1 ? url : url.slice(0, queryAt);
+  const path4 = queryAt === -1 ? url : url.slice(0, queryAt);
   const search = queryAt === -1 ? "" : url.slice(queryAt);
-  let next2 = path2;
+  let next2 = path4;
   if (next2.startsWith("/api/scraper/")) next2 = `/api/${next2.slice("/api/scraper/".length)}`;
   else if (next2 === "/api/scraper") next2 = "/api";
   else if (next2.startsWith("/scraper/api/")) next2 = `/api/${next2.slice("/scraper/api/".length)}`;
@@ -73023,8 +73023,1802 @@ function rewriteScraperApiUrl(url) {
 
 // webscraper/server.ts
 var import_express = __toESM(require_express2(), 1);
-var import_path = __toESM(require("path"), 1);
-var import_url = require("url");
+var import_path3 = __toESM(require("path"), 1);
+
+// webscraper/render/constants.ts
+var REVIEW_CARD_SELECTOR = '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], .detailReviewItem, [class$="_review"]:has([class*="reviewContent"]), article:has([aria-label="review item"]), .grid-item:has(.main-text), .product-detail__rating__review, .pdp-review, li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
+var NAV_TIMEOUT_MS = 45e3;
+var RENDER_DEADLINE_MS = 12e4;
+var RENDER_TAIL_MS = 25e3;
+var REVIEW_WAIT_MS = 1e4;
+var MAX_REVIEW_PAGES = 60;
+var MAX_REVIEWS = 300;
+var MAX_LINKED_REVIEW_PAGES = 15;
+var MAX_CAPTURED_BODY_BYTES = 5e6;
+var MAX_CAPTURED_TOTAL_BYTES = 3e7;
+var REVIEW_WIDGET_SELECTOR = [
+  "#yotpo-main-widget",
+  ".yotpo-main-widget",
+  '[class*="yotpo-reviews"]',
+  ".yotpo-display-wrapper",
+  ".okeReviews",
+  "[data-oke-reviews-widget]",
+  "[data-oke-widget]",
+  ".jdgm-widget",
+  ".jdgm-rev-widg",
+  "#judgeme_product_reviews",
+  "#stamped-main-widget",
+  ".stamped-main-widget",
+  "#stamped-reviews-widget",
+  '[class*="junip"]',
+  "junip-product-reviews",
+  "[data-bv-show]",
+  "#BVRRContainer",
+  '[class*="bv-rnr"]',
+  '[class*="bv_main"]',
+  '[class*="bv-pagination"]',
+  "[data-bv-v]",
+  "#pr-reviewdisplay",
+  ".pr-review-display",
+  ".kl_reviews",
+  '[class*="kl_reviews"]',
+  "#klaviyo-reviews-all",
+  ".loox-reviews-default",
+  "#looxReviews",
+  ".reviews-io-widget",
+  "#ReviewsWidget",
+  "#full-page-widget",
+  "#reviews",
+  "#Reviews",
+  "#product-reviews",
+  '[id*="review" i]:not([id*="preview" i])',
+  '[class*="review" i]:not([class*="preview" i])'
+].join(", ");
+
+// webscraper/fitAnalyzer.ts
+var GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+var REVIEW_SIZE_TOKEN = "XXXL|3XL|XXL|2XL|XXS|X-LARGE|X-SMALL|EXTRA LARGE|EXTRA SMALL|XLARGE|XSMALL|SMALL|MEDIUM|LARGE|XL|XS|S|M|L|\\d{1,2}";
+var ANATOMICAL_ZONES = [
+  "shoulders",
+  "chest",
+  "waist",
+  "hips",
+  "length",
+  "sleeves"
+];
+var ZONE_LABELS = {
+  shoulders: "Shoulders & Drop Seam",
+  chest: "Chest & Bust",
+  waist: "Waist & Midsection",
+  hips: "Hips & Seat",
+  length: "Torso & Hem Length",
+  sleeves: "Sleeve & Armhole"
+};
+function normalizeSizeOrNull(rawSize) {
+  const cleaned = (rawSize || "").trim().toUpperCase();
+  if (!cleaned) return null;
+  if (cleaned === "XS" || cleaned === "EXTRA SMALL" || cleaned === "X-SMALL" || cleaned === "XXS") {
+    return "XS";
+  }
+  if (cleaned === "S" || cleaned === "SM" || cleaned === "SMALL") {
+    return "S";
+  }
+  if (cleaned === "M" || cleaned === "MED" || cleaned === "MEDIUM" || cleaned === "M/L") {
+    return "M";
+  }
+  if (cleaned === "L" || cleaned === "LG" || cleaned === "LARGE") {
+    return "L";
+  }
+  if (cleaned === "XL" || cleaned === "X-LARGE" || cleaned === "EXTRA LARGE" || cleaned === "1XL") {
+    return "XL";
+  }
+  if (cleaned === "XXL" || cleaned === "2XL" || cleaned === "XX-LARGE" || cleaned === "3XL" || cleaned === "XXXL") {
+    return "XXL";
+  }
+  const numericMatch = cleaned.match(/\b(\d{1,2})\b/);
+  if (numericMatch) {
+    const num2 = parseInt(numericMatch[1], 10);
+    if (num2 <= 2 || num2 >= 24 && num2 <= 27) return "XS";
+    if (num2 >= 4 && num2 <= 6 || num2 >= 28 && num2 <= 29) return "S";
+    if (num2 >= 8 && num2 <= 10 || num2 >= 30 && num2 <= 32) return "M";
+    if (num2 >= 12 && num2 <= 14 || num2 >= 33 && num2 <= 34) return "L";
+    if (num2 === 16 || num2 >= 35 && num2 <= 37) return "XL";
+    if (num2 >= 18 || num2 >= 38) return "XXL";
+  }
+  if (cleaned.startsWith("XS")) return "XS";
+  if (cleaned.startsWith("XXL") || cleaned.startsWith("2X")) return "XXL";
+  if (cleaned.startsWith("XL")) return "XL";
+  if (/^(S|SMALL)\b/.test(cleaned)) return "S";
+  if (/^(L|LARGE)\b/.test(cleaned)) return "L";
+  if (/^(M|MEDIUM)\b/.test(cleaned)) return "M";
+  return null;
+}
+function normalizeReviewRating(value) {
+  const n = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.min(5, Math.max(1, Math.round(n)));
+}
+function meanOrNull(value, ratedReviewCount) {
+  return ratedReviewCount === 0 ? null : value;
+}
+var SMALL_CUES = [
+  { pattern: /\bruns?\s+(very\s+|super\s+|extremely\s+|way\s+)?small\b/i, label: "runs small", weight: -0.85 },
+  { pattern: /\b(too|very|super|way\s+too|uncomfortably)\s+(tight|snug|narrow|constricting|restrictive)\b/i, label: "too tight", weight: -0.75 },
+  { pattern: /\bsize\s+up\b|\bsizing\s+up\b|\border(ed)?\s+a\s+size\s+(larger|up)\b/i, label: "size up recommended", weight: -0.65 },
+  { pattern: /\bshrunk\b|\bshrank\b|\bshrinks?\b|\bshrinkage\b/i, label: "shrinks after wash", weight: -0.45 },
+  { pattern: /\bcouldn'?t\s+(button|zip|get\s+it\s+over)\b|\bpulls?\s+at\s+the\s+(buttons|chest|hips|bust)\b/i, label: "pulls / cannot fasten", weight: -0.8 },
+  { pattern: /\b(short\s+in\s+the\s+(torso|sleeves|arms|inseam|length)|cropped\s+shorter\s+than)\b/i, label: "short proportions", weight: -0.5 },
+  { pattern: /\btight\s+(across|in|around|through)\s+the\s+(shoulders|chest|bust|waist|hips|thighs|arms|cuffs|neck)\b/i, label: "tight fit zone", weight: -0.7 },
+  { pattern: /\bsnug\s+(across|in|around|fit)\b/i, label: "snug fit", weight: -0.45 },
+  { pattern: /\bsmaller\s+than\s+(expected|usual|normal|standard)\b/i, label: "smaller than expected", weight: -0.7 }
+];
+var LARGE_CUES = [
+  { pattern: /\bruns?\s+(very\s+|super\s+|extremely\s+|way\s+)?(large|big|huge)\b/i, label: "runs large", weight: 0.85 },
+  { pattern: /\b(swimming\s+in\s+it|drowning\s+in\s+it|like\s+a\s+tent|sack)\b/i, label: "swimming in garment", weight: 0.9 },
+  { pattern: /\bsize\s+down\b|\bsizing\s+down\b|\border(ed)?\s+a\s+size\s+(smaller|down)\b/i, label: "size down recommended", weight: 0.65 },
+  { pattern: /\b(way\s+too|very|overly|super)\s+(baggy|boxy|loose|wide|long|oversized|roomy)\b/i, label: "excessively baggy/boxy", weight: 0.75 },
+  { pattern: /\bbigger\s+than\s+(expected|usual|normal)\b/i, label: "larger than expected", weight: 0.7 },
+  { pattern: /\b(gaps?|gaping)\s+at\s+the\s+(waist|back|collar|chest)\b/i, label: "waist/collar gaping", weight: 0.55 },
+  { pattern: /\bgenerous\s+(fit|sizing|cut)|relaxed\s+(oversized\s+|boxy\s+|drop-shoulder\s+)?(drape|fit|cut|silhouette)\b/i, label: "relaxed generous cut", weight: 0.55 },
+  { pattern: /\bloose\s+(in|around|through|at)\s+the\s+(waist|hips|shoulders|chest|hem|sleeves)\b/i, label: "loose fit zone", weight: 0.6 },
+  { pattern: /\bdropped\s+shoulders?\s+(are\s+)?(roomy|wide|relaxed|generous)\b/i, label: "roomy drop shoulders", weight: 0.5 }
+];
+var TRUE_TO_SIZE_CUES = [
+  { pattern: /\btrue\s+to\s+size\b|\btts\b/i, label: "true to size", weight: 0 },
+  { pattern: /\bfits?\s+(just\s+right|perfectly|spot\s+on|like\s+a\s+glove|as\s+expected|great)\b/i, label: "fits as expected", weight: 0 },
+  { pattern: /\bexact(ly)?\s+my\s+usual\s+size\b|\bstandard\s+sizing\b|\bbuy\s+your\s+normal\s+size\b/i, label: "matches usual size", weight: 0 },
+  { pattern: /\bperfect\s+(tailored\s+|relaxed\s+|boxy\s+)?fit\b/i, label: "perfect fit", weight: 0 }
+];
+var SHRINKAGE_REGEX = /\b(shrunk|shrank|shrinks?|shrinkage|shortened\s+in\s+the\s+wash)\b/i;
+var OPAQUE_HEAVY_REGEX = /\b(not\s+see[- ]?through|non[- ]?see[- ]?through|zero\s+transparency|opaque|thick\s+(cotton|jersey|fabric|weight|collar)|heavyweight|220\s*gsm|240\s*gsm|260\s*gsm|280\s*gsm|substantial\s+(cotton|weight|feel)|sturdy\s+cotton)\b/i;
+var SHEER_THIN_REGEX = /\b(see[- ]?through|sheer|paper[- ]?thin|flimsy|transparent)\b/i;
+var POSITIVE_SENTIMENT_WORDS = /\b(love|excellent|flattering|comfortable|high-quality|stunning|perfect|soft|durable|favorite|worth\s+every\s+penny|great\s+drape|impeccable|breathable|compliments|substantial|opaque|sturdy)\b/gi;
+var NEGATIVE_SENTIMENT_WORDS = /\b(disappointed|returning|returned|uncomfortable|unwearable|awkward|cheap|scratchy|stiff|poorly|waste|regret|frustrating|unflattering|misleading|warped)\b/gi;
+var ZONE_PATTERNS = {
+  shoulders: /\b(shoulders?|yoke|upper\s+back|scapula|drop[- ]?shoulder)\b/i,
+  chest: /\b(chest|bust|ribcage|pec|across\s+the\s+front)\b/i,
+  waist: /\b(waist|waistband|midsection|stomach|belly|tummy)\b/i,
+  hips: /\b(hips?|seat|glutes|thighs?|crotch|rise)\b/i,
+  length: /\b(length|torso|hem|cropped|inseam|tall|short\s+body|long\s+body)\b/i,
+  sleeves: /\b(sleeves?|arms?|armholes?|cuffs?|wrists?|biceps?|forearms?|elbow)\b/i
+};
+function classifyReviewFitAndSentiment(text4, rating = null, declaredFitTag) {
+  const fullText = (text4 || "").trim();
+  const extractedPhrases = [];
+  let rawSkewSum = 0;
+  let cueCount = 0;
+  let ttsHits = 0;
+  if (declaredFitTag) {
+    const tagLower = declaredFitTag.toLowerCase();
+    const mild = /\b(slightly|a bit|a little|somewhat)\b/.test(tagLower);
+    if (mild && /small|tight/.test(tagLower)) {
+      rawSkewSum -= 0.45;
+      cueCount += 1;
+    } else if (mild && /large|big|loose/.test(tagLower)) {
+      rawSkewSum += 0.45;
+      cueCount += 1;
+    } else if (tagLower.includes("slightly small")) {
+      rawSkewSum -= 0.45;
+      cueCount += 1;
+    } else if (tagLower.includes("small") || tagLower.includes("tight")) {
+      rawSkewSum -= 0.75;
+      cueCount += 1;
+    } else if (tagLower.includes("slightly large")) {
+      rawSkewSum += 0.45;
+      cueCount += 1;
+    } else if (tagLower.includes("large") || tagLower.includes("big") || tagLower.includes("loose")) {
+      rawSkewSum += 0.75;
+      cueCount += 1;
+    } else if (tagLower.includes("true") || tagLower.includes("just right")) {
+      ttsHits += 1;
+      cueCount += 1;
+    }
+  }
+  for (const cue of SMALL_CUES) {
+    if (cue.pattern.test(fullText)) {
+      rawSkewSum += cue.weight;
+      cueCount += 1;
+      if (!extractedPhrases.includes(cue.label)) {
+        extractedPhrases.push(cue.label);
+      }
+    }
+  }
+  for (const cue of LARGE_CUES) {
+    if (cue.pattern.test(fullText)) {
+      rawSkewSum += cue.weight;
+      cueCount += 1;
+      if (!extractedPhrases.includes(cue.label)) {
+        extractedPhrases.push(cue.label);
+      }
+    }
+  }
+  for (const cue of TRUE_TO_SIZE_CUES) {
+    if (cue.pattern.test(fullText)) {
+      ttsHits += 1;
+      cueCount += 1;
+      if (!extractedPhrases.includes(cue.label)) {
+        extractedPhrases.push(cue.label);
+      }
+    }
+  }
+  const mentionsShrinkage = SHRINKAGE_REGEX.test(fullText);
+  let mentionsFabricOpacity = null;
+  if (OPAQUE_HEAVY_REGEX.test(fullText)) {
+    mentionsFabricOpacity = "thick_opaque";
+    if (!extractedPhrases.includes("opaque heavyweight cotton")) {
+      extractedPhrases.push("opaque heavyweight cotton");
+    }
+  } else if (SHEER_THIN_REGEX.test(fullText)) {
+    mentionsFabricOpacity = "thin_sheer";
+    if (!extractedPhrases.includes("thin/sheer fabric")) {
+      extractedPhrases.push("thin/sheer fabric");
+    }
+  }
+  const sentences = fullText.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
+  const anatomicalMentions = [];
+  for (const zone of ANATOMICAL_ZONES) {
+    const zoneRegex = ZONE_PATTERNS[zone];
+    const matchingSentences = sentences.filter((s) => zoneRegex.test(s));
+    if (matchingSentences.length > 0) {
+      const joined = matchingSentences.join(" ");
+      const isTight = /\b(tight|snug|narrow|short|small|pinch|pull|constrict|restrict|cramps?|squeeze|shrunk|shrank)\b/i.test(
+        joined
+      );
+      const isLoose = /\b(loose|baggy|wide|long|large|big|roomy|boxy|gap|excess|swimming|relaxed|generous)\b/i.test(
+        joined
+      );
+      let tension = "optimal";
+      if (isTight && !isLoose) {
+        tension = "tight";
+        if (cueCount === 0) {
+          rawSkewSum -= 0.55;
+          cueCount += 1;
+        }
+      } else if (isLoose && !isTight) {
+        tension = "loose";
+        if (cueCount === 0) {
+          rawSkewSum += 0.55;
+          cueCount += 1;
+        }
+      }
+      anatomicalMentions.push({
+        zone,
+        tension,
+        snippet: matchingSentences[0].slice(0, 140)
+      });
+    }
+  }
+  let fitSkew = 0;
+  if (cueCount > 0) {
+    fitSkew = Math.max(
+      -1,
+      Math.min(1, Number((rawSkewSum / Math.max(1, cueCount * 0.85)).toFixed(2)))
+    );
+    if (ttsHits > 0 && Math.abs(fitSkew) < 0.35) {
+      fitSkew = Number((fitSkew * 0.4).toFixed(2));
+    }
+  }
+  let fitDirection = "true_to_size";
+  if (fitSkew <= -0.25) {
+    fitDirection = "runs_small";
+  } else if (fitSkew >= 0.25) {
+    fitDirection = "runs_large";
+  }
+  if (extractedPhrases.length === 0) {
+    if (fitDirection === "runs_small") extractedPhrases.push("snug proportions");
+    else if (fitDirection === "runs_large") extractedPhrases.push("relaxed proportions");
+    else extractedPhrases.push("true to size");
+  }
+  let sizedUpOrDownMention = null;
+  if (/\b(sized?\s+up|went\s+up\s+a\s+size|ordered\s+a\s+size\s+up)\b/i.test(fullText)) {
+    sizedUpOrDownMention = "sized_up";
+  } else if (/\b(sized?\s+down|went\s+down\s+a\s+size|ordered\s+a\s+size\s+down)\b/i.test(fullText)) {
+    sizedUpOrDownMention = "sized_down";
+  } else if (/\b(usual\s+size|normal\s+size|true\s+to\s+size)\b/i.test(fullText)) {
+    sizedUpOrDownMention = "kept_usual";
+  }
+  const stars = normalizeReviewRating(rating);
+  let sentimentScore = null;
+  let sentimentPolarity = null;
+  if (stars !== null) {
+    const ratingBase = (stars - 1) / 4 * 76 + 12;
+    const posMatches = (fullText.match(POSITIVE_SENTIMENT_WORDS) || []).length;
+    const negMatches = (fullText.match(NEGATIVE_SENTIMENT_WORDS) || []).length;
+    sentimentScore = Math.round(Math.max(5, Math.min(99, ratingBase + posMatches * 5 - negMatches * 9)));
+    sentimentPolarity = sentimentScore >= 68 ? "positive" : sentimentScore >= 45 ? "mixed" : "negative";
+  }
+  return {
+    fitDirection,
+    fitSkew,
+    sentimentScore,
+    sentimentPolarity,
+    extractedPhrases: extractedPhrases.slice(0, 4),
+    anatomicalMentions,
+    sizedUpOrDownMention,
+    mentionsShrinkage,
+    mentionsFabricOpacity
+  };
+}
+function skewToVerdict(fitSkew, count) {
+  if (count === 0) return "Insufficient Data";
+  if (fitSkew <= -0.42) return "Runs Small";
+  if (fitSkew <= -0.18) return "Slightly Small";
+  if (fitSkew >= 0.42) return "Runs Large";
+  if (fitSkew >= 0.18) return "Slightly Large";
+  return "True to Size";
+}
+function formatSigned(n, digits = 2) {
+  const text4 = n.toFixed(digits);
+  return n > 0 ? `+${text4}` : text4;
+}
+function parseRawReviewBatch(rawInput) {
+  const trimmed = (rawInput || "").trim();
+  if (!trimmed) return [];
+  const results = [];
+  const htmlBlockRegex = /<(?:article|div|li)[^>]*class=["'][^"']*review[^"']*["'][^>]*>([\s\S]*?)<\/(?:article|div|li)>/gi;
+  let match;
+  let index2 = 0;
+  while ((match = htmlBlockRegex.exec(trimmed)) !== null) {
+    const fullTag = match[0];
+    const innerHtml = match[1];
+    index2 += 1;
+    const attrSize = fullTag.match(/data-size=["']([^"']+)["']/i)?.[1] || innerHtml.match(/Size(?:\s+Purchased)?:\s*<[^>]+>([^<]+)</i)?.[1] || innerHtml.match(/Size(?:\s+Purchased)?:\s*([A-Za-z0-9-]+)/i)?.[1] || "";
+    const attrRating = fullTag.match(/data-rating=["'](\d(?:\.\d)?)["']/i)?.[1] || innerHtml.match(/(\d(?:\.\d)?)\s*\/\s*5/i)?.[1] || "";
+    const attrFit = fullTag.match(/data-fit=["']([^"']+)["']/i)?.[1] || innerHtml.match(/Fit:\s*([^<\n]+)/i)?.[1];
+    const author = fullTag.match(/data-author=["']([^"']+)["']/i)?.[1] || innerHtml.match(/class=["'][^"']*author[^"']*["'][^>]*>([^<]+)</i)?.[1] || `Verified Buyer #${index2}`;
+    const title = innerHtml.match(/<h[345][^>]*>([^<]+)<\/h[345]>/i)?.[1] || innerHtml.match(/class=["'][^"']*title[^"']*["'][^>]*>([^<]+)</i)?.[1] || "Customer Fit Review";
+    const bodyText = innerHtml.replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (bodyText.length > 8) {
+      results.push({
+        id: `scraped-html-${index2}`,
+        author: author.trim(),
+        sizePurchased: attrSize.trim(),
+        rating: normalizeReviewRating(attrRating),
+        title: title.trim(),
+        body: bodyText,
+        date: "",
+        verifiedPurchase: false,
+        declaredFitTag: attrFit?.trim()
+      });
+    }
+  }
+  if (results.length > 0) {
+    return results;
+  }
+  const blocks = trimmed.split(/\n\s*\n+|\n(?=\[?Size\s*:|\bSize\s+(?:XS|S|M|L|XL|XXL)\b)/i).map((b) => b.trim()).filter((b) => b.length > 10);
+  blocks.forEach((block, idx) => {
+    const sizeMatch = block.match(
+      new RegExp(`\\bSize(?:\\s+Purchased|\\s+Ordered)?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`, "i")
+    ) || block.match(new RegExp(`\\[\\s*(${REVIEW_SIZE_TOKEN})\\s*\\]`, "i")) || block.match(
+      // A bare number after a buying verb is a quantity ("ordered 2"); it is a size only after "size".
+      new RegExp(
+        `\\b(?:bought|ordered|wearing|got)\\s+(?:(?:a|an)\\s+)?(?:size\\s+(${REVIEW_SIZE_TOKEN})|(${REVIEW_SIZE_TOKEN.replace("|\\d{1,2}", "")}))\\b`,
+        "i"
+      )
+    );
+    const ratingMatch = block.match(/\bRating\s*[:=-]\s*(\d(?:\.\d)?)/i) || block.match(/\b(\d)\s*\/\s*5\s*stars?\b/i) || block.match(/★{1,5}/);
+    let rating = null;
+    if (ratingMatch) {
+      rating = normalizeReviewRating(ratingMatch[0].includes("\u2605") ? ratingMatch[0].length : ratingMatch[1]);
+    }
+    const cleanBody = block.replace(/^\[.*?\]\s*/, "").replace(/\s+/g, " ").trim();
+    results.push({
+      id: `parsed-review-${idx + 1}`,
+      author: `Reviewer #${idx + 1}`,
+      sizePurchased: sizeMatch ? sizeMatch[1] ?? sizeMatch[2] ?? "" : "",
+      rating,
+      title: cleanBody.slice(0, 48) + (cleanBody.length > 48 ? "..." : ""),
+      body: cleanBody,
+      date: "",
+      verifiedPurchase: false
+    });
+  });
+  return results;
+}
+function roundedShares(left, middle, right) {
+  const total = left + middle + right;
+  if (total <= 0) return [0, 0, 0];
+  let leftPct = Math.round(left / total * 100);
+  let rightPct = Math.round(right / total * 100);
+  let middlePct = 100 - leftPct - rightPct;
+  if (middlePct < 0) {
+    const excess = -middlePct;
+    if (leftPct >= rightPct) leftPct -= excess;
+    else rightPct -= excess;
+    middlePct = 0;
+  }
+  return [leftPct, middlePct, rightPct];
+}
+function starStats(reviews) {
+  let ratedCount = 0;
+  let starSum = 0;
+  let sentimentSum = 0;
+  for (const r of reviews) {
+    if (r.rating === null || r.sentimentScore === null) continue;
+    ratedCount += 1;
+    starSum += r.rating;
+    sentimentSum += r.sentimentScore;
+  }
+  if (ratedCount === 0) return { ratedCount, avgRating: 0, sentiment: 0 };
+  return {
+    ratedCount,
+    avgRating: Number((starSum / ratedCount).toFixed(1)),
+    sentiment: Math.round(sentimentSum / ratedCount)
+  };
+}
+function aggregateProductFitReport(meta, rawReviews) {
+  const analyzedReviews = rawReviews.map((r) => {
+    const normalizedSize = normalizeSizeOrNull(r.sizePurchased);
+    const rating = normalizeReviewRating(r.rating);
+    const classification = classifyReviewFitAndSentiment(r.body, rating, r.declaredFitTag);
+    return {
+      ...r,
+      rating,
+      normalizedSize,
+      ...classification
+    };
+  });
+  const totalReviews = analyzedReviews.length;
+  const runsSmallCount = analyzedReviews.filter((r) => r.fitDirection === "runs_small").length;
+  const trueToSizeCount = analyzedReviews.filter((r) => r.fitDirection === "true_to_size").length;
+  const runsLargeCount = analyzedReviews.filter((r) => r.fitDirection === "runs_large").length;
+  const overallShares = roundedShares(runsSmallCount, trueToSizeCount, runsLargeCount);
+  const runsSmallPct = overallShares[0];
+  const trueToSizePct = overallShares[1];
+  const runsLargePct = overallShares[2];
+  const overallFitIndex = totalReviews > 0 ? Number(
+    (analyzedReviews.reduce((acc, r) => acc + r.fitSkew, 0) / totalReviews).toFixed(2)
+  ) : 0;
+  const overallVerdict = skewToVerdict(overallFitIndex, totalReviews);
+  const overallStars = starStats(analyzedReviews);
+  const ratedReviewCount = overallStars.ratedCount;
+  const overallSentimentScore = overallStars.sentiment;
+  const overallAvgRating = overallStars.avgRating;
+  const shrinkageReviewCount = analyzedReviews.filter((r) => r.mentionsShrinkage).length;
+  const overallShrinkagePct = totalReviews > 0 ? Math.round(shrinkageReviewCount / totalReviews * 100) : 0;
+  const opaqueReviewCount = analyzedReviews.filter(
+    (r) => r.mentionsFabricOpacity === "thick_opaque"
+  ).length;
+  const sheerReviewCount = analyzedReviews.filter(
+    (r) => r.mentionsFabricOpacity === "thin_sheer"
+  ).length;
+  const opacityTotalMentions = opaqueReviewCount + sheerReviewCount;
+  const fabricOpacityPct = opacityTotalMentions > 0 ? Math.round(opaqueReviewCount / opacityTotalMentions * 100) : null;
+  const gsmMatch = meta.fabricComposition.match(/(\d{3}\s*gsm|\d{1,2}(?:\.\d)?\s*oz)/i);
+  const gsmSpec = gsmMatch ? gsmMatch[1].toUpperCase() : null;
+  const washCareAdvisory = overallShrinkagePct >= 25 ? `${overallShrinkagePct}% of reviewers mention shrinkage. Cold wash and hang dry.` : overallShrinkagePct > 0 ? `${overallShrinkagePct}% of reviews mention shrinkage.` : "No reviewer mentioned shrinkage.";
+  const fabricWeightConsensus = fabricOpacityPct !== null && opaqueReviewCount >= sheerReviewCount && opaqueReviewCount > 0 ? `${fabricOpacityPct}% of fabric mentions describe it as opaque${gsmSpec ? ` (${gsmSpec})` : ""}.` : sheerReviewCount > opaqueReviewCount ? "Reviewers describe the fabric as lightweight or sheer." : gsmSpec ? `The page states ${gsmSpec}. Reviews do not mention opacity.` : "Reviews do not mention fabric weight or opacity.";
+  const sizeSummaries = GARMENT_SIZES.map((size) => {
+    const group = analyzedReviews.filter((r) => r.normalizedSize === size);
+    const count = group.length;
+    if (count === 0) {
+      return {
+        size,
+        reviewCount: 0,
+        runsSmallCount: 0,
+        trueToSizeCount: 0,
+        runsLargeCount: 0,
+        runsSmallPct: 0,
+        trueToSizePct: 0,
+        runsLargePct: 0,
+        fitSkew: 0,
+        verdict: "Insufficient Data",
+        avgRating: 0,
+        ratedReviewCount: 0,
+        sentimentScore: 0,
+        returnRisk: "Low",
+        primaryFitNote: "No scraped reviews for this size yet",
+        trendSummary: `No customer reviews scraped for size ${size}.`,
+        topKeywords: [],
+        dominantZones: [],
+        sampleQuote: "",
+        shrinkageMentionPct: 0,
+        shrinkageMentionCount: 0,
+        fabricWeightNote: "No fabric data"
+      };
+    }
+    const sSmall = group.filter((r) => r.fitDirection === "runs_small").length;
+    const sTts = group.filter((r) => r.fitDirection === "true_to_size").length;
+    const sLarge = group.filter((r) => r.fitDirection === "runs_large").length;
+    const [sSmallPct, sTtsPct, sLargePct] = roundedShares(sSmall, sTts, sLarge);
+    const fitSkew = Number(
+      (group.reduce((acc, r) => acc + r.fitSkew, 0) / count).toFixed(2)
+    );
+    const verdict = skewToVerdict(fitSkew, count);
+    const {
+      ratedCount: sizeRatedCount,
+      avgRating,
+      sentiment: sentimentScore
+    } = starStats(group);
+    const shrinkageMentionCount = group.filter((r) => r.mentionsShrinkage).length;
+    const shrinkageMentionPct = Math.round(shrinkageMentionCount / count * 100);
+    const sizeOpaqueCount = group.filter(
+      (r) => r.mentionsFabricOpacity === "thick_opaque"
+    ).length;
+    const fabricWeightNote = sizeOpaqueCount > 0 ? `Opaque heavyweight feel (${sizeOpaqueCount}/${count} cite zero transparency)` : shrinkageMentionCount > 0 ? `${shrinkageMentionPct}% note length tightening after high-heat drying` : "Consistent fabric drape";
+    const phraseCounts = /* @__PURE__ */ new Map();
+    group.forEach((r) => {
+      r.extractedPhrases.forEach((p) => {
+        phraseCounts.set(p, (phraseCounts.get(p) || 0) + 1);
+      });
+    });
+    const topKeywords = Array.from(phraseCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
+    const zoneStats = [];
+    for (const z of ANATOMICAL_ZONES) {
+      const mentions = group.flatMap((r) => r.anatomicalMentions.filter((m) => m.zone === z));
+      if (mentions.length > 0) {
+        const tightC = mentions.filter((m) => m.tension === "tight").length;
+        const looseC = mentions.filter((m) => m.tension === "loose").length;
+        if (tightC > looseC && tightC > 0) {
+          zoneStats.push({
+            zone: z,
+            issue: "tight",
+            pct: Math.round(tightC / count * 100)
+          });
+        } else if (looseC > tightC && looseC > 0) {
+          zoneStats.push({
+            zone: z,
+            issue: "loose",
+            pct: Math.round(looseC / count * 100)
+          });
+        }
+      }
+    }
+    zoneStats.sort((a, b) => b.pct - a.pct);
+    const returnRisk = sizeRatedCount === 0 ? Math.abs(fitSkew) >= 0.28 ? "Moderate" : "Low" : sentimentScore < 62 || Math.abs(fitSkew) >= 0.55 && sentimentScore < 76 ? "High" : Math.abs(fitSkew) >= 0.28 || sentimentScore < 75 ? "Moderate" : "Low";
+    const topZoneText = zoneStats.length > 0 ? `${zoneStats[0].issue} in ${zoneStats[0].zone}` : topKeywords[0] || "consistent proportions";
+    let primaryFitNote = "";
+    let trendSummary = "";
+    const sentimentNote = sizeRatedCount > 0 ? `Sentiment is ${sentimentScore}/100 (${avgRating}\u2605).` : "";
+    if (verdict === "Runs Small" || verdict === "Slightly Small") {
+      primaryFitNote = `${sSmallPct}% report small fit (${topZoneText})`;
+      trendSummary = `Size ${size} skews small (Fit Index ${formatSigned(fitSkew)}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ""}${sentimentNote}`.trim();
+    } else if (verdict === "Runs Large" || verdict === "Slightly Large") {
+      primaryFitNote = `${sLargePct}% report relaxed/large fit (${topZoneText})`;
+      trendSummary = `Size ${size} skews roomy/large (Fit Index ${formatSigned(fitSkew)}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention shrinkage. ` : ""}${sentimentNote}`.trim();
+    } else {
+      primaryFitNote = `${sTtsPct}% confirm true-to-size fit`;
+      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${formatSigned(fitSkew)}): ${sTtsPct}% of reviewers report accurate proportions${sizeRatedCount > 0 ? ` with ${sentimentScore}/100 positive sentiment` : ""}.`;
+    }
+    const bestSample = group.find((r) => r.fitDirection !== "true_to_size") || group[0];
+    return {
+      size,
+      reviewCount: count,
+      runsSmallCount: sSmall,
+      trueToSizeCount: sTts,
+      runsLargeCount: sLarge,
+      runsSmallPct: sSmallPct,
+      trueToSizePct: sTtsPct,
+      runsLargePct: sLargePct,
+      fitSkew,
+      verdict,
+      avgRating,
+      ratedReviewCount: sizeRatedCount,
+      sentimentScore,
+      returnRisk,
+      primaryFitNote,
+      trendSummary,
+      topKeywords,
+      dominantZones: zoneStats.slice(0, 2),
+      sampleQuote: bestSample ? bestSample.body : "",
+      shrinkageMentionPct,
+      shrinkageMentionCount,
+      fabricWeightNote
+    };
+  });
+  const anatomicalBreakdown = ANATOMICAL_ZONES.map((zone) => {
+    const mentions = analyzedReviews.flatMap(
+      (r) => r.anatomicalMentions.filter((m) => m.zone === zone)
+    );
+    const mCount = mentions.length;
+    if (mCount === 0) {
+      return {
+        zone,
+        label: ZONE_LABELS[zone],
+        mentionCount: 0,
+        tightPct: 0,
+        optimalPct: totalReviews === 0 ? 0 : 100,
+        loosePct: 0,
+        netTensionScore: 0,
+        statusLabel: totalReviews === 0 ? "No reviews" : "Standard fit"
+      };
+    }
+    const tightC = mentions.filter((m) => m.tension === "tight").length;
+    const looseC = mentions.filter((m) => m.tension === "loose").length;
+    const [tightPct, optimalPct, loosePct] = roundedShares(tightC, mCount - tightC - looseC, looseC);
+    const netTensionScore = Number(((looseC - tightC) / mCount).toFixed(2));
+    let statusLabel = "Balanced Drape";
+    if (netTensionScore <= -0.35) statusLabel = "Runs Tight / Narrow";
+    else if (netTensionScore <= -0.15) statusLabel = "Slightly Snug";
+    else if (netTensionScore >= 0.35) statusLabel = "Relaxed / Roomy Cut";
+    else if (netTensionScore >= 0.15) statusLabel = "Slightly Roomy";
+    return {
+      zone,
+      label: ZONE_LABELS[zone],
+      mentionCount: mCount,
+      tightPct,
+      optimalPct,
+      loosePct,
+      netTensionScore,
+      statusLabel
+    };
+  });
+  const coreSizes = sizeSummaries.filter(
+    (s) => ["XS", "S", "M"].includes(s.size) && s.reviewCount > 0
+  );
+  const plusSizes = sizeSummaries.filter(
+    (s) => ["L", "XL", "XXL"].includes(s.size) && s.reviewCount > 0
+  );
+  const coreAvgSkew = coreSizes.length > 0 ? coreSizes.reduce((acc, s) => acc + s.fitSkew, 0) / coreSizes.length : overallFitIndex;
+  const plusAvgSkew = plusSizes.length > 0 ? plusSizes.reduce((acc, s) => acc + s.fitSkew, 0) / plusSizes.length : overallFitIndex;
+  const gradingDelta = Number((plusAvgSkew - coreAvgSkew).toFixed(2));
+  let sizingGradingAlert = "";
+  if (totalReviews === 0) {
+    sizingGradingAlert = "No reviews, so grading was not compared.";
+  } else if (gradingDelta <= -0.22) {
+    sizingGradingAlert = `Grading Compression in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L\u2013XXL skew tighter (${formatSigned(plusAvgSkew)}) than XS\u2013M (${formatSigned(coreAvgSkew)}).`;
+  } else if (gradingDelta >= 0.25) {
+    sizingGradingAlert = `Grading Flare in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L\u2013XXL skew looser (${formatSigned(plusAvgSkew)}) than XS\u2013M (${formatSigned(coreAvgSkew)}).`;
+  } else {
+    sizingGradingAlert = `Linear Spec Grading (Delta ${formatSigned(gradingDelta)}): Fit skew tracks evenly across XS\u2013M (${formatSigned(coreAvgSkew)}) and L\u2013XXL (${formatSigned(plusAvgSkew)}).`;
+  }
+  const mostMentionedZone = [...anatomicalBreakdown].sort(
+    (a, b) => b.mentionCount - a.mentionCount
+  )[0];
+  const merchandisingTakeaway = totalReviews === 0 ? "No reviews were found, so there is no fit verdict." : overallVerdict === "Runs Small" || overallVerdict === "Slightly Small" ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}.` : overallVerdict === "Runs Large" || overallVerdict === "Slightly Large" ? `Runs Large (${runsLargePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.` : `True to Size (${trueToSizePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}).${ratedReviewCount > 0 ? ` Mean sentiment score: ${overallSentimentScore}/100.` : ""}`;
+  return {
+    id: meta.id,
+    name: meta.name,
+    brand: meta.brand,
+    category: meta.category,
+    sku: meta.sku,
+    price: meta.price,
+    fabricComposition: meta.fabricComposition,
+    sourceUrl: meta.sourceUrl,
+    totalReviews,
+    overallFitIndex,
+    overallVerdict,
+    gradingDelta,
+    overallDistribution: {
+      runsSmallPct,
+      trueToSizePct,
+      runsLargePct,
+      runsSmallCount,
+      trueToSizeCount,
+      runsLargeCount
+    },
+    overallSentimentScore,
+    overallAvgRating,
+    ratedReviewCount,
+    merchandisingTakeaway,
+    sizingGradingAlert,
+    tshirtSignals: {
+      overallShrinkagePct,
+      shrinkageReviewCount,
+      fabricOpacityPct,
+      opaqueReviewCount,
+      sheerReviewCount,
+      gsmSpec,
+      washCareAdvisory,
+      fabricWeightConsensus
+    },
+    sizeSummaries,
+    anatomicalBreakdown,
+    reviews: analyzedReviews,
+    scraperTelemetry: {
+      sourceUrl: meta.sourceUrl,
+      scrapedAt: meta.scraperTelemetry?.scrapedAt || (/* @__PURE__ */ new Date()).toISOString(),
+      domNodesScanned: meta.scraperTelemetry?.domNodesScanned ?? 0,
+      reviewNodesMatched: totalReviews,
+      selectorsUsed: meta.scraperTelemetry?.selectorsUsed ?? [],
+      parseDurationMs: meta.scraperTelemetry?.parseDurationMs ?? 0,
+      engineMode: meta.scraperTelemetry?.engineMode || "cheerio-dom+deterministic-nlp",
+      reportedReviewCount: meta.scraperTelemetry?.reportedReviewCount ?? null,
+      reviewSources: meta.scraperTelemetry?.reviewSources ?? []
+    },
+    committedToDbAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
+function generateSqlInsertDump(reports, charts = []) {
+  const esc = (val2) => (val2 || "").replace(/'/g, "''");
+  const num2 = (value) => value === null || !Number.isFinite(value) ? "NULL" : String(value);
+  const lines = [
+    "-- Pearfit Scraper Commercial Apparel Fit Database Dump",
+    `-- Generated At: ${(/* @__PURE__ */ new Date()).toISOString()}`,
+    "-- Engine: Deterministic Cheerio DOM + Rule-Based Lexical Fit Classifier (No LLM)",
+    "",
+    "CREATE TABLE IF NOT EXISTS commercial_skus (",
+    "  sku VARCHAR(64) PRIMARY KEY,",
+    "  product_id VARCHAR(128) NOT NULL,",
+    "  brand VARCHAR(128) NOT NULL,",
+    "  product_name VARCHAR(255) NOT NULL,",
+    "  category VARCHAR(64) NOT NULL,",
+    "  retail_price VARCHAR(32),",
+    "  fabric_composition TEXT,",
+    "  total_reviews INT NOT NULL,",
+    "  overall_fit_index DECIMAL(4,2) NOT NULL,",
+    "  overall_verdict VARCHAR(32) NOT NULL,",
+    "  grading_delta DECIMAL(4,2) NOT NULL,",
+    "  runs_small_pct INT NOT NULL,",
+    "  true_to_size_pct INT NOT NULL,",
+    "  runs_large_pct INT NOT NULL,",
+    "  shrinkage_mention_pct INT NOT NULL,",
+    "  fabric_opacity_pct INT,",
+    "  sentiment_score INT,",
+    "  avg_rating DECIMAL(3,1),",
+    "  source_url TEXT,",
+    "  scraped_at TIMESTAMP NOT NULL",
+    ");",
+    "",
+    "CREATE TABLE IF NOT EXISTS sku_size_metrics (",
+    "  sku VARCHAR(64) NOT NULL,",
+    "  size_code VARCHAR(16) NOT NULL,",
+    "  review_count INT NOT NULL,",
+    "  fit_skew DECIMAL(4,2) NOT NULL,",
+    "  fit_verdict VARCHAR(32) NOT NULL,",
+    "  runs_small_pct INT NOT NULL,",
+    "  true_to_size_pct INT NOT NULL,",
+    "  runs_large_pct INT NOT NULL,",
+    "  shrinkage_pct INT NOT NULL,",
+    "  sentiment_score INT,",
+    "  avg_rating DECIMAL(3,1),",
+    "  return_risk VARCHAR(16) NOT NULL,",
+    "  primary_fit_note TEXT,",
+    "  PRIMARY KEY (sku, size_code)",
+    ");",
+    "",
+    "CREATE TABLE IF NOT EXISTS sku_size_chart (",
+    "  sku VARCHAR(128) NOT NULL,",
+    "  size_code VARCHAR(16) NOT NULL,",
+    "  sort_order INT NOT NULL,",
+    "  chest_cm DECIMAL(6,1),",
+    "  length_cm DECIMAL(6,1),",
+    "  sleeve_cm DECIMAL(6,1),",
+    "  PRIMARY KEY (sku, size_code)",
+    ");",
+    ""
+  ];
+  for (const r of reports) {
+    lines.push(
+      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${num2(r.overallFitIndex)}, '${esc(r.overallVerdict)}', ${num2(r.gradingDelta)}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${num2(r.tshirtSignals.fabricOpacityPct)}, ${num2(meanOrNull(r.overallSentimentScore, r.ratedReviewCount))}, ${num2(meanOrNull(r.overallAvgRating, r.ratedReviewCount))}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
+    );
+    for (const s of r.sizeSummaries) {
+      if (s.reviewCount > 0) {
+        lines.push(
+          `INSERT INTO sku_size_metrics (sku, size_code, review_count, fit_skew, fit_verdict, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_pct, sentiment_score, avg_rating, return_risk, primary_fit_note) VALUES ('${esc(r.sku)}', '${s.size}', ${s.reviewCount}, ${s.fitSkew}, '${esc(s.verdict)}', ${s.runsSmallPct}, ${s.trueToSizePct}, ${s.runsLargePct}, ${s.shrinkageMentionPct}, ${num2(meanOrNull(s.sentimentScore, s.ratedReviewCount))}, ${num2(meanOrNull(s.avgRating, s.ratedReviewCount))}, '${s.returnRisk}', '${esc(s.primaryFitNote)}');`
+        );
+      }
+    }
+    lines.push("");
+  }
+  const chartRows = [...charts].sort((a, b) => a.sku.localeCompare(b.sku) || a.sortOrder - b.sortOrder || a.size.localeCompare(b.size));
+  for (const row of chartRows) {
+    if (!row.sku || !row.size) continue;
+    lines.push(
+      `INSERT INTO sku_size_chart (sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm) VALUES ('${esc(row.sku)}', '${esc(row.size)}', ${Math.round(row.sortOrder) || 0}, ${num2(row.chest_cm)}, ${num2(row.length_cm)}, ${num2(row.sleeve_cm)});`
+    );
+  }
+  if (chartRows.length > 0) lines.push("");
+  return lines.join("\n");
+}
+
+// webscraper/structuredData.ts
+function isObject(v) {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+function asArray(v) {
+  if (v === void 0 || v === null) return [];
+  return Array.isArray(v) ? v : [v];
+}
+function hasType(node, type) {
+  return asArray(node["@type"]).some((t) => typeof t === "string" && t.toLowerCase() === type.toLowerCase());
+}
+function text(v) {
+  if (typeof v === "string") {
+    const t = v.replace(/\s+/g, " ").trim();
+    return t || null;
+  }
+  if (typeof v === "number") return String(v);
+  if (isObject(v)) return text(v.name);
+  if (Array.isArray(v)) return text(v[0]);
+  return null;
+}
+function collectNodes(root2, out = []) {
+  if (Array.isArray(root2)) {
+    for (const item of root2) collectNodes(item, out);
+  } else if (isObject(root2)) {
+    out.push(root2);
+    for (const value of Object.values(root2)) {
+      if (typeof value === "object" && value !== null) collectNodes(value, out);
+    }
+  }
+  return out;
+}
+function reviewIsForAnotherProduct(review, product) {
+  const reviewed = review.itemReviewed;
+  if (!isObject(reviewed)) return false;
+  const reviewedSku = text(reviewed.sku);
+  const productSku = text(product.sku);
+  if (reviewedSku && productSku) return reviewedSku !== productSku;
+  const reviewedName = text(reviewed.name);
+  const productName = text(product.name);
+  if (reviewedName && productName) return reviewedName !== productName;
+  return false;
+}
+function formatPrice(offersRaw) {
+  for (const offer of asArray(offersRaw)) {
+    if (!isObject(offer)) continue;
+    const amount = offer.price ?? offer.lowPrice ?? (isObject(offer.priceSpecification) ? offer.priceSpecification.price : void 0);
+    const currency = text(offer.priceCurrency) ?? (isObject(offer.priceSpecification) ? text(offer.priceSpecification.priceCurrency) : null);
+    const amountText = text(amount);
+    if (amountText) return currency ? `${amountText} ${currency}` : amountText;
+  }
+  return null;
+}
+function parseRating(ratingRaw) {
+  if (!isObject(ratingRaw)) return null;
+  const value = parseFloat(String(ratingRaw.ratingValue ?? ""));
+  if (!Number.isFinite(value)) return null;
+  const best = parseFloat(String(ratingRaw.bestRating ?? "5"));
+  const worst = parseFloat(String(ratingRaw.worstRating ?? "1"));
+  const scaled = Number.isFinite(best) && Number.isFinite(worst) && best > worst && best !== 5 ? 1 + (value - worst) / (best - worst) * 4 : value;
+  return Math.min(5, Math.max(1, Math.round(scaled)));
+}
+function extractSizeFromReviewText(body) {
+  const labeled = new RegExp(
+    `\\bsize(?:\\s+(?:purchased|ordered|bought))?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`,
+    "i"
+  );
+  const sizedTo = new RegExp(
+    `\\b(?:sized|went)\\s+(?:up|down)\\s+(?:to|a size to)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`,
+    "i"
+  );
+  const letterSize = REVIEW_SIZE_TOKEN.replace("|\\d{1,2}", "");
+  const bought = new RegExp(
+    `\\b(?:bought|ordered|purchased)\\s+(?:(?:a|an|the|my)\\s+)?(?:size\\s+(${REVIEW_SIZE_TOKEN})|(${letterSize}))\\b`,
+    "i"
+  );
+  const wornIn = new RegExp(`\\bin\\s+(?:a\\s+|size\\s+)(${REVIEW_SIZE_TOKEN})\\b`, "i");
+  const match = body.match(labeled) || body.match(sizedTo) || body.match(bought) || body.match(wornIn);
+  return match ? match[1] ?? match[2] ?? "" : "";
+}
+var FIT_TAG_REGEX = /\b(runs\s+small|true\s+to\s+size|runs\s+large|slightly\s+small|slightly\s+large)\b/i;
+function extractStructuredProduct(jsonLdBlocks) {
+  const nodes = collectNodes(jsonLdBlocks);
+  const product = nodes.find((n) => hasType(n, "Product") || hasType(n, "ProductGroup"));
+  if (!product) return null;
+  const reviewNodes = /* @__PURE__ */ new Set();
+  const ownedByAnotherProduct = /* @__PURE__ */ new Set();
+  for (const node of nodes) {
+    if (node === product || !hasType(node, "Product") && !hasType(node, "ProductGroup")) continue;
+    for (const review of asArray(node.review ?? node.reviews)) {
+      if (isObject(review)) ownedByAnotherProduct.add(review);
+    }
+  }
+  for (const r of asArray(product.review ?? product.reviews)) if (isObject(r)) reviewNodes.add(r);
+  for (const n of nodes) {
+    if (!hasType(n, "Review") || ownedByAnotherProduct.has(n) || reviewIsForAnotherProduct(n, product)) continue;
+    reviewNodes.add(n);
+  }
+  const reviews = [];
+  let idx = 0;
+  for (const r of reviewNodes) {
+    const body = text(r.reviewBody) ?? text(r.description);
+    if (!body || body.length <= 8) continue;
+    idx += 1;
+    const rating = parseRating(r.reviewRating);
+    const fitTag = body.match(FIT_TAG_REGEX)?.[1];
+    reviews.push({
+      id: `jsonld-rev-${idx}`,
+      author: text(r.author) ?? "Anonymous",
+      sizePurchased: extractSizeFromReviewText(body),
+      // A JSON-LD review with no rating has none: null, not a neutral 3.
+      rating,
+      title: text(r.name) ?? text(r.headline) ?? "",
+      body,
+      date: text(r.datePublished) ?? "",
+      verifiedPurchase: false,
+      declaredFitTag: fitTag
+    });
+  }
+  const identifiers = /* @__PURE__ */ new Set();
+  const idFields = ["productID", "productId", "sku", "mpn", "gtin", "gtin8", "gtin12", "gtin13", "gtin14", "productGroupID"];
+  for (const node of [product, ...asArray(product.hasVariant), ...asArray(product.offers)]) {
+    if (!isObject(node)) continue;
+    for (const field of idFields) {
+      const value = text(node[field]);
+      if (value) identifiers.add(value.toLowerCase());
+    }
+  }
+  const aggregate = isObject(product.aggregateRating) ? product.aggregateRating : null;
+  const count = aggregate ? Number(aggregate.reviewCount ?? aggregate.ratingCount) : NaN;
+  const organization = nodes.find((n) => hasType(n, "Organization") || hasType(n, "Corporation") || hasType(n, "OnlineStore"));
+  return {
+    organizationName: organization ? text(organization.name) : null,
+    identifiers: [...identifiers],
+    reportedReviewCount: Number.isInteger(count) && count >= 0 ? count : null,
+    name: text(product.name),
+    brand: text(product.brand) ?? text(product.manufacturer),
+    sku: text(product.sku) ?? text(product.mpn) ?? text(product.productGroupID),
+    price: formatPrice(product.offers),
+    material: text(product.material),
+    category: text(product.category),
+    reviews
+  };
+}
+function parseJsonLdScripts(scriptContents) {
+  const blocks = [];
+  for (const raw of scriptContents) {
+    const cleaned = raw.trim().replace(/^<!--/, "").replace(/-->$/, "").trim();
+    if (!cleaned) continue;
+    try {
+      blocks.push(JSON.parse(cleaned));
+    } catch {
+    }
+  }
+  return blocks;
+}
+
+// webscraper/reviewJson.ts
+function isObject2(v) {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+function str(v) {
+  if (typeof v === "string") {
+    const t = v.replace(/\s+/g, " ").trim();
+    return t || null;
+  }
+  if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  return null;
+}
+function num(v) {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && /^\s*-?\d+(\.\d+)?\s*$/.test(v)) return Number(v);
+  return null;
+}
+function first(obj, keys) {
+  for (const key of keys) {
+    if (obj[key] !== void 0 && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return void 0;
+}
+function at(obj, path4) {
+  let cur = obj;
+  for (const part of path4.split(".")) {
+    if (!isObject2(cur)) return void 0;
+    cur = cur[part];
+  }
+  return cur;
+}
+function firstPath(obj, paths) {
+  for (const path4 of paths) {
+    const v = at(obj, path4);
+    if (v !== void 0 && v !== null && v !== "") return v;
+  }
+  return void 0;
+}
+var RATING_KEYS = ["rating", "score", "Rating", "reviewRating", "stars", "starRating", "star_rating", "overallRating", "ratingValue", "reviewScore", "rate", "star"];
+var BODY_KEYS = ["body", "body_html", "bodyHtml", "reviewContent", "content", "comments", "ReviewText", "reviewText", "reviewMessage", "reviewBody", "review_body", "review_text", "text", "comment", "review", "message"];
+var TITLE_KEYS = ["title", "Title", "reviewTitle", "review_title", "headline"];
+var DATE_KEYS = ["createdAt", "created_at", "dateCreated", "date_created", "SubmissionTime", "submissionTime", "reviewDate", "datePublished", "publishedAt", "published_at", "submittedAt", "createDate", "dateCreatedMillis", "createdDate", "created_date", "reviewed_at", "reviewedAt", "date", "created"];
+var ID_KEYS = ["id", "Id", "reviewId", "review_id", "ReviewId", "ugc_id", "uuid"];
+var AUTHOR_PATHS = [
+  "user.displayName",
+  "user.display_name",
+  "user.name",
+  "author.name",
+  "author.displayName",
+  "author.display_name",
+  "reviewer.displayName",
+  "reviewer.display_name",
+  "reviewer.name",
+  "customer.name",
+  "UserNickname",
+  "userNickname",
+  "nickname",
+  "reviewerName",
+  "reviewer_name",
+  "userName",
+  "user_name",
+  "displayName",
+  "display_name",
+  "author",
+  "name"
+];
+var AGGREGATE_KEYS = [
+  "review_count",
+  "reviewCount",
+  "totalReviews",
+  "total_reviews",
+  "TotalReviewCount",
+  "rating_histogram",
+  "ratingHistogram",
+  "averageScore",
+  "average_score",
+  "averageRating",
+  "average_rating",
+  "AverageOverallRating"
+];
+function normalizeRating(raw, best) {
+  let value;
+  let scale = num(best);
+  if (isObject2(raw)) {
+    value = num(first(raw, ["ratingValue", "value", "Value", "rating"]));
+    scale = num(first(raw, ["bestRating", "best", "max", "RatingRange"])) ?? scale;
+  } else {
+    value = num(raw);
+  }
+  if (value === null || value <= 0) return null;
+  if (scale && scale > 0 && scale !== 5) value = value / scale * 5;
+  else if (value > 5 && value <= 10) value = value / 2;
+  else if (value > 10 && value <= 100) value = value / 20;
+  if (value > 5) return null;
+  return Math.round(value * 10) / 10;
+}
+function bodyOf(obj) {
+  for (const key of BODY_KEYS) {
+    const v = obj[key];
+    if (typeof v === "string") {
+      const t = v.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      if (t.length >= 2) return t;
+    }
+  }
+  return null;
+}
+function flattenReview(obj) {
+  if (!isObject2(obj.details) || !isObject2(obj.metrics)) return obj;
+  const badges = isObject2(obj.badges) ? obj.badges : {};
+  return { ...obj, ...obj.details, ...obj.metrics, verifiedBuyer: badges.is_verified_buyer === true };
+}
+function looksLikeReview(raw) {
+  const obj = flattenReview(raw);
+  if (AGGREGATE_KEYS.some((key) => key in obj)) return false;
+  const rating = normalizeRating(first(obj, RATING_KEYS), obj.bestRating);
+  if (rating === null) return false;
+  if (bodyOf(obj) !== null) return true;
+  if (str(first(obj, TITLE_KEYS)) === null) return false;
+  return authorOf(obj) !== "Anonymous" || str(first(obj, DATE_KEYS)) !== null;
+}
+var SMALL_WORDS = /small|tight|snug|short|narrow/i;
+var LARGE_WORDS = /large|big|loose|roomy|long|baggy|wide/i;
+function directionFrom(lowLabel, highLabel) {
+  const low = str(lowLabel) ?? "";
+  const high = str(highLabel) ?? "";
+  if (SMALL_WORDS.test(low) || LARGE_WORDS.test(high)) return true;
+  if (LARGE_WORDS.test(low) || SMALL_WORDS.test(high)) return false;
+  return null;
+}
+function labelFromId(label) {
+  return label.replace(/_\d+$/, "").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+}
+function answer(label, value, scale = null) {
+  const raw = str(label);
+  const l = raw ? labelFromId(raw) : null;
+  if (!l) return null;
+  const list = Array.isArray(value) ? value : [value];
+  const text4 = list.map((v) => str(v)).filter(Boolean).join(", ") || null;
+  const numeric = list.length === 1 ? num(list[0]) : null;
+  if (text4 === null && numeric === null) return null;
+  return { label: l, value: text4, numeric, scale };
+}
+function reviewAnswers(review) {
+  const out = [];
+  const push = (a) => {
+    if (a) out.push(a);
+  };
+  for (const key of ["customFields", "custom_fields"]) {
+    const fields = review[key];
+    if (!isObject2(fields)) continue;
+    for (const field of Object.values(fields)) {
+      if (!isObject2(field)) continue;
+      const type = str(first(field, ["fieldType", "field_type"])) ?? "";
+      const scale = /^size$/i.test(type) ? { center: 2, half: 1, lowIsSmall: true } : null;
+      push(answer(first(field, ["title", "question", "label"]), field.value, scale));
+    }
+  }
+  if (isObject2(review.question_answers)) {
+    for (const qa of Object.values(review.question_answers)) {
+      if (!isObject2(qa)) continue;
+      const type = str(qa.type) ?? "";
+      const values = isObject2(qa.values) ? qa.values : {};
+      const lowIsSmall = directionFrom(values.min, values.max);
+      const scale = /range/.test(type) && lowIsSmall !== null ? { center: 2, half: 2, lowIsSmall } : null;
+      push(answer(qa.label, qa.answer, scale));
+    }
+  }
+  const attrLists = [
+    review.attributes,
+    at(review, "author.attributes"),
+    at(review, "reviewer.attributes"),
+    review.productAttributes,
+    review.attributesWithRating,
+    review.reviewer_attributes,
+    review.reviewAttributes
+  ];
+  for (const list of attrLists) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      if (!isObject2(item)) continue;
+      const label = first(item, ["label", "title", "name", "question", "attributeName", "key"]);
+      const type = str(item.type) ?? "";
+      const options = Array.isArray(item.options) ? item.options : [];
+      let scale = null;
+      const min = num(first(item, ["minValue", "min"]));
+      const max = num(first(item, ["maxValue", "max"]));
+      const lowIsSmall = directionFrom(
+        first(item, ["minLabel", "min_label"]) ?? options[0],
+        first(item, ["maxLabel", "max_label"]) ?? options[options.length - 1]
+      );
+      if (min !== null && max !== null && max > min && lowIsSmall !== null) {
+        scale = { center: (min + max) / 2, half: (max - min) / 2, lowIsSmall };
+      } else if (/centered/i.test(type) && options.length === 3 && lowIsSmall !== null) {
+        scale = { center: 3, half: 2, lowIsSmall };
+      } else if (/centered/i.test(type) && "midLabel" in item && lowIsSmall !== null) {
+        const v = num(item.value);
+        if (v !== null && Math.abs(v) <= 1) scale = { center: 0, half: 1, lowIsSmall };
+      }
+      push(answer(label, first(item, ["value", "answer", "values", "displayName"]), scale));
+    }
+  }
+  for (const [key, label] of [["heightRange", "height"], ["height", "height"], ["weightRange", "weight"], ["weight", "weight"], ["bodyType", "body type"], ["usualSize", "usual size"], ["usual_size", "usual size"]]) {
+    const value = review[key];
+    if (typeof value === "string" || typeof value === "number") push(answer(label, value));
+  }
+  if (typeof review.fit === "string" && !/^\d+(\.\d+)?$/.test(review.fit.trim())) push(answer("fit", review.fit));
+  if (typeof review.fit === "number" && "purchasedSize" in review && "rate" in review) {
+    push(answer("fit", review.fit, { center: 3, half: 2, lowIsSmall: true }));
+  }
+  for (const key of ["size", "sizePurchased", "size_purchased", "purchasedSize", "purchased_size", "sizeOrdered", "size_ordered", "variantSize", "variant_size"]) {
+    const value = review[key];
+    if (typeof value === "string" || typeof value === "number") push(answer("size purchased", value));
+  }
+  if (Array.isArray(review.product_options)) {
+    for (const item of review.product_options) {
+      if (isObject2(item)) push(answer(item.name ?? item.label, item.value));
+    }
+  }
+  if (isObject2(review.productVariants)) {
+    for (const [name, value] of Object.entries(review.productVariants)) push(answer(name, value));
+  }
+  for (const key of ["ContextDataValues", "AdditionalFields"]) {
+    const fields = review[key];
+    if (!isObject2(fields)) continue;
+    for (const [id, field] of Object.entries(fields)) {
+      if (!isObject2(field)) continue;
+      push(answer(first(field, ["DimensionLabel", "Label"]) ?? id, first(field, ["ValueLabel", "Value"])));
+    }
+  }
+  if (isObject2(review.SecondaryRatings)) {
+    for (const [id, field] of Object.entries(review.SecondaryRatings)) {
+      if (!isObject2(field)) continue;
+      const range = num(field.ValueRange);
+      const lowIsSmall = directionFrom(field.MinLabel, field.MaxLabel) ?? true;
+      const scale = range && range >= 3 ? { center: (range + 1) / 2, half: (range - 1) / 2, lowIsSmall } : null;
+      push(answer(first(field, ["Label"]) ?? id.replace(/_\d+$/, ""), field.Value, scale));
+    }
+  }
+  if (Array.isArray(review.dimensions)) {
+    for (const item of review.dimensions) {
+      if (!isObject2(item)) continue;
+      const labels = Array.isArray(item.valueLabels) ? item.valueLabels.map((l) => str(isObject2(l) ? first(l, ["label", "value", "name"]) : l)) : [];
+      const v = num(item.value);
+      const worded = v !== null && Number.isInteger(v) && v >= 1 && v <= labels.length ? labels[v - 1] : null;
+      push(answer(item.dimensionLabel, worded));
+    }
+  }
+  const profile = at(review, "profileAttributes.custom");
+  if (Array.isArray(profile)) {
+    for (const item of profile) if (isObject2(item)) push(answer(item.label, item.value));
+  }
+  for (const key of ["reviewOptionsList", "options", "survey_answers", "surveyAnswers", "answers", "customQuestions", "properties"]) {
+    const list = review[key];
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      if (!isObject2(item)) continue;
+      const label = first(item, ["label", "k", "question", "title", "name", "key"]) ?? at(item, "survey_question.title") ?? at(item, "question.title");
+      push(answer(label, first(item, ["v", "value", "answer", "response"])));
+    }
+  }
+  return out;
+}
+var SIZE_BOUGHT_LABEL = /^(size|sizes?)\??$|\b(size (purchased|ordered|bought|worn|selected|chosen|received)|purchased size|ordered size|what size did you (buy|order|purchase|get|choose)|which size did you (buy|order|purchase|get|choose)|size you (bought|ordered|purchased))\b/i;
+var USUAL_SIZE_LABEL = /usual(ly)? (wear|size)|normally wear|typical(ly)? (wear|size)|what size do you (usually|normally|typically)/i;
+var FIT_LABEL = /\bfits?\b|sizing|true to size|how (did|does|do) (it|they|this|the \w+) fit|runs? (small|large|big)|size rating/i;
+var HEIGHT_LABEL = /\bheight\b|how tall/i;
+var BUILD_LABEL = /\bweight\b|body (type|shape)|\bbuild\b/i;
+var STRICT_SIZE = /^(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL|4XL|1X|2X|3X|SMALL|MEDIUM|LARGE|X-?SMALL|X-?LARGE|XX-?LARGE|EXTRA[ -]SMALL|EXTRA[ -]LARGE|ONE SIZE|\d{1,2}(\.\d)?)$/i;
+function sizeFromVariantTitle(title) {
+  const parts = title.split(/\s*[\/|,–—]\s*|\s+-\s+/).map((p) => p.trim()).filter(Boolean);
+  const letter = parts.find((p) => STRICT_SIZE.test(p) && !/^\d/.test(p));
+  if (letter) return letter;
+  const numeric = parts.find((p) => STRICT_SIZE.test(p));
+  return numeric ?? null;
+}
+function fitTagFromAnswer(a) {
+  if (a.numeric !== null && a.scale) {
+    const offset = a.numeric - a.scale.center;
+    if (Math.abs(offset) < 1e-9) return "True to Size";
+    const towardLarge = a.scale.lowIsSmall ? offset > 0 : offset < 0;
+    const strong = Math.abs(offset) / a.scale.half >= 0.75;
+    return `${strong ? "Runs" : "Slightly"} ${towardLarge ? "Large" : "Small"}`;
+  }
+  const text4 = a.value ?? "";
+  if (!text4 || /^\d+(\.\d+)?$/.test(text4)) return null;
+  if (/true to size|just right|perfect|as expected|fits? (as expected|well|great)|accurate/i.test(text4)) return "True to Size";
+  const mild = /slightly|a bit|a little|somewhat|kind of|sort of/i.test(text4);
+  if (SMALL_WORDS.test(text4) && !LARGE_WORDS.test(text4)) return `${mild ? "Slightly" : "Runs"} Small`;
+  if (LARGE_WORDS.test(text4) && !SMALL_WORDS.test(text4)) return `${mild ? "Slightly" : "Runs"} Large`;
+  return null;
+}
+function fieldsFromAnswers(answers) {
+  const out = {};
+  for (const a of answers) {
+    if (a.scale && (FIT_LABEL.test(a.label) || /\bsize\b/i.test(a.label))) {
+      if (!out.declaredFitTag) {
+        const tag = fitTagFromAnswer(a);
+        if (tag) out.declaredFitTag = tag;
+      }
+      continue;
+    }
+    if (!out.usualSize && USUAL_SIZE_LABEL.test(a.label) && a.value) {
+      out.usualSize = a.value;
+    } else if (/\bfits?\b/i.test(a.label) && FIT_LABEL.test(a.label)) {
+      if (!out.declaredFitTag) {
+        const tag = fitTagFromAnswer(a);
+        if (tag) out.declaredFitTag = tag;
+      }
+    } else if (SIZE_BOUGHT_LABEL.test(a.label) && a.value) {
+      const exact = sizeFromVariantTitle(a.value);
+      if (!out.sizePurchased || exact && !sizeFromVariantTitle(out.sizePurchased)) out.sizePurchased = exact ?? a.value;
+    } else if (!out.declaredFitTag && FIT_LABEL.test(a.label)) {
+      const tag = fitTagFromAnswer(a);
+      if (tag) out.declaredFitTag = tag;
+    } else if (!out.reviewerHeight && HEIGHT_LABEL.test(a.label) && a.value) {
+      out.reviewerHeight = a.value;
+    } else if (!out.reviewerBuild && BUILD_LABEL.test(a.label) && a.value) {
+      out.reviewerBuild = a.value;
+    }
+  }
+  return out;
+}
+var PRODUCT_KEY_PATHS = [
+  "productId",
+  "product_id",
+  "ProductId",
+  "productExternalId",
+  "product_external_id",
+  "productSKU",
+  "productHandle",
+  "product_handle",
+  "product.shopify_id",
+  "product.external_id",
+  "product.shopify_handle",
+  "product.handle",
+  "product.id",
+  "product_variant.product_external_id",
+  "shopProductId",
+  "catItem.sku",
+  "product_page_id",
+  "reviewed_product.product_id"
+];
+var PRODUCT_NAME_PATHS = ["productName", "product_name", "OriginalProductName", "product.name", "product.title", "groupingData.productName", "catItem.title", "reviewed_product.title"];
+function authorOf(obj) {
+  for (const path4 of AUTHOR_PATHS) {
+    const v = at(obj, path4);
+    const s = typeof v === "string" ? str(v) : null;
+    if (s) return s;
+  }
+  const firstName = str(firstPath(obj, ["customer.first_name", "reviewer.first_name", "first_name", "user.firstName", "firstName"]));
+  const lastName = str(firstPath(obj, ["customer.last_name", "reviewer.last_name", "last_name", "user.lastName", "lastName"]));
+  if (firstName) return lastName ? `${firstName} ${lastName.charAt(0)}.` : firstName;
+  return "Anonymous";
+}
+function verifiedOf(obj) {
+  const v = first(obj, ["verifiedBuyer", "verified_buyer", "isVerifiedBuyer", "verified", "isVerified", "verifiedPurchase"]);
+  if (v === true || v === 1 || v === "true" || v === "1") return true;
+  const badges = obj.Badges;
+  if (isObject2(badges) && Object.keys(badges).some((k) => /verified/i.test(k))) return true;
+  return false;
+}
+function dateOf(v) {
+  if (typeof v === "number" && Number.isFinite(v) && v > 1e9) {
+    const ms = v > 1e12 ? v : v * 1e3;
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  return str(v) ?? "";
+}
+function reviewFromJson(raw, index2) {
+  if (!looksLikeReview(raw)) return null;
+  const obj = flattenReview(raw);
+  const rating = normalizeRating(first(obj, RATING_KEYS), obj.bestRating);
+  const fields = fieldsFromAnswers(reviewAnswers(obj));
+  const variantTitle = str(firstPath(obj, ["product_variant.title", "productVariantName", "variantName", "variant_title", "variant.title"]));
+  const sizePurchased = fields.sizePurchased ?? (variantTitle ? sizeFromVariantTitle(variantTitle) : null) ?? extractSizeFromReviewText(bodyOf(obj) ?? "");
+  const productKeys = PRODUCT_KEY_PATHS.map((p) => str(at(obj, p))?.toLowerCase().replace(/^shopify-/, "")).filter((k) => !!k);
+  return {
+    id: str(first(obj, ID_KEYS)) ?? `json-${index2}`,
+    author: authorOf(obj),
+    sizePurchased,
+    usualSize: fields.usualSize,
+    rating: Math.min(5, Math.max(1, Math.round(rating))),
+    title: str(first(obj, TITLE_KEYS)) ?? "",
+    body: bodyOf(obj) ?? str(first(obj, TITLE_KEYS)) ?? "",
+    date: dateOf(first(obj, DATE_KEYS)),
+    verifiedPurchase: verifiedOf(obj),
+    reviewerHeight: fields.reviewerHeight,
+    reviewerBuild: fields.reviewerBuild,
+    declaredFitTag: fields.declaredFitTag,
+    productKeys: [...new Set(productKeys)],
+    productName: str(firstPath(obj, PRODUCT_NAME_PATHS))
+  };
+}
+var TOTAL_PATHS = [
+  "bottomline.totalReview",
+  "bottomline.total_review",
+  "TotalResults",
+  "response.TotalResults",
+  "pagination.total",
+  "rollup.review_count",
+  "data.rollup.review_count",
+  "results.0.rollup.review_count",
+  "summary.review_count",
+  "reviewAggregate.reviewCount",
+  "aggregate.reviewCount",
+  "total_reviews",
+  "totalReviews",
+  "reviewCount",
+  "review_count",
+  "number_of_reviews",
+  "total"
+];
+function reportedTotalOf(root2) {
+  if (!isObject2(root2)) return null;
+  for (const path4 of TOTAL_PATHS) {
+    const v = num(at(root2, path4));
+    if (v !== null && v >= 0 && Number.isInteger(v)) return v;
+  }
+  return null;
+}
+var CONTAINER_TOTAL_KEYS = ["total", "totalCount", "total_count", "totalResults", "TotalResults", "totalReviews", "total_reviews", "reviewCount", "review_count", "numberOfReviews"];
+function extractReviewsFromJson(root2) {
+  const reviews = [];
+  const seen = /* @__PURE__ */ new Set();
+  let containerTotal = null;
+  const walk = (v, depth, parent2 = null) => {
+    if (depth > 40 || v === null || typeof v !== "object" || seen.has(v)) return;
+    seen.add(v);
+    if (Array.isArray(v)) {
+      const before2 = reviews.length;
+      for (const item of v) walk(item, depth + 1);
+      if (reviews.length > before2 && parent2 && containerTotal === null) {
+        for (const key of CONTAINER_TOTAL_KEYS) {
+          const total = num(parent2[key]);
+          if (total !== null && Number.isInteger(total) && total >= 0) {
+            containerTotal = total;
+            break;
+          }
+        }
+        if (containerTotal === null) containerTotal = reportedTotalOf(parent2);
+      }
+      return;
+    }
+    const review = reviewFromJson(v, reviews.length);
+    if (review) {
+      reviews.push(review);
+      return;
+    }
+    for (const child of Object.values(v)) walk(child, depth + 1, v);
+  };
+  walk(root2, 0);
+  return { reviews, reportedTotal: reviews.length > 0 ? reportedTotalOf(root2) ?? containerTotal : null };
+}
+function parseJsonBody(body) {
+  const t = body.trim();
+  if (!t || t[0] !== "{" && t[0] !== "[") return null;
+  try {
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
+}
+function normName(s) {
+  return s.toLowerCase().replace(/[®™]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+}
+function reviewMatchesProduct(review, responseKeys, product) {
+  const keys = review.productKeys.length > 0 ? review.productKeys : responseKeys;
+  if (keys.length > 0 && product.keys.length > 0) {
+    if (keys.some((k) => product.keys.includes(k))) return true;
+  }
+  if (review.productName && product.name) {
+    const a = normName(review.productName.split("|")[0]);
+    const b = normName(product.name.split("|")[0]);
+    if (a && b && (a.startsWith(b) || b.startsWith(a))) return true;
+  }
+  if (keys.length === 0 && !review.productName) return null;
+  return false;
+}
+function keysFromUrl(url) {
+  try {
+    const u = new URL(url);
+    const parts = [...u.pathname.split("/"), ...[...u.searchParams.values()].flatMap((v) => v.split(/[:,=]/))];
+    return [...new Set(parts.map((p) => decodeURIComponent(p).toLowerCase()).filter((p) => /^\d{5,}$/.test(p) || /^shopify-\d+$/.test(p)).map((p) => p.replace(/^shopify-/, "")))];
+  } catch {
+    return [];
+  }
+}
+function reviewIdentity(review) {
+  if (!review.id.startsWith("json-")) return `id:${review.id}`;
+  const body = review.body.toLowerCase().replace(/\s+/g, " ").trim();
+  return `body:${review.author.toLowerCase()}:${body.slice(0, 60)}`;
+}
+function dedupeKey(review) {
+  return [reviewIdentity(review)];
+}
+function collectJsonReviews(sources, product) {
+  const kept = [];
+  const seen = /* @__PURE__ */ new Set();
+  const hosts = /* @__PURE__ */ new Set();
+  let reportedTotal = null;
+  const sets = sources.map((source) => {
+    const set = extractReviewsFromJson(source.value);
+    const urlKeys = source.url.startsWith("page:") ? [] : keysFromUrl(source.url);
+    return { source, set, urlKeys, verdicts: set.reviews.map((r) => reviewMatchesProduct(r, urlKeys, product)) };
+  });
+  const someSourceMatches = sets.some((s) => s.verdicts.includes(true));
+  const requested = sets.filter((s) => s.set.reviews.length > 0 && s.urlKeys.length > 0);
+  const requestedIds = new Set(requested.flatMap((s) => s.urlKeys));
+  const widgetNamed = !someSourceMatches && requestedIds.size === 1 && !!product.knownIds && product.knownIds.has([...requestedIds][0]);
+  const ownListOf = ({ set, urlKeys, verdicts }) => {
+    const matched = verdicts.filter((v) => v === true).length;
+    return urlKeys.some((k) => product.keys.includes(k)) || widgetNamed && urlKeys.length > 0 || matched > 0 && set.reportedTotal !== null || set.reviews.length > 0 && matched * 2 >= set.reviews.length;
+  };
+  const sharedEndpoint = (url) => /graphql|\/batch(\.json)?\/?$|\/widgets?\/fetch/i.test(pathOf(url));
+  const ownPaths = new Set(
+    sets.filter((s) => s.set.reviews.length > 0 && ownListOf(s) && !sharedEndpoint(s.source.url)).map((s) => pathOf(s.source.url))
+  );
+  for (const entry of sets) {
+    const { source, set, verdicts } = entry;
+    if (set.reviews.length === 0) continue;
+    const anyMatch = verdicts.includes(true);
+    const anyOther = verdicts.includes(false);
+    const ownList = ownListOf(entry) || !source.url.startsWith("page:") && !sharedEndpoint(source.url) && ownPaths.has(pathOf(source.url));
+    if (anyOther && !anyMatch && !ownList) continue;
+    if (!anyMatch && !ownList && someSourceMatches && !source.url.startsWith("page:")) continue;
+    let added = 0;
+    set.reviews.forEach((review, i) => {
+      if (!ownList && verdicts[i] === false) return;
+      if (!ownList && verdicts[i] === null && anyOther) return;
+      const keys = dedupeKey(review);
+      if (keys.some((k) => seen.has(k))) return;
+      keys.forEach((k) => seen.add(k));
+      kept.push(review);
+      added++;
+    });
+    if (added > 0 || anyMatch) {
+      hosts.add(source.url.startsWith("page:") ? "page" : safeHost(source.url));
+      if (set.reportedTotal !== null) reportedTotal = Math.max(reportedTotal ?? 0, set.reportedTotal);
+    }
+  }
+  return { reviews: kept, reportedTotal, sources: [...hosts] };
+}
+function pathOf(url) {
+  try {
+    const u = new URL(url);
+    return u.origin + u.pathname;
+  } catch {
+    return url;
+  }
+}
+function safeHost(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+// webscraper/render/jsonCapture.ts
+function embeddedWidgetHtml(body) {
+  const value = parseJsonBody(body);
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const widget = value.widget;
+  return typeof widget === "string" && /class="stamped-review[ "]/.test(widget) ? widget : null;
+}
+var TABLE_MARKUP = /(?:<|\\u003c)table\b/i;
+var SIZE_CHART_WORDS = /size[-_ ]?(?:chart|guide)|sizing[-_ ]?(?:chart|guide)/i;
+var MAX_CHART_BODIES = 4;
+function htmlWithTables(value, found = [], depth = 0) {
+  if (depth > 12 || value === null) return found;
+  if (typeof value === "string") {
+    if (/<table\b/i.test(value)) found.push(value);
+  } else if (Array.isArray(value)) {
+    for (const item of value) htmlWithTables(item, found, depth + 1);
+  } else if (typeof value === "object") {
+    for (const item of Object.values(value)) htmlWithTables(item, found, depth + 1);
+  }
+  return found;
+}
+var RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating|rate)"\s*:/;
+var JSONP = /^[\w$.]+\(\s*([\s\S]*?)\s*\)\s*;?\s*$/;
+var JsonCapture = class {
+  constructor() {
+    this.items = [];
+    this.bytes = 0;
+    this.pending = /* @__PURE__ */ new Set();
+    /** Rough count of rating fields seen, used to stop paging once enough reviews loaded. */
+    this.ratingFields = 0;
+    this.chartBodies = [];
+    this.counted = /* @__PURE__ */ new Set();
+    this.countedItems = 0;
+    this.statedTotal = null;
+    this.statedTotalFrom = 0;
+  }
+  offer(url, status, contentType, read) {
+    if (status < 200 || status >= 300) return;
+    const isJson = /json/i.test(contentType);
+    const maybeJsonp = /javascript|text\/plain/i.test(contentType) && /review|rating|ugc|bazaarvoice|batch/i.test(url);
+    if (!isJson && !maybeJsonp) return;
+    const job = read().then((raw) => this.add(url, raw)).catch(() => {
+    }).finally(() => this.pending.delete(job));
+    this.pending.add(job);
+  }
+  add(url, raw) {
+    if (raw.length > MAX_CAPTURED_BODY_BYTES || this.bytes + raw.length > MAX_CAPTURED_TOTAL_BYTES) return;
+    let body = raw.trim();
+    const wrapped = body[0] !== "{" && body[0] !== "[" ? JSONP.exec(body) : null;
+    if (wrapped) body = wrapped[1];
+    if (body[0] !== "{" && body[0] !== "[") return;
+    if (this.chartBodies.length < MAX_CHART_BODIES && TABLE_MARKUP.test(body) && (SIZE_CHART_WORDS.test(url) || SIZE_CHART_WORDS.test(body))) {
+      this.chartBodies.push(body);
+      this.bytes += body.length;
+    }
+    if (!RATING_FIELD.test(body)) return;
+    this.items.push({ url, body });
+    this.bytes += body.length;
+    this.ratingFields += (body.match(new RegExp(RATING_FIELD.source, "g")) ?? []).length;
+  }
+  /**
+   * The HTML tables found in the size-chart JSON the page received, one fragment each. Where such a table
+   * gives only body measurements the chart parser reads nothing from it, so the dimension stays null.
+   */
+  chartPages() {
+    const pages = this.chartBodies.flatMap((body) => htmlWithTables(parseJsonBody(body)));
+    return [...new Set(pages)].map((html3) => `<div>${html3}</div>`);
+  }
+  /** Distinct reviews in the JSON kept so far (by id, else by the start of the text). */
+  reviewCount() {
+    for (; this.countedItems < this.items.length; this.countedItems++) {
+      const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
+      for (const r of set.reviews) this.counted.add(reviewIdentity(r));
+      const widget = embeddedWidgetHtml(this.items[this.countedItems].body);
+      if (widget) for (const m of widget.matchAll(/data-review-id="(\d+)"/g)) this.counted.add(`html:${m[1]}`);
+      if (set.reportedTotal !== null && set.reviews.length >= this.statedTotalFrom) {
+        this.statedTotal = set.reportedTotal;
+        this.statedTotalFrom = set.reviews.length;
+      }
+    }
+    return this.counted.size;
+  }
+  /** The largest product review total the kept JSON states, or null. */
+  reportedTotal() {
+    this.reviewCount();
+    return this.statedTotal;
+  }
+  async settle(timeoutMs = 3e3) {
+    await Promise.race([Promise.all([...this.pending]), new Promise((r) => setTimeout(r, timeoutMs))]);
+  }
+};
+
+// webscraper/render/decisions.ts
+function shouldUseHeadlessRender(input) {
+  if (!input.isRemoteUrl || input.renderMode === "never" || input.staticFailed) return false;
+  if (input.renderMode === "always") return true;
+  if (input.reviewCount === null || input.reviewCount === 0) return true;
+  if (typeof input.reportedReviewCount === "number" && input.reviewCount >= input.reportedReviewCount) return false;
+  return true;
+}
+function linkStaysOnProduct(href, pageUrl) {
+  if (!href || /^(#|javascript:)/i.test(href.trim())) return true;
+  try {
+    const page = new URL(pageUrl);
+    const target = new URL(href, page);
+    if (target.origin !== page.origin) return false;
+    const base = page.pathname.replace(/\/$/, "");
+    const path4 = target.pathname.replace(/\/$/, "");
+    return path4 === base || path4.startsWith(base + "/");
+  } catch {
+    return false;
+  }
+}
+function navigationTimedOutAfterLoading(err, currentUrl) {
+  return err instanceof Error && /Timeout \d+ms exceeded/.test(err.message) && /^https?:/i.test(currentUrl);
+}
+function isReviewWidgetFrame(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname === "loox.io" && u.pathname.startsWith("/widget/");
+  } catch {
+    return false;
+  }
+}
+
+// webscraper/publicUrl.ts
+var import_promises = require("node:dns/promises");
+var import_node_net = require("node:net");
+function isBlockedHostname(hostname) {
+  let host = hostname.trim().toLowerCase().replace(/\.$/, "");
+  if (host.startsWith("[") && host.endsWith("]")) host = host.slice(1, -1);
+  if (!host) return true;
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal") || host === "metadata.google.internal") {
+    return true;
+  }
+  const mapped = host.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (mapped) return isBlockedIPv4(mapped[1]);
+  if (host.includes(":")) return isBlockedIPv6(host);
+  if (/^\d+$/.test(host)) return true;
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return isBlockedIPv4(host);
+  return false;
+}
+function isBlockedIPv4(host) {
+  const parts = host.split(".").map((part) => Number(part));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return true;
+  }
+  const [a, b] = parts;
+  if (a === 0 || a === 10 || a === 127) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a === 198 && (b === 18 || b === 19)) return true;
+  if (a === 192 && b === 0 && parts[2] === 0) return true;
+  if (a >= 224) return true;
+  return false;
+}
+function embeddedIPv4(high, low) {
+  const hi = parseInt(high, 16);
+  const lo = parseInt(low, 16);
+  return [hi >> 8, hi & 255, lo >> 8, lo & 255].join(".");
+}
+function isBlockedIPv6(host) {
+  const bare = host.split("%")[0];
+  if (bare === "::" || bare === "::1") return true;
+  if (/^fe[89abcdef]/.test(bare) || bare.startsWith("fc") || bare.startsWith("fd")) return true;
+  const sixToFour = bare.match(/^2002:([0-9a-f]{1,4}):([0-9a-f]{1,4})(?::|$)/);
+  if (sixToFour) return isBlockedIPv4(embeddedIPv4(sixToFour[1], sixToFour[2]));
+  const embedded = bare.match(/^(?:::(?:ffff:)?|64:ff9b::)(?:(\d{1,3}(?:\.\d{1,3}){3})|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
+  if (embedded) return isBlockedIPv4(embedded[1] ?? embeddedIPv4(embedded[2], embedded[3]));
+  return false;
+}
+function blockedFetchTarget(raw) {
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    return "That is not a valid http(s) URL.";
+  }
+  if (url.username || url.password) {
+    return "The scraper does not fetch URLs that embed credentials.";
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return "Only http and https product URLs can be scraped.";
+  }
+  if (isBlockedHostname(url.hostname)) {
+    return `${url.hostname} is not a public address. The scraper only fetches public product pages.`;
+  }
+  return null;
+}
+async function blockedFetchTargetResolved(raw) {
+  const literal = blockedFetchTarget(raw);
+  if (literal) return literal;
+  const hostname = new URL(raw).hostname;
+  if ((0, import_node_net.isIP)(hostname)) return null;
+  try {
+    const records = await (0, import_promises.lookup)(hostname, { all: true });
+    for (const record of records) {
+      if (isBlockedHostname(record.address)) {
+        return `${hostname} resolves to a non-public address. The scraper only fetches public product pages.`;
+      }
+    }
+  } catch {
+  }
+  return null;
+}
+function createRequestHostGuard(resolve = (hostname) => (0, import_promises.lookup)(hostname, { all: true })) {
+  const cache = /* @__PURE__ */ new Map();
+  return (rawUrl) => {
+    let hostname;
+    try {
+      hostname = new URL(rawUrl).hostname;
+    } catch {
+      return Promise.resolve(false);
+    }
+    if (/^(?:data|blob|about):/i.test(rawUrl)) return Promise.resolve(false);
+    let verdict = cache.get(hostname);
+    if (!verdict) {
+      verdict = (async () => {
+        if (isBlockedHostname(hostname)) return true;
+        const bare = hostname.replace(/^\[|\]$/g, "");
+        if ((0, import_node_net.isIP)(bare)) return false;
+        try {
+          const records = await resolve(hostname);
+          return records.some((record) => isBlockedHostname(record.address));
+        } catch {
+          return false;
+        }
+      })();
+      cache.set(hostname, verdict);
+    }
+    return verdict;
+  };
+}
+
+// webscraper/render/browser.ts
+var browserPromise = null;
+var renderTail = Promise.resolve();
+var SERVERLESS_CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar";
+function startUrlAllowsPrivate(raw) {
+  try {
+    return isBlockedHostname(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
+}
+function renderBudgetMs() {
+  return process.env.VERCEL ? 5e4 : RENDER_DEADLINE_MS;
+}
+async function getBrowser() {
+  if (!browserPromise) {
+    browserPromise = (process.env.VERCEL ? launchServerlessBrowser() : launchPlaywrightBrowser()).catch((err) => {
+      browserPromise = null;
+      throw err;
+    });
+  }
+  return browserPromise;
+}
+async function launchPlaywrightBrowser() {
+  const { chromium } = await import("playwright");
+  return chromium.launch({
+    headless: true,
+    args: ["--no-sandbox"]
+  });
+}
+async function launchServerlessBrowser() {
+  const chromiumMod = await import("@sparticuz/chromium-min");
+  const puppeteerMod = await import("puppeteer-core");
+  const chromium = chromiumMod.default ?? chromiumMod;
+  const puppeteer = puppeteerMod.default ?? puppeteerMod;
+  chromium.setGraphicsMode = false;
+  return puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(SERVERLESS_CHROMIUM_PACK),
+    headless: true,
+    defaultViewport: { width: 1366, height: 900 }
+  });
+}
+async function closeHeadlessBrowser() {
+  if (!browserPromise) return;
+  const pending = browserPromise;
+  browserPromise = null;
+  try {
+    await (await pending).close();
+  } catch {
+  }
+}
+function queueRender(job) {
+  const run = renderTail.then(job);
+  renderTail = run.then(
+    () => {
+    },
+    () => {
+    }
+  );
+  return run;
+}
+
+// webscraper/pageHelpers.ts
+var import_node_crypto = require("node:crypto");
 
 // webscraper/node_modules/cheerio/dist/esm/options.js
 var defaultOpts = {
@@ -73060,7 +74854,7 @@ __export(static_exports, {
   merge: () => merge,
   parseHTML: () => parseHTML,
   root: () => root,
-  text: () => text,
+  text: () => text2,
   xml: () => xml
 });
 
@@ -74848,7 +76642,7 @@ function xml(dom) {
   const options = { ...this._options, xmlMode: true };
   return render2(this, dom, options);
 }
-function text(elements) {
+function text2(elements) {
   const elems = elements !== null && elements !== void 0 ? elements : this ? this.root() : [];
   let ret = "";
   for (let i = 0; i < elems.length; i++) {
@@ -76610,7 +78404,7 @@ function getAttr(elem, name, xmlMode) {
     return !xmlMode && rboolean.test(name) ? name : elem.attribs[name];
   }
   if (elem.name === "option" && name === "value") {
-    return text(elem.children);
+    return text2(elem.children);
   }
   if (elem.name === "input" && (elem.attribs["type"] === "radio" || elem.attribs["type"] === "checkbox") && name === "value") {
     return "on";
@@ -76839,7 +78633,7 @@ function val(value) {
         }
         return this;
       }
-      return this.attr("multiple") ? option.toArray().map((el) => text(el.children)) : option.attr("value");
+      return this.attr("multiple") ? option.toArray().map((el) => text2(el.children)) : option.attr("value");
     }
     case "button":
     case "input":
@@ -76994,7 +78788,7 @@ __export(traversing_exports, {
   filter: () => filter3,
   filterArray: () => filterArray,
   find: () => find3,
-  first: () => first,
+  first: () => first2,
   get: () => get,
   has: () => has,
   index: () => index,
@@ -78404,7 +80198,7 @@ function has(selectorOrHaystack) {
     `:has(${selectorOrHaystack})`
   ) : (_, el) => this._make(el).find(selectorOrHaystack).length > 0);
 }
-function first() {
+function first2() {
   return this.length > 1 ? this._make(this[0]) : this;
 }
 function last() {
@@ -78476,7 +80270,7 @@ __export(manipulation_exports, {
   prependTo: () => prependTo,
   remove: () => remove,
   replaceWith: () => replaceWith,
-  text: () => text2,
+  text: () => text3,
   toString: () => toString,
   unwrap: () => unwrap,
   wrap: () => wrap,
@@ -78820,12 +80614,12 @@ function html2(str2) {
 function toString() {
   return this._render(this);
 }
-function text2(str2) {
+function text3(str2) {
   if (str2 === void 0) {
-    return text(this);
+    return text2(this);
   }
   if (typeof str2 === "function") {
-    return domEach(this, (el, i) => this._make(el).text(str2.call(el, i, text([el]))));
+    return domEach(this, (el, i) => this._make(el).text(str2.call(el, i, text2([el]))));
   }
   return domEach(this, (el) => {
     if (!hasChildren(el))
@@ -87468,2563 +89262,6 @@ var STRINGS = {
 var undici = __toESM(require_undici(), 1);
 var import_whatwg_mimetype = __toESM(require_mime_type(), 1);
 
-// webscraper/server.ts
-var import_better_sqlite3 = __toESM(require("better-sqlite3"), 1);
-var import_dotenv = __toESM(require_main(), 1);
-
-// webscraper/fitAnalyzer.ts
-var GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
-var REVIEW_SIZE_TOKEN = "XXXL|3XL|XXL|2XL|XXS|X-LARGE|X-SMALL|EXTRA LARGE|EXTRA SMALL|XLARGE|XSMALL|SMALL|MEDIUM|LARGE|XL|XS|S|M|L|\\d{1,2}";
-var ANATOMICAL_ZONES = [
-  "shoulders",
-  "chest",
-  "waist",
-  "hips",
-  "length",
-  "sleeves"
-];
-var ZONE_LABELS = {
-  shoulders: "Shoulders & Drop Seam",
-  chest: "Chest & Bust",
-  waist: "Waist & Midsection",
-  hips: "Hips & Seat",
-  length: "Torso & Hem Length",
-  sleeves: "Sleeve & Armhole"
-};
-function normalizeSizeOrNull(rawSize) {
-  const cleaned = (rawSize || "").trim().toUpperCase();
-  if (!cleaned) return null;
-  if (cleaned === "XS" || cleaned === "EXTRA SMALL" || cleaned === "X-SMALL" || cleaned === "XXS") {
-    return "XS";
-  }
-  if (cleaned === "S" || cleaned === "SM" || cleaned === "SMALL") {
-    return "S";
-  }
-  if (cleaned === "M" || cleaned === "MED" || cleaned === "MEDIUM" || cleaned === "M/L") {
-    return "M";
-  }
-  if (cleaned === "L" || cleaned === "LG" || cleaned === "LARGE") {
-    return "L";
-  }
-  if (cleaned === "XL" || cleaned === "X-LARGE" || cleaned === "EXTRA LARGE" || cleaned === "1XL") {
-    return "XL";
-  }
-  if (cleaned === "XXL" || cleaned === "2XL" || cleaned === "XX-LARGE" || cleaned === "3XL" || cleaned === "XXXL") {
-    return "XXL";
-  }
-  const numericMatch = cleaned.match(/\b(\d{1,2})\b/);
-  if (numericMatch) {
-    const num2 = parseInt(numericMatch[1], 10);
-    if (num2 <= 2 || num2 >= 24 && num2 <= 27) return "XS";
-    if (num2 >= 4 && num2 <= 6 || num2 >= 28 && num2 <= 29) return "S";
-    if (num2 >= 8 && num2 <= 10 || num2 >= 30 && num2 <= 32) return "M";
-    if (num2 >= 12 && num2 <= 14 || num2 >= 33 && num2 <= 34) return "L";
-    if (num2 === 16 || num2 >= 35 && num2 <= 37) return "XL";
-    if (num2 >= 18 || num2 >= 38) return "XXL";
-  }
-  if (cleaned.startsWith("XS")) return "XS";
-  if (cleaned.startsWith("XXL") || cleaned.startsWith("2X")) return "XXL";
-  if (cleaned.startsWith("XL")) return "XL";
-  if (cleaned.startsWith("S")) return "S";
-  if (cleaned.startsWith("L")) return "L";
-  if (cleaned.startsWith("M")) return "M";
-  return null;
-}
-var SMALL_CUES = [
-  { pattern: /\bruns?\s+(very\s+|super\s+|extremely\s+|way\s+)?small\b/i, label: "runs small", weight: -0.85 },
-  { pattern: /\b(too|very|super|way\s+too|uncomfortably)\s+(tight|snug|narrow|constricting|restrictive)\b/i, label: "too tight", weight: -0.75 },
-  { pattern: /\bsize\s+up\b|\bsizing\s+up\b|\border(ed)?\s+a\s+size\s+(larger|up)\b/i, label: "size up recommended", weight: -0.65 },
-  { pattern: /\bshrunk\b|\bshrank\b|\bshrinks?\b|\bshrinkage\b/i, label: "shrinks after wash", weight: -0.45 },
-  { pattern: /\bcouldn'?t\s+(button|zip|get\s+it\s+over)\b|\bpulls?\s+at\s+the\s+(buttons|chest|hips|bust)\b/i, label: "pulls / cannot fasten", weight: -0.8 },
-  { pattern: /\b(short\s+in\s+the\s+(torso|sleeves|arms|inseam|length)|cropped\s+shorter\s+than)\b/i, label: "short proportions", weight: -0.5 },
-  { pattern: /\btight\s+(across|in|around|through)\s+the\s+(shoulders|chest|bust|waist|hips|thighs|arms|cuffs|neck)\b/i, label: "tight fit zone", weight: -0.7 },
-  { pattern: /\bsnug\s+(across|in|around|fit)\b/i, label: "snug fit", weight: -0.45 },
-  { pattern: /\bsmaller\s+than\s+(expected|usual|normal|standard)\b/i, label: "smaller than expected", weight: -0.7 }
-];
-var LARGE_CUES = [
-  { pattern: /\bruns?\s+(very\s+|super\s+|extremely\s+|way\s+)?(large|big|huge)\b/i, label: "runs large", weight: 0.85 },
-  { pattern: /\b(swimming\s+in\s+it|drowning\s+in\s+it|like\s+a\s+tent|sack)\b/i, label: "swimming in garment", weight: 0.9 },
-  { pattern: /\bsize\s+down\b|\bsizing\s+down\b|\border(ed)?\s+a\s+size\s+(smaller|down)\b/i, label: "size down recommended", weight: 0.65 },
-  { pattern: /\b(way\s+too|very|overly|super)\s+(baggy|boxy|loose|wide|long|oversized|roomy)\b/i, label: "excessively baggy/boxy", weight: 0.75 },
-  { pattern: /\bbigger\s+than\s+(expected|usual|normal)\b/i, label: "larger than expected", weight: 0.7 },
-  { pattern: /\b(gaps?|gaping)\s+at\s+the\s+(waist|back|collar|chest)\b/i, label: "waist/collar gaping", weight: 0.55 },
-  { pattern: /\bgenerous\s+(fit|sizing|cut)|relaxed\s+(oversized\s+|boxy\s+|drop-shoulder\s+)?(drape|fit|cut|silhouette)\b/i, label: "relaxed generous cut", weight: 0.55 },
-  { pattern: /\bloose\s+(in|around|through|at)\s+the\s+(waist|hips|shoulders|chest|hem|sleeves)\b/i, label: "loose fit zone", weight: 0.6 },
-  { pattern: /\bdropped\s+shoulders?\s+(are\s+)?(roomy|wide|relaxed|generous)\b/i, label: "roomy drop shoulders", weight: 0.5 }
-];
-var TRUE_TO_SIZE_CUES = [
-  { pattern: /\btrue\s+to\s+size\b|\btts\b/i, label: "true to size", weight: 0 },
-  { pattern: /\bfits?\s+(just\s+right|perfectly|spot\s+on|like\s+a\s+glove|as\s+expected|great)\b/i, label: "fits as expected", weight: 0 },
-  { pattern: /\bexact(ly)?\s+my\s+usual\s+size\b|\bstandard\s+sizing\b|\bbuy\s+your\s+normal\s+size\b/i, label: "matches usual size", weight: 0 },
-  { pattern: /\bperfect\s+(tailored\s+|relaxed\s+|boxy\s+)?fit\b/i, label: "perfect fit", weight: 0 }
-];
-var SHRINKAGE_REGEX = /\b(shrunk|shrank|shrinks?|shrinkage|shortened\s+in\s+the\s+wash)\b/i;
-var OPAQUE_HEAVY_REGEX = /\b(not\s+see[- ]?through|non[- ]?see[- ]?through|zero\s+transparency|opaque|thick\s+(cotton|jersey|fabric|weight|collar)|heavyweight|220\s*gsm|240\s*gsm|260\s*gsm|280\s*gsm|substantial\s+(cotton|weight|feel)|sturdy\s+cotton)\b/i;
-var SHEER_THIN_REGEX = /\b(see[- ]?through|sheer|paper[- ]?thin|flimsy|transparent)\b/i;
-var POSITIVE_SENTIMENT_WORDS = /\b(love|excellent|flattering|comfortable|high-quality|stunning|perfect|soft|durable|favorite|worth\s+every\s+penny|great\s+drape|impeccable|breathable|compliments|substantial|opaque|sturdy)\b/gi;
-var NEGATIVE_SENTIMENT_WORDS = /\b(disappointed|returning|returned|uncomfortable|unwearable|awkward|cheap|scratchy|stiff|poorly|waste|regret|frustrating|unflattering|misleading|warped)\b/gi;
-var ZONE_PATTERNS = {
-  shoulders: /\b(shoulders?|yoke|upper\s+back|scapula|drop[- ]?shoulder)\b/i,
-  chest: /\b(chest|bust|ribcage|pec|across\s+the\s+front)\b/i,
-  waist: /\b(waist|waistband|midsection|stomach|belly|tummy)\b/i,
-  hips: /\b(hips?|seat|glutes|thighs?|crotch|rise)\b/i,
-  length: /\b(length|torso|hem|cropped|inseam|tall|short\s+body|long\s+body)\b/i,
-  sleeves: /\b(sleeves?|arms?|armholes?|cuffs?|wrists?|biceps?|forearms?|elbow)\b/i
-};
-function classifyReviewFitAndSentiment(text4, rating = 4, declaredFitTag) {
-  const fullText = (text4 || "").trim();
-  const extractedPhrases = [];
-  let rawSkewSum = 0;
-  let cueCount = 0;
-  let ttsHits = 0;
-  if (declaredFitTag) {
-    const tagLower = declaredFitTag.toLowerCase();
-    const mild = /\b(slightly|a bit|a little|somewhat)\b/.test(tagLower);
-    if (mild && /small|tight/.test(tagLower)) {
-      rawSkewSum -= 0.45;
-      cueCount += 1;
-    } else if (mild && /large|big|loose/.test(tagLower)) {
-      rawSkewSum += 0.45;
-      cueCount += 1;
-    } else if (tagLower.includes("slightly small")) {
-      rawSkewSum -= 0.45;
-      cueCount += 1;
-    } else if (tagLower.includes("small") || tagLower.includes("tight")) {
-      rawSkewSum -= 0.75;
-      cueCount += 1;
-    } else if (tagLower.includes("slightly large")) {
-      rawSkewSum += 0.45;
-      cueCount += 1;
-    } else if (tagLower.includes("large") || tagLower.includes("big") || tagLower.includes("loose")) {
-      rawSkewSum += 0.75;
-      cueCount += 1;
-    } else if (tagLower.includes("true") || tagLower.includes("just right")) {
-      ttsHits += 1;
-      cueCount += 1;
-    }
-  }
-  for (const cue of SMALL_CUES) {
-    if (cue.pattern.test(fullText)) {
-      rawSkewSum += cue.weight;
-      cueCount += 1;
-      if (!extractedPhrases.includes(cue.label)) {
-        extractedPhrases.push(cue.label);
-      }
-    }
-  }
-  for (const cue of LARGE_CUES) {
-    if (cue.pattern.test(fullText)) {
-      rawSkewSum += cue.weight;
-      cueCount += 1;
-      if (!extractedPhrases.includes(cue.label)) {
-        extractedPhrases.push(cue.label);
-      }
-    }
-  }
-  for (const cue of TRUE_TO_SIZE_CUES) {
-    if (cue.pattern.test(fullText)) {
-      ttsHits += 1;
-      cueCount += 1;
-      if (!extractedPhrases.includes(cue.label)) {
-        extractedPhrases.push(cue.label);
-      }
-    }
-  }
-  const mentionsShrinkage = SHRINKAGE_REGEX.test(fullText);
-  let mentionsFabricOpacity = null;
-  if (OPAQUE_HEAVY_REGEX.test(fullText)) {
-    mentionsFabricOpacity = "thick_opaque";
-    if (!extractedPhrases.includes("opaque heavyweight cotton")) {
-      extractedPhrases.push("opaque heavyweight cotton");
-    }
-  } else if (SHEER_THIN_REGEX.test(fullText)) {
-    mentionsFabricOpacity = "thin_sheer";
-    if (!extractedPhrases.includes("thin/sheer fabric")) {
-      extractedPhrases.push("thin/sheer fabric");
-    }
-  }
-  const sentences = fullText.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
-  const anatomicalMentions = [];
-  for (const zone of ANATOMICAL_ZONES) {
-    const zoneRegex = ZONE_PATTERNS[zone];
-    const matchingSentences = sentences.filter((s) => zoneRegex.test(s));
-    if (matchingSentences.length > 0) {
-      const joined = matchingSentences.join(" ");
-      const isTight = /\b(tight|snug|narrow|short|small|pinch|pull|constrict|restrict|cramps?|squeeze|shrunk|shrank)\b/i.test(
-        joined
-      );
-      const isLoose = /\b(loose|baggy|wide|long|large|big|roomy|boxy|gap|excess|swimming|relaxed|generous)\b/i.test(
-        joined
-      );
-      let tension = "optimal";
-      if (isTight && !isLoose) {
-        tension = "tight";
-        if (cueCount === 0) {
-          rawSkewSum -= 0.55;
-          cueCount += 1;
-        }
-      } else if (isLoose && !isTight) {
-        tension = "loose";
-        if (cueCount === 0) {
-          rawSkewSum += 0.55;
-          cueCount += 1;
-        }
-      }
-      anatomicalMentions.push({
-        zone,
-        tension,
-        snippet: matchingSentences[0].slice(0, 140)
-      });
-    }
-  }
-  let fitSkew = 0;
-  if (cueCount > 0) {
-    fitSkew = Math.max(
-      -1,
-      Math.min(1, Number((rawSkewSum / Math.max(1, cueCount * 0.85)).toFixed(2)))
-    );
-    if (ttsHits > 0 && Math.abs(fitSkew) < 0.35) {
-      fitSkew = Number((fitSkew * 0.4).toFixed(2));
-    }
-  }
-  let fitDirection = "true_to_size";
-  if (fitSkew <= -0.25) {
-    fitDirection = "runs_small";
-  } else if (fitSkew >= 0.25) {
-    fitDirection = "runs_large";
-  }
-  if (extractedPhrases.length === 0) {
-    if (fitDirection === "runs_small") extractedPhrases.push("snug proportions");
-    else if (fitDirection === "runs_large") extractedPhrases.push("relaxed proportions");
-    else extractedPhrases.push("true to size");
-  }
-  let sizedUpOrDownMention = null;
-  if (/\b(sized?\s+up|went\s+up\s+a\s+size|ordered\s+a\s+size\s+up)\b/i.test(fullText)) {
-    sizedUpOrDownMention = "sized_up";
-  } else if (/\b(sized?\s+down|went\s+down\s+a\s+size|ordered\s+a\s+size\s+down)\b/i.test(fullText)) {
-    sizedUpOrDownMention = "sized_down";
-  } else if (/\b(usual\s+size|normal\s+size|true\s+to\s+size)\b/i.test(fullText)) {
-    sizedUpOrDownMention = "kept_usual";
-  }
-  const clampedRating = Math.max(1, Math.min(5, rating || 4));
-  const ratingBase = (clampedRating - 1) / 4 * 76 + 12;
-  const posMatches = (fullText.match(POSITIVE_SENTIMENT_WORDS) || []).length;
-  const negMatches = (fullText.match(NEGATIVE_SENTIMENT_WORDS) || []).length;
-  const sentimentScore = Math.round(
-    Math.max(5, Math.min(99, ratingBase + posMatches * 5 - negMatches * 9))
-  );
-  const sentimentPolarity = sentimentScore >= 68 ? "positive" : sentimentScore >= 45 ? "mixed" : "negative";
-  return {
-    fitDirection,
-    fitSkew,
-    sentimentScore,
-    sentimentPolarity,
-    extractedPhrases: extractedPhrases.slice(0, 4),
-    anatomicalMentions,
-    sizedUpOrDownMention,
-    mentionsShrinkage,
-    mentionsFabricOpacity
-  };
-}
-function skewToVerdict(fitSkew, count) {
-  if (count === 0) return "Insufficient Data";
-  if (fitSkew <= -0.42) return "Runs Small";
-  if (fitSkew <= -0.18) return "Slightly Small";
-  if (fitSkew >= 0.42) return "Runs Large";
-  if (fitSkew >= 0.18) return "Slightly Large";
-  return "True to Size";
-}
-function formatSigned(n, digits = 2) {
-  const text4 = n.toFixed(digits);
-  return n > 0 ? `+${text4}` : text4;
-}
-function parseRawReviewBatch(rawInput) {
-  const trimmed = (rawInput || "").trim();
-  if (!trimmed) return [];
-  const results = [];
-  const htmlBlockRegex = /<(?:article|div|li)[^>]*class=["'][^"']*review[^"']*["'][^>]*>([\s\S]*?)<\/(?:article|div|li)>/gi;
-  let match;
-  let index2 = 0;
-  while ((match = htmlBlockRegex.exec(trimmed)) !== null) {
-    const fullTag = match[0];
-    const innerHtml = match[1];
-    index2 += 1;
-    const attrSize = fullTag.match(/data-size=["']([^"']+)["']/i)?.[1] || innerHtml.match(/Size(?:\s+Purchased)?:\s*<[^>]+>([^<]+)</i)?.[1] || innerHtml.match(/Size(?:\s+Purchased)?:\s*([A-Za-z0-9-]+)/i)?.[1] || "";
-    const attrRating = fullTag.match(/data-rating=["'](\d(?:\.\d)?)["']/i)?.[1] || innerHtml.match(/(\d(?:\.\d)?)\s*\/\s*5/i)?.[1] || "";
-    const attrFit = fullTag.match(/data-fit=["']([^"']+)["']/i)?.[1] || innerHtml.match(/Fit:\s*([^<\n]+)/i)?.[1];
-    const author = fullTag.match(/data-author=["']([^"']+)["']/i)?.[1] || innerHtml.match(/class=["'][^"']*author[^"']*["'][^>]*>([^<]+)</i)?.[1] || `Verified Buyer #${index2}`;
-    const title = innerHtml.match(/<h[345][^>]*>([^<]+)<\/h[345]>/i)?.[1] || innerHtml.match(/class=["'][^"']*title[^"']*["'][^>]*>([^<]+)</i)?.[1] || "Customer Fit Review";
-    const bodyText = innerHtml.replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    if (bodyText.length > 8) {
-      results.push({
-        id: `scraped-html-${index2}`,
-        author: author.trim(),
-        sizePurchased: attrSize.trim(),
-        rating: Math.min(5, Math.max(1, Math.round(parseFloat(attrRating) || 3))),
-        title: title.trim(),
-        body: bodyText,
-        date: "",
-        verifiedPurchase: false,
-        declaredFitTag: attrFit?.trim()
-      });
-    }
-  }
-  if (results.length > 0) {
-    return results;
-  }
-  const blocks = trimmed.split(/\n\s*\n+|\n(?=\[?Size\s*:|\bSize\s+(?:XS|S|M|L|XL|XXL)\b)/i).map((b) => b.trim()).filter((b) => b.length > 10);
-  blocks.forEach((block, idx) => {
-    const sizeMatch = block.match(
-      new RegExp(`\\bSize(?:\\s+Purchased|\\s+Ordered)?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`, "i")
-    ) || block.match(new RegExp(`\\[\\s*(${REVIEW_SIZE_TOKEN})\\s*\\]`, "i")) || block.match(
-      new RegExp(`\\b(?:bought|ordered|wearing|got)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`, "i")
-    );
-    const ratingMatch = block.match(/\bRating\s*[:=-]\s*(\d(?:\.\d)?)/i) || block.match(/\b(\d)\s*\/\s*5\s*stars?\b/i) || block.match(/★{1,5}/);
-    let rating = 3;
-    if (ratingMatch) {
-      if (ratingMatch[0].includes("\u2605")) {
-        rating = ratingMatch[0].length;
-      } else if (ratingMatch[1]) {
-        rating = Math.min(5, Math.max(1, Math.round(parseFloat(ratingMatch[1]))));
-      }
-    }
-    const cleanBody = block.replace(/^\[.*?\]\s*/, "").replace(/\s+/g, " ").trim();
-    results.push({
-      id: `parsed-review-${idx + 1}`,
-      author: `Reviewer #${idx + 1}`,
-      sizePurchased: sizeMatch ? sizeMatch[1] : "",
-      rating,
-      title: cleanBody.slice(0, 48) + (cleanBody.length > 48 ? "..." : ""),
-      body: cleanBody,
-      date: "",
-      verifiedPurchase: false
-    });
-  });
-  return results;
-}
-function roundedShares(left, middle, right) {
-  const total = left + middle + right;
-  if (total <= 0) return [0, 0, 0];
-  let leftPct = Math.round(left / total * 100);
-  let rightPct = Math.round(right / total * 100);
-  let middlePct = 100 - leftPct - rightPct;
-  if (middlePct < 0) {
-    const excess = -middlePct;
-    if (leftPct >= rightPct) leftPct -= excess;
-    else rightPct -= excess;
-    middlePct = 0;
-  }
-  return [leftPct, middlePct, rightPct];
-}
-function aggregateProductFitReport(meta, rawReviews) {
-  const analyzedReviews = rawReviews.map((r) => {
-    const normalizedSize = normalizeSizeOrNull(r.sizePurchased);
-    const classification = classifyReviewFitAndSentiment(r.body, r.rating, r.declaredFitTag);
-    return {
-      ...r,
-      normalizedSize,
-      ...classification
-    };
-  });
-  const totalReviews = analyzedReviews.length;
-  const runsSmallCount = analyzedReviews.filter((r) => r.fitDirection === "runs_small").length;
-  const trueToSizeCount = analyzedReviews.filter((r) => r.fitDirection === "true_to_size").length;
-  const runsLargeCount = analyzedReviews.filter((r) => r.fitDirection === "runs_large").length;
-  const overallShares = roundedShares(runsSmallCount, trueToSizeCount, runsLargeCount);
-  const runsSmallPct = overallShares[0];
-  const trueToSizePct = overallShares[1];
-  const runsLargePct = overallShares[2];
-  const overallFitIndex = totalReviews > 0 ? Number(
-    (analyzedReviews.reduce((acc, r) => acc + r.fitSkew, 0) / totalReviews).toFixed(2)
-  ) : 0;
-  const overallVerdict = skewToVerdict(overallFitIndex, totalReviews);
-  const overallSentimentScore = totalReviews > 0 ? Math.round(analyzedReviews.reduce((acc, r) => acc + r.sentimentScore, 0) / totalReviews) : 0;
-  const overallAvgRating = totalReviews > 0 ? Number(
-    (analyzedReviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1)
-  ) : 0;
-  const shrinkageReviewCount = analyzedReviews.filter((r) => r.mentionsShrinkage).length;
-  const overallShrinkagePct = totalReviews > 0 ? Math.round(shrinkageReviewCount / totalReviews * 100) : 0;
-  const opaqueReviewCount = analyzedReviews.filter(
-    (r) => r.mentionsFabricOpacity === "thick_opaque"
-  ).length;
-  const sheerReviewCount = analyzedReviews.filter(
-    (r) => r.mentionsFabricOpacity === "thin_sheer"
-  ).length;
-  const opacityTotalMentions = opaqueReviewCount + sheerReviewCount;
-  const fabricOpacityPct = opacityTotalMentions > 0 ? Math.round(opaqueReviewCount / opacityTotalMentions * 100) : null;
-  const gsmMatch = meta.fabricComposition.match(/(\d{3}\s*gsm|\d{1,2}(?:\.\d)?\s*oz)/i);
-  const gsmSpec = gsmMatch ? gsmMatch[1].toUpperCase() : null;
-  const washCareAdvisory = overallShrinkagePct >= 25 ? `${overallShrinkagePct}% of reviewers mention shrinkage. Cold wash and hang dry.` : overallShrinkagePct > 0 ? `${overallShrinkagePct}% of reviews mention shrinkage.` : "No reviewer mentioned shrinkage.";
-  const fabricWeightConsensus = fabricOpacityPct !== null && opaqueReviewCount >= sheerReviewCount && opaqueReviewCount > 0 ? `${fabricOpacityPct}% of fabric mentions describe it as opaque${gsmSpec ? ` (${gsmSpec})` : ""}.` : sheerReviewCount > opaqueReviewCount ? "Reviewers describe the fabric as lightweight or sheer." : gsmSpec ? `The page states ${gsmSpec}. Reviews do not mention opacity.` : "Reviews do not mention fabric weight or opacity.";
-  const sizeSummaries = GARMENT_SIZES.map((size) => {
-    const group = analyzedReviews.filter((r) => r.normalizedSize === size);
-    const count = group.length;
-    if (count === 0) {
-      return {
-        size,
-        reviewCount: 0,
-        runsSmallCount: 0,
-        trueToSizeCount: 0,
-        runsLargeCount: 0,
-        runsSmallPct: 0,
-        trueToSizePct: 0,
-        runsLargePct: 0,
-        fitSkew: 0,
-        verdict: "Insufficient Data",
-        avgRating: 0,
-        sentimentScore: 0,
-        returnRisk: "Low",
-        primaryFitNote: "No scraped reviews for this size yet",
-        trendSummary: `No customer reviews scraped for size ${size}.`,
-        topKeywords: [],
-        dominantZones: [],
-        sampleQuote: "",
-        shrinkageMentionPct: 0,
-        shrinkageMentionCount: 0,
-        fabricWeightNote: "No fabric data"
-      };
-    }
-    const sSmall = group.filter((r) => r.fitDirection === "runs_small").length;
-    const sTts = group.filter((r) => r.fitDirection === "true_to_size").length;
-    const sLarge = group.filter((r) => r.fitDirection === "runs_large").length;
-    const [sSmallPct, sTtsPct, sLargePct] = roundedShares(sSmall, sTts, sLarge);
-    const fitSkew = Number(
-      (group.reduce((acc, r) => acc + r.fitSkew, 0) / count).toFixed(2)
-    );
-    const verdict = skewToVerdict(fitSkew, count);
-    const avgRating = Number(
-      (group.reduce((acc, r) => acc + r.rating, 0) / count).toFixed(1)
-    );
-    const sentimentScore = Math.round(
-      group.reduce((acc, r) => acc + r.sentimentScore, 0) / count
-    );
-    const shrinkageMentionCount = group.filter((r) => r.mentionsShrinkage).length;
-    const shrinkageMentionPct = Math.round(shrinkageMentionCount / count * 100);
-    const sizeOpaqueCount = group.filter(
-      (r) => r.mentionsFabricOpacity === "thick_opaque"
-    ).length;
-    const fabricWeightNote = sizeOpaqueCount > 0 ? `Opaque heavyweight feel (${sizeOpaqueCount}/${count} cite zero transparency)` : shrinkageMentionCount > 0 ? `${shrinkageMentionPct}% note length tightening after high-heat drying` : "Consistent fabric drape";
-    const phraseCounts = /* @__PURE__ */ new Map();
-    group.forEach((r) => {
-      r.extractedPhrases.forEach((p) => {
-        phraseCounts.set(p, (phraseCounts.get(p) || 0) + 1);
-      });
-    });
-    const topKeywords = Array.from(phraseCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
-    const zoneStats = [];
-    for (const z of ANATOMICAL_ZONES) {
-      const mentions = group.flatMap((r) => r.anatomicalMentions.filter((m) => m.zone === z));
-      if (mentions.length > 0) {
-        const tightC = mentions.filter((m) => m.tension === "tight").length;
-        const looseC = mentions.filter((m) => m.tension === "loose").length;
-        if (tightC > looseC && tightC > 0) {
-          zoneStats.push({
-            zone: z,
-            issue: "tight",
-            pct: Math.round(tightC / count * 100)
-          });
-        } else if (looseC > tightC && looseC > 0) {
-          zoneStats.push({
-            zone: z,
-            issue: "loose",
-            pct: Math.round(looseC / count * 100)
-          });
-        }
-      }
-    }
-    zoneStats.sort((a, b) => b.pct - a.pct);
-    const returnRisk = sentimentScore < 62 || Math.abs(fitSkew) >= 0.55 && sentimentScore < 76 ? "High" : Math.abs(fitSkew) >= 0.28 || sentimentScore < 75 ? "Moderate" : "Low";
-    const topZoneText = zoneStats.length > 0 ? `${zoneStats[0].issue} in ${zoneStats[0].zone}` : topKeywords[0] || "consistent proportions";
-    let primaryFitNote = "";
-    let trendSummary = "";
-    if (verdict === "Runs Small" || verdict === "Slightly Small") {
-      primaryFitNote = `${sSmallPct}% report small fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews small (Fit Index ${formatSigned(fitSkew)}): ${sSmallPct}% of ${size} buyers cite snugness (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention wash shrinkage. ` : ""}Sentiment is ${sentimentScore}/100 (${avgRating}\u2605).`;
-    } else if (verdict === "Runs Large" || verdict === "Slightly Large") {
-      primaryFitNote = `${sLargePct}% report relaxed/large fit (${topZoneText})`;
-      trendSummary = `Size ${size} skews roomy/large (Fit Index ${formatSigned(fitSkew)}): ${sLargePct}% of ${size} reviewers note relaxed volume (${topZoneText}). ${shrinkageMentionPct > 0 ? `${shrinkageMentionPct}% mention shrinkage. ` : ""}Sentiment is ${sentimentScore}/100 (${avgRating}\u2605).`;
-    } else {
-      primaryFitNote = `${sTtsPct}% confirm true-to-size fit`;
-      trendSummary = `Size ${size} tracks true to standard grading (Fit Index ${formatSigned(fitSkew)}): ${sTtsPct}% of reviewers report accurate proportions with ${sentimentScore}/100 positive sentiment.`;
-    }
-    const bestSample = group.find((r) => r.fitDirection !== "true_to_size") || group[0];
-    return {
-      size,
-      reviewCount: count,
-      runsSmallCount: sSmall,
-      trueToSizeCount: sTts,
-      runsLargeCount: sLarge,
-      runsSmallPct: sSmallPct,
-      trueToSizePct: sTtsPct,
-      runsLargePct: sLargePct,
-      fitSkew,
-      verdict,
-      avgRating,
-      sentimentScore,
-      returnRisk,
-      primaryFitNote,
-      trendSummary,
-      topKeywords,
-      dominantZones: zoneStats.slice(0, 2),
-      sampleQuote: bestSample ? bestSample.body : "",
-      shrinkageMentionPct,
-      shrinkageMentionCount,
-      fabricWeightNote
-    };
-  });
-  const anatomicalBreakdown = ANATOMICAL_ZONES.map((zone) => {
-    const mentions = analyzedReviews.flatMap(
-      (r) => r.anatomicalMentions.filter((m) => m.zone === zone)
-    );
-    const mCount = mentions.length;
-    if (mCount === 0) {
-      return {
-        zone,
-        label: ZONE_LABELS[zone],
-        mentionCount: 0,
-        tightPct: 0,
-        optimalPct: totalReviews === 0 ? 0 : 100,
-        loosePct: 0,
-        netTensionScore: 0,
-        statusLabel: totalReviews === 0 ? "No reviews" : "Standard fit"
-      };
-    }
-    const tightC = mentions.filter((m) => m.tension === "tight").length;
-    const looseC = mentions.filter((m) => m.tension === "loose").length;
-    const [tightPct, optimalPct, loosePct] = roundedShares(tightC, mCount - tightC - looseC, looseC);
-    const netTensionScore = Number(((looseC - tightC) / mCount).toFixed(2));
-    let statusLabel = "Balanced Drape";
-    if (netTensionScore <= -0.35) statusLabel = "Runs Tight / Narrow";
-    else if (netTensionScore <= -0.15) statusLabel = "Slightly Snug";
-    else if (netTensionScore >= 0.35) statusLabel = "Relaxed / Roomy Cut";
-    else if (netTensionScore >= 0.15) statusLabel = "Slightly Roomy";
-    return {
-      zone,
-      label: ZONE_LABELS[zone],
-      mentionCount: mCount,
-      tightPct,
-      optimalPct,
-      loosePct,
-      netTensionScore,
-      statusLabel
-    };
-  });
-  const coreSizes = sizeSummaries.filter(
-    (s) => ["XS", "S", "M"].includes(s.size) && s.reviewCount > 0
-  );
-  const plusSizes = sizeSummaries.filter(
-    (s) => ["L", "XL", "XXL"].includes(s.size) && s.reviewCount > 0
-  );
-  const coreAvgSkew = coreSizes.length > 0 ? coreSizes.reduce((acc, s) => acc + s.fitSkew, 0) / coreSizes.length : overallFitIndex;
-  const plusAvgSkew = plusSizes.length > 0 ? plusSizes.reduce((acc, s) => acc + s.fitSkew, 0) / plusSizes.length : overallFitIndex;
-  const gradingDelta = Number((plusAvgSkew - coreAvgSkew).toFixed(2));
-  let sizingGradingAlert = "";
-  if (totalReviews === 0) {
-    sizingGradingAlert = "No reviews, so grading was not compared.";
-  } else if (gradingDelta <= -0.22) {
-    sizingGradingAlert = `Grading Compression in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L\u2013XXL skew tighter (${formatSigned(plusAvgSkew)}) than XS\u2013M (${formatSigned(coreAvgSkew)}).`;
-  } else if (gradingDelta >= 0.25) {
-    sizingGradingAlert = `Grading Flare in Upper Sizes (Delta ${formatSigned(gradingDelta)}): Sizes L\u2013XXL skew looser (${formatSigned(plusAvgSkew)}) than XS\u2013M (${formatSigned(coreAvgSkew)}).`;
-  } else {
-    sizingGradingAlert = `Linear Spec Grading (Delta ${formatSigned(gradingDelta)}): Fit skew tracks evenly across XS\u2013M (${formatSigned(coreAvgSkew)}) and L\u2013XXL (${formatSigned(plusAvgSkew)}).`;
-  }
-  const mostMentionedZone = [...anatomicalBreakdown].sort(
-    (a, b) => b.mentionCount - a.mentionCount
-  )[0];
-  const merchandisingTakeaway = totalReviews === 0 ? "No reviews were found, so there is no fit verdict." : overallVerdict === "Runs Small" || overallVerdict === "Slightly Small" ? `Runs Small (${runsSmallPct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary tension zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}.` : overallVerdict === "Runs Large" || overallVerdict === "Slightly Large" ? `Runs Large (${runsLargePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Primary volume zone: ${mostMentionedZone?.label.toLowerCase() || "shoulders & chest"}. Post-wash shrinkage frequency: ${overallShrinkagePct}%.` : `True to Size (${trueToSizePct}% of reviews, Fit Index ${formatSigned(overallFitIndex)}). Mean sentiment score: ${overallSentimentScore}/100.`;
-  return {
-    id: meta.id,
-    name: meta.name,
-    brand: meta.brand,
-    category: meta.category,
-    sku: meta.sku,
-    price: meta.price,
-    fabricComposition: meta.fabricComposition,
-    sourceUrl: meta.sourceUrl,
-    totalReviews,
-    overallFitIndex,
-    overallVerdict,
-    gradingDelta,
-    overallDistribution: {
-      runsSmallPct,
-      trueToSizePct,
-      runsLargePct,
-      runsSmallCount,
-      trueToSizeCount,
-      runsLargeCount
-    },
-    overallSentimentScore,
-    overallAvgRating,
-    merchandisingTakeaway,
-    sizingGradingAlert,
-    tshirtSignals: {
-      overallShrinkagePct,
-      shrinkageReviewCount,
-      fabricOpacityPct,
-      opaqueReviewCount,
-      sheerReviewCount,
-      gsmSpec,
-      washCareAdvisory,
-      fabricWeightConsensus
-    },
-    sizeSummaries,
-    anatomicalBreakdown,
-    reviews: analyzedReviews,
-    scraperTelemetry: {
-      sourceUrl: meta.sourceUrl,
-      scrapedAt: meta.scraperTelemetry?.scrapedAt || (/* @__PURE__ */ new Date()).toISOString(),
-      domNodesScanned: meta.scraperTelemetry?.domNodesScanned ?? 0,
-      reviewNodesMatched: totalReviews,
-      selectorsUsed: meta.scraperTelemetry?.selectorsUsed ?? [],
-      parseDurationMs: meta.scraperTelemetry?.parseDurationMs ?? 0,
-      engineMode: meta.scraperTelemetry?.engineMode || "cheerio-dom+deterministic-nlp",
-      reportedReviewCount: meta.scraperTelemetry?.reportedReviewCount ?? null,
-      reviewSources: meta.scraperTelemetry?.reviewSources ?? []
-    },
-    committedToDbAt: (/* @__PURE__ */ new Date()).toISOString()
-  };
-}
-function generateSqlInsertDump(reports, charts = []) {
-  const esc = (val2) => (val2 || "").replace(/'/g, "''");
-  const num2 = (value) => value === null || !Number.isFinite(value) ? "NULL" : String(value);
-  const lines = [
-    "-- Pearfit Scraper Commercial Apparel Fit Database Dump",
-    `-- Generated At: ${(/* @__PURE__ */ new Date()).toISOString()}`,
-    "-- Engine: Deterministic Cheerio DOM + Rule-Based Lexical Fit Classifier (No LLM)",
-    "",
-    "CREATE TABLE IF NOT EXISTS commercial_skus (",
-    "  sku VARCHAR(64) PRIMARY KEY,",
-    "  product_id VARCHAR(128) NOT NULL,",
-    "  brand VARCHAR(128) NOT NULL,",
-    "  product_name VARCHAR(255) NOT NULL,",
-    "  category VARCHAR(64) NOT NULL,",
-    "  retail_price VARCHAR(32),",
-    "  fabric_composition TEXT,",
-    "  total_reviews INT NOT NULL,",
-    "  overall_fit_index DECIMAL(4,2) NOT NULL,",
-    "  overall_verdict VARCHAR(32) NOT NULL,",
-    "  grading_delta DECIMAL(4,2) NOT NULL,",
-    "  runs_small_pct INT NOT NULL,",
-    "  true_to_size_pct INT NOT NULL,",
-    "  runs_large_pct INT NOT NULL,",
-    "  shrinkage_mention_pct INT NOT NULL,",
-    "  fabric_opacity_pct INT,",
-    "  sentiment_score INT NOT NULL,",
-    "  avg_rating DECIMAL(3,1) NOT NULL,",
-    "  source_url TEXT,",
-    "  scraped_at TIMESTAMP NOT NULL",
-    ");",
-    "",
-    "CREATE TABLE IF NOT EXISTS sku_size_metrics (",
-    "  sku VARCHAR(64) NOT NULL,",
-    "  size_code VARCHAR(16) NOT NULL,",
-    "  review_count INT NOT NULL,",
-    "  fit_skew DECIMAL(4,2) NOT NULL,",
-    "  fit_verdict VARCHAR(32) NOT NULL,",
-    "  runs_small_pct INT NOT NULL,",
-    "  true_to_size_pct INT NOT NULL,",
-    "  runs_large_pct INT NOT NULL,",
-    "  shrinkage_pct INT NOT NULL,",
-    "  sentiment_score INT NOT NULL,",
-    "  avg_rating DECIMAL(3,1) NOT NULL,",
-    "  return_risk VARCHAR(16) NOT NULL,",
-    "  primary_fit_note TEXT,",
-    "  PRIMARY KEY (sku, size_code)",
-    ");",
-    "",
-    "CREATE TABLE IF NOT EXISTS sku_size_chart (",
-    "  sku VARCHAR(128) NOT NULL,",
-    "  size_code VARCHAR(16) NOT NULL,",
-    "  sort_order INT NOT NULL,",
-    "  chest_cm DECIMAL(6,1),",
-    "  length_cm DECIMAL(6,1),",
-    "  sleeve_cm DECIMAL(6,1),",
-    "  PRIMARY KEY (sku, size_code)",
-    ");",
-    ""
-  ];
-  for (const r of reports) {
-    lines.push(
-      `INSERT INTO commercial_skus (sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at) VALUES ('${esc(r.sku)}', '${esc(r.id)}', '${esc(r.brand)}', '${esc(r.name)}', '${esc(r.category)}', '${esc(r.price)}', '${esc(r.fabricComposition)}', ${r.totalReviews}, ${num2(r.overallFitIndex)}, '${esc(r.overallVerdict)}', ${num2(r.gradingDelta)}, ${r.overallDistribution.runsSmallPct}, ${r.overallDistribution.trueToSizePct}, ${r.overallDistribution.runsLargePct}, ${r.tshirtSignals.overallShrinkagePct}, ${num2(r.tshirtSignals.fabricOpacityPct)}, ${r.overallSentimentScore}, ${num2(r.overallAvgRating)}, '${esc(r.sourceUrl)}', '${esc(r.scraperTelemetry.scrapedAt)}');`
-    );
-    for (const s of r.sizeSummaries) {
-      if (s.reviewCount > 0) {
-        lines.push(
-          `INSERT INTO sku_size_metrics (sku, size_code, review_count, fit_skew, fit_verdict, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_pct, sentiment_score, avg_rating, return_risk, primary_fit_note) VALUES ('${esc(r.sku)}', '${s.size}', ${s.reviewCount}, ${s.fitSkew}, '${esc(s.verdict)}', ${s.runsSmallPct}, ${s.trueToSizePct}, ${s.runsLargePct}, ${s.shrinkageMentionPct}, ${s.sentimentScore}, ${s.avgRating}, '${s.returnRisk}', '${esc(s.primaryFitNote)}');`
-        );
-      }
-    }
-    lines.push("");
-  }
-  const chartRows = [...charts].sort((a, b) => a.sku.localeCompare(b.sku) || a.sortOrder - b.sortOrder || a.size.localeCompare(b.size));
-  for (const row of chartRows) {
-    if (!row.sku || !row.size) continue;
-    lines.push(
-      `INSERT INTO sku_size_chart (sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm) VALUES ('${esc(row.sku)}', '${esc(row.size)}', ${Math.round(row.sortOrder) || 0}, ${num2(row.chest_cm)}, ${num2(row.length_cm)}, ${num2(row.sleeve_cm)});`
-    );
-  }
-  if (chartRows.length > 0) lines.push("");
-  return lines.join("\n");
-}
-
-// webscraper/seedCatalog.ts
-var HM_HEAVYWEIGHT_TEE_REVIEWS = [
-  {
-    id: "hm-tee-1",
-    author: "Lukas M.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 5,
-    title: "Thick 240 GSM cotton with a relaxed boxy drape",
-    body: "Runs large out of the bag with roomy dropped shoulders and wide sleeves. The 240 gsm heavyweight cotton is completely opaque and not see-through even in crisp white. Cold wash and air dry to avoid shrinkage.",
-    date: "2026-10-29",
-    verifiedPurchase: true,
-    reviewerHeight: `5'6"`,
-    reviewerBuild: "132 lbs \xB7 Slim",
-    declaredFitTag: "Slightly Large"
-  },
-  {
-    id: "hm-tee-2",
-    author: "Sofia R.",
-    sizePurchased: "XS",
-    usualSize: "S",
-    rating: 5,
-    title: "Sized down to XS for a cleaner unisex fit",
-    body: "Runs large so I ordered a size down from S to XS. Now the chest and shoulders fit just right, and the thick collar holds its shape.",
-    date: "2026-10-27",
-    verifiedPurchase: true,
-    reviewerHeight: `5'4"`,
-    reviewerBuild: "118 lbs \xB7 Petite",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "hm-tee-3",
-    author: "Elias K.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 4,
-    title: "Great fabric weight, shrank slightly in dryer",
-    body: "True to size after the first wash! Started slightly loose in the waist, then shrank about half an inch in torso length when I accidentally put it in the dryer. Substantial cotton feel.",
-    date: "2026-10-24",
-    verifiedPurchase: true,
-    reviewerHeight: `5'7"`,
-    reviewerBuild: "138 lbs \xB7 Lean",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "hm-tee-4",
-    author: "Daniel V.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 5,
-    title: "Best $20 heavyweight tee \u2014 zero transparency",
-    body: "Relaxed drop-shoulder fit that runs large in a good modern streetwear way. Thick jersey fabric is not see-through at all and feels like a $60 Blank Staples tee.",
-    date: "2026-10-28",
-    verifiedPurchase: true,
-    reviewerHeight: `5'8"`,
-    reviewerBuild: "152 lbs \xB7 Regular",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "hm-tee-5",
-    author: "Maya T.",
-    sizePurchased: "S",
-    usualSize: "M",
-    rating: 5,
-    title: "Size down if you want a standard T-shirt silhouette",
-    body: "Bigger than expected in the chest and sleeves. I sized down from M to S and it fits perfectly through the shoulders. Cold wash only!",
-    date: "2026-10-25",
-    verifiedPurchase: true,
-    reviewerHeight: `5'7"`,
-    reviewerBuild: "145 lbs \xB7 Athletic",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "hm-tee-6",
-    author: "Owen C.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 4,
-    title: "Roomy chest, watch out for length shrinkage",
-    body: "Fits as expected for a relaxed fit tee with loose sleeves, though it shrunk in length after tumble drying on medium heat. Hang dry is mandatory.",
-    date: "2026-10-21",
-    verifiedPurchase: true,
-    reviewerHeight: `5'9"`,
-    reviewerBuild: "155 lbs \xB7 Slim",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "hm-tee-7",
-    author: "Julian H.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 5,
-    title: "Sturdy cotton and thick ribbed neck",
-    body: "True to size if you want the intended relaxed boxy fit. Dropped shoulders drape nicely and sturdy cotton has zero transparency.",
-    date: "2026-10-18",
-    verifiedPurchase: true,
-    reviewerHeight: `5'8"`,
-    reviewerBuild: "149 lbs \xB7 Regular",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "hm-tee-8",
-    author: "Marcus B.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 5,
-    title: "Generous boxy cut in Size M",
-    body: "Runs large with a generous cut across the chest and waist, and wide elbow-length sleeves. Heavyweight 240 gsm cotton is thick and opaque.",
-    date: "2026-10-29",
-    verifiedPurchase: true,
-    reviewerHeight: `5'10"`,
-    reviewerBuild: "168 lbs \xB7 Regular",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "hm-tee-9",
-    author: "Noah L.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 4,
-    title: "Slightly large before wash, spot on after",
-    body: "Started roomy in the chest and shoulders, and after a cold wash it settled into a perfect fit. Not see-through and very comfortable.",
-    date: "2026-10-26",
-    verifiedPurchase: true,
-    reviewerHeight: `5'11"`,
-    reviewerBuild: "174 lbs \xB7 Athletic",
-    declaredFitTag: "Slightly Large"
-  },
-  {
-    id: "hm-tee-10",
-    author: "Caleb W.",
-    sizePurchased: "M",
-    usualSize: "L",
-    rating: 5,
-    title: "Sized down from L to M for a tailored look",
-    body: "Runs large! Went down a size to M and the chest and waist drape cleanly without swimming in fabric. Thick jersey.",
-    date: "2026-10-22",
-    verifiedPurchase: true,
-    reviewerHeight: `6'0"`,
-    reviewerBuild: "178 lbs \xB7 Lean",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "hm-tee-11",
-    author: "Isaac P.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 4,
-    title: "True to relaxed sizing, thick non-sheer white tee",
-    body: "Buy your normal size M for a modern relaxed drape. Finally a white H&M t-shirt that is heavyweight and not see-through.",
-    date: "2026-10-16",
-    verifiedPurchase: true,
-    reviewerHeight: `5'10"`,
-    reviewerBuild: "165 lbs \xB7 Regular",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "hm-tee-12",
-    author: "Devon G.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 4,
-    title: "Wide in the chest and waist in L",
-    body: "Runs large through the midsection and sleeves. Great 240 gsm heavyweight cotton, just note it shrinks about an inch in torso length if tumble dried.",
-    date: "2026-10-28",
-    verifiedPurchase: true,
-    reviewerHeight: `6'0"`,
-    reviewerBuild: "188 lbs \xB7 Broad",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "hm-tee-13",
-    author: "Soren D.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 5,
-    title: "Spot on relaxed fit for 6ft athletic build",
-    body: "True to size in L! Comfortable across the shoulders and chest with a thick collar that never bacon-necks. Air dry to keep the length.",
-    date: "2026-10-23",
-    verifiedPurchase: true,
-    reviewerHeight: `6'1"`,
-    reviewerBuild: "192 lbs \xB7 Athletic",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "hm-tee-14",
-    author: "Harrison K.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 3,
-    title: "Shrunk in torso length after first wash",
-    body: `Out of the bag it was roomy in the chest, but shrunk noticeably in torso length after the first wash and dryer cycle, making it feel slightly small and short for a 6'2" frame.`,
-    date: "2026-10-19",
-    verifiedPurchase: true,
-    reviewerHeight: `6'2"`,
-    reviewerBuild: "195 lbs \xB7 Tall",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "hm-tee-15",
-    author: "Patrick N.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 5,
-    title: "Substantial opaque jersey",
-    body: "Fits just right in the shoulders and waist. Thick cotton fabric is opaque and drapes well.",
-    date: "2026-10-14",
-    verifiedPurchase: true,
-    reviewerHeight: `6'0"`,
-    reviewerBuild: "185 lbs \xB7 Regular",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "hm-tee-16",
-    author: "Trevor J.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 3,
-    title: "Boxy width in XL but short in the torso after wash",
-    body: "Loose around the waist, but short in the torso length after washing! Shrunk in length so it sits higher on the hips than expected. Thick fabric though.",
-    date: "2026-10-27",
-    verifiedPurchase: true,
-    reviewerHeight: `6'2"`,
-    reviewerBuild: "212 lbs \xB7 Broad",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "hm-tee-17",
-    author: "Roman S.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 4,
-    title: "Good relaxed chest room in XL if you hang dry",
-    body: "True to size in the chest and dropped shoulders as long as you cold wash and hang dry. Opaque heavyweight cotton feels durable.",
-    date: "2026-10-21",
-    verifiedPurchase: true,
-    reviewerHeight: `6'1"`,
-    reviewerBuild: "208 lbs \xB7 Stocky",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "hm-tee-18",
-    author: "Gabe E.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 4,
-    title: "Generous sleeves and chest in XL",
-    body: "Runs large in the sleeves and midsection with a boxy streetwear cut. Substantial cotton weight.",
-    date: "2026-10-15",
-    verifiedPurchase: true,
-    reviewerHeight: `6'0"`,
-    reviewerBuild: "204 lbs \xB7 Regular",
-    declaredFitTag: "Slightly Large"
-  },
-  {
-    id: "hm-tee-19",
-    author: "Victor A.",
-    sizePurchased: "XXL",
-    usualSize: "XXL",
-    rating: 3,
-    title: "XXL chest is wide but body length runs short after wash",
-    body: `Smaller than expected in vertical torso length after the first wash. Tight across the upper back and short in the hem if you are over 6'2", even though the waist is wide.`,
-    date: "2026-10-25",
-    verifiedPurchase: true,
-    reviewerHeight: `6'3"`,
-    reviewerBuild: "232 lbs \xB7 Big & Tall",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "hm-tee-20",
-    author: "Bradford L.",
-    sizePurchased: "XXL",
-    usualSize: "XXL",
-    rating: 4,
-    title: "Heavy opaque tee \u2014 air dry only for XXL",
-    body: "True to size in XXL before washing. Heavyweight 240 gsm cotton is not see-through, just make sure to hang dry so the torso length does not shrink.",
-    date: "2026-10-17",
-    verifiedPurchase: true,
-    reviewerHeight: `6'2"`,
-    reviewerBuild: "225 lbs \xB7 Broad",
-    declaredFitTag: "True to Size"
-  }
-];
-var DENIM_JACKET_REVIEWS = [
-  {
-    id: "dj-1",
-    author: "Marcus V.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 5,
-    title: "Fits my lean frame well",
-    body: "True to size for XS. Fits like a glove in the waist and torso length, though the raw denim starts slightly stiff in the sleeves.",
-    date: "2026-10-18",
-    verifiedPurchase: true,
-    reviewerHeight: `5'7"`,
-    reviewerBuild: "135 lbs \xB7 Lean",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "dj-2",
-    author: "Kenji T.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 4,
-    title: "Snug shoulders but breaks in",
-    body: "Slightly snug across the shoulders at first wear, but overall true to size in the chest and waist.",
-    date: "2026-10-12",
-    verifiedPurchase: true,
-    reviewerHeight: `5'6"`,
-    reviewerBuild: "130 lbs \xB7 Slim",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "dj-3",
-    author: "Liam O.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 3,
-    title: "Runs small in the arms",
-    body: "Runs small through the sleeves and biceps. If you wear anything thicker than a t-shirt underneath, size up.",
-    date: "2026-10-04",
-    verifiedPurchase: true,
-    reviewerHeight: `5'8"`,
-    reviewerBuild: "142 lbs \xB7 Athletic",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-4",
-    author: "Devon S.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 4,
-    title: "Tailored Japanese cut, slightly snug",
-    body: "True to size if you want a vintage cropped silhouette, though it is snug in the chest when buttoned all the way up.",
-    date: "2026-10-21",
-    verifiedPurchase: true,
-    reviewerHeight: `5'8"`,
-    reviewerBuild: "150 lbs \xB7 Regular",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "dj-5",
-    author: "Arthur P.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 3,
-    title: "Runs small after cold soak",
-    body: "Runs small! Shrunk about half an inch in the sleeves and tight across the shoulders. Definitely size up one size.",
-    date: "2026-10-16",
-    verifiedPurchase: true,
-    reviewerHeight: `5'9"`,
-    reviewerBuild: "155 lbs \xB7 Athletic",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-6",
-    author: "Nolan C.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 5,
-    title: "Spot on vintage proportions",
-    body: "Fits just right in the shoulders and waist. High-quality selvedge fabric with zero waist gap.",
-    date: "2026-10-09",
-    verifiedPurchase: true,
-    reviewerHeight: `5'7"`,
-    reviewerBuild: "146 lbs \xB7 Slim",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "dj-7",
-    author: "Julian M.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 2,
-    title: "Way too tight across shoulders",
-    body: "Runs very small in size M. Way too tight across the shoulders and pulls at the chest buttons. Returning to size up to L.",
-    date: "2026-10-25",
-    verifiedPurchase: true,
-    reviewerHeight: `5'10"`,
-    reviewerBuild: "168 lbs \xB7 Athletic",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-8",
-    author: "Lucas H.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 3,
-    title: "Short in the torso and tight cuffs",
-    body: "Smaller than expected. Short in the torso length and very tight in the sleeves and forearms. Order a size larger.",
-    date: "2026-10-19",
-    verifiedPurchase: true,
-    reviewerHeight: `5'11"`,
-    reviewerBuild: "172 lbs \xB7 Regular",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-9",
-    author: "Harrison G.",
-    sizePurchased: "M",
-    usualSize: "S",
-    rating: 5,
-    title: "Sized up to M and it fits great",
-    body: "I usually wear S, sized up to M after reading reviews. Runs small so the M fits my chest and shoulders comfortably.",
-    date: "2026-10-11",
-    verifiedPurchase: true,
-    reviewerHeight: `5'9"`,
-    reviewerBuild: "158 lbs \xB7 Regular",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-10",
-    author: "Evan B.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 4,
-    title: "Snug rockstar fit",
-    body: "True to size if you only wear a light tee underneath. Waist and length sit right at the belt line.",
-    date: "2026-10-03",
-    verifiedPurchase: true,
-    reviewerHeight: `5'10"`,
-    reviewerBuild: "160 lbs \xB7 Slim",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "dj-11",
-    author: "calvin_r",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 2,
-    title: "L fits like a standard US Medium",
-    body: "Runs very small! Couldn\u2019t button it across the chest and uncomfortably tight in the shoulders and armholes. Size up!",
-    date: "2026-10-26",
-    verifiedPurchase: true,
-    reviewerHeight: `6'0"`,
-    reviewerBuild: "188 lbs \xB7 Broad Shoulders",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-12",
-    author: "Derek W.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 3,
-    title: "Restrictive yoke and short sleeves",
-    body: "Runs small. Tight across the shoulders and upper back when reaching forward, and short in the sleeves for a 6ft frame.",
-    date: "2026-10-20",
-    verifiedPurchase: true,
-    reviewerHeight: `6'1"`,
-    reviewerBuild: "185 lbs \xB7 Athletic",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-13",
-    author: "Soren K.",
-    sizePurchased: "L",
-    usualSize: "M",
-    rating: 5,
-    title: "Glad I ordered a size up",
-    body: "Runs small compared to US sizing. Ordered a size up (L instead of M) and the shoulders and torso length are spot on.",
-    date: "2026-10-14",
-    verifiedPurchase: true,
-    reviewerHeight: `5'11"`,
-    reviewerBuild: "175 lbs \xB7 Regular",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-14",
-    author: "Patrick D.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 4,
-    title: "Trim fit through chest",
-    body: "Fits as expected for Japanese raw denim, snug in the chest but comfortable in the waist.",
-    date: "2026-10-05",
-    verifiedPurchase: true,
-    reviewerHeight: `5'11"`,
-    reviewerBuild: "178 lbs \xB7 Slim",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "dj-15",
-    author: "Gabe N.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 2,
-    title: "Grading in XL is way too narrow",
-    body: "Runs extremely small in XL! Way too tight in the chest and shoulders, and shrunk after wash. Disappointed and returning.",
-    date: "2026-10-27",
-    verifiedPurchase: true,
-    reviewerHeight: `6'2"`,
-    reviewerBuild: "208 lbs \xB7 Broad",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-16",
-    author: "Trevor J.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 2,
-    title: "Tight armholes and short body",
-    body: "Smaller than expected. Tight in the sleeves and armholes, and cropped shorter than standard trucker jackets in the torso.",
-    date: "2026-10-17",
-    verifiedPurchase: true,
-    reviewerHeight: `6'1"`,
-    reviewerBuild: "202 lbs \xB7 Stocky",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-17",
-    author: "Roman L.",
-    sizePurchased: "XL",
-    usualSize: "L",
-    rating: 4,
-    title: "Size up to XL if you are normally L",
-    body: "Definitely runs small. I wear L in almost every brand, went up a size to XL and now the shoulders and chest fit great.",
-    date: "2026-10-08",
-    verifiedPurchase: true,
-    reviewerHeight: `6'0"`,
-    reviewerBuild: "190 lbs \xB7 Athletic",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-18",
-    author: "Victor A.",
-    sizePurchased: "XXL",
-    usualSize: "XXL",
-    rating: 2,
-    title: "XXL chest and waist are constricting",
-    body: "Runs very small. Couldn\u2019t button the waist or chest comfortably, and tight across the shoulders. Pattern grading stops scaling after L.",
-    date: "2026-10-23",
-    verifiedPurchase: true,
-    reviewerHeight: `6'3"`,
-    reviewerBuild: "225 lbs \xB7 Big & Tall",
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "dj-19",
-    author: "Bradford E.",
-    sizePurchased: "XXL",
-    usualSize: "XL",
-    rating: 4,
-    title: "XXL works for a true XL buyer",
-    body: "Runs small so sizing up to XXL gave me the room I needed in the shoulders and sleeves. Gorgeous copper hardware.",
-    date: "2026-10-10",
-    verifiedPurchase: true,
-    reviewerHeight: `6'1"`,
-    reviewerBuild: "210 lbs \xB7 Broad",
-    declaredFitTag: "Runs Small"
-  }
-];
-var BOXY_HOODIE_REVIEWS = [
-  {
-    id: "bh-1",
-    author: "Chloe M.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 5,
-    title: "Relaxed streetwear drape without drowning",
-    body: "Runs large by design with a generous cut in the chest and sleeves, but the ribbed waist hem keeps it looking structured and flattering.",
-    date: "2026-10-24",
-    verifiedPurchase: true,
-    reviewerHeight: `5'3"`,
-    reviewerBuild: "112 lbs \xB7 Petite",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-2",
-    author: "Hannah Z.",
-    sizePurchased: "XS",
-    usualSize: "S",
-    rating: 5,
-    title: "Sized down to XS \u2014 perfect fit!",
-    body: "Runs large so I ordered a size down from S to XS. Now the shoulders and length fit like a glove!",
-    date: "2026-10-18",
-    verifiedPurchase: true,
-    reviewerHeight: `5'5"`,
-    reviewerBuild: "124 lbs \xB7 Regular",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-3",
-    author: "Zoe L.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 4,
-    title: "Super roomy in the chest and arms",
-    body: "Bigger than expected in the chest and loose in the sleeves. Super soft 500gsm fleece, just size down if you want a regular fit.",
-    date: "2026-10-22",
-    verifiedPurchase: true,
-    reviewerHeight: `5'6"`,
-    reviewerBuild: "132 lbs \xB7 Slim",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-4",
-    author: "Ethan Y.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 5,
-    title: "Ideal boxy silhouette",
-    body: "True to size for an architectural boxy hoodie. Drop shoulders are roomy and the torso length hits right at the hip.",
-    date: "2026-10-15",
-    verifiedPurchase: true,
-    reviewerHeight: `5'8"`,
-    reviewerBuild: "148 lbs \xB7 Regular",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "bh-5",
-    author: "Noah P.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 4,
-    title: "Runs large and wide in the chest",
-    body: "Runs large! Very boxy through the chest and waist, with long wide sleeves. Comfortable for lounging but definitely oversized.",
-    date: "2026-10-26",
-    verifiedPurchase: true,
-    reviewerHeight: `5'10"`,
-    reviewerBuild: "165 lbs \xB7 Regular",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-6",
-    author: "Maya R.",
-    sizePurchased: "M",
-    usualSize: "L",
-    rating: 5,
-    title: "Sized down to M and love it",
-    body: "Went down a size from L to M because it runs large. The chest drape and shoulder seam sit perfectly now.",
-    date: "2026-10-19",
-    verifiedPurchase: true,
-    reviewerHeight: `5'9"`,
-    reviewerBuild: "160 lbs \xB7 Curvy",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-7",
-    author: "Caleb K.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 5,
-    title: "Heavyweight perfection",
-    body: "Fits as expected with a relaxed oversized drape in the shoulders and chest.",
-    date: "2026-10-11",
-    verifiedPurchase: true,
-    reviewerHeight: `5'11"`,
-    reviewerBuild: "170 lbs \xB7 Athletic",
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "bh-8",
-    author: "Jordan F.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 3,
-    title: "Way too baggy in the waist",
-    body: "Runs very large in size L. Way too boxy and loose around the waist and chest, almost swimming in it. Size down.",
-    date: "2026-10-25",
-    verifiedPurchase: true,
-    reviewerHeight: `6'0"`,
-    reviewerBuild: "182 lbs \xB7 Athletic",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-9",
-    author: "Isaac W.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 4,
-    title: "Generous sizing in shoulders and sleeves",
-    body: "Runs large with very wide sleeves and drop shoulders. Great fabric weight.",
-    date: "2026-10-14",
-    verifiedPurchase: true,
-    reviewerHeight: `6'1"`,
-    reviewerBuild: "190 lbs \xB7 Broad",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-10",
-    author: "Owen T.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 2,
-    title: "Like a tent in the midsection",
-    body: "Runs super large! Swimming in it through the chest and waist while the torso length is strangely cropped. Returning for L.",
-    date: "2026-10-27",
-    verifiedPurchase: true,
-    reviewerHeight: `6'2"`,
-    reviewerBuild: "210 lbs \xB7 Regular",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-11",
-    author: "Leo V.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 3,
-    title: "Overly wide shoulders and sleeves",
-    body: "Bigger than expected. Way too baggy in the sleeves and loose at the waist hem. Definitely size down one full size.",
-    date: "2026-10-16",
-    verifiedPurchase: true,
-    reviewerHeight: `6'1"`,
-    reviewerBuild: "205 lbs \xB7 Stocky",
-    declaredFitTag: "Runs Large"
-  },
-  {
-    id: "bh-12",
-    author: "Dante B.",
-    sizePurchased: "XXL",
-    usualSize: "XXL",
-    rating: 2,
-    title: "XXL is widest hoodie I own",
-    body: "Runs extremely large. Drowning in it around the waist and chest, feels like a sack in XXL. Size down.",
-    date: "2026-10-21",
-    verifiedPurchase: true,
-    reviewerHeight: `6'3"`,
-    reviewerBuild: "230 lbs \xB7 Big & Tall",
-    declaredFitTag: "Runs Large"
-  }
-];
-var MERINO_CREWNECK_REVIEWS = [
-  {
-    id: "mc-1",
-    author: "Claire B.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 5,
-    title: "Impeccable true to size knit",
-    body: "True to size! Fits perfectly across the shoulders, bust, and waist with zero bunching. Softest merino wool.",
-    date: "2026-10-25",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "mc-2",
-    author: "Sienna H.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 5,
-    title: "Exact usual size S",
-    body: "Exact my usual size S. Fits like a glove through the sleeves and torso length.",
-    date: "2026-10-23",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "mc-3",
-    author: "Naomi K.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 5,
-    title: "Flattering drape in S",
-    body: "True to size and very comfortable in the shoulders and chest. Great layering weight.",
-    date: "2026-10-18",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "mc-4",
-    author: "Audrey L.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 5,
-    title: "Spot on M proportions",
-    body: "Fits just right in the chest, waist, and sleeve length. Standard sizing and gorgeous rib texture.",
-    date: "2026-10-22",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "mc-5",
-    author: "camille_d",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 4,
-    title: "True to size with contoured rib",
-    body: "True to size overall, slightly snug in the sleeves because of the ribbed knit but stretches nicely.",
-    date: "2026-10-14",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "mc-6",
-    author: "Rachel G.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 4,
-    title: "True to size in L, slightly trim bust",
-    body: "Fits as expected in the shoulders and length, though the ribbed knit is slightly snug across the bust.",
-    date: "2026-10-20",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "mc-7",
-    author: "Valerie P.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 3,
-    title: "Runs slightly small in the arms for L",
-    body: "Runs small in the sleeves and tight across the chest for a size L. If you have a fuller bust, size up to XL.",
-    date: "2026-10-12",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "mc-8",
-    author: "Monica S.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 3,
-    title: "XL clings tightly at chest and cuffs",
-    body: "Smaller than expected in XL. Tight across the bust and constricting in the forearms and cuffs. Recommend sizing up.",
-    date: "2026-10-24",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "mc-9",
-    author: "Diana W.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 4,
-    title: "Nice length but snug shoulders",
-    body: "Torso length is great, but runs small in the shoulders and bust compared to sizes S and M.",
-    date: "2026-10-15",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "mc-10",
-    author: "Beatrice N.",
-    sizePurchased: "XXL",
-    usualSize: "XXL",
-    rating: 4,
-    title: "Comfortable fit in XXL",
-    body: "True to size in XXL with comfortable waist and hip drape.",
-    date: "2026-10-09",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  }
-];
-var CARGO_PANT_REVIEWS = [
-  {
-    id: "cp-1",
-    author: "Alexei R.",
-    sizePurchased: "XS",
-    usualSize: "XS",
-    rating: 5,
-    title: "Great articulated fit for 27 waist",
-    body: "True to size in XS. Waistband sits securely and the inseam length is spot on.",
-    date: "2026-10-21",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "cp-2",
-    author: "Samir K.",
-    sizePurchased: "S",
-    usualSize: "S",
-    rating: 5,
-    title: "Fits 29-30 waist accurately",
-    body: "True to size! Fits perfectly in the waist and hips with plenty of knee mobility.",
-    date: "2026-10-19",
-    verifiedPurchase: true,
-    declaredFitTag: "True to Size"
-  },
-  {
-    id: "cp-3",
-    author: "Toby M.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 2,
-    title: "Inelastic waistband runs small",
-    body: "Runs small in size M! Way too tight around the waist and hips when sitting down. Zero stretch in the ripstop waistband, size up.",
-    date: "2026-10-26",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "cp-4",
-    author: "Shane L.",
-    sizePurchased: "M",
-    usualSize: "M",
-    rating: 3,
-    title: "Snug thighs and tight waist",
-    body: "Smaller than expected. Tight in the hips and thighs for athletic legs. Order a size larger.",
-    date: "2026-10-17",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "cp-5",
-    author: "Chris P.",
-    sizePurchased: "L",
-    usualSize: "L",
-    rating: 2,
-    title: "Size L measures like a 31 waist",
-    body: "Runs very small! Couldn\u2019t button the waist comfortably and pulls at the hips. Returning for XL.",
-    date: "2026-10-25",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "cp-6",
-    author: "Mitch D.",
-    sizePurchased: "L",
-    usualSize: "M",
-    rating: 5,
-    title: "Sized up to L and fits great",
-    body: "Ordered a size up from M to L because the waist runs small. Now the waist and thigh room are ideal.",
-    date: "2026-10-14",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "cp-7",
-    author: "Warren H.",
-    sizePurchased: "XL",
-    usualSize: "XL",
-    rating: 3,
-    title: "Tight rise and seat in XL",
-    body: "Runs small through the hips, seat, and waistband. Inseam length is fine but waist has no give.",
-    date: "2026-10-22",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  },
-  {
-    id: "cp-8",
-    author: "Greg O.",
-    sizePurchased: "XXL",
-    usualSize: "XXL",
-    rating: 3,
-    title: "Snug waist in XXL",
-    body: "Runs small in the waist and hips. Size up if you have muscular thighs.",
-    date: "2026-10-11",
-    verifiedPurchase: true,
-    declaredFitTag: "Runs Small"
-  }
-];
-var SEED_CATALOG = [
-  aggregateProductFitReport(
-    {
-      id: "hm-heavyweight-relaxed-tee",
-      name: "H&M Relaxed Fit Heavyweight Cotton T-Shirt",
-      brand: "H&M (Blank Staples)",
-      category: "T-Shirts & Tops",
-      sku: "HM-1096385-WHT",
-      price: "$19.99",
-      fabricComposition: "100% Heavyweight Carded Cotton Jersey (240 GSM \xB7 Non-Sheer Opaque Knit)",
-      sourceUrl: "https://www2.hm.com/en_us/productpage.1096385001.html#reviews",
-      scraperTelemetry: {
-        scrapedAt: "2026-10-30T18:15:00Z",
-        domNodesScanned: 684,
-        parseDurationMs: 152,
-        engineMode: "cheerio-dom+deterministic-nlp"
-      }
-    },
-    HM_HEAVYWEIGHT_TEE_REVIEWS
-  ),
-  aggregateProductFitReport(
-    {
-      id: "kuroki-selvedge-jacket",
-      name: "Kuroki 14oz Raw Selvedge Trucker Jacket",
-      brand: "Aethelgard Workwear",
-      category: "Outerwear",
-      sku: "AGW-104-IND",
-      price: "$295",
-      fabricComposition: "100% Unsanforized Japanese Cotton Selvedge (14.2 oz)",
-      sourceUrl: "https://store.aethelgard.example/products/kuroki-14oz-selvedge-jacket#reviews",
-      scraperTelemetry: {
-        scrapedAt: "2026-10-30T17:45:00Z",
-        domNodesScanned: 612,
-        parseDurationMs: 168,
-        engineMode: "cheerio-dom+deterministic-nlp"
-      }
-    },
-    DENIM_JACKET_REVIEWS
-  ),
-  aggregateProductFitReport(
-    {
-      id: "cloudloft-boxy-hoodie",
-      name: "CloudLoft 480gsm Architectural Boxy Hoodie",
-      brand: "Vanguard Athletics",
-      category: "Fleece & Hoodies",
-      sku: "VGA-480-CHR",
-      price: "$148",
-      fabricComposition: "100% Organic Heavyweight Combed French Terry (480 gsm)",
-      sourceUrl: "https://vanguard-athletics.example/collections/fleece/cloudloft-hoodie#reviews",
-      scraperTelemetry: {
-        scrapedAt: "2026-10-30T17:42:00Z",
-        domNodesScanned: 488,
-        parseDurationMs: 142,
-        engineMode: "cheerio-dom+deterministic-nlp"
-      }
-    },
-    BOXY_HOODIE_REVIEWS
-  ),
-  aggregateProductFitReport(
-    {
-      id: "verona-merino-crewneck",
-      name: "Verona Fine Merino Ribbed Crewneck Sweater",
-      brand: "Maison Liora",
-      category: "Knitwear",
-      sku: "MLR-219-OAT",
-      price: "$210",
-      fabricComposition: "96% Extra-Fine Australian Merino Wool, 4% Cashmere",
-      sourceUrl: "https://maisonliora.example/knitwear/verona-merino-crewneck#reviews",
-      scraperTelemetry: {
-        scrapedAt: "2026-10-30T17:38:00Z",
-        domNodesScanned: 394,
-        parseDurationMs: 131,
-        engineMode: "cheerio-dom+deterministic-nlp"
-      }
-    },
-    MERINO_CREWNECK_REVIEWS
-  ),
-  aggregateProductFitReport(
-    {
-      id: "apex-ripstop-cargo",
-      name: "Apex Articulated Ripstop Tapered Cargo Pant",
-      brand: "Terrain Labs",
-      category: "Trousers",
-      sku: "TRL-802-OLV",
-      price: "$185",
-      fabricComposition: "70% Cordura Cotton, 30% Nylon Mechanical Ripstop (Zero Elastane)",
-      sourceUrl: "https://terrainlabs.example/bottoms/apex-ripstop-cargo-pant#reviews",
-      scraperTelemetry: {
-        scrapedAt: "2026-10-30T17:30:00Z",
-        domNodesScanned: 350,
-        parseDurationMs: 119,
-        engineMode: "cheerio-dom+deterministic-nlp"
-      }
-    },
-    CARGO_PANT_REVIEWS
-  )
-];
-
-// webscraper/structuredData.ts
-function isObject(v) {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-function asArray(v) {
-  if (v === void 0 || v === null) return [];
-  return Array.isArray(v) ? v : [v];
-}
-function hasType(node, type) {
-  return asArray(node["@type"]).some((t) => typeof t === "string" && t.toLowerCase() === type.toLowerCase());
-}
-function text3(v) {
-  if (typeof v === "string") {
-    const t = v.replace(/\s+/g, " ").trim();
-    return t || null;
-  }
-  if (typeof v === "number") return String(v);
-  if (isObject(v)) return text3(v.name);
-  if (Array.isArray(v)) return text3(v[0]);
-  return null;
-}
-function collectNodes(root2, out = []) {
-  if (Array.isArray(root2)) {
-    for (const item of root2) collectNodes(item, out);
-  } else if (isObject(root2)) {
-    out.push(root2);
-    for (const value of Object.values(root2)) {
-      if (typeof value === "object" && value !== null) collectNodes(value, out);
-    }
-  }
-  return out;
-}
-function reviewIsForAnotherProduct(review, product) {
-  const reviewed = review.itemReviewed;
-  if (!isObject(reviewed)) return false;
-  const reviewedSku = text3(reviewed.sku);
-  const productSku = text3(product.sku);
-  if (reviewedSku && productSku) return reviewedSku !== productSku;
-  const reviewedName = text3(reviewed.name);
-  const productName = text3(product.name);
-  if (reviewedName && productName) return reviewedName !== productName;
-  return false;
-}
-function formatPrice(offersRaw) {
-  for (const offer of asArray(offersRaw)) {
-    if (!isObject(offer)) continue;
-    const amount = offer.price ?? offer.lowPrice ?? (isObject(offer.priceSpecification) ? offer.priceSpecification.price : void 0);
-    const currency = text3(offer.priceCurrency) ?? (isObject(offer.priceSpecification) ? text3(offer.priceSpecification.priceCurrency) : null);
-    const amountText = text3(amount);
-    if (amountText) return currency ? `${amountText} ${currency}` : amountText;
-  }
-  return null;
-}
-function parseRating(ratingRaw) {
-  if (!isObject(ratingRaw)) return null;
-  const value = parseFloat(String(ratingRaw.ratingValue ?? ""));
-  if (!Number.isFinite(value)) return null;
-  const best = parseFloat(String(ratingRaw.bestRating ?? "5"));
-  const worst = parseFloat(String(ratingRaw.worstRating ?? "1"));
-  const scaled = Number.isFinite(best) && Number.isFinite(worst) && best > worst && best !== 5 ? 1 + (value - worst) / (best - worst) * 4 : value;
-  return Math.min(5, Math.max(1, Math.round(scaled)));
-}
-function extractSizeFromReviewText(body) {
-  const labeled = new RegExp(
-    `\\bsize(?:\\s+(?:purchased|ordered|bought))?\\s*[:=-]\\s*(${REVIEW_SIZE_TOKEN})\\b`,
-    "i"
-  );
-  const sizedTo = new RegExp(
-    `\\b(?:sized|went)\\s+(?:up|down)\\s+(?:to|a size to)\\s+(?:a\\s+|an\\s+|size\\s+)?(${REVIEW_SIZE_TOKEN})\\b`,
-    "i"
-  );
-  const letterSize = REVIEW_SIZE_TOKEN.replace("|\\d{1,2}", "");
-  const bought = new RegExp(
-    `\\b(?:bought|ordered|purchased)\\s+(?:(?:a|an|the|my)\\s+)?(?:size\\s+(${REVIEW_SIZE_TOKEN})|(${letterSize}))\\b`,
-    "i"
-  );
-  const wornIn = new RegExp(`\\bin\\s+(?:a\\s+|size\\s+)(${REVIEW_SIZE_TOKEN})\\b`, "i");
-  const match = body.match(labeled) || body.match(sizedTo) || body.match(bought) || body.match(wornIn);
-  return match ? match[1] ?? match[2] ?? "" : "";
-}
-var FIT_TAG_REGEX = /\b(runs\s+small|true\s+to\s+size|runs\s+large|slightly\s+small|slightly\s+large)\b/i;
-function extractStructuredProduct(jsonLdBlocks) {
-  const nodes = collectNodes(jsonLdBlocks);
-  const product = nodes.find((n) => hasType(n, "Product") || hasType(n, "ProductGroup"));
-  if (!product) return null;
-  const reviewNodes = /* @__PURE__ */ new Set();
-  const ownedByAnotherProduct = /* @__PURE__ */ new Set();
-  for (const node of nodes) {
-    if (node === product || !hasType(node, "Product") && !hasType(node, "ProductGroup")) continue;
-    for (const review of asArray(node.review ?? node.reviews)) {
-      if (isObject(review)) ownedByAnotherProduct.add(review);
-    }
-  }
-  for (const r of asArray(product.review ?? product.reviews)) if (isObject(r)) reviewNodes.add(r);
-  for (const n of nodes) {
-    if (!hasType(n, "Review") || ownedByAnotherProduct.has(n) || reviewIsForAnotherProduct(n, product)) continue;
-    reviewNodes.add(n);
-  }
-  const reviews = [];
-  let idx = 0;
-  for (const r of reviewNodes) {
-    const body = text3(r.reviewBody) ?? text3(r.description);
-    if (!body || body.length <= 8) continue;
-    idx += 1;
-    const rating = parseRating(r.reviewRating);
-    const fitTag = body.match(FIT_TAG_REGEX)?.[1];
-    reviews.push({
-      id: `jsonld-rev-${idx}`,
-      author: text3(r.author) ?? "Anonymous",
-      sizePurchased: extractSizeFromReviewText(body),
-      // classifyReviewFitAndSentiment expects a rating; 3 is the neutral midpoint when absent.
-      rating: rating ?? 3,
-      title: text3(r.name) ?? text3(r.headline) ?? "",
-      body,
-      date: text3(r.datePublished) ?? "",
-      verifiedPurchase: false,
-      declaredFitTag: fitTag
-    });
-  }
-  const identifiers = /* @__PURE__ */ new Set();
-  const idFields = ["productID", "productId", "sku", "mpn", "gtin", "gtin8", "gtin12", "gtin13", "gtin14", "productGroupID"];
-  for (const node of [product, ...asArray(product.hasVariant), ...asArray(product.offers)]) {
-    if (!isObject(node)) continue;
-    for (const field of idFields) {
-      const value = text3(node[field]);
-      if (value) identifiers.add(value.toLowerCase());
-    }
-  }
-  const aggregate = isObject(product.aggregateRating) ? product.aggregateRating : null;
-  const count = aggregate ? Number(aggregate.reviewCount ?? aggregate.ratingCount) : NaN;
-  const organization = nodes.find((n) => hasType(n, "Organization") || hasType(n, "Corporation") || hasType(n, "OnlineStore"));
-  return {
-    organizationName: organization ? text3(organization.name) : null,
-    identifiers: [...identifiers],
-    reportedReviewCount: Number.isInteger(count) && count >= 0 ? count : null,
-    name: text3(product.name),
-    brand: text3(product.brand) ?? text3(product.manufacturer),
-    sku: text3(product.sku) ?? text3(product.mpn) ?? text3(product.productGroupID),
-    price: formatPrice(product.offers),
-    material: text3(product.material),
-    category: text3(product.category),
-    reviews
-  };
-}
-function parseJsonLdScripts(scriptContents) {
-  const blocks = [];
-  for (const raw of scriptContents) {
-    const cleaned = raw.trim().replace(/^<!--/, "").replace(/-->$/, "").trim();
-    if (!cleaned) continue;
-    try {
-      blocks.push(JSON.parse(cleaned));
-    } catch {
-    }
-  }
-  return blocks;
-}
-
-// webscraper/publicUrl.ts
-var import_promises = require("node:dns/promises");
-var import_node_net = require("node:net");
-function isBlockedHostname(hostname) {
-  let host = hostname.trim().toLowerCase().replace(/\.$/, "");
-  if (host.startsWith("[") && host.endsWith("]")) host = host.slice(1, -1);
-  if (!host) return true;
-  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal") || host === "metadata.google.internal") {
-    return true;
-  }
-  const mapped = host.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
-  if (mapped) return isBlockedIPv4(mapped[1]);
-  if (host.includes(":")) return isBlockedIPv6(host);
-  if (/^\d+$/.test(host)) return true;
-  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return isBlockedIPv4(host);
-  return false;
-}
-function isBlockedIPv4(host) {
-  const parts = host.split(".").map((part) => Number(part));
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
-    return true;
-  }
-  const [a, b] = parts;
-  if (a === 0 || a === 10 || a === 127) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  if (a >= 224) return true;
-  return false;
-}
-function embeddedIPv4(high, low) {
-  const hi = parseInt(high, 16);
-  const lo = parseInt(low, 16);
-  return [hi >> 8, hi & 255, lo >> 8, lo & 255].join(".");
-}
-function isBlockedIPv6(host) {
-  const bare = host.split("%")[0];
-  if (bare === "::" || bare === "::1") return true;
-  if (/^fe[89ab]/.test(bare) || bare.startsWith("fc") || bare.startsWith("fd")) return true;
-  const embedded = bare.match(/^(?:::(?:ffff:)?|64:ff9b::)(?:(\d{1,3}(?:\.\d{1,3}){3})|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
-  if (embedded) return isBlockedIPv4(embedded[1] ?? embeddedIPv4(embedded[2], embedded[3]));
-  return false;
-}
-function blockedFetchTarget(raw) {
-  let url;
-  try {
-    url = new URL(raw);
-  } catch {
-    return "That is not a valid http(s) URL.";
-  }
-  if (url.username || url.password) {
-    return "The scraper does not fetch URLs that embed credentials.";
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    return "Only http and https product URLs can be scraped.";
-  }
-  if (isBlockedHostname(url.hostname)) {
-    return `${url.hostname} is not a public address. The scraper only fetches public product pages.`;
-  }
-  return null;
-}
-async function blockedFetchTargetResolved(raw) {
-  const literal = blockedFetchTarget(raw);
-  if (literal) return literal;
-  const hostname = new URL(raw).hostname;
-  if ((0, import_node_net.isIP)(hostname)) return null;
-  try {
-    const records = await (0, import_promises.lookup)(hostname, { all: true });
-    for (const record of records) {
-      if (isBlockedHostname(record.address)) {
-        return `${hostname} resolves to a non-public address. The scraper only fetches public product pages.`;
-      }
-    }
-  } catch {
-  }
-  return null;
-}
-function createRequestHostGuard(resolve = (hostname) => (0, import_promises.lookup)(hostname, { all: true })) {
-  const cache = /* @__PURE__ */ new Map();
-  return (rawUrl) => {
-    let hostname;
-    try {
-      hostname = new URL(rawUrl).hostname;
-    } catch {
-      return Promise.resolve(false);
-    }
-    let verdict = cache.get(hostname);
-    if (!verdict) {
-      verdict = (async () => {
-        if (isBlockedHostname(hostname)) return true;
-        const bare = hostname.replace(/^\[|\]$/g, "");
-        if ((0, import_node_net.isIP)(bare)) return false;
-        try {
-          const records = await resolve(hostname);
-          return records.some((record) => isBlockedHostname(record.address));
-        } catch {
-          return false;
-        }
-      })();
-      cache.set(hostname, verdict);
-    }
-    return verdict;
-  };
-}
-
-// webscraper/reviewJson.ts
-function isObject2(v) {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-function str(v) {
-  if (typeof v === "string") {
-    const t = v.replace(/\s+/g, " ").trim();
-    return t || null;
-  }
-  if (typeof v === "number" && Number.isFinite(v)) return String(v);
-  return null;
-}
-function num(v) {
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-  if (typeof v === "string" && /^\s*-?\d+(\.\d+)?\s*$/.test(v)) return Number(v);
-  return null;
-}
-function first2(obj, keys) {
-  for (const key of keys) {
-    if (obj[key] !== void 0 && obj[key] !== null && obj[key] !== "") return obj[key];
-  }
-  return void 0;
-}
-function at(obj, path2) {
-  let cur = obj;
-  for (const part of path2.split(".")) {
-    if (!isObject2(cur)) return void 0;
-    cur = cur[part];
-  }
-  return cur;
-}
-function firstPath(obj, paths) {
-  for (const path2 of paths) {
-    const v = at(obj, path2);
-    if (v !== void 0 && v !== null && v !== "") return v;
-  }
-  return void 0;
-}
-var RATING_KEYS = ["rating", "score", "Rating", "reviewRating", "stars", "starRating", "star_rating", "overallRating", "ratingValue", "reviewScore", "rate"];
-var BODY_KEYS = ["body", "content", "comments", "ReviewText", "reviewText", "reviewMessage", "reviewBody", "review_body", "review_text", "text", "comment", "review", "message"];
-var TITLE_KEYS = ["title", "Title", "reviewTitle", "review_title", "headline"];
-var DATE_KEYS = ["createdAt", "created_at", "dateCreated", "date_created", "SubmissionTime", "submissionTime", "reviewDate", "datePublished", "publishedAt", "published_at", "submittedAt", "createDate", "dateCreatedMillis", "createdDate", "created_date", "reviewed_at", "reviewedAt", "date", "created"];
-var ID_KEYS = ["id", "Id", "reviewId", "review_id", "ReviewId", "ugc_id", "uuid"];
-var AUTHOR_PATHS = [
-  "user.displayName",
-  "user.display_name",
-  "user.name",
-  "author.name",
-  "author.displayName",
-  "author.display_name",
-  "reviewer.displayName",
-  "reviewer.display_name",
-  "reviewer.name",
-  "customer.name",
-  "UserNickname",
-  "userNickname",
-  "nickname",
-  "reviewerName",
-  "reviewer_name",
-  "displayName",
-  "display_name",
-  "author",
-  "name"
-];
-var AGGREGATE_KEYS = [
-  "review_count",
-  "reviewCount",
-  "totalReviews",
-  "total_reviews",
-  "TotalReviewCount",
-  "rating_histogram",
-  "ratingHistogram",
-  "averageScore",
-  "average_score",
-  "averageRating",
-  "average_rating",
-  "AverageOverallRating"
-];
-function normalizeRating(raw, best) {
-  let value;
-  let scale = num(best);
-  if (isObject2(raw)) {
-    value = num(first2(raw, ["ratingValue", "value", "Value", "rating"]));
-    scale = num(first2(raw, ["bestRating", "best", "max", "RatingRange"])) ?? scale;
-  } else {
-    value = num(raw);
-  }
-  if (value === null || value <= 0) return null;
-  if (scale && scale > 0 && scale !== 5) value = value / scale * 5;
-  else if (value > 5 && value <= 10) value = value / 2;
-  else if (value > 10 && value <= 100) value = value / 20;
-  if (value > 5) return null;
-  return Math.round(value * 10) / 10;
-}
-function bodyOf(obj) {
-  for (const key of BODY_KEYS) {
-    const v = obj[key];
-    if (typeof v === "string") {
-      const t = v.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-      if (t.length >= 2) return t;
-    }
-  }
-  return null;
-}
-function flattenReview(obj) {
-  if (!isObject2(obj.details) || !isObject2(obj.metrics)) return obj;
-  const badges = isObject2(obj.badges) ? obj.badges : {};
-  return { ...obj, ...obj.details, ...obj.metrics, verifiedBuyer: badges.is_verified_buyer === true };
-}
-function looksLikeReview(raw) {
-  const obj = flattenReview(raw);
-  if (AGGREGATE_KEYS.some((key) => key in obj)) return false;
-  const rating = normalizeRating(first2(obj, RATING_KEYS), obj.bestRating);
-  if (rating === null) return false;
-  if (bodyOf(obj) !== null) return true;
-  if (str(first2(obj, TITLE_KEYS)) === null) return false;
-  return authorOf(obj) !== "Anonymous" || str(first2(obj, DATE_KEYS)) !== null;
-}
-var SMALL_WORDS = /small|tight|snug|short|narrow/i;
-var LARGE_WORDS = /large|big|loose|roomy|long|baggy|wide/i;
-function directionFrom(lowLabel, highLabel) {
-  const low = str(lowLabel) ?? "";
-  const high = str(highLabel) ?? "";
-  if (SMALL_WORDS.test(low) || LARGE_WORDS.test(high)) return true;
-  if (LARGE_WORDS.test(low) || SMALL_WORDS.test(high)) return false;
-  return null;
-}
-function labelFromId(label) {
-  return label.replace(/_\d+$/, "").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-}
-function answer(label, value, scale = null) {
-  const raw = str(label);
-  const l = raw ? labelFromId(raw) : null;
-  if (!l) return null;
-  const list = Array.isArray(value) ? value : [value];
-  const text4 = list.map((v) => str(v)).filter(Boolean).join(", ") || null;
-  const numeric = list.length === 1 ? num(list[0]) : null;
-  if (text4 === null && numeric === null) return null;
-  return { label: l, value: text4, numeric, scale };
-}
-function reviewAnswers(review) {
-  const out = [];
-  const push = (a) => {
-    if (a) out.push(a);
-  };
-  for (const key of ["customFields", "custom_fields"]) {
-    const fields = review[key];
-    if (!isObject2(fields)) continue;
-    for (const field of Object.values(fields)) {
-      if (!isObject2(field)) continue;
-      const type = str(first2(field, ["fieldType", "field_type"])) ?? "";
-      const scale = /^size$/i.test(type) ? { center: 2, half: 1, lowIsSmall: true } : null;
-      push(answer(first2(field, ["title", "question", "label"]), field.value, scale));
-    }
-  }
-  if (isObject2(review.question_answers)) {
-    for (const qa of Object.values(review.question_answers)) {
-      if (!isObject2(qa)) continue;
-      const type = str(qa.type) ?? "";
-      const values = isObject2(qa.values) ? qa.values : {};
-      const lowIsSmall = directionFrom(values.min, values.max);
-      const scale = /range/.test(type) && lowIsSmall !== null ? { center: 2, half: 2, lowIsSmall } : null;
-      push(answer(qa.label, qa.answer, scale));
-    }
-  }
-  const attrLists = [
-    review.attributes,
-    at(review, "author.attributes"),
-    at(review, "reviewer.attributes"),
-    review.productAttributes,
-    review.attributesWithRating,
-    review.reviewer_attributes,
-    review.reviewAttributes
-  ];
-  for (const list of attrLists) {
-    if (!Array.isArray(list)) continue;
-    for (const item of list) {
-      if (!isObject2(item)) continue;
-      const label = first2(item, ["label", "title", "name", "question", "attributeName"]);
-      const type = str(item.type) ?? "";
-      const options = Array.isArray(item.options) ? item.options : [];
-      let scale = null;
-      const min = num(first2(item, ["minValue", "min"]));
-      const max = num(first2(item, ["maxValue", "max"]));
-      const lowIsSmall = directionFrom(
-        first2(item, ["minLabel", "min_label"]) ?? options[0],
-        first2(item, ["maxLabel", "max_label"]) ?? options[options.length - 1]
-      );
-      if (min !== null && max !== null && max > min && lowIsSmall !== null) {
-        scale = { center: (min + max) / 2, half: (max - min) / 2, lowIsSmall };
-      } else if (/centered/i.test(type) && options.length === 3 && lowIsSmall !== null) {
-        scale = { center: 3, half: 2, lowIsSmall };
-      } else if (/centered/i.test(type) && "midLabel" in item && lowIsSmall !== null) {
-        const v = num(item.value);
-        if (v !== null && Math.abs(v) <= 1) scale = { center: 0, half: 1, lowIsSmall };
-      }
-      push(answer(label, first2(item, ["value", "answer", "values", "displayName"]), scale));
-    }
-  }
-  for (const [key, label] of [["heightRange", "height"], ["height", "height"], ["weightRange", "weight"], ["weight", "weight"], ["bodyType", "body type"], ["usualSize", "usual size"], ["usual_size", "usual size"]]) {
-    const value = review[key];
-    if (typeof value === "string" || typeof value === "number") push(answer(label, value));
-  }
-  if (typeof review.fit === "string" && !/^\d+(\.\d+)?$/.test(review.fit.trim())) push(answer("fit", review.fit));
-  if (typeof review.fit === "number" && "purchasedSize" in review && "rate" in review) {
-    push(answer("fit", review.fit, { center: 3, half: 2, lowIsSmall: true }));
-  }
-  for (const key of ["size", "sizePurchased", "size_purchased", "purchasedSize", "purchased_size", "sizeOrdered", "size_ordered", "variantSize", "variant_size"]) {
-    const value = review[key];
-    if (typeof value === "string" || typeof value === "number") push(answer("size purchased", value));
-  }
-  if (Array.isArray(review.product_options)) {
-    for (const item of review.product_options) {
-      if (isObject2(item)) push(answer(item.name ?? item.label, item.value));
-    }
-  }
-  if (isObject2(review.productVariants)) {
-    for (const [name, value] of Object.entries(review.productVariants)) push(answer(name, value));
-  }
-  for (const key of ["ContextDataValues", "AdditionalFields"]) {
-    const fields = review[key];
-    if (!isObject2(fields)) continue;
-    for (const [id, field] of Object.entries(fields)) {
-      if (!isObject2(field)) continue;
-      push(answer(first2(field, ["DimensionLabel", "Label"]) ?? id, first2(field, ["ValueLabel", "Value"])));
-    }
-  }
-  if (isObject2(review.SecondaryRatings)) {
-    for (const [id, field] of Object.entries(review.SecondaryRatings)) {
-      if (!isObject2(field)) continue;
-      const range = num(field.ValueRange);
-      const lowIsSmall = directionFrom(field.MinLabel, field.MaxLabel) ?? true;
-      const scale = range && range >= 3 ? { center: (range + 1) / 2, half: (range - 1) / 2, lowIsSmall } : null;
-      push(answer(first2(field, ["Label"]) ?? id.replace(/_\d+$/, ""), field.Value, scale));
-    }
-  }
-  if (Array.isArray(review.dimensions)) {
-    for (const item of review.dimensions) {
-      if (!isObject2(item)) continue;
-      const labels = Array.isArray(item.valueLabels) ? item.valueLabels.map((l) => str(isObject2(l) ? first2(l, ["label", "value", "name"]) : l)) : [];
-      const v = num(item.value);
-      const worded = v !== null && Number.isInteger(v) && v >= 1 && v <= labels.length ? labels[v - 1] : null;
-      push(answer(item.dimensionLabel, worded));
-    }
-  }
-  const profile = at(review, "profileAttributes.custom");
-  if (Array.isArray(profile)) {
-    for (const item of profile) if (isObject2(item)) push(answer(item.label, item.value));
-  }
-  for (const key of ["reviewOptionsList", "options", "survey_answers", "surveyAnswers", "answers", "customQuestions", "properties"]) {
-    const list = review[key];
-    if (!Array.isArray(list)) continue;
-    for (const item of list) {
-      if (!isObject2(item)) continue;
-      const label = first2(item, ["label", "k", "question", "title", "name", "key"]) ?? at(item, "survey_question.title") ?? at(item, "question.title");
-      push(answer(label, first2(item, ["v", "value", "answer", "response"])));
-    }
-  }
-  return out;
-}
-var SIZE_BOUGHT_LABEL = /^(size|sizes?)\??$|\b(size (purchased|ordered|bought|worn|selected|chosen|received)|purchased size|ordered size|what size did you (buy|order|purchase|get|choose)|which size did you (buy|order|purchase|get|choose)|size you (bought|ordered|purchased))\b/i;
-var USUAL_SIZE_LABEL = /usual(ly)? (wear|size)|normally wear|typical(ly)? (wear|size)|what size do you (usually|normally|typically)/i;
-var FIT_LABEL = /\bfits?\b|sizing|true to size|how (did|does|do) (it|they|this|the \w+) fit|runs? (small|large|big)|size rating/i;
-var HEIGHT_LABEL = /\bheight\b|how tall/i;
-var BUILD_LABEL = /\bweight\b|body (type|shape)|\bbuild\b/i;
-var STRICT_SIZE = /^(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL|4XL|1X|2X|3X|SMALL|MEDIUM|LARGE|X-?SMALL|X-?LARGE|XX-?LARGE|EXTRA[ -]SMALL|EXTRA[ -]LARGE|ONE SIZE|\d{1,2}(\.\d)?)$/i;
-function sizeFromVariantTitle(title) {
-  const parts = title.split(/\s*[\/|,–—]\s*|\s+-\s+/).map((p) => p.trim()).filter(Boolean);
-  const letter = parts.find((p) => STRICT_SIZE.test(p) && !/^\d/.test(p));
-  if (letter) return letter;
-  const numeric = parts.find((p) => STRICT_SIZE.test(p));
-  return numeric ?? null;
-}
-function fitTagFromAnswer(a) {
-  if (a.numeric !== null && a.scale) {
-    const offset = a.numeric - a.scale.center;
-    if (Math.abs(offset) < 1e-9) return "True to Size";
-    const towardLarge = a.scale.lowIsSmall ? offset > 0 : offset < 0;
-    const strong = Math.abs(offset) / a.scale.half >= 0.75;
-    return `${strong ? "Runs" : "Slightly"} ${towardLarge ? "Large" : "Small"}`;
-  }
-  const text4 = a.value ?? "";
-  if (!text4 || /^\d+(\.\d+)?$/.test(text4)) return null;
-  if (/true to size|just right|perfect|as expected|fits? (as expected|well|great)|accurate/i.test(text4)) return "True to Size";
-  const mild = /slightly|a bit|a little|somewhat|kind of|sort of/i.test(text4);
-  if (SMALL_WORDS.test(text4) && !LARGE_WORDS.test(text4)) return `${mild ? "Slightly" : "Runs"} Small`;
-  if (LARGE_WORDS.test(text4) && !SMALL_WORDS.test(text4)) return `${mild ? "Slightly" : "Runs"} Large`;
-  return null;
-}
-function fieldsFromAnswers(answers) {
-  const out = {};
-  for (const a of answers) {
-    if (a.scale && (FIT_LABEL.test(a.label) || /\bsize\b/i.test(a.label))) {
-      if (!out.declaredFitTag) {
-        const tag = fitTagFromAnswer(a);
-        if (tag) out.declaredFitTag = tag;
-      }
-      continue;
-    }
-    if (!out.usualSize && USUAL_SIZE_LABEL.test(a.label) && a.value) {
-      out.usualSize = a.value;
-    } else if (/\bfits?\b/i.test(a.label) && FIT_LABEL.test(a.label)) {
-      if (!out.declaredFitTag) {
-        const tag = fitTagFromAnswer(a);
-        if (tag) out.declaredFitTag = tag;
-      }
-    } else if (SIZE_BOUGHT_LABEL.test(a.label) && a.value) {
-      const exact = sizeFromVariantTitle(a.value);
-      if (!out.sizePurchased || exact && !sizeFromVariantTitle(out.sizePurchased)) out.sizePurchased = exact ?? a.value;
-    } else if (!out.declaredFitTag && FIT_LABEL.test(a.label)) {
-      const tag = fitTagFromAnswer(a);
-      if (tag) out.declaredFitTag = tag;
-    } else if (!out.reviewerHeight && HEIGHT_LABEL.test(a.label) && a.value) {
-      out.reviewerHeight = a.value;
-    } else if (!out.reviewerBuild && BUILD_LABEL.test(a.label) && a.value) {
-      out.reviewerBuild = a.value;
-    }
-  }
-  return out;
-}
-var PRODUCT_KEY_PATHS = [
-  "productId",
-  "product_id",
-  "ProductId",
-  "productExternalId",
-  "product_external_id",
-  "productSKU",
-  "productHandle",
-  "product_handle",
-  "product.shopify_id",
-  "product.external_id",
-  "product.shopify_handle",
-  "product.handle",
-  "product.id",
-  "product_variant.product_external_id",
-  "shopProductId",
-  "catItem.sku",
-  "product_page_id",
-  "reviewed_product.product_id"
-];
-var PRODUCT_NAME_PATHS = ["productName", "product_name", "OriginalProductName", "product.name", "product.title", "groupingData.productName", "catItem.title", "reviewed_product.title"];
-function authorOf(obj) {
-  for (const path2 of AUTHOR_PATHS) {
-    const v = at(obj, path2);
-    const s = typeof v === "string" ? str(v) : null;
-    if (s) return s;
-  }
-  const firstName = str(firstPath(obj, ["customer.first_name", "reviewer.first_name", "first_name", "user.firstName", "firstName"]));
-  const lastName = str(firstPath(obj, ["customer.last_name", "reviewer.last_name", "last_name", "user.lastName", "lastName"]));
-  if (firstName) return lastName ? `${firstName} ${lastName.charAt(0)}.` : firstName;
-  return "Anonymous";
-}
-function verifiedOf(obj) {
-  const v = first2(obj, ["verifiedBuyer", "verified_buyer", "isVerifiedBuyer", "verified", "isVerified", "verifiedPurchase"]);
-  if (v === true || v === 1 || v === "true" || v === "1") return true;
-  const badges = obj.Badges;
-  if (isObject2(badges) && Object.keys(badges).some((k) => /verified/i.test(k))) return true;
-  return false;
-}
-function dateOf(v) {
-  if (typeof v === "number" && Number.isFinite(v) && v > 1e9) {
-    const ms = v > 1e12 ? v : v * 1e3;
-    const d = new Date(ms);
-    return Number.isNaN(d.getTime()) ? "" : d.toISOString();
-  }
-  return str(v) ?? "";
-}
-function reviewFromJson(raw, index2) {
-  if (!looksLikeReview(raw)) return null;
-  const obj = flattenReview(raw);
-  const rating = normalizeRating(first2(obj, RATING_KEYS), obj.bestRating);
-  const fields = fieldsFromAnswers(reviewAnswers(obj));
-  const variantTitle = str(firstPath(obj, ["product_variant.title", "productVariantName", "variantName", "variant_title", "variant.title"]));
-  const sizePurchased = fields.sizePurchased ?? (variantTitle ? sizeFromVariantTitle(variantTitle) : null) ?? extractSizeFromReviewText(bodyOf(obj) ?? "");
-  const productKeys = PRODUCT_KEY_PATHS.map((p) => str(at(obj, p))?.toLowerCase().replace(/^shopify-/, "")).filter((k) => !!k);
-  return {
-    id: str(first2(obj, ID_KEYS)) ?? `json-${index2}`,
-    author: authorOf(obj),
-    sizePurchased,
-    usualSize: fields.usualSize,
-    rating: Math.min(5, Math.max(1, Math.round(rating))),
-    title: str(first2(obj, TITLE_KEYS)) ?? "",
-    body: bodyOf(obj) ?? str(first2(obj, TITLE_KEYS)) ?? "",
-    date: dateOf(first2(obj, DATE_KEYS)),
-    verifiedPurchase: verifiedOf(obj),
-    reviewerHeight: fields.reviewerHeight,
-    reviewerBuild: fields.reviewerBuild,
-    declaredFitTag: fields.declaredFitTag,
-    productKeys: [...new Set(productKeys)],
-    productName: str(firstPath(obj, PRODUCT_NAME_PATHS))
-  };
-}
-var TOTAL_PATHS = [
-  "bottomline.totalReview",
-  "bottomline.total_review",
-  "TotalResults",
-  "response.TotalResults",
-  "pagination.total",
-  "rollup.review_count",
-  "data.rollup.review_count",
-  "results.0.rollup.review_count",
-  "summary.review_count",
-  "reviewAggregate.reviewCount",
-  "aggregate.reviewCount",
-  "total_reviews",
-  "totalReviews",
-  "reviewCount",
-  "review_count",
-  "total"
-];
-function reportedTotalOf(root2) {
-  if (!isObject2(root2)) return null;
-  for (const path2 of TOTAL_PATHS) {
-    const v = num(at(root2, path2));
-    if (v !== null && v >= 0 && Number.isInteger(v)) return v;
-  }
-  return null;
-}
-var CONTAINER_TOTAL_KEYS = ["total", "totalCount", "total_count", "totalResults", "TotalResults", "totalReviews", "total_reviews", "reviewCount", "review_count", "numberOfReviews"];
-function extractReviewsFromJson(root2) {
-  const reviews = [];
-  const seen = /* @__PURE__ */ new Set();
-  let containerTotal = null;
-  const walk = (v, depth, parent2 = null) => {
-    if (depth > 40 || v === null || typeof v !== "object" || seen.has(v)) return;
-    seen.add(v);
-    if (Array.isArray(v)) {
-      const before2 = reviews.length;
-      for (const item of v) walk(item, depth + 1);
-      if (reviews.length > before2 && parent2 && containerTotal === null) {
-        for (const key of CONTAINER_TOTAL_KEYS) {
-          const total = num(parent2[key]);
-          if (total !== null && Number.isInteger(total) && total >= 0) {
-            containerTotal = total;
-            break;
-          }
-        }
-        if (containerTotal === null) containerTotal = reportedTotalOf(parent2);
-      }
-      return;
-    }
-    const review = reviewFromJson(v, reviews.length);
-    if (review) {
-      reviews.push(review);
-      return;
-    }
-    for (const child of Object.values(v)) walk(child, depth + 1, v);
-  };
-  walk(root2, 0);
-  return { reviews, reportedTotal: reviews.length > 0 ? reportedTotalOf(root2) ?? containerTotal : null };
-}
-function parseJsonBody(body) {
-  const t = body.trim();
-  if (!t || t[0] !== "{" && t[0] !== "[") return null;
-  try {
-    return JSON.parse(t);
-  } catch {
-    return null;
-  }
-}
-function normName(s) {
-  return s.toLowerCase().replace(/[®™]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
-}
-function reviewMatchesProduct(review, responseKeys, product) {
-  const keys = review.productKeys.length > 0 ? review.productKeys : responseKeys;
-  if (keys.length > 0 && product.keys.length > 0) {
-    if (keys.some((k) => product.keys.includes(k))) return true;
-  }
-  if (review.productName && product.name) {
-    const a = normName(review.productName.split("|")[0]);
-    const b = normName(product.name.split("|")[0]);
-    if (a && b && (a.startsWith(b) || b.startsWith(a))) return true;
-  }
-  if (keys.length === 0 && !review.productName) return null;
-  return false;
-}
-function keysFromUrl(url) {
-  try {
-    const u = new URL(url);
-    const parts = [...u.pathname.split("/"), ...[...u.searchParams.values()].flatMap((v) => v.split(/[:,=]/))];
-    return [...new Set(parts.map((p) => decodeURIComponent(p).toLowerCase()).filter((p) => /^\d{5,}$/.test(p) || /^shopify-\d+$/.test(p)).map((p) => p.replace(/^shopify-/, "")))];
-  } catch {
-    return [];
-  }
-}
-function reviewIdentity(review) {
-  if (!review.id.startsWith("json-")) return `id:${review.id}`;
-  const body = review.body.toLowerCase().replace(/\s+/g, " ").trim();
-  return `body:${review.author.toLowerCase()}:${body.slice(0, 60)}`;
-}
-function dedupeKey(review) {
-  return [reviewIdentity(review)];
-}
-function collectJsonReviews(sources, product) {
-  const kept = [];
-  const seen = /* @__PURE__ */ new Set();
-  const hosts = /* @__PURE__ */ new Set();
-  let reportedTotal = null;
-  const sets = sources.map((source) => {
-    const set = extractReviewsFromJson(source.value);
-    const urlKeys = source.url.startsWith("page:") ? [] : keysFromUrl(source.url);
-    return { source, set, urlKeys, verdicts: set.reviews.map((r) => reviewMatchesProduct(r, urlKeys, product)) };
-  });
-  const someSourceMatches = sets.some((s) => s.verdicts.includes(true));
-  const requested = sets.filter((s) => s.set.reviews.length > 0 && s.urlKeys.length > 0);
-  const requestedIds = new Set(requested.flatMap((s) => s.urlKeys));
-  const widgetNamed = !someSourceMatches && requestedIds.size === 1 && !!product.knownIds && product.knownIds.has([...requestedIds][0]);
-  const ownListOf = ({ set, urlKeys, verdicts }) => {
-    const matched = verdicts.filter((v) => v === true).length;
-    return urlKeys.some((k) => product.keys.includes(k)) || widgetNamed && urlKeys.length > 0 || matched > 0 && set.reportedTotal !== null || set.reviews.length > 0 && matched * 2 >= set.reviews.length;
-  };
-  const sharedEndpoint = (url) => /graphql|\/batch(\.json)?\/?$|\/widgets?\/fetch/i.test(pathOf(url));
-  const ownPaths = new Set(
-    sets.filter((s) => s.set.reviews.length > 0 && ownListOf(s) && !sharedEndpoint(s.source.url)).map((s) => pathOf(s.source.url))
-  );
-  for (const entry of sets) {
-    const { source, set, verdicts } = entry;
-    if (set.reviews.length === 0) continue;
-    const anyMatch = verdicts.includes(true);
-    const anyOther = verdicts.includes(false);
-    const ownList = ownListOf(entry) || !source.url.startsWith("page:") && !sharedEndpoint(source.url) && ownPaths.has(pathOf(source.url));
-    if (anyOther && !anyMatch && !ownList) continue;
-    if (!anyMatch && !ownList && someSourceMatches && !source.url.startsWith("page:")) continue;
-    let added = 0;
-    set.reviews.forEach((review, i) => {
-      if (!ownList && verdicts[i] === false) return;
-      if (!ownList && verdicts[i] === null && anyOther) return;
-      const keys = dedupeKey(review);
-      if (keys.some((k) => seen.has(k))) return;
-      keys.forEach((k) => seen.add(k));
-      kept.push(review);
-      added++;
-    });
-    if (added > 0 || anyMatch) {
-      hosts.add(source.url.startsWith("page:") ? "page" : safeHost(source.url));
-      if (set.reportedTotal !== null) reportedTotal = Math.max(reportedTotal ?? 0, set.reportedTotal);
-    }
-  }
-  return { reviews: kept, reportedTotal, sources: [...hosts] };
-}
-function pathOf(url) {
-  try {
-    const u = new URL(url);
-    return u.origin + u.pathname;
-  } catch {
-    return url;
-  }
-}
-function safeHost(url) {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
-}
-
 // webscraper/sizeChart.ts
 var LETTERS = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 function round1(n) {
@@ -90037,6 +89274,11 @@ function chartSizeCode(raw) {
   const cleaned = raw.replace(/\s+/g, " ").trim().toUpperCase();
   if (!cleaned || cleaned.length > 24) return null;
   const letters = {
+    XXXS: "XXXS",
+    "3XS": "XXXS",
+    XXS: "XXS",
+    "2XS": "XXS",
+    "XX-SMALL": "XXS",
     XS: "XS",
     "X-SMALL": "XS",
     "XSMALL": "XS",
@@ -90062,13 +89304,15 @@ function chartSizeCode(raw) {
     "3XL": "XXXL"
   };
   if (letters[cleaned]) return letters[cleaned];
-  const word = cleaned.match(/\b(XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
+  const word = cleaned.match(/\b(XXXS|3XS|XXS|2XS|XXXL|3XL|XXL|2XL|X-LARGE|EXTRA LARGE|EXTRA SMALL|X-SMALL|SMALL|MEDIUM|LARGE|XS|XL|S|M|L)\b/);
   if (word && letters[word[1]]) return letters[word[1]];
   const numeric = cleaned.match(/^(?:US|UK|EU|IT|FR|JP)?\s*(\d{1,3})(?:\s*\((?:US|UK|EU|IT|FR|JP)\))?$/);
   if (numeric) return numeric[1];
   return null;
 }
 function sortOrder(size, index2) {
+  if (size === "XXS") return -1;
+  if (size === "XXXS") return -2;
   const letter = LETTERS.indexOf(size);
   if (letter >= 0) return letter;
   if (size === "00") return 999;
@@ -90078,12 +89322,15 @@ function sortOrder(size, index2) {
 }
 function unitInText(text4) {
   const h = text4.toLowerCase();
-  if (/\bcm\b|centimet(?:er|re)s?/.test(h)) return "cm";
-  if (/\binches\b|\binch\b|\(in\)|\bin\./.test(h)) return "in";
-  return null;
+  const cm = /\bcm\b|centimet(?:er|re)s?/.test(h);
+  const inch = /\binches\b|\binch\b|\(in\)|\bin\./.test(h);
+  if (cm === inch) return null;
+  return cm ? "cm" : "in";
 }
 function unitFromToggle($2, node) {
   for (const box of $2(node).parents().toArray()) {
+    const fromButtons = unitFromButtons($2, box) ?? unitFromSelect($2, box);
+    if (fromButtons) return fromButtons;
     const checked = /* @__PURE__ */ new Set();
     let found = false;
     $2(box).find('input[type="radio"]').each((_i, radio) => {
@@ -90107,6 +89354,39 @@ function unitFromToggle($2, node) {
     if (found) return checked.size === 1 ? [...checked][0] : null;
   }
   return null;
+}
+function unitFromButtons($2, box) {
+  const active = /* @__PURE__ */ new Set();
+  let found = 0;
+  $2(box).find("[data-unit]").each((_i, el) => {
+    const raw = ($2(el).attr("data-unit") ?? "").trim().toLowerCase();
+    const unit = raw === "cm" || raw === "metric" ? "cm" : raw === "in" || raw === "inch" || raw === "inches" ? "in" : null;
+    if (!unit) return;
+    found += 1;
+    const aria = $2(el).attr("aria-pressed") ?? $2(el).attr("aria-selected");
+    const isActive = aria !== void 0 ? aria === "true" : /\b(active|selected|is-active|current)\b/.test($2(el).attr("class") ?? "");
+    if (isActive) active.add(unit);
+  });
+  return found >= 2 && active.size === 1 ? [...active][0] : null;
+}
+function unitFromSelect($2, box) {
+  const units = /* @__PURE__ */ new Set();
+  let found = 0;
+  $2(box).find("select").each((_i, select2) => {
+    const options = $2(select2).find("option").toArray();
+    const read = (option) => {
+      const text4 = `${$2(option).attr("value") ?? ""} ${$2(option).text()}`.trim().toLowerCase();
+      if (/^(cm|centimet\w*|metric)\b/.test(text4)) return "cm";
+      if (/^(in|inch\w*|imperial)\b/.test(text4)) return "in";
+      return null;
+    };
+    const mapped = options.map(read);
+    if (options.length < 2 || mapped.some((unit) => unit === null) || new Set(mapped).size < 2) return;
+    found += 1;
+    const picked = options.findIndex((option) => $2(option).is("[selected]"));
+    units.add(mapped[picked >= 0 ? picked : 0]);
+  });
+  return found === 1 && units.size === 1 ? [...units][0] : null;
 }
 var UNICODE_FRACTIONS = {
   "\xBD": 0.5,
@@ -90141,28 +89421,34 @@ function readMeasurement(raw) {
   return value;
 }
 var UNIT_PAIR = /(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[½¼¾⅛⅜⅝⅞])?)\s*(cm|centimet(?:er|re)s?|in(?:ch(?:es)?)?\b|"|″)/gi;
+function isDualUnit(text4) {
+  const units = [...text4.matchAll(UNIT_PAIR)].map((m) => /^c/i.test(m[2]) ? "cm" : "in");
+  return units.length === 2 && units[0] !== units[1];
+}
 function parseCell(raw, tableUnit) {
   const text4 = raw.replace(/\s+/g, " ").trim();
   if (!text4 || /^(-|–|—|n\/a|null|unknown)$/i.test(text4)) return null;
-  if (/[\d½¼¾⅛⅜⅝⅞]\s*[-–—]\s*\d/.test(text4)) return null;
+  if (/[\d½¼¾⅛⅜⅝⅞]\s*(?:["″”]|in\.?|cm)?\s*[-–—‑]\s*\d/i.test(text4) && !isDualUnit(text4)) return null;
   const pairs = [...text4.matchAll(UNIT_PAIR)].map((m) => ({
     value: readMeasurement(m[1]),
     unit: /^c/i.test(m[2]) ? "cm" : "in"
   }));
-  if (pairs.length > 1) {
+  if (pairs.length >= 1) {
     const pick = pairs.find((p) => p.unit === "cm" && p.value !== null) ?? pairs.find((p) => p.value !== null);
     return pick && pick.value !== null && pick.value > 0 ? { value: pick.value, unit: pick.unit } : null;
   }
   const value = readMeasurement(text4);
   if (value === null || value <= 0) return null;
-  const unit = /cm\b/i.test(text4) ? "cm" : /in(?:ch(?:es)?)?\b|"|″/.test(text4) ? "in" : tableUnit;
+  const unit = /cm\b/i.test(text4) ? "cm" : /in(?:ch(?:es)?)?\b|"|″/i.test(text4) ? "in" : tableUnit;
   if (!unit) return null;
   return { value, unit };
 }
+var PIT_TO_PIT = /\b(?:arm)?pit[\s-]*(?:to|2)?[\s-]*(?:arm)?pit\b|\bunder[\s-]?arm[\s-]*(?:to|2)?[\s-]*under[\s-]?arm\b|\bp2p\b/;
 function chestKind(header) {
   const h = header.toLowerCase();
+  if (PIT_TO_PIT.test(h)) return "flat";
   if (!/\b(chest|bust|pit)\b|body width/.test(h)) return null;
-  if (/pit[\s-]*to[\s-]*pit|body width|chest width|half chest|flat|across chest|laid flat/.test(h)) {
+  if (/pit[\s-]*to[\s-]*pit|body width|chest width|(?:half|1\/2|½)[\s-]*(?:chest|bust)|flat|across chest|laid flat/.test(h)) {
     return "flat";
   }
   if (/circumference|all around|full chest|around bust|around chest/.test(h)) return "circumference";
@@ -90171,6 +89457,7 @@ function chestKind(header) {
 function measureCol(header) {
   if (chestKind(header)) return "chest";
   const h = header.toLowerCase();
+  if (/\b(hand|head|foot|feet|glove|finger|palm|shoe|sock)\b/.test(h)) return null;
   if (/\bsleeve\b|\barm length\b/.test(h)) return "sleeve";
   if (/\blength\b/.test(h) && !/\bsleeve\b/.test(h)) return "length";
   return null;
@@ -90179,12 +89466,15 @@ function isSizeHeader(header) {
   const h = header.toLowerCase().trim();
   return h === "" || h === "size" || h === "sizes" || h === "size (us)" || /^size\b/.test(h);
 }
-function chestCm(value, unit, kind) {
-  if (kind === "unspecified") return null;
+function chestCm(value, unit, kind, flatDefault = false) {
+  if (kind === "unspecified") {
+    if (!flatDefault) return null;
+    return round1(toCm(value, unit));
+  }
   const cm = toCm(value, unit);
   return round1(kind === "flat" ? cm : cm / 2);
 }
-function parseHtmlTable(headers, body, tableUnit) {
+function parseHtmlTable(headers, body, tableUnit, flatDefault = false) {
   let sizeIdx = headers.findIndex((h) => isSizeHeader(h));
   if (sizeIdx < 0) sizeIdx = 0;
   const cols = [];
@@ -90192,7 +89482,7 @@ function parseHtmlTable(headers, body, tableUnit) {
     if (index2 === sizeIdx) return;
     const kind = measureCol(header);
     if (!kind) return;
-    cols.push({ index: index2, kind, chest: kind === "chest" ? chestKind(header) : null });
+    cols.push({ index: index2, kind, chest: kind === "chest" ? chestKind(header) : null, unit: unitInText(header) });
   });
   if (cols.length === 0) return null;
   const rows = [];
@@ -90210,9 +89500,9 @@ function parseHtmlTable(headers, body, tableUnit) {
     };
     let any = false;
     for (const col of cols) {
-      const parsed = parseCell(cells[col.index] ?? "", tableUnit);
+      const parsed = parseCell(cells[col.index] ?? "", col.unit ?? tableUnit);
       if (!parsed) continue;
-      if (col.kind === "chest" && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest);
+      if (col.kind === "chest" && col.chest) row.chest_cm = chestCm(parsed.value, parsed.unit, col.chest, flatDefault);
       if (col.kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (col.kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
       if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
@@ -90223,7 +89513,7 @@ function parseHtmlTable(headers, body, tableUnit) {
   });
   return tableHasValue ? { rows } : null;
 }
-function parseTransposedTable(headers, body, tableUnit) {
+function parseTransposedTable(headers, body, tableUnit, flatDefault = false) {
   const seen = /* @__PURE__ */ new Set();
   const sizes = headers.slice(1).map((cell) => {
     const size = chartSizeCode(cell);
@@ -90255,7 +89545,7 @@ function parseTransposedTable(headers, body, tableUnit) {
       if (!row) return;
       const parsed = parseCell(cells[index2 + 1] ?? "", rowUnit);
       if (!parsed) return;
-      if (kind === "chest" && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest);
+      if (kind === "chest" && chest) row.chest_cm = chestCm(parsed.value, parsed.unit, chest, flatDefault);
       if (kind === "length") row.length_cm = round1(toCm(parsed.value, parsed.unit));
       if (kind === "sleeve") row.sleeve_cm = round1(toCm(parsed.value, parsed.unit));
       if (row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null) any = true;
@@ -90274,35 +89564,142 @@ function cellText($2, cell) {
   walk(cell);
   return parts.join(" ").replace(/\s+/g, " ").trim();
 }
+function cellValue($2, cell) {
+  const metric = ($2(cell).attr("data-cm") ?? "").trim();
+  if (/^\d+(?:\.\d+)?$/.test(metric)) return `${metric} cm`;
+  return cellText($2, cell);
+}
 function tableGrid($2, table) {
   const grid = [];
   $2(table).find("tr").each((_r, tr) => {
     const cells = [];
     $2(tr).children("th, td").each((_c, cell) => {
-      cells.push(cellText($2, cell));
+      cells.push(cellValue($2, cell));
     });
     if (cells.length > 0) grid.push(cells);
   });
   return grid;
 }
-function rowsFromTables(html3) {
-  const $2 = load(html3);
-  let best = [];
-  $2("table").each((_i, table) => {
-    const node = $2(table);
-    const grid = tableGrid($2, table);
+function saysMeasuredFlat(text4) {
+  const t = text4.replace(/\s+/g, " ");
+  const flat = /(?:measure[sd]?|measuring|measurements?)[^.]{0,40}\bflat\b|\b(?:laid|lying|lays|laying) flat\b[^.]{0,30}measure|\bflat (?:garment )?measure/i.test(t);
+  if (!flat) return false;
+  return !/body measurements?|circumference|measure around|around the fullest|your (?:body|chest|bust) measure/i.test(t);
+}
+function surroundingBlock($2, node) {
+  let best = null;
+  for (const parent2 of $2(node).parents().toArray().slice(0, 4)) {
+    if ($2(parent2).text().replace(/\s+/g, " ").length > 5e3) break;
+    if ($2(parent2).find("table").length > 1) break;
+    best = $2(parent2);
+  }
+  return best;
+}
+function surroundingText($2, node) {
+  return surroundingBlock($2, node)?.text() ?? "";
+}
+function unitStated(text4) {
+  const found = /* @__PURE__ */ new Set();
+  const sentence = /\b(?:units?|measurements?|sizes?|dimensions?)\s+(?:are\s+)?(?:all\s+)?(?:listed\s+|given\s+|shown\s+|stated\s+)?in\s+(inches|inch|centimeters|centimetres|cm)\b(?!\s*(?:and|&|\/|or)\s*(?:inch|in\b|cm|centi))/gi;
+  for (const match of text4.replace(/\s+/g, " ").matchAll(sentence)) found.add(/^c/i.test(match[1]) ? "cm" : "in");
+  return found.size === 1 ? [...found][0] : null;
+}
+function unitFromAttrs($2, table) {
+  const node = $2(table);
+  const parts = [];
+  for (const el of [node, node.parent()]) {
+    const attrs = el.get(0)?.attribs ?? {};
+    for (const [name, value] of Object.entries(attrs)) {
+      if (/^data-(?:unit|units|measure|measurement|system)$/.test(name)) parts.push(value);
+      else if (name === "id" || name === "class") {
+        for (const token of value.split(/\s+/)) if (/[-_]/.test(token)) parts.push(token);
+      }
+    }
+  }
+  const text4 = parts.join(" ").toLowerCase();
+  const inch = /(?:^|[^a-z])(?:in|inch|inches|imperial)$|(?:^|[^a-z])(?:in|inch|inches|imperial)(?=[^a-z])/.test(text4) && !/\bin-(?:stock|active|view)\b/.test(text4);
+  const cm = /(?:^|[^a-z])(?:cm|centimeters?|centimetres?|metric)(?:$|[^a-z])/.test(text4);
+  if (inch === cm) return null;
+  return cm ? "cm" : "in";
+}
+function withMeasurements(rows) {
+  return rows.filter((row) => row.chest_cm !== null || row.length_cm !== null || row.sleeve_cm !== null);
+}
+var MEN = /\b(men|mens|man|male)\b/;
+var WOMEN = /\b(women|womens|woman|ladies|female)\b/;
+var TOP_WORDS = /\b(tee|tees|t-shirt|tshirt|shirt|shirts|top|tops|tank|polo|hoodie|sweatshirt|sweater|jacket|coat|vest|blouse|henley|crew|pullover|cardigan|jersey|bodysuit)\b/;
+var BOTTOM_WORDS = /\b(pant|pants|jean|jeans|short|shorts|skirt|skirts|legging|leggings|trouser|trousers|chino|chinos|jogger|joggers|bottom|bottoms)\b/;
+var BOTTOM_LENGTH = /\b(?:skirts?|bottoms?|pants?|shorts|jeans?|leggings?|trousers?|chinos?|joggers?)\s+lengths?\b|\blengths?\s+(?:of|for)\s+(?:a\s+|the\s+)?(?:skirts?|bottoms?|pants?|shorts|jeans?|leggings?|trousers?|chinos?|joggers?)\b/;
+function words(text4) {
+  return text4.toLowerCase().replace(/\bshort[- ]sleeves?\b/g, "shortsleeve").replace(/\b(?:border|margin|padding|sticky|fixed|offset|scroll|float|align|text|vertical|table)[-_](?:top|bottom)\b/g, " ").replace(/['’]s\b/g, "s").replace(/[^a-z0-9]+/g, " ");
+}
+function productTraits(hint) {
+  const product = words(`${hint.name ?? ""} ${(hint.url ?? "").split("?")[0].split("/").pop() ?? ""}`.replace(/-/g, " "));
+  return { men: MEN.test(product), women: WOMEN.test(product), top: TOP_WORDS.test(product), bottom: BOTTOM_WORDS.test(product) };
+}
+function contradictsProduct(label, product) {
+  const text4 = words(label);
+  const labelMen = MEN.test(text4);
+  const labelWomen = WOMEN.test(text4);
+  if (product.men && !product.women && labelWomen && !labelMen) return true;
+  if (product.women && !product.men && labelMen && !labelWomen) return true;
+  if (product.top && !product.bottom && BOTTOM_WORDS.test(text4) && !TOP_WORDS.test(text4)) return true;
+  if (product.bottom && !product.top && TOP_WORDS.test(text4) && !BOTTOM_WORDS.test(text4)) return true;
+  return false;
+}
+function productMatchScore(label, product) {
+  const text4 = words(label);
+  let score = 0;
+  if (product.men && MEN.test(text4) || product.women && WOMEN.test(text4)) score += 1;
+  if (product.top && TOP_WORDS.test(text4) || product.bottom && BOTTOM_WORDS.test(text4)) score += 1;
+  return score;
+}
+function dropNumericSizesOfLengthTable(rows, text4) {
+  if (!BOTTOM_LENGTH.test(words(text4))) return rows;
+  if (rows.some((row) => row.chest_cm !== null)) return rows;
+  return rows.filter((row) => !/^\d+$/.test(row.size));
+}
+function tableCandidates($2) {
+  const out = [];
+  let heading = "";
+  $2("h1, h2, h3, h4, h5, h6, caption, table").each((_i, el) => {
+    if (el.type !== "tag") return;
+    const node = $2(el);
+    if (el.name !== "table") {
+      if (el.name !== "caption") heading = node.text().replace(/\s+/g, " ").trim();
+      return;
+    }
+    const grid = tableGrid($2, el);
     if (grid.length < 2) return;
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
-    const context = [node.find("caption").text(), node.attr("class") ?? "", node.prev().text(), grid[headerAt].join(" ")].join(" ");
-    const unit = unitInText(context) ?? unitFromToggle($2, table);
+    const previous = node.prev();
+    const before2 = previous.is('a, button, label, input, select, [role="tab"], [role="button"], [data-unit]') ? "" : previous.text().replace(/\s+/g, " ").trim();
+    const context = [node.find("caption").text(), node.attr("class") ?? "", before2, grid[headerAt].join(" ")].join(" ");
+    const around = surroundingText($2, el);
+    const unit = unitInText(context) ?? unitFromToggle($2, el) ?? unitFromAttrs($2, el) ?? unitInText(heading) ?? unitStated(around);
+    const flat = saysMeasuredFlat(around);
     const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit)
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
+      parseTransposedTable(grid[0], grid.slice(1), unit, flat)
     );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+    if (!parsed) return;
+    const panel = node.closest("[id], [aria-labelledby]");
+    const label = [heading, node.find("caption").text(), panel.attr("id") ?? "", node.attr("class") ?? ""].join(" ").replace(/\s+/g, " ").trim();
+    const rows = withMeasurements(dropNumericSizesOfLengthTable(parsed.rows, `${label} ${grid[headerAt].join(" ")}`));
+    if (rows.length > 0) out.push({ rows, label });
   });
-  return best.length > 0 ? best : rowsFromDivCharts($2);
+  return out;
+}
+function rowsFromTables(html3, hint) {
+  const $2 = load(html3);
+  const product = hint ? productTraits(hint) : null;
+  let best = [];
+  for (const candidate of tableCandidates($2)) {
+    if (product && contradictsProduct(candidate.label, product)) continue;
+    if (candidate.rows.length > best.length) best = candidate.rows;
+  }
+  return best.length > 0 ? best : rowsFromDivCharts($2, product);
 }
 function filledMeasurements(rows) {
   if (!rows) return 0;
@@ -90323,10 +89720,11 @@ function cellTexts($2, node) {
   });
   return cells;
 }
-function rowsFromDivCharts($2) {
+function rowsFromDivCharts($2, product = null) {
   let best = [];
   $2('[class*="size-chart"], [class*="sizechart"], [class*="size-guide"], [class*="sizeguide"], [id*="size-chart"], [id*="size-guide"]').each((_i, box) => {
     if ($2(box).is("table") || $2(box).find("table").length > 0) return;
+    if (product && contradictsProduct(`${$2(box).attr("id") ?? ""} ${$2(box).attr("class") ?? ""}`, product)) return;
     const grid = [];
     $2(box).find('li, [class*="row"]').each((_r, row) => {
       const cells = cellTexts($2, row);
@@ -90337,200 +89735,289 @@ function rowsFromDivCharts($2) {
     const unit = unitInText(context) ?? unitFromToggle($2, box);
     const headerAt = grid.findIndex((cells) => cells.some((cell) => measureCol(cell)));
     if (headerAt < 0) return;
+    const flat = saysMeasuredFlat(surroundingText($2, box));
     const parsed = preferChart(
-      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit),
-      parseTransposedTable(grid[0], grid.slice(1), unit)
+      parseHtmlTable(grid[headerAt], grid.slice(headerAt + 1), unit, flat),
+      parseTransposedTable(grid[0], grid.slice(1), unit, flat)
     );
-    if (parsed && parsed.rows.length > best.length) best = parsed.rows;
+    if (!parsed) return;
+    const rows = withMeasurements(dropNumericSizesOfLengthTable(parsed.rows, `${context} ${grid[headerAt].join(" ")}`));
+    if (rows.length > best.length) best = rows;
   });
   return best;
 }
-function parseSizeChart(html3) {
-  const rows = rowsFromTables(html3);
+function parseSizeChart(html3, hint) {
+  const rows = rowsFromTables(html3, hint);
   return rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
-function parseSizeChartFirst(...pages) {
+function sameChart(a, b) {
+  if (a.length !== b.length) return false;
+  const close = (x, y) => x === null || y === null ? x === y : Math.abs(x - y) < 1;
+  return a.every((row, i) => row.size === b[i].size && close(row.chest_cm, b[i].chest_cm) && close(row.length_cm, b[i].length_cm) && close(row.sleeve_cm, b[i].sleeve_cm));
+}
+function parseGuidePageChart(html3, hint) {
+  const $2 = load(html3);
+  const product = productTraits(hint);
+  const fits = tableCandidates($2).filter((c) => c.rows.some((row) => row.chest_cm !== null)).filter((c) => !contradictsProduct(c.label, product)).map((c) => ({ rows: c.rows, score: productMatchScore(c.label, product) }));
+  if (fits.length === 0) return [];
+  const top = Math.max(...fits.map((c) => c.score));
+  const best = fits.filter((c) => c.score === top);
+  if (best.some((c) => !sameChart(c.rows, best[0].rows))) return [];
+  return best[0].rows.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+// webscraper/pageHelpers.ts
+var LABEL_LINE = /^([A-Za-z][A-Za-z ]{1,30}):\s*(.+)$/;
+function leafTexts($2, node) {
+  const out = [];
+  node.find("*").each((_i, el) => {
+    const child = $2(el);
+    if (child.children().length === 0 || child.is("p")) {
+      const t = child.text().replace(/\s+/g, " ").trim();
+      if (t) out.push(t);
+    }
+  });
+  return out;
+}
+function labelledValue(lines, label) {
+  for (const line of lines) {
+    const m = line.match(LABEL_LINE);
+    if (m && label.test(m[1].trim())) return m[2].trim();
+  }
+  return "";
+}
+var MONTH = "(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+var DATE_LINE = new RegExp(
+  [
+    // 12/05/2025, 12.05.2025, 12-5-25
+    "^\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}$",
+    // 2025-05-12, 2025.05.12, 2025/5/12
+    "^\\d{4}[/.-]\\d{1,2}[/.-]\\d{1,2}$",
+    // 08 September 2026, 8th Sep. 2026, 8 of May 2026
+    `^\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?${MONTH}\\.?,?\\s+\\d{4}$`,
+    // September 8, 2026, Sep. 8th 2026
+    `^${MONTH}\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}$`
+  ].join("|"),
+  "i"
+);
+function looksLikeDate(line) {
+  return DATE_LINE.test(line.replace(/\s+/g, " ").trim());
+}
+function isBadgeLine(line) {
+  return /^verified(?: (?:buyer|purchase|purchaser|customer|reviewer|review))?$/i.test(line.replace(/\s+/g, " ").trim());
+}
+function dateFromAttribute(value) {
+  const raw = value.trim();
+  if (/^\d+(?:\.\d+)?(?:e\+?\d+)?$/i.test(raw)) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 1e9) {
+      const date = new Date(n > 1e12 ? n : n * 1e3);
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+  }
+  return raw;
+}
+function longestFreeText(lines, exclude) {
+  let best = "";
+  for (const line of lines) {
+    if (LABEL_LINE.test(line) || exclude.includes(line) || looksLikeDate(line) || isBadgeLine(line)) continue;
+    if (line.length > best.length) best = line;
+  }
+  return best;
+}
+function textOutsideLines(cardText, lines) {
+  let rest = ` ${cardText} `;
+  for (const line of [...lines].sort((a, b) => b.length - a.length)) {
+    const at2 = rest.indexOf(line);
+    if (at2 >= 0) rest = `${rest.slice(0, at2)} ${rest.slice(at2 + line.length)}`;
+  }
+  rest = rest.replace(/\s+/g, " ").trim();
+  return looksLikeDate(rest) ? "" : rest;
+}
+function isEmptyStarFill(fill) {
+  if (/^transparent$/i.test(fill)) return true;
+  let hex = fill.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i)?.[1];
+  if (!hex) return false;
+  if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return Math.min(r, g, b) >= 192 && Math.max(r, g, b) - Math.min(r, g, b) <= 24;
+}
+function ratingFromStarIcons($2, node) {
+  const block = node.find('[data-testid*="Rating" i], [class*="rating" i], [class*="stars" i]').filter((_i, el) => $2(el).find("svg").length === 5).first();
+  if (block.length === 0) return "";
+  let filled = 0;
+  block.find("svg").each((_i, svg) => {
+    const icon = $2(svg);
+    const fills = [icon.attr("fill"), ...icon.find("[fill]").map((_j, f) => $2(f).attr("fill")).get()].filter(
+      (f) => Boolean(f) && f !== "none"
+    );
+    const cls = icon.attr("class") || "";
+    const empty2 = /empty|off|outline/i.test(cls) || fills.length > 0 && fills.every(isEmptyStarFill);
+    if (!empty2) filled += 1;
+  });
+  return filled > 0 ? String(filled) : "";
+}
+function ratingFromStarFills($2, node) {
+  const stars = node.find('[class*="star" i]').filter((_i, el) => /(^|\s)([\w-]*__)?star(\s|$)/i.test($2(el).attr("class") || ""));
+  if (stars.length === 5) {
+    const filled = stars.filter((_i, el) => $2(el).find('[class*="star-fill" i]').length > 0).length;
+    if (filled > 0) return String(filled);
+  }
+  const overlays = node.find('[style*="width"][class*="overflow-hidden"]').filter((_i, el) => $2(el).find("svg").length > 0).slice(0, 5);
+  if (overlays.length === 5) {
+    let sum = 0;
+    overlays.each((_i, el) => {
+      const pct = Number(($2(el).attr("style") || "").match(/width:\s*([\d.]+)%/)?.[1]);
+      if (Number.isFinite(pct)) sum += Math.min(100, Math.max(0, pct)) / 100;
+    });
+    const rounded = Math.round(sum);
+    return rounded >= 1 && rounded <= 5 ? String(rounded) : "";
+  }
+  return "";
+}
+function cleanProductTitle(title) {
+  if (!title) return null;
+  const t = title.split(/\s+[|\u2013\u2014]\s+/)[0].replace(/^(customer\s+)?reviews?\s+(for|of)\s+/i, "").trim();
+  return t || null;
+}
+function productIdFromUrl(url) {
+  const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
+  const m = (
+    // Target: /p/<name>/-/A-93249836 (the A- number is Target's item id).
+    url.match(/\/-\/(A-\d{5,})(?:[/?#]|$)/) || url.match(/\/(\d{4,})\.html/) || // A product code with letters and digits as the page name: /edgartown-pocket-tee/1V011322.html.
+    url.match(/\/([A-Z0-9]*\d[A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z][A-Z0-9]*\d[A-Z0-9]*)\.html(?:[?#]|$)/i) || // A code contains a digit. A slug such as /product/mens-shirt/ must not win over the id after it.
+    url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) || url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i)
+  );
+  if (m) return m[1];
+  if (param) return param[1];
+  const numericSegment = url.match(/^[^?#]*\/(\d{5,})(?:[/?#]|$)/);
+  return numericSegment ? numericSegment[1] : null;
+}
+function ratingFromLabel(label) {
+  const m = label?.match(/(\d+(?:\.\d+)?)\s*(?:out\s*of|\/)\s*(\d+)/i);
+  if (!m) return "";
+  const value = parseFloat(m[1]);
+  const best = parseFloat(m[2]);
+  if (!(best > 1)) return "";
+  return best === 5 ? String(value) : String(1 + (value - 1) / (best - 1) * 4);
+}
+function describeFetchFailure(url, error) {
+  const err = error instanceof Error ? error : new Error(String(error));
+  const cause = err.cause instanceof Error ? ` (${err.cause.code ?? err.cause.message})` : "";
+  return { status: 502, message: `Could not reach ${url}: ${err.message}${cause}.`, blocked: false, retryInBrowser: true };
+}
+function isRefusalStatus(status) {
+  return [403, 406, 418, 429, 503].includes(status);
+}
+function isBotCheckRedirect(location2) {
+  return /^\/px(\/|\?|$)|\/PX-Show(\?|$)/i.test(location2.split("#")[0].replace(/^https?:\/\/[^/]+/i, ""));
+}
+function blockPageTitle(html3) {
+  const head2 = html3.match(/<head[\s>][\s\S]*?<\/head>/i)?.[0] ?? html3.slice(0, 5e3);
+  const title = (head2.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "").replace(/\s+/g, " ").trim();
+  const pattern = /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
+  return pattern.test(title) ? title : null;
+}
+function blockPageText(html3) {
+  const text4 = html3.replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/\s+/g, " ").trim();
+  if (text4.length > 1500) return null;
+  if (/automated (traffic|requests|access)|unusual (activity|traffic)|verify (that )?you are (a )?human|not a robot|enable javascript and cookies to continue/i.test(text4)) {
+    return "refused";
+  }
+  if (/system maintenance is in progress|(down|closed) for (scheduled )?maintenance|be right back|we.ll be back (soon|shortly)/i.test(text4)) {
+    return "maintenance";
+  }
+  return null;
+}
+function decodeHtmlEntities(text4) {
+  const named = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  return text4.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body) => {
+    if (body[0] === "#") {
+      const code = body[1].toLowerCase() === "x" ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      return Number.isFinite(code) && code > 0 && code < 1114112 ? String.fromCodePoint(code) : whole;
+    }
+    return named[body.toLowerCase()] ?? whole;
+  });
+}
+var GUIDE_LABEL = /size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|how to measure|measurement guide/i;
+var GUIDE_PATH = /size[-_]?(guide|chart)s?\b|sizing[-_]?(guide|chart)?|fit[-_]?guide|measure/i;
+var GUIDE_NAME = /size\s*[-_]?\s*(guide|chart)s?|sizing\s*[-_]?\s*(guide|chart)?/i;
+function guideLinksFromHtml(html3, pageUrl, limit = 3) {
+  let page;
+  try {
+    page = new URL(pageUrl);
+  } catch {
+    return [];
+  }
+  const site = (host) => host.replace(/^www\./, "");
+  const $2 = load(html3);
+  const found = /* @__PURE__ */ new Map();
+  $2("a[href]").each((_i, a) => {
+    const raw = ($2(a).attr("href") ?? "").trim();
+    if (!raw || raw.startsWith("#") || /^(javascript|mailto|tel):/i.test(raw)) return;
+    let target;
+    try {
+      target = new URL(raw, page);
+    } catch {
+      return;
+    }
+    if (!/^https?:$/.test(target.protocol)) return;
+    if (site(target.host) !== site(page.host) || target.pathname === page.pathname) return;
+    if (/^\/([a-z]{2}(-[a-z]{2})?\/)?(products|collections|cart|account|search)\b/i.test(target.pathname)) return;
+    if (/[?&](prefn1|prefv1|filter|sort|variant)=/i.test(target.search)) return;
+    const label = ($2(a).attr("aria-label") || $2(a).text() || "").replace(/\s+/g, " ").trim();
+    const byLabel = label.length < 60 && GUIDE_LABEL.test(label);
+    if (!byLabel && !GUIDE_PATH.test(target.pathname)) return;
+    const score = (GUIDE_NAME.test(label) ? 2 : 0) + (GUIDE_NAME.test(target.pathname) ? 2 : 0) + (byLabel ? 1 : 0);
+    const key = target.origin + target.pathname;
+    if (!found.has(key) || found.get(key).score < score) found.set(key, { href: target.href, score });
+  });
+  return [...found.values()].sort((x, y) => y.score - x.score).map((x) => x.href).slice(0, limit);
+}
+var SECOND_LEVEL_LABELS = /* @__PURE__ */ new Set(["co", "com", "org", "net", "gov", "edu", "ac"]);
+function registrableDomain(host) {
+  const parts = host.toLowerCase().split(".").filter(Boolean);
+  if (parts.length <= 2) return parts.join(".");
+  const last2 = parts[parts.length - 1];
+  const before2 = parts[parts.length - 2];
+  return parts.slice(last2.length === 2 && SECOND_LEVEL_LABELS.has(before2) ? -3 : -2).join(".");
+}
+function memoizeParse(parse8, max = 16) {
+  const cache = /* @__PURE__ */ new Map();
+  const stats = { calls: 0, parses: 0 };
+  const run = (html3, hint) => {
+    stats.calls++;
+    const key = `${(0, import_node_crypto.createHash)("sha256").update(html3).digest("hex")}|${hint?.name ?? ""}|${hint?.url ?? ""}`;
+    let rows = cache.get(key);
+    if (rows) {
+      cache.delete(key);
+    } else {
+      stats.parses++;
+      rows = parse8(html3, hint);
+    }
+    cache.set(key, rows);
+    if (cache.size > max) cache.delete(cache.keys().next().value);
+    return rows.map((row) => ({ ...row }));
+  };
+  return Object.assign(run, { stats });
+}
+var parseSizeChartCached = memoizeParse(parseSizeChart);
+var parseGuidePageChartCached = memoizeParse((html3, hint) => parseGuidePageChart(html3, hint ?? {}));
+function sizeChartFromPages(pages, guidePages, hint) {
   for (const html3 of pages) {
     if (!html3) continue;
-    const rows = parseSizeChart(html3);
+    const rows = parseSizeChartCached(html3, hint);
+    if (rows.length > 0) return rows;
+  }
+  for (const html3 of guidePages) {
+    if (!html3) continue;
+    const rows = parseGuidePageChartCached(html3, hint);
     if (rows.length > 0) return rows;
   }
   return [];
 }
 
-// webscraper/headlessFetch.ts
-var REVIEW_CARD_SELECTOR = '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
-var NAV_TIMEOUT_MS = 45e3;
-var RENDER_DEADLINE_MS = 12e4;
-var RENDER_TAIL_MS = 25e3;
-var REVIEW_WAIT_MS = 1e4;
-var MAX_REVIEW_PAGES = 60;
-var MAX_REVIEWS = 300;
-var MAX_LINKED_REVIEW_PAGES = 15;
-var MAX_CAPTURED_BODY_BYTES = 5e6;
-var MAX_CAPTURED_TOTAL_BYTES = 3e7;
-var REVIEW_WIDGET_SELECTOR = [
-  "#yotpo-main-widget",
-  ".yotpo-main-widget",
-  '[class*="yotpo-reviews"]',
-  ".yotpo-display-wrapper",
-  ".okeReviews",
-  "[data-oke-reviews-widget]",
-  "[data-oke-widget]",
-  ".jdgm-widget",
-  ".jdgm-rev-widg",
-  "#judgeme_product_reviews",
-  "#stamped-main-widget",
-  ".stamped-main-widget",
-  "#stamped-reviews-widget",
-  '[class*="junip"]',
-  "junip-product-reviews",
-  "[data-bv-show]",
-  "#BVRRContainer",
-  '[class*="bv-rnr"]',
-  '[class*="bv_main"]',
-  '[class*="bv-pagination"]',
-  "[data-bv-v]",
-  "#pr-reviewdisplay",
-  ".pr-review-display",
-  ".kl_reviews",
-  '[class*="kl_reviews"]',
-  "#klaviyo-reviews-all",
-  ".loox-reviews-default",
-  "#looxReviews",
-  ".reviews-io-widget",
-  "#ReviewsWidget",
-  "#full-page-widget",
-  "#reviews",
-  "#Reviews",
-  "#product-reviews",
-  '[id*="review" i]:not([id*="preview" i])',
-  '[class*="review" i]:not([class*="preview" i])'
-].join(", ");
-var RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating|rate)"\s*:/;
-var JSONP = /^[\w$.]+\(\s*([\s\S]*?)\s*\)\s*;?\s*$/;
-var JsonCapture = class {
-  constructor() {
-    this.items = [];
-    this.bytes = 0;
-    this.pending = /* @__PURE__ */ new Set();
-    /** Rough count of rating fields seen, used to stop paging once enough reviews loaded. */
-    this.ratingFields = 0;
-    this.counted = /* @__PURE__ */ new Set();
-    this.countedItems = 0;
-    this.statedTotal = null;
-    this.statedTotalFrom = 0;
-  }
-  offer(url, status, contentType, read) {
-    if (status < 200 || status >= 300) return;
-    const isJson = /json/i.test(contentType);
-    const maybeJsonp = /javascript|text\/plain/i.test(contentType) && /review|rating|ugc|bazaarvoice|batch/i.test(url);
-    if (!isJson && !maybeJsonp) return;
-    const job = read().then((raw) => this.add(url, raw)).catch(() => {
-    }).finally(() => this.pending.delete(job));
-    this.pending.add(job);
-  }
-  add(url, raw) {
-    if (raw.length > MAX_CAPTURED_BODY_BYTES || this.bytes + raw.length > MAX_CAPTURED_TOTAL_BYTES) return;
-    let body = raw.trim();
-    const wrapped = body[0] !== "{" && body[0] !== "[" ? JSONP.exec(body) : null;
-    if (wrapped) body = wrapped[1];
-    if (body[0] !== "{" && body[0] !== "[") return;
-    if (!RATING_FIELD.test(body)) return;
-    this.items.push({ url, body });
-    this.bytes += body.length;
-    this.ratingFields += (body.match(new RegExp(RATING_FIELD.source, "g")) ?? []).length;
-  }
-  /** Distinct reviews in the JSON kept so far (by id, else by the start of the text). */
-  reviewCount() {
-    for (; this.countedItems < this.items.length; this.countedItems++) {
-      const set = extractReviewsFromJson(parseJsonBody(this.items[this.countedItems].body));
-      for (const r of set.reviews) this.counted.add(reviewIdentity(r));
-      if (set.reportedTotal !== null && set.reviews.length >= this.statedTotalFrom) {
-        this.statedTotal = set.reportedTotal;
-        this.statedTotalFrom = set.reviews.length;
-      }
-    }
-    return this.counted.size;
-  }
-  /** The largest product review total the kept JSON states, or null. */
-  reportedTotal() {
-    this.reviewCount();
-    return this.statedTotal;
-  }
-  async settle(timeoutMs = 3e3) {
-    await Promise.race([Promise.all([...this.pending]), new Promise((r) => setTimeout(r, timeoutMs))]);
-  }
-};
-function shouldUseHeadlessRender(input) {
-  if (!input.isRemoteUrl || input.renderMode === "never" || input.staticFailed) return false;
-  if (input.renderMode === "always") return true;
-  if (input.reviewCount === null || input.reviewCount === 0) return true;
-  if (typeof input.reportedReviewCount === "number" && input.reviewCount >= input.reportedReviewCount) return false;
-  return true;
-}
-var browserPromise = null;
-var renderTail = Promise.resolve();
-var SERVERLESS_CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar";
-function startUrlAllowsPrivate(raw) {
-  try {
-    return isBlockedHostname(new URL(raw).hostname);
-  } catch {
-    return false;
-  }
-}
-function renderBudgetMs() {
-  return process.env.VERCEL ? 5e4 : RENDER_DEADLINE_MS;
-}
-async function getBrowser() {
-  if (!browserPromise) {
-    browserPromise = (process.env.VERCEL ? launchServerlessBrowser() : launchPlaywrightBrowser()).catch((err) => {
-      browserPromise = null;
-      throw err;
-    });
-  }
-  return browserPromise;
-}
-async function launchPlaywrightBrowser() {
-  const { chromium } = await import("playwright");
-  return chromium.launch({
-    headless: true,
-    args: ["--no-sandbox"]
-  });
-}
-async function launchServerlessBrowser() {
-  const chromiumMod = await import("@sparticuz/chromium-min");
-  const puppeteerMod = await import("puppeteer-core");
-  const chromium = chromiumMod.default ?? chromiumMod;
-  const puppeteer = puppeteerMod.default ?? puppeteerMod;
-  chromium.setGraphicsMode = false;
-  return puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(SERVERLESS_CHROMIUM_PACK),
-    headless: true,
-    defaultViewport: { width: 1366, height: 900 }
-  });
-}
-async function closeHeadlessBrowser() {
-  if (!browserPromise) return;
-  const pending = browserPromise;
-  browserPromise = null;
-  try {
-    await (await pending).close();
-  } catch {
-  }
-}
-async function clickFirst(page, role, name) {
-  const loc = page.getByRole(role, { name }).first();
-  try {
-    if (await loc.isVisible({ timeout: 500 })) {
-      await loc.click({ timeout: 2e3 });
-      return true;
-    }
-  } catch {
-  }
-  return false;
-}
+// webscraper/render/pageScripts.ts
 var DEEP_QUERY = `const deepAll = (selector, root = document) => {
   const out = [...root.querySelectorAll(selector)];
   for (const el of root.querySelectorAll('*')) if (el.shadowRoot) out.push(...deepAll(selector, el.shadowRoot));
@@ -90547,6 +90034,46 @@ var OPEN_RATING_SUMMARY = `(() => {
     if (!r.width || !r.height) continue;
     el.click();
     return label.slice(0, 40);
+  }
+  return '';
+})()`;
+var CLICK_NEXT_NUMBERED_PAGE = `(() => {
+  ${DEEP_QUERY}
+  const label = (el) => (el.getAttribute('aria-label') || '').trim();
+  const pages = deepAll('button, [role="button"]').filter((el) => /^page \\d+$/i.test(label(el)));
+  const current = pages.find((el) => el.getAttribute('aria-current') === 'page');
+  if (!current) {
+    // Salesforce storefronts: <div class="page-numbers"><div class="page-number active" data-page="1">\u2026
+    const active = deepAll('.page-numbers .page-number.active[data-page]')[0];
+    const nextDiv = active && active.nextElementSibling;
+    if (!nextDiv || !nextDiv.getAttribute('data-page')) return '';
+    nextDiv.click();
+    return 'Page ' + nextDiv.getAttribute('data-page');
+  }
+  const n = Number(label(current).replace(/\\D+/g, ''));
+  const next = pages.find((el) => label(el).toLowerCase() === 'page ' + (n + 1));
+  if (!next) return '';
+  next.click();
+  return label(next);
+})()`;
+var REVIEW_CARDS_MARKUP = `(() => {
+  ${DEEP_QUERY}
+  // A wrapper that holds another match is skipped, as the reader does, so a card and its child are not both collected.
+  const cards = deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)});
+  return '<div>' + cards.filter((el) => !cards.some((other) => other !== el && el.contains(other))).map((el) => el.outerHTML).join('') + '</div>';
+})()`;
+var OPEN_REVIEWS_HEADING = `(() => {
+  ${DEEP_QUERY}
+  const showing = deepAll(${JSON.stringify(REVIEW_CARD_SELECTOR)}).some((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+  if (showing) return '';
+  for (const el of deepAll('span, div, li, h2, h3, h4, p')) {
+    if (el.closest('a, button, [role="tab"]') || el.children.length > 3) continue;
+    const label = (el.textContent || '').replace(/\\s+/g, ' ').trim();
+    if (!/^(customer )?reviews?( ?\\(\\d[\\d,]*\\))?$/i.test(label)) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || window.getComputedStyle(el).cursor !== 'pointer') continue;
+    el.click();
+    return label;
   }
   return '';
 })()`;
@@ -90755,207 +90282,248 @@ var SERIALIZE_WITH_SHADOW_ROOTS = `(() => {
   const idx = html.lastIndexOf('</body>');
   return '<!DOCTYPE html>' + (idx === -1 ? html + dump : html.slice(0, idx) + dump + html.slice(idx));
 })()`;
-async function countReviews(page) {
-  return page.locator(REVIEW_CARD_SELECTOR).count();
-}
-async function hasReviews(page) {
-  return await countReviews(page) > 0;
-}
-async function waitForMoreReviews(page, before2, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (await countReviews(page) > before2) return true;
-    await page.waitForTimeout(250);
-  }
-  return false;
-}
-async function renderPageHtml(url) {
-  const run = renderTail.then(() => renderPageHtmlOnce(url));
-  renderTail = run.then(
-    () => {
-    },
-    () => {
-    }
-  );
-  return run;
-}
-async function renderPageHtmlOnce(url) {
-  if (process.env.VERCEL) return renderWithServerlessChromium(url);
-  return renderWithPlaywright(url);
-}
-async function renderWithPlaywright(url) {
-  const browser = await getBrowser();
-  const context = await browser.newContext({
-    locale: "en-US",
-    viewport: { width: 1366, height: 900 }
-  });
-  const allowPrivate = startUrlAllowsPrivate(url);
-  const hostIsBlocked = createRequestHostGuard();
-  await context.route("**/*", async (route) => {
-    const type = route.request().resourceType();
-    if (type === "image" || type === "media" || type === "font") return route.abort();
-    if (!allowPrivate && await hostIsBlocked(route.request().url())) return route.abort();
-    return route.continue();
-  });
-  const page = await context.newPage();
-  const capture = new JsonCapture();
-  page.on("response", (response) => {
-    capture.offer(response.url(), response.status(), response.headers()["content-type"] ?? "", () => response.text());
-  });
-  const startedAt = Date.now();
-  const stopPagingAt = startedAt + renderBudgetMs() - RENDER_TAIL_MS;
-  let timedOut = false;
-  const deadline = setTimeout(() => {
-    timedOut = true;
-    context.close().catch(() => {
-    });
-  }, renderBudgetMs());
+var CLICK_FRAME_LOAD_MORE = `(() => {
+  const btn = [...document.querySelectorAll('button')].find((b) => /^(show|load|see|view) more( reviews?)?$/i.test((b.textContent || '').trim()) && b.getBoundingClientRect().width > 0 && !b.disabled);
+  if (!btn) return '';
+  btn.click();
+  return (btn.textContent || '').trim();
+})()`;
+
+// webscraper/render/sizeGuide.ts
+var SIZE_GUIDE_LABEL = /size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|find\s*(your|my)\s*(size|fit)|size\s*(info|help)|how to measure|measurements?$/i;
+var SIZE_GUIDE_TEXT = /^\s*(size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|find\s*(your|my)\s*size|size\s*info(rmation)?|size\s*help)\s*[+–—-]?\s*$/i;
+async function clickLocator(loc) {
   try {
-    const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
-    const status = response?.status() ?? null;
-    if (status !== null && status >= 400) {
-      return { html: "", status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
-    }
-    await page.waitForLoadState("networkidle", { timeout: 8e3 }).catch(() => {
-    });
-    await clickFirst(page, "button", /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
-    await page.evaluate(SCROLL_TO_END);
-    let chartHtml = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
-    const reviewsBeforeOpening = await countReviews(page);
-    const openedSection = await clickFirst(page, "tab", /reviews?/i) || await clickFirst(page, "button", /^(customer )?reviews?\b/i) || !await hasReviews(page) && capture.ratingFields === 0 && await clickFirst(page, "link", /^(read |see |customer )?(all )?reviews?\b/i);
-    if (openedSection) {
-      await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
-      });
-      await waitForMoreReviews(page, reviewsBeforeOpening, REVIEW_WAIT_MS);
-    }
-    if (capture.reviewCount() === 0 && await page.evaluate(OPEN_RATING_SUMMARY)) {
-      await page.waitForLoadState("networkidle", { timeout: 6e3 }).catch(() => {
-      });
-    }
-    await page.evaluate(REVIEW_WIDGETS_INTO_VIEW);
-    await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
-    });
-    await capture.settle();
-    const reviewSelectorFound = capture.ratingFields > 0 || await page.locator(REVIEW_CARD_SELECTOR).first().waitFor({ timeout: REVIEW_WAIT_MS, state: "attached" }).then(() => true).catch(() => false);
-    const hasReviewWidget = await page.locator(REVIEW_WIDGET_SELECTOR).count() > 0;
-    const pagingOps = {
-      click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`),
-      progress: async () => ({ json: capture.reviewCount(), cards: await countReviews(page) }),
-      enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
-      settle: () => capture.settle(1500),
-      sleep: (ms) => page.waitForTimeout(ms),
-      scroll: () => page.evaluate(SCROLL_TO_BOTTOM),
-      realClick: async () => {
-        try {
-          const control = page.locator('[data-pearfit-paging="1"]').first();
-          const isLink = await control.evaluate(
-            (el) => el.tagName === "A" && !!el.getAttribute("href") && !/^(#|javascript:)/i.test(el.getAttribute("href") || "")
-          );
-          if (isLink) return false;
-          await control.scrollIntoViewIfNeeded({ timeout: 2e3 });
-          try {
-            await control.click({ timeout: 3e3 });
-          } catch {
-            await page.keyboard.press("Escape");
-            await control.click({ timeout: 3e3 });
-          }
-          return true;
-        } catch {
-          return false;
-        }
-      },
-      stopAt: stopPagingAt
-    };
-    if (process.env.SCRAPER_DEBUG) console.error(`[render] reviewSelectorFound=${reviewSelectorFound} hasReviewWidget=${hasReviewWidget} json=${capture.items.length}`);
-    if (reviewSelectorFound || hasReviewWidget) {
-      let sorted = await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms));
-      if (!sorted) sorted = await sortNewestByRealClick(page);
-      if (process.env.SCRAPER_DEBUG) console.error(`[render] sort=${JSON.stringify(sorted)}`);
-      if (sorted) {
-        await page.waitForLoadState("networkidle", { timeout: 4e3 }).catch(() => {
-        });
-        await capture.settle();
-      }
-      await pageThroughReviews(pagingOps);
-    }
-    const stated = capture.reportedTotal();
-    const reviewPage = await page.evaluate(ALL_REVIEWS_LINK);
-    const timeLeft = stopPagingAt - Date.now();
-    if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25e3) {
-      await clickFirst(page, "tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-      await clickFirst(page, "button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-      const withGuide = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
-      if (parseSizeChart(withGuide).length > 0) chartHtml = withGuide;
-      if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
-      await page.goto(reviewPage, { waitUntil: "domcontentloaded", timeout: Math.min(NAV_TIMEOUT_MS, timeLeft - 1e4) }).catch(() => null);
-      await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
-      });
-      await page.evaluate(REVIEW_WIDGETS_INTO_VIEW).catch(() => {
-      });
-      await capture.settle();
-      await pageThroughReviews(pagingOps);
-    }
-    const extraHtml = [];
-    let cardsKept = 0;
-    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8e3; i++) {
-      const known = capture.reportedTotal();
-      if (known !== null && capture.reviewCount() >= known) break;
-      const cardsHere = await countReviews(page).catch(() => 0);
-      if (capture.reviewCount() + cardsKept + cardsHere >= MAX_REVIEWS) break;
-      const next2 = await page.evaluate(NEXT_REVIEW_PAGE_LINK);
-      if (!next2) break;
-      if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next2}`);
-      const here = page.url();
-      extraHtml.push(await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS));
-      cardsKept += cardsHere;
-      const moved = await page.goto(next2, { waitUntil: "domcontentloaded", timeout: Math.max(3e3, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3e3)) }).then(() => true, () => false);
-      if (!moved) {
-        if (page.url() === here) extraHtml.pop();
-        break;
-      }
-      await page.waitForLoadState("networkidle", { timeout: 3e3 }).catch(() => {
-      });
-      await capture.settle(1500);
-    }
-    await clickFirst(page, "tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-    await clickFirst(page, "button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-    await page.waitForLoadState("networkidle", { timeout: 2e3 }).catch(() => {
-    });
-    await capture.settle(2e3);
-    const html3 = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
-    return {
-      html: html3,
-      status,
-      finalUrl: page.url(),
-      reviewSelectorFound,
-      chartHtml,
-      jsonResponses: capture.items,
-      extraHtml
-    };
-  } catch (err) {
-    if (timedOut) {
-      throw new Error(`Headless render timed out after ${renderBudgetMs() / 1e3}s`);
-    }
-    throw err;
-  } finally {
-    clearTimeout(deadline);
-    await context.close().catch(() => {
-    });
-  }
-}
-async function sortNewestByRealClick(page) {
-  const button = page.locator('[aria-haspopup="menu"], [aria-haspopup="listbox"], [aria-haspopup="true"], [role="combobox"]').filter({ hasText: /^\s*sort\b/i }).or(page.locator('[aria-haspopup][aria-label^="sort" i]')).first();
-  try {
-    if (!await button.isVisible({ timeout: 500 })) return "";
-    await page.keyboard.press("Escape");
-    await button.scrollIntoViewIfNeeded({ timeout: 2e3 });
-    await button.click({ timeout: 3e3 });
-    await page.waitForTimeout(600);
-    return await page.evaluate(`${SORT_NEWEST}('pick')`) || "";
+    if (!await loc.isVisible({ timeout: 500 })) return false;
   } catch {
-    return "";
+    return false;
+  }
+  try {
+    await loc.click({ timeout: 2e3 });
+    return true;
+  } catch {
+    try {
+      await loc.evaluate((el) => el.click());
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
+var VISIBLE_TABLES = `(() => {
+  let count = 0;
+  const walk = (root) => {
+    for (const t of root.querySelectorAll('table')) if (t.getClientRects().length > 0) count++;
+    for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot);
+  };
+  walk(document);
+  return count;
+})()`;
+function sizeGuideControls(page) {
+  const inPage = 'a:not([href]), a[href^="#"], a[href^="javascript"]';
+  return [
+    page.getByRole("tab", { name: SIZE_GUIDE_LABEL }),
+    page.getByRole("button", { name: SIZE_GUIDE_LABEL }),
+    page.locator("summary").filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.locator(inPage).filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.locator('[aria-haspopup="dialog"], [aria-controls], [data-modal], [data-drawer], [data-toggle], [data-bs-toggle]').filter({ hasText: SIZE_GUIDE_LABEL }),
+    page.getByText(SIZE_GUIDE_TEXT).locator("visible=true")
+  ];
+}
+function withoutHash(url) {
+  return url.split("#")[0];
+}
+var GUIDE_CONTROLS_PER_GROUP = 3;
+var GUIDE_CONTROL_GROUPS = 6;
+async function openSizeGuideWith(ops, until, maxTries = 4, hint) {
+  const now = ops.now ?? Date.now;
+  let tries = 0;
+  for (let group = 0; group < GUIDE_CONTROL_GROUPS; group++) {
+    if (until - now() < 6e3) break;
+    const count = Math.min(await ops.count(group).catch(() => 0), GUIDE_CONTROLS_PER_GROUP);
+    for (let i = 0; i < count && tries < maxTries && until - now() > 6e3; i++) {
+      const before2 = withoutHash(ops.url());
+      const tablesBefore = await ops.tables().catch(() => 0);
+      if (!await ops.click(group, i).catch(() => false)) continue;
+      tries += 1;
+      const waitForTable = async (ms) => {
+        const settleBy = Math.min(now() + ms, until);
+        do {
+          await ops.sleep(400);
+        } while (now() < settleBy && await ops.tables().catch(() => 0) <= tablesBefore);
+      };
+      await waitForTable(2500);
+      if (withoutHash(ops.url()) !== before2) {
+        await ops.back().catch(() => {
+        });
+        continue;
+      }
+      if (await ops.tables().catch(() => 0) <= tablesBefore && ops.retryClick && until - now() > 8e3) {
+        if (await ops.retryClick().catch(() => false)) await waitForTable(2e3);
+        if (withoutHash(ops.url()) !== before2) {
+          await ops.back().catch(() => {
+          });
+          continue;
+        }
+      }
+      const html3 = await ops.serialize().catch(() => "");
+      if (html3 && parseSizeChartCached(html3, hint).length > 0) return html3;
+      await ops.escape().catch(() => {
+      });
+    }
+    if (tries >= maxTries) break;
+  }
+  return null;
+}
+async function openSizeGuide(page, until = Date.now() + 2e4, maxTries = 4, hint) {
+  return openSizeGuideWith(playwrightGuideOps(page), until, maxTries, hint);
+}
+function playwrightGuideOps(page) {
+  const groups = sizeGuideControls(page);
+  return {
+    url: () => page.url(),
+    count: (group) => groups[group].count(),
+    click: (group, index2) => clickLocator(groups[group].nth(index2)),
+    tables: () => page.evaluate(VISIBLE_TABLES),
+    serialize: () => page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS),
+    escape: () => page.keyboard.press("Escape"),
+    back: async () => {
+      await page.goBack({ waitUntil: "domcontentloaded", timeout: 8e3 });
+    },
+    sleep: (ms) => page.waitForTimeout(ms)
+  };
+}
+var GUIDE_LINKS = `(() => {
+  const labelRe = new RegExp(${JSON.stringify(GUIDE_LABEL.source)}, 'i');
+  const pathRe = new RegExp(${JSON.stringify(GUIDE_PATH.source)}, 'i');
+  const sizeRe = new RegExp(${JSON.stringify(GUIDE_NAME.source)}, 'i');
+  const site = (h) => h.replace(/^www\\./, '');
+  const found = new Map();
+  for (const a of document.querySelectorAll('a[href]')) {
+    const raw = a.getAttribute('href') || '';
+    if (!raw || raw.startsWith('#') || /^(javascript|mailto|tel):/i.test(raw)) continue;
+    let u;
+    try { u = new URL(raw, location.href); } catch { continue; }
+    if (site(u.host) !== site(location.host) || u.pathname === location.pathname) continue;
+    if (/^\\/([a-z]{2}(-[a-z]{2})?\\/)?(products|collections|cart|account|search)\\b/i.test(u.pathname)) continue;
+    if (/[?&](prefn1|prefv1|filter|sort|variant)=/i.test(u.search)) continue;
+    const label = (a.getAttribute('aria-label') || a.textContent || '').replace(/\\s+/g, ' ').trim();
+    const byLabel = label.length < 60 && labelRe.test(label);
+    if (!byLabel && !pathRe.test(u.pathname)) continue;
+    // A page named size chart / size guide beats a "fit guide" (which usually describes cuts, not measurements).
+    const score = (sizeRe.test(label) ? 2 : 0) + (sizeRe.test(u.pathname) ? 2 : 0) + (byLabel ? 1 : 0);
+    const key = u.origin + u.pathname;
+    if (!found.has(key) || found.get(key).score < score) found.set(key, { href: u.href, score });
+  }
+  return [...found.values()].sort((x, y) => y.score - x.score).map((x) => x.href).slice(0, 3);
+})()`;
+var MAX_GUIDE_PAGES = 2;
+async function fetchGuidePagesWith(ops, until) {
+  const now = ops.now ?? Date.now;
+  const pages = [];
+  const links = await ops.links().catch(() => []) ?? [];
+  for (const href of links.slice(0, MAX_GUIDE_PAGES)) {
+    const left = until - now();
+    if (left < 8e3) break;
+    const html3 = await ops.load(href, Math.min(15e3, left - 3e3)).catch(() => null);
+    if (html3) pages.push(html3);
+  }
+  return pages;
+}
+async function fetchGuidePages(page, until) {
+  return fetchGuidePagesWith(
+    {
+      links: async () => await page.evaluate(GUIDE_LINKS) ?? [],
+      load: async (href, timeoutMs) => {
+        const guide = await page.context().newPage();
+        try {
+          await guide.goto(href, { waitUntil: "domcontentloaded", timeout: timeoutMs });
+          await guide.waitForLoadState("networkidle", { timeout: 3e3 }).catch(() => {
+          });
+          return await guide.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
+        } finally {
+          await guide.close().catch(() => {
+          });
+        }
+      }
+    },
+    until
+  );
+}
+async function fetchGuidePagesByHttp(html3, pageUrl, fetchPage, until = Date.now() + 3e4) {
+  let refused = false;
+  return fetchGuidePagesWith(
+    {
+      links: async () => guideLinksFromHtml(html3, pageUrl),
+      load: async (href, timeoutMs) => {
+        if (refused) return null;
+        const result = await fetchPage(href, timeoutMs);
+        if ("html" in result) return result.html;
+        if (result.refused) refused = true;
+        return null;
+      }
+    },
+    until
+  );
+}
+var SIZE_GUIDE_CONTROL_IN_PAGE = `((group, index, act, labelSource, textSource) => {
+  ${DEEP_QUERY}
+  const label = new RegExp(labelSource, 'i');
+  const plain = new RegExp(textSource, 'i');
+  const flat = (s) => (s || '').replace(/\\s+/g, ' ').trim();
+  const nameOf = (el) => flat(el.getAttribute('aria-label') || el.textContent || el.getAttribute('title') || el.value);
+  const visible = (el) => {
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    const st = window.getComputedStyle(el);
+    return st.visibility !== 'hidden' && st.display !== 'none';
+  };
+  const roleOf = (el) => {
+    const explicit = (el.getAttribute('role') || '').split(/\\s+/)[0];
+    if (explicit) return explicit;
+    if (el.tagName === 'BUTTON' || (el.tagName === 'INPUT' && /^(button|submit|reset)$/i.test(el.type))) return 'button';
+    if (el.tagName === 'A' && el.hasAttribute('href')) return 'link';
+    return '';
+  };
+  const byRole = (role) => deepAll('button, a, input, [role]').filter((el) => roleOf(el) === role && label.test(nameOf(el)));
+  const byText = (selector) => deepAll(selector).filter((el) => label.test(flat(el.textContent)));
+  // A label that is nothing but a size guide name, on the element that holds the text (a DIV or SPAN with a handler).
+  const plainText = () => {
+    const roots = [document, ...deepAll('*').filter((el) => el.shadowRoot).map((el) => el.shadowRoot)];
+    const out = [];
+    for (const root of roots) {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const parent = node.parentElement;
+        if (parent && !/^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OPTION)$/.test(parent.tagName) && plain.test(flat(node.data))) out.push(parent);
+      }
+    }
+    return out;
+  };
+  const groups = [
+    () => byRole('tab'),
+    () => byRole('button'),
+    () => byText('summary'),
+    () => byText('a:not([href]), a[href^="#"], a[href^="javascript"]'),
+    () => byText('[aria-haspopup="dialog"], [aria-controls], [data-modal], [data-drawer], [data-toggle], [data-bs-toggle]'),
+    plainText,
+  ];
+  const found = [...new Set(groups[group]())].filter(visible);
+  if (act === 'count') return found.length;
+  const el = found[index];
+  if (!el) return false;
+  for (const old of deepAll('[data-pearfit-guide]')) old.removeAttribute('data-pearfit-guide');
+  el.setAttribute('data-pearfit-guide', '1');
+  el.scrollIntoView({ block: 'center' });
+  for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup']) {
+    const Ctor = type.startsWith('pointer') && window.PointerEvent ? PointerEvent : MouseEvent;
+    el.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, view: window }));
+  }
+  el.click();
+  return true;
+})`;
+
+// webscraper/render/paging.ts
 async function sortReviewsNewest(evaluate, sleep2) {
   const viaSelect = await evaluate(`${SORT_NEWEST}('select')`);
   if (viaSelect) return viaSelect;
@@ -91013,6 +90581,390 @@ async function pageThroughReviews(ops) {
   }
   return pages;
 }
+
+// webscraper/render/playwrightHelpers.ts
+async function clickFirst(page, role, name) {
+  const loc = page.getByRole(role, { name }).first();
+  try {
+    if (await loc.isVisible({ timeout: 500 })) {
+      if (role === "link" && !linkStaysOnProduct(await loc.getAttribute("href", { timeout: 500 }), page.url())) return false;
+      await loc.click({ timeout: 2e3 });
+      return true;
+    }
+  } catch {
+  }
+  return false;
+}
+async function playwrightProductHint(page) {
+  return { url: page.url(), name: await page.title().catch(() => "") };
+}
+async function evaluateStable(page, script) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await page.evaluate(script);
+    } catch (error) {
+      if (attempt >= 2 || !/execution context was destroyed|navigation/i.test(String(error))) throw error;
+      await page.waitForLoadState("domcontentloaded", { timeout: 15e3 }).catch(() => {
+      });
+      await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
+      });
+    }
+  }
+}
+async function countReviews(page) {
+  return page.locator(REVIEW_CARD_SELECTOR).count();
+}
+async function hasReviews(page) {
+  return await countReviews(page) > 0;
+}
+async function waitForMoreReviews(page, before2, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await countReviews(page) > before2) return true;
+    await page.waitForTimeout(250);
+  }
+  return false;
+}
+async function reviewFramePages(page, stopAt) {
+  const pages = [];
+  for (const frame of page.frames()) {
+    if (frame === page.mainFrame() || !isReviewWidgetFrame(frame.url())) continue;
+    const seen = /* @__PURE__ */ new Set();
+    const collect = async () => {
+      const cards = await frame.evaluate(
+        `(() => { const all = [...document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)})]; return all.filter((el) => !all.some((o) => o !== el && el.contains(o))).map((el) => el.outerHTML); })()`
+      );
+      for (const card of cards) seen.add(card);
+    };
+    try {
+      await collect();
+      for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < stopAt && seen.size < MAX_REVIEWS; i++) {
+        const clicked = await frame.evaluate(CLICK_FRAME_LOAD_MORE);
+        if (process.env.SCRAPER_DEBUG) console.error(`[frame] ${i}: cards=${seen.size} clicked=${JSON.stringify(clicked)}`);
+        if (!clicked) break;
+        const before2 = seen.size;
+        const until = Math.min(Date.now() + 4e3, stopAt);
+        while (Date.now() < until && seen.size <= before2) {
+          await page.waitForTimeout(250);
+          await collect();
+        }
+      }
+      await collect();
+    } catch {
+    }
+    if (seen.size > 0) pages.push(`<div>${[...seen].join("")}</div>`);
+  }
+  return pages;
+}
+function widgetPages(items) {
+  return [...new Set(items.map((item) => embeddedWidgetHtml(item.body)).filter((html3) => html3 !== null))];
+}
+async function newGuardedContext(browser, url) {
+  const context = await browser.newContext({
+    locale: "en-US",
+    viewport: { width: 1366, height: 900 }
+  });
+  const allowPrivate = startUrlAllowsPrivate(url);
+  const hostIsBlocked = createRequestHostGuard();
+  await context.route("**/*", async (route) => {
+    const type = route.request().resourceType();
+    if (type === "image" || type === "media" || type === "font") return route.abort();
+    if (!allowPrivate && await hostIsBlocked(route.request().url())) return route.abort();
+    return route.continue();
+  });
+  return context;
+}
+async function sortNewestByRealClick(page) {
+  const button = page.locator('[aria-haspopup="menu"], [aria-haspopup="listbox"], [aria-haspopup="true"], [role="combobox"]').filter({ hasText: /^\s*sort\b/i }).or(page.locator('[aria-haspopup][aria-label^="sort" i]')).first();
+  try {
+    if (!await button.isVisible({ timeout: 500 })) return "";
+    await page.keyboard.press("Escape");
+    await button.scrollIntoViewIfNeeded({ timeout: 2e3 });
+    await button.click({ timeout: 3e3 });
+    await page.waitForTimeout(600);
+    return await page.evaluate(`${SORT_NEWEST}('pick')`) || "";
+  } catch {
+    return "";
+  }
+}
+
+// webscraper/render/playwrightRender.ts
+var CHART_RENDER_BUDGET_MS = 45e3;
+async function renderChartOnlyWithPlaywright(url) {
+  const browser = await getBrowser();
+  const context = await newGuardedContext(browser, url);
+  const page = await context.newPage();
+  const capture = new JsonCapture();
+  page.on("response", (response) => {
+    capture.offer(response.url(), response.status(), response.headers()["content-type"] ?? "", () => response.text());
+  });
+  const startedAt = Date.now();
+  let timedOut = false;
+  const deadline = setTimeout(() => {
+    timedOut = true;
+    context.close().catch(() => {
+    });
+  }, CHART_RENDER_BUDGET_MS);
+  try {
+    const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 2e4 }).catch((err) => {
+      if (navigationTimedOutAfterLoading(err, page.url())) return null;
+      throw err;
+    });
+    const status = response?.status() ?? null;
+    if (status !== null && status >= 400) {
+      return { html: "", status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
+    }
+    await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
+    });
+    await clickFirst(page, "button", /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
+    const snapshot = await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS);
+    const hint = await playwrightProductHint(page);
+    const chartHtml = parseSizeChartCached(snapshot, hint).length > 0 ? snapshot : await openSizeGuide(page, startedAt + CHART_RENDER_BUDGET_MS - 17e3, 4, hint) ?? snapshot;
+    const html3 = await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS);
+    const guidePages = parseSizeChartCached(chartHtml, hint).length === 0 && parseSizeChartCached(html3, hint).length === 0 ? await fetchGuidePages(page, startedAt + CHART_RENDER_BUDGET_MS - 4e3) : [];
+    await capture.settle(1e3);
+    return { html: html3, status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml, jsonResponses: [], chartJson: capture.chartPages(), guidePages };
+  } catch (err) {
+    if (timedOut) throw new Error(`Headless chart render timed out after ${CHART_RENDER_BUDGET_MS / 1e3}s`);
+    throw err;
+  } finally {
+    clearTimeout(deadline);
+    await context.close().catch(() => {
+    });
+  }
+}
+async function renderWithPlaywright(url) {
+  const browser = await getBrowser();
+  const context = await newGuardedContext(browser, url);
+  const page = await context.newPage();
+  const capture = new JsonCapture();
+  page.on("response", (response) => {
+    capture.offer(response.url(), response.status(), response.headers()["content-type"] ?? "", () => response.text());
+  });
+  const startedAt = Date.now();
+  const stopPagingAt = startedAt + renderBudgetMs() - RENDER_TAIL_MS;
+  let timedOut = false;
+  const deadline = setTimeout(() => {
+    timedOut = true;
+    context.close().catch(() => {
+    });
+  }, renderBudgetMs());
+  try {
+    const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS }).catch((err) => {
+      if (navigationTimedOutAfterLoading(err, page.url())) return null;
+      throw err;
+    });
+    const status = response?.status() ?? null;
+    if (status !== null && status >= 400) {
+      return { html: "", status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
+    }
+    await page.waitForLoadState("networkidle", { timeout: 8e3 }).catch(() => {
+    });
+    await clickFirst(page, "button", /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
+    await evaluateStable(page, SCROLL_TO_END);
+    let chartHtml = await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS);
+    const hint = await playwrightProductHint(page);
+    const reviewsBeforeOpening = await countReviews(page);
+    const openedSection = await clickFirst(page, "tab", /reviews?/i) || await clickFirst(page, "button", /^(customer )?reviews?\b/i) || !await hasReviews(page) && capture.ratingFields === 0 && await clickFirst(page, "link", /^(read |see |customer )?(all )?reviews?\b/i);
+    if (openedSection) {
+      await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
+      });
+      await waitForMoreReviews(page, reviewsBeforeOpening, REVIEW_WAIT_MS);
+    } else if (await evaluateStable(page, OPEN_REVIEWS_HEADING)) {
+      await page.waitForLoadState("networkidle", { timeout: 3e3 }).catch(() => {
+      });
+    }
+    if (capture.reviewCount() === 0 && await evaluateStable(page, OPEN_RATING_SUMMARY)) {
+      await page.waitForLoadState("networkidle", { timeout: 6e3 }).catch(() => {
+      });
+    }
+    await evaluateStable(page, REVIEW_WIDGETS_INTO_VIEW);
+    await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
+    });
+    await capture.settle();
+    const reviewSelectorFound = capture.ratingFields > 0 || await page.locator(REVIEW_CARD_SELECTOR).first().waitFor({ timeout: REVIEW_WAIT_MS, state: "attached" }).then(() => true).catch(() => false);
+    const hasReviewWidget = await page.locator(REVIEW_WIDGET_SELECTOR).count() > 0;
+    const pagingOps = {
+      click: (skip) => page.evaluate(`${CLICK_NEXT_REVIEWS}(${JSON.stringify(skip)})`),
+      progress: async () => ({ json: capture.reviewCount(), cards: await countReviews(page) }),
+      enough: async () => (capture.reviewCount() > 0 ? capture.reviewCount() : await countReviews(page)) >= MAX_REVIEWS,
+      settle: () => capture.settle(1500),
+      sleep: (ms) => page.waitForTimeout(ms),
+      scroll: () => page.evaluate(SCROLL_TO_BOTTOM),
+      realClick: async () => {
+        try {
+          const control = page.locator('[data-pearfit-paging="1"]').first();
+          const isLink = await control.evaluate(
+            (el) => el.tagName === "A" && !!el.getAttribute("href") && !/^(#|javascript:)/i.test(el.getAttribute("href") || "")
+          );
+          if (isLink) return false;
+          await control.scrollIntoViewIfNeeded({ timeout: 2e3 });
+          try {
+            await control.click({ timeout: 3e3 });
+          } catch {
+            await page.keyboard.press("Escape");
+            await control.click({ timeout: 3e3 });
+          }
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      stopAt: stopPagingAt
+    };
+    if (process.env.SCRAPER_DEBUG) console.error(`[render] reviewSelectorFound=${reviewSelectorFound} hasReviewWidget=${hasReviewWidget} json=${capture.items.length}`);
+    if (reviewSelectorFound || hasReviewWidget) {
+      let sorted = await sortReviewsNewest((script) => page.evaluate(script), (ms) => page.waitForTimeout(ms));
+      if (!sorted) sorted = await sortNewestByRealClick(page);
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] sort=${JSON.stringify(sorted)}`);
+      if (sorted) {
+        await page.waitForLoadState("networkidle", { timeout: 4e3 }).catch(() => {
+        });
+        await capture.settle();
+      }
+      await pageThroughReviews(pagingOps);
+    }
+    const stated = capture.reportedTotal();
+    const reviewPage = await page.evaluate(ALL_REVIEWS_LINK);
+    const timeLeft = stopPagingAt - Date.now();
+    if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25e3) {
+      if (parseSizeChartCached(chartHtml, hint).length === 0) chartHtml = await openSizeGuide(page, Date.now() + 1e4, 4, hint) ?? chartHtml;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
+      await page.goto(reviewPage, { waitUntil: "domcontentloaded", timeout: Math.min(NAV_TIMEOUT_MS, timeLeft - 1e4) }).catch(() => null);
+      await page.waitForLoadState("networkidle", { timeout: 5e3 }).catch(() => {
+      });
+      await evaluateStable(page, REVIEW_WIDGETS_INTO_VIEW).catch(() => {
+      });
+      await capture.settle();
+      await pageThroughReviews(pagingOps);
+    }
+    const extraHtml = [];
+    let cardsKept = 0;
+    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8e3; i++) {
+      const known = capture.reportedTotal();
+      if (known !== null && capture.reviewCount() >= known) break;
+      const cardsHere = await countReviews(page).catch(() => 0);
+      if (capture.reviewCount() + cardsKept + cardsHere >= MAX_REVIEWS) break;
+      const next2 = await page.evaluate(NEXT_REVIEW_PAGE_LINK);
+      if (!next2) break;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] review page link ${next2}`);
+      const here = page.url();
+      extraHtml.push(await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS));
+      cardsKept += cardsHere;
+      const moved = await page.goto(next2, { waitUntil: "domcontentloaded", timeout: Math.max(3e3, Math.min(NAV_TIMEOUT_MS, stopPagingAt - Date.now() - 3e3)) }).then(() => true, () => false);
+      if (!moved) {
+        if (page.url() === here) extraHtml.pop();
+        break;
+      }
+      await page.waitForLoadState("networkidle", { timeout: 3e3 }).catch(() => {
+      });
+      await capture.settle(1500);
+    }
+    let cardsOnPages = 0;
+    for (let i = 0; i < MAX_LINKED_REVIEW_PAGES && stopPagingAt - Date.now() > 8e3; i++) {
+      const cardsHere = await countReviews(page).catch(() => 0);
+      if (cardsHere === 0 || cardsOnPages + cardsHere >= MAX_REVIEWS) break;
+      const first3 = await evaluateStable(page, REVIEW_CARDS_MARKUP);
+      const clicked = await evaluateStable(page, CLICK_NEXT_NUMBERED_PAGE);
+      if (!clicked) break;
+      if (process.env.SCRAPER_DEBUG) console.error(`[render] numbered pager ${clicked}`);
+      extraHtml.push(first3);
+      cardsOnPages += cardsHere;
+      const changeUntil = Math.min(Date.now() + 6e3, stopPagingAt);
+      while (Date.now() < changeUntil) {
+        await page.waitForTimeout(300);
+        if (await evaluateStable(page, REVIEW_CARDS_MARKUP) !== first3) break;
+      }
+    }
+    if (parseSizeChartCached(chartHtml, hint).length === 0) {
+      chartHtml = await openSizeGuide(page, startedAt + renderBudgetMs() - 18e3, 4, hint) ?? chartHtml;
+      await page.waitForLoadState("networkidle", { timeout: 2e3 }).catch(() => {
+      });
+    }
+    await capture.settle(2e3);
+    const framePages = await reviewFramePages(page, stopPagingAt);
+    const html3 = await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS);
+    const guidePages = parseSizeChartCached(chartHtml, hint).length === 0 && parseSizeChartCached(html3, hint).length === 0 ? await fetchGuidePages(page, startedAt + renderBudgetMs() - 8e3) : [];
+    return {
+      html: html3,
+      status,
+      finalUrl: page.url(),
+      reviewSelectorFound,
+      chartHtml,
+      jsonResponses: capture.items,
+      chartJson: capture.chartPages(),
+      extraHtml: [...extraHtml, ...widgetPages(capture.items), ...framePages],
+      guidePages
+    };
+  } catch (err) {
+    if (timedOut) {
+      throw new Error(`Headless render timed out after ${renderBudgetMs() / 1e3}s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(deadline);
+    await context.close().catch(() => {
+    });
+  }
+}
+
+// webscraper/render/serverlessRender.ts
+async function guardServerlessPage(page, allowPrivate, hostIsBlocked) {
+  await page.setRequestInterception(true);
+  page.on("request", (req) => {
+    const type = req.resourceType();
+    if (type === "image" || type === "media" || type === "font") {
+      void req.abort();
+      return;
+    }
+    if (allowPrivate) {
+      void req.continue();
+      return;
+    }
+    void hostIsBlocked(req.url()).then(
+      (blocked) => blocked ? req.abort() : req.continue(),
+      () => req.abort()
+    );
+  });
+}
+function serverlessGuideOps(page, sleep2) {
+  const control = (group, index2, act) => page.evaluate(
+    `${SIZE_GUIDE_CONTROL_IN_PAGE}(${group}, ${index2}, ${JSON.stringify(act)}, ${JSON.stringify(SIZE_GUIDE_LABEL.source)}, ${JSON.stringify(SIZE_GUIDE_TEXT.source)})`
+  );
+  return {
+    url: () => page.url(),
+    count: async (group) => Number(await control(group, 0, "count")) || 0,
+    click: async (group, index2) => await control(group, index2, "click") === true,
+    retryClick: async () => {
+      await page.click('pierce/[data-pearfit-guide="1"]');
+      return true;
+    },
+    tables: async () => Number(await page.evaluate(VISIBLE_TABLES)) || 0,
+    serialize: async () => await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS),
+    escape: () => page.keyboard.press("Escape"),
+    back: async () => {
+      await page.goBack({ waitUntil: "domcontentloaded", timeout: 8e3 });
+    },
+    sleep: sleep2
+  };
+}
+function serverlessGuidePageOps(page, openGuardedTab) {
+  return {
+    links: async () => await page.evaluate(GUIDE_LINKS) ?? [],
+    load: async (href, timeoutMs) => {
+      const guide = await openGuardedTab();
+      try {
+        await guide.goto(href, { waitUntil: "domcontentloaded", timeout: timeoutMs });
+        await guide.waitForNetworkIdle({ timeout: 3e3 }).catch(() => {
+        });
+        return await guide.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
+      } finally {
+        await guide.close().catch(() => {
+        });
+      }
+    }
+  };
+}
 var CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
   const re = new RegExp(source, flags);
   const roleOf = (el) => {
@@ -91035,31 +90987,19 @@ var CLICK_ROLE_IN_PAGE = `(role, source, flags) => {
   return false;
 }`;
 async function renderWithServerlessChromium(url) {
-  const browser = await getBrowser();
+  return renderWithServerlessBrowser(await getBrowser(), url);
+}
+async function renderWithServerlessBrowser(browser, url) {
   const page = await browser.newPage();
   const allowPrivate = startUrlAllowsPrivate(url);
   const hostIsBlocked = createRequestHostGuard();
-  await page.setRequestInterception(true);
-  page.on("request", (req) => {
-    const type = req.resourceType();
-    if (type === "image" || type === "media" || type === "font") {
-      void req.abort();
-      return;
-    }
-    if (allowPrivate) {
-      void req.continue();
-      return;
-    }
-    void hostIsBlocked(req.url()).then(
-      (blocked) => blocked ? req.abort() : req.continue(),
-      () => req.abort()
-    );
-  });
+  await guardServerlessPage(page, allowPrivate, hostIsBlocked);
   const capture = new JsonCapture();
   page.on("response", (res) => {
     capture.offer(res.url(), res.status(), res.headers()["content-type"] ?? "", () => res.text());
   });
-  const stopPagingAt = Date.now() + renderBudgetMs() - RENDER_TAIL_MS;
+  const startedAt = Date.now();
+  const stopPagingAt = startedAt + renderBudgetMs() - RENDER_TAIL_MS;
   let timedOut = false;
   const deadline = setTimeout(() => {
     timedOut = true;
@@ -91088,6 +91028,7 @@ async function renderWithServerlessChromium(url) {
     await clickRole("button", /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
     await page.evaluate(SCROLL_TO_END);
     const chartHtml = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
+    const hint = { url: page.url(), name: String(await page.evaluate("document.title").catch(() => "") ?? "") };
     const reviewsBeforeOpening = await countReviews2();
     const openedSection = await clickRole("tab", /reviews?/i) || await clickRole("button", /^(customer )?reviews?\b/i) || await countReviews2() === 0 && capture.ratingFields === 0 && await clickRole("link", /^(read |see |customer )?(all )?reviews?\b/i);
     if (openedSection) {
@@ -91121,12 +91062,32 @@ async function renderWithServerlessChromium(url) {
         stopAt: stopPagingAt
       });
     }
-    await clickRole("tab", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide/i);
-    await clickRole("button", /size\s*(guide|chart)|sizing\s*chart|fit\s*guide|size\s*&\s*fit/i);
-    await sleep2(500);
+    let guideHtml = null;
+    if (parseSizeChartCached(chartHtml, hint).length === 0) {
+      guideHtml = await openSizeGuideWith(serverlessGuideOps(page, sleep2), startedAt + renderBudgetMs() - 18e3, 4, hint);
+      await page.waitForNetworkIdle({ timeout: 2e3 }).catch(() => {
+      });
+    }
     await capture.settle(2e3);
     const html3 = await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS);
-    return { html: html3, status, finalUrl: page.url(), reviewSelectorFound, chartHtml, jsonResponses: capture.items };
+    const guidePages = !guideHtml && parseSizeChartCached(chartHtml, hint).length === 0 && parseSizeChartCached(html3, hint).length === 0 ? await fetchGuidePagesWith(
+      serverlessGuidePageOps(page, async () => {
+        const tab = await browser.newPage();
+        await guardServerlessPage(tab, allowPrivate, hostIsBlocked);
+        return tab;
+      }),
+      startedAt + renderBudgetMs() - 8e3
+    ) : [];
+    return {
+      html: html3,
+      status,
+      finalUrl: page.url(),
+      reviewSelectorFound,
+      chartHtml: guideHtml ?? chartHtml,
+      jsonResponses: capture.items,
+      chartJson: capture.chartPages(),
+      guidePages
+    };
   } catch (err) {
     if (timedOut) throw new Error(`Headless render timed out after ${renderBudgetMs() / 1e3}s`);
     throw err;
@@ -91137,109 +91098,17 @@ async function renderWithServerlessChromium(url) {
   }
 }
 
-// webscraper/pageHelpers.ts
-var LABEL_LINE = /^([A-Za-z][A-Za-z ]{1,30}):\s*(.+)$/;
-function leafTexts($2, node) {
-  const out = [];
-  node.find("*").each((_i, el) => {
-    const child = $2(el);
-    if (child.children().length === 0 || child.is("p")) {
-      const t = child.text().replace(/\s+/g, " ").trim();
-      if (t) out.push(t);
-    }
-  });
-  return out;
+// webscraper/render/renderPage.ts
+async function renderPageHtml(url) {
+  return queueRender(() => renderPageHtmlOnce(url));
 }
-function labelledValue(lines, label) {
-  for (const line of lines) {
-    const m = line.match(LABEL_LINE);
-    if (m && label.test(m[1].trim())) return m[2].trim();
-  }
-  return "";
+async function renderChartOnly(url) {
+  if (process.env.VERCEL) throw new Error("A chart-only render is not available on the hosted function.");
+  return queueRender(() => renderChartOnlyWithPlaywright(url));
 }
-function longestFreeText(lines, exclude) {
-  let best = "";
-  for (const line of lines) {
-    if (LABEL_LINE.test(line) || exclude.includes(line)) continue;
-    if (line.length > best.length) best = line;
-  }
-  return best;
-}
-function isEmptyStarFill(fill) {
-  if (/^transparent$/i.test(fill)) return true;
-  let hex = fill.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i)?.[1];
-  if (!hex) return false;
-  if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return Math.min(r, g, b) >= 192 && Math.max(r, g, b) - Math.min(r, g, b) <= 24;
-}
-function ratingFromStarIcons($2, node) {
-  const block = node.find('[data-testid*="Rating" i], [class*="rating" i], [class*="stars" i]').filter((_i, el) => $2(el).find("svg").length === 5).first();
-  if (block.length === 0) return "";
-  let filled = 0;
-  block.find("svg").each((_i, svg) => {
-    const icon = $2(svg);
-    const fills = [icon.attr("fill"), ...icon.find("[fill]").map((_j, f) => $2(f).attr("fill")).get()].filter(
-      (f) => Boolean(f) && f !== "none"
-    );
-    const cls = icon.attr("class") || "";
-    const empty2 = /empty|off|outline/i.test(cls) || fills.length > 0 && fills.every(isEmptyStarFill);
-    if (!empty2) filled += 1;
-  });
-  return filled > 0 ? String(filled) : "";
-}
-function cleanProductTitle(title) {
-  if (!title) return null;
-  const t = title.split(/\s+[|\u2013\u2014]\s+/)[0].replace(/^(customer\s+)?reviews?\s+(for|of)\s+/i, "").trim();
-  return t || null;
-}
-function productIdFromUrl(url) {
-  const param = url.match(/[?&](?:pid|productId|product_id|itemId|item_id|styleId|style)=([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[&#]|$)/i);
-  const m = (
-    // Target: /p/<name>/-/A-93249836 (the A- number is Target's item id).
-    url.match(/\/-\/(A-\d{5,})(?:[/?#]|$)/) || url.match(/\/(\d{4,})\.html/) || // A product code with letters and digits as the page name: /edgartown-pocket-tee/1V011322.html.
-    url.match(/\/([A-Z0-9]*\d[A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z][A-Z0-9]*\d[A-Z0-9]*)\.html(?:[?#]|$)/i) || // A code contains a digit. A slug such as /product/mens-shirt/ must not win over the id after it.
-    url.match(/\/products?\/([A-Z0-9_-]*\d[A-Z0-9_-]*)(?:[/?#.]|$)/i) || url.match(/\/p\/(?:[^/?#]+\/)*([A-Z0-9]*\d[A-Z0-9]*)(?:[/?#]|$)/i)
-  );
-  if (m) return m[1];
-  if (param) return param[1];
-  const numericSegment = url.match(/^[^?#]*\/(\d{5,})(?:[/?#]|$)/);
-  return numericSegment ? numericSegment[1] : null;
-}
-function ratingFromLabel(label) {
-  const m = label?.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+)/i);
-  if (!m) return "";
-  const value = parseFloat(m[1]);
-  const best = parseFloat(m[2]);
-  if (!(best > 1)) return "";
-  return best === 5 ? String(value) : String(1 + (value - 1) / (best - 1) * 4);
-}
-function blockPageTitle(html3) {
-  const head2 = html3.match(/<head[\s>][\s\S]*?<\/head>/i)?.[0] ?? html3.slice(0, 5e3);
-  const title = (head2.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "").replace(/\s+/g, " ").trim();
-  const pattern = /^(access denied|access to this page has been denied|client challenge|just a moment|attention required|pardon our interruption|are you a robot\??|verify you are (a )?human|request blocked|security check|bot protection)[\s.!…]*([|\-–—:].*)?$/i;
-  return pattern.test(title) ? title : null;
-}
-function blockPageText(html3) {
-  const text4 = html3.replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/\s+/g, " ").trim();
-  if (text4.length > 1500) return null;
-  if (/automated (traffic|requests|access)|unusual (activity|traffic)|verify (that )?you are (a )?human|not a robot|enable javascript and cookies to continue/i.test(text4)) {
-    return "refused";
-  }
-  if (/system maintenance is in progress|(down|closed) for (scheduled )?maintenance|be right back|we.ll be back (soon|shortly)/i.test(text4)) {
-    return "maintenance";
-  }
-  return null;
-}
-function decodeHtmlEntities(text4) {
-  const named = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
-  return text4.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body) => {
-    if (body[0] === "#") {
-      const code = body[1].toLowerCase() === "x" ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
-      return Number.isFinite(code) && code > 0 && code < 1114112 ? String.fromCodePoint(code) : whole;
-    }
-    return named[body.toLowerCase()] ?? whole;
-  });
+async function renderPageHtmlOnce(url) {
+  if (process.env.VERCEL) return renderWithServerlessChromium(url);
+  return renderWithPlaywright(url);
 }
 
 // webscraper/node_modules/@supabase/supabase-js/dist/index.mjs
@@ -91263,7 +91132,7 @@ function getTraceContextExtractor() {
 }
 
 // webscraper/node_modules/@supabase/supabase-js/dist/index.mjs
-var import_functions_js = __toESM(require_main2(), 1);
+var import_functions_js = __toESM(require_main(), 1);
 
 // webscraper/node_modules/@supabase/postgrest-js/dist/index.mjs
 var PostgrestError = class extends Error {
@@ -95186,7 +95055,7 @@ var PostgrestClient = class PostgrestClient2 {
 };
 
 // webscraper/node_modules/@supabase/supabase-js/dist/index.mjs
-var import_realtime_js = __toESM(require_main3(), 1);
+var import_realtime_js = __toESM(require_main2(), 1);
 
 // webscraper/node_modules/iceberg-js/dist/index.mjs
 var IcebergError = class extends Error {
@@ -95218,8 +95087,8 @@ var IcebergError = class extends Error {
     return this.status === 419;
   }
 };
-function buildUrl(baseUrl, path2, query) {
-  const url = new URL(path2, baseUrl);
+function buildUrl(baseUrl, path4, query) {
+  const url = new URL(path4, baseUrl);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== void 0) {
@@ -95249,12 +95118,12 @@ function createFetchClient(options) {
   return {
     async request({
       method,
-      path: path2,
+      path: path4,
       query,
       body,
       headers
     }) {
-      const url = buildUrl(options.baseUrl, path2, query);
+      const url = buildUrl(options.baseUrl, path4, query);
       const authHeaders = await buildAuthHeaders(options.auth);
       const res = await fetchFn(url, {
         method,
@@ -95851,7 +95720,7 @@ var isValidBucketName = (bucketName) => {
   if (bucketName.includes("/") || bucketName.includes("\\")) return false;
   return /^[\w!.\*'() &$@=;:+,?-]+$/.test(bucketName);
 };
-var encodeStoragePath = (path2) => path2.split("/").map(encodeURIComponent).join("/");
+var encodeStoragePath = (path4) => path4.split("/").map(encodeURIComponent).join("/");
 var _getErrorMessage = (err) => {
   if (typeof err === "object" && err !== null) {
     const e = err;
@@ -96122,7 +95991,7 @@ var StorageFileApi = class extends BaseApiClient {
   * @param path The relative file path. Should be of the format `folder/subfolder/filename.png`. The bucket must already exist before attempting to upload.
   * @param fileBody The body of the file to be stored in the bucket.
   */
-  async uploadOrUpdate(method, path2, fileBody, fileOptions) {
+  async uploadOrUpdate(method, path4, fileBody, fileOptions) {
     var _this = this;
     return _this.handleOperation(async () => {
       let body;
@@ -96139,7 +96008,7 @@ var StorageFileApi = class extends BaseApiClient {
         if ((typeof ReadableStream !== "undefined" && body instanceof ReadableStream || body && typeof body === "object" && "pipe" in body && typeof body.pipe === "function") && !options.duplex) options.duplex = "half";
       }
       if (fileOptions === null || fileOptions === void 0 ? void 0 : fileOptions.headers) for (const [key, value] of Object.entries(fileOptions.headers)) headers = setHeader(headers, key, value);
-      const cleanPath = _this._removeEmptyFolders(path2);
+      const cleanPath = _this._removeEmptyFolders(path4);
       const _path = _this._getFinalPath(cleanPath);
       const data2 = await (method == "PUT" ? put : post)(_this.fetch, `${_this.url}/object/${_path}`, body, _objectSpread22({ headers }, (options === null || options === void 0 ? void 0 : options.duplex) ? { duplex: options.duplex } : {}));
       return {
@@ -96216,8 +96085,8 @@ var StorageFileApi = class extends BaseApiClient {
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   * - For React Native, using either `Blob`, `File` or `FormData` does not work as intended. Upload file using `ArrayBuffer` from base64 file data instead, see example below.
   */
-  async upload(path2, fileBody, fileOptions) {
-    return this.uploadOrUpdate("POST", path2, fileBody, fileOptions);
+  async upload(path4, fileBody, fileOptions) {
+    return this.uploadOrUpdate("POST", path4, fileBody, fileOptions);
   }
   /**
   * Upload a file with a token generated from `createSignedUploadUrl`.
@@ -96257,9 +96126,9 @@ var StorageFileApi = class extends BaseApiClient {
   *   - `objects` table permissions: none
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   */
-  async uploadToSignedUrl(path2, token, fileBody, fileOptions) {
+  async uploadToSignedUrl(path4, token, fileBody, fileOptions) {
     var _this3 = this;
-    const cleanPath = _this3._removeEmptyFolders(path2);
+    const cleanPath = _this3._removeEmptyFolders(path4);
     const _path = _this3._getFinalPath(cleanPath);
     const url = new URL(_this3.url + `/object/upload/sign/${_path}`);
     url.searchParams.set("token", token);
@@ -96321,10 +96190,10 @@ var StorageFileApi = class extends BaseApiClient {
   *   - `objects` table permissions: `insert`
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   */
-  async createSignedUploadUrl(path2, options) {
+  async createSignedUploadUrl(path4, options) {
     var _this4 = this;
     return _this4.handleOperation(async () => {
-      let _path = _this4._getFinalPath(path2);
+      let _path = _this4._getFinalPath(path4);
       const headers = _objectSpread22({}, _this4.headers);
       if (options === null || options === void 0 ? void 0 : options.upsert) headers["x-upsert"] = "true";
       const data2 = await post(_this4.fetch, `${_this4.url}/object/upload/sign/${_path}`, {}, { headers });
@@ -96333,7 +96202,7 @@ var StorageFileApi = class extends BaseApiClient {
       if (!token) throw new StorageError("No token returned by API");
       return {
         signedUrl: url.toString(),
-        path: path2,
+        path: path4,
         token
       };
     });
@@ -96393,8 +96262,8 @@ var StorageFileApi = class extends BaseApiClient {
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   * - For React Native, using either `Blob`, `File` or `FormData` does not work as intended. Update file using `ArrayBuffer` from base64 file data instead, see example below.
   */
-  async update(path2, fileBody, fileOptions) {
-    return this.uploadOrUpdate("PUT", path2, fileBody, fileOptions);
+  async update(path4, fileBody, fileOptions) {
+    return this.uploadOrUpdate("PUT", path4, fileBody, fileOptions);
   }
   /**
   * Moves an existing file to a new path in the same bucket.
@@ -96567,10 +96436,10 @@ var StorageFileApi = class extends BaseApiClient {
   *   - `objects` table permissions: `select`
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   */
-  async createSignedUrl(path2, expiresIn, options) {
+  async createSignedUrl(path4, expiresIn, options) {
     var _this8 = this;
     return _this8.handleOperation(async () => {
-      let _path = _this8._getFinalPath(path2);
+      let _path = _this8._getFinalPath(path4);
       const hasTransform = typeof (options === null || options === void 0 ? void 0 : options.transform) === "object" && options.transform !== null && Object.keys(options.transform).length > 0;
       let data2 = await post(_this8.fetch, `${_this8.url}/object/sign/${_path}`, _objectSpread22(_objectSpread22({ expiresIn }, hasTransform ? { transform: options.transform } : {}), (options === null || options === void 0 ? void 0 : options.versionId) != null ? { versionId: options.versionId } : {}), { headers: _this8.headers });
       const query = new URLSearchParams();
@@ -96705,14 +96574,14 @@ var StorageFileApi = class extends BaseApiClient {
   *   - `objects` table permissions: `select`
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   */
-  download(path2, options, parameters) {
+  download(path4, options, parameters) {
     const renderPath = typeof (options === null || options === void 0 ? void 0 : options.transform) === "object" && options.transform !== null && Object.keys(options.transform).length > 0 ? "render/image/authenticated" : "object";
     const query = new URLSearchParams();
     if (options === null || options === void 0 ? void 0 : options.transform) this.applyTransformOptsToQuery(query, options.transform);
     if ((options === null || options === void 0 ? void 0 : options.cacheNonce) != null) query.set("cacheNonce", String(options.cacheNonce));
     if ((options === null || options === void 0 ? void 0 : options.versionId) != null) query.set("versionId", String(options.versionId));
     const queryString = query.toString();
-    const _path = this._getFinalPath(path2);
+    const _path = this._getFinalPath(path4);
     const downloadFn = () => get2(this.fetch, `${this.url}/${renderPath}/${_path}${queryString ? `?${queryString}` : ""}`, {
       headers: this.headers,
       noResolveJson: true
@@ -96744,9 +96613,9 @@ var StorageFileApi = class extends BaseApiClient {
   * }
   * ```
   */
-  async info(path2, options) {
+  async info(path4, options) {
     var _this10 = this;
-    const _path = _this10._getFinalPath(path2);
+    const _path = _this10._getFinalPath(path4);
     const query = new URLSearchParams();
     if ((options === null || options === void 0 ? void 0 : options.versionId) != null) query.set("versionId", String(options.versionId));
     const queryString = query.toString();
@@ -96778,8 +96647,8 @@ var StorageFileApi = class extends BaseApiClient {
   *   .exists('folder/avatar1.png')
   * ```
   */
-  async exists(path2) {
-    const { error } = await this.info(path2);
+  async exists(path4) {
+    const { error } = await this.info(path4);
     if (!error) return {
       data: true,
       error: null
@@ -96850,8 +96719,8 @@ var StorageFileApi = class extends BaseApiClient {
   *   - `objects` table permissions: none
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   */
-  getPublicUrl(path2, options) {
-    const _path = this._getFinalPath(path2);
+  getPublicUrl(path4, options) {
+    const _path = this._getFinalPath(path4);
     const query = new URLSearchParams();
     if (options === null || options === void 0 ? void 0 : options.download) query.set("download", options.download === true ? "" : options.download);
     if (options === null || options === void 0 ? void 0 : options.transform) this.applyTransformOptsToQuery(query, options.transform);
@@ -96951,10 +96820,10 @@ var StorageFileApi = class extends BaseApiClient {
   *   .purgeCache('folder/avatar1.png', { transformations: true })
   * ```
   */
-  async purgeCache(path2, options, parameters) {
+  async purgeCache(path4, options, parameters) {
     var _this13 = this;
     return _this13.handleOperation(async () => {
-      const _path = encodeStoragePath(_this13._getFinalPath(path2));
+      const _path = encodeStoragePath(_this13._getFinalPath(path4));
       const query = new URLSearchParams();
       if (options === null || options === void 0 ? void 0 : options.transformations) query.set("transformations", "true");
       const queryString = query.toString();
@@ -97052,13 +96921,13 @@ var StorageFileApi = class extends BaseApiClient {
   *   - `objects` table permissions: `select`
   * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
   */
-  async list(path2, options, parameters) {
+  async list(path4, options, parameters) {
     var _this14 = this;
     return _this14.handleOperation(async () => {
       const sortBy = (options === null || options === void 0 ? void 0 : options.sortBy) ? _objectSpread22(_objectSpread22({}, DEFAULT_SEARCH_OPTIONS.sortBy), options.sortBy) : DEFAULT_SEARCH_OPTIONS.sortBy;
       const body = _objectSpread22(_objectSpread22(_objectSpread22({}, DEFAULT_SEARCH_OPTIONS), options), {}, {
         sortBy,
-        prefix: path2 || ""
+        prefix: path4 || ""
       });
       return await post(_this14.fetch, `${_this14.url}/object/list/${_this14.bucketId}`, body, { headers: _this14.headers }, parameters);
     });
@@ -97138,11 +97007,11 @@ var StorageFileApi = class extends BaseApiClient {
     if (typeof Buffer !== "undefined") return Buffer.from(data2).toString("base64");
     return btoa(data2);
   }
-  _getFinalPath(path2) {
-    return `${this.bucketId}/${path2.replace(/^\/+/, "")}`;
+  _getFinalPath(path4) {
+    return `${this.bucketId}/${path4.replace(/^\/+/, "")}`;
   }
-  _removeEmptyFolders(path2) {
-    return path2.replace(/^\/|\/$/g, "").replace(/\/+/g, "/");
+  _removeEmptyFolders(path4) {
+    return path4.replace(/^\/|\/$/g, "").replace(/\/+/g, "/");
   }
   /** Modifies the `query`, appending values the from `transform` */
   applyTransformOptsToQuery(query, transform) {
@@ -98712,9 +98581,9 @@ var StorageClient = class extends StorageBucketApi {
 };
 
 // webscraper/node_modules/@supabase/supabase-js/dist/index.mjs
-var import_auth_js = __toESM(require_main4(), 1);
+var import_auth_js = __toESM(require_main3(), 1);
+__reExport(dist_exports, __toESM(require_main2(), 1));
 __reExport(dist_exports, __toESM(require_main3(), 1));
-__reExport(dist_exports, __toESM(require_main4(), 1));
 var version2 = "2.119.0";
 var JS_ENV = "";
 var JS_RUNTIME_VERSION;
@@ -99492,6 +99361,8 @@ function fitPayloadFromReport(report, chart = [], options = {}) {
     fabricOpacityPct: report.tshirtSignals.fabricOpacityPct,
     sentimentScore: report.overallSentimentScore,
     avgRating: report.overallAvgRating,
+    // A report stored before ratings could be missing has no count; every review then had stars.
+    ratedReviewCount: report.ratedReviewCount ?? report.totalReviews,
     sourceUrl: report.sourceUrl,
     scrapedAt: report.scraperTelemetry.scrapedAt,
     // A size with no reviews has no fit numbers. Sending it would store a zero rating and a "Low" return risk.
@@ -99506,6 +99377,7 @@ function fitPayloadFromReport(report, chart = [], options = {}) {
       shrinkagePct: size.shrinkageMentionPct,
       sentimentScore: size.sentimentScore,
       avgRating: size.avgRating,
+      ratedReviewCount: size.ratedReviewCount ?? size.reviewCount,
       returnRisk: size.returnRisk,
       primaryFitNote: size.primaryFitNote
     })),
@@ -99621,11 +99493,14 @@ async function deleteRemoteFitSku(sku) {
   return { ok: true };
 }
 
-// webscraper/server.ts
+// webscraper/server/env.ts
+var import_path = __toESM(require("path"), 1);
+var import_url = require("url");
+var import_dotenv = __toESM(require_main4(), 1);
 var import_meta = {};
 function serverDir() {
   if (process.env.VERCEL) return import_path.default.join(process.cwd(), "api", "scraper");
-  return import_path.default.dirname((0, import_url.fileURLToPath)(import_meta.url));
+  return import_path.default.resolve(import_path.default.dirname((0, import_url.fileURLToPath)(import_meta.url)), "..");
 }
 function loadEnvFiles() {
   const dirs = [serverDir(), import_path.default.join(process.cwd(), "webscraper"), import_path.default.join(process.cwd(), "api", "scraper")];
@@ -99636,7 +99511,11 @@ function loadEnvFiles() {
   }
 }
 loadEnvFiles();
-var dbPath = process.env.VERCEL ? "/tmp/commercial_fit.db" : import_path.default.join(serverDir(), "commercial_fit.db");
+
+// webscraper/server/db.ts
+var import_path2 = __toESM(require("path"), 1);
+var import_better_sqlite3 = __toESM(require("better-sqlite3"), 1);
+var dbPath = process.env.VERCEL ? "/tmp/commercial_fit.db" : import_path2.default.join(serverDir(), "commercial_fit.db");
 var db = new import_better_sqlite3.default(dbPath);
 db.pragma("journal_mode = WAL");
 db.exec(`
@@ -99689,8 +99568,8 @@ db.exec(`
     raw_size TEXT NOT NULL,
     fit_direction TEXT NOT NULL,
     fit_skew REAL NOT NULL,
-    sentiment_score INTEGER NOT NULL,
-    rating INTEGER NOT NULL,
+    sentiment_score INTEGER,
+    rating INTEGER,
     mentions_shrinkage INTEGER NOT NULL,
     fabric_opacity TEXT,
     author TEXT,
@@ -99773,6 +99652,41 @@ if (opacityColumn?.notnull === 1) {
     FROM commercial_skus;
     DROP TABLE commercial_skus;
     ALTER TABLE commercial_skus__opacity RENAME TO commercial_skus;
+    COMMIT;
+  `);
+}
+var reviewColumns = db.prepare(`PRAGMA table_info(sku_reviews)`).all();
+if (reviewColumns.some((column) => (column.name === "rating" || column.name === "sentiment_score") && column.notnull === 1)) {
+  db.exec(`
+    BEGIN;
+    CREATE TABLE sku_reviews__nullable (
+      review_uid TEXT PRIMARY KEY,
+      sku TEXT NOT NULL,
+      size_code TEXT NOT NULL,
+      raw_size TEXT NOT NULL,
+      fit_direction TEXT NOT NULL,
+      fit_skew REAL NOT NULL,
+      sentiment_score INTEGER,
+      rating INTEGER,
+      mentions_shrinkage INTEGER NOT NULL,
+      fabric_opacity TEXT,
+      author TEXT,
+      review_date TEXT,
+      title TEXT,
+      body TEXT
+    );
+    INSERT INTO sku_reviews__nullable (
+      review_uid, sku, size_code, raw_size, fit_direction, fit_skew,
+      sentiment_score, rating, mentions_shrinkage, fabric_opacity,
+      author, review_date, title, body
+    )
+    SELECT
+      review_uid, sku, size_code, raw_size, fit_direction, fit_skew,
+      sentiment_score, rating, mentions_shrinkage, fabric_opacity,
+      author, review_date, title, body
+    FROM sku_reviews;
+    DROP TABLE sku_reviews;
+    ALTER TABLE sku_reviews__nullable RENAME TO sku_reviews;
     COMMIT;
   `);
 }
@@ -99910,6 +99824,1087 @@ function saveSizeChart(sku, rows) {
     }
   });
   write();
+}
+function getDatabaseSummary() {
+  const rows = db.prepare(`SELECT report_json, committed_at FROM commercial_skus ORDER BY committed_at DESC`).all();
+  const reports = rows.map((r) => {
+    const parsed = JSON.parse(r.report_json);
+    parsed.committedToDbAt = r.committed_at;
+    return parsed;
+  });
+  const stats = db.prepare(`
+      SELECT
+        (SELECT COUNT(*) FROM commercial_skus) as skuCount,
+        (SELECT COUNT(*) FROM sku_size_metrics WHERE review_count > 0) as sizeMetricRows,
+        (SELECT COUNT(*) FROM sku_reviews) as reviewRows
+    `).get();
+  const recentLogs = db.prepare(`SELECT id, sku, product_name, action, rows_affected, committed_at FROM ingestion_log ORDER BY id DESC LIMIT 10`).all();
+  const chartRows = db.prepare(
+    `SELECT sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm
+       FROM size_chart ORDER BY sku, sort_order`
+  ).all();
+  const charts = {};
+  for (const row of chartRows) {
+    const list = charts[row.sku] ?? [];
+    list.push({
+      size: row.size_code,
+      sortOrder: row.sort_order,
+      chest_cm: row.chest_cm,
+      length_cm: row.length_cm,
+      sleeve_cm: row.sleeve_cm
+    });
+    charts[row.sku] = list;
+  }
+  return {
+    reports,
+    stats,
+    recentLogs,
+    charts
+  };
+}
+
+// webscraper/seedCatalog.ts
+var HM_HEAVYWEIGHT_TEE_REVIEWS = [
+  {
+    id: "hm-tee-1",
+    author: "Lukas M.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 5,
+    title: "Thick 240 GSM cotton with a relaxed boxy drape",
+    body: "Runs large out of the bag with roomy dropped shoulders and wide sleeves. The 240 gsm heavyweight cotton is completely opaque and not see-through even in crisp white. Cold wash and air dry to avoid shrinkage.",
+    date: "2026-10-29",
+    verifiedPurchase: true,
+    reviewerHeight: `5'6"`,
+    reviewerBuild: "132 lbs \xB7 Slim",
+    declaredFitTag: "Slightly Large"
+  },
+  {
+    id: "hm-tee-2",
+    author: "Sofia R.",
+    sizePurchased: "XS",
+    usualSize: "S",
+    rating: 5,
+    title: "Sized down to XS for a cleaner unisex fit",
+    body: "Runs large so I ordered a size down from S to XS. Now the chest and shoulders fit just right, and the thick collar holds its shape.",
+    date: "2026-10-27",
+    verifiedPurchase: true,
+    reviewerHeight: `5'4"`,
+    reviewerBuild: "118 lbs \xB7 Petite",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "hm-tee-3",
+    author: "Elias K.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 4,
+    title: "Great fabric weight, shrank slightly in dryer",
+    body: "True to size after the first wash! Started slightly loose in the waist, then shrank about half an inch in torso length when I accidentally put it in the dryer. Substantial cotton feel.",
+    date: "2026-10-24",
+    verifiedPurchase: true,
+    reviewerHeight: `5'7"`,
+    reviewerBuild: "138 lbs \xB7 Lean",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "hm-tee-4",
+    author: "Daniel V.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 5,
+    title: "Best $20 heavyweight tee \u2014 zero transparency",
+    body: "Relaxed drop-shoulder fit that runs large in a good modern streetwear way. Thick jersey fabric is not see-through at all and feels like a $60 Blank Staples tee.",
+    date: "2026-10-28",
+    verifiedPurchase: true,
+    reviewerHeight: `5'8"`,
+    reviewerBuild: "152 lbs \xB7 Regular",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "hm-tee-5",
+    author: "Maya T.",
+    sizePurchased: "S",
+    usualSize: "M",
+    rating: 5,
+    title: "Size down if you want a standard T-shirt silhouette",
+    body: "Bigger than expected in the chest and sleeves. I sized down from M to S and it fits perfectly through the shoulders. Cold wash only!",
+    date: "2026-10-25",
+    verifiedPurchase: true,
+    reviewerHeight: `5'7"`,
+    reviewerBuild: "145 lbs \xB7 Athletic",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "hm-tee-6",
+    author: "Owen C.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 4,
+    title: "Roomy chest, watch out for length shrinkage",
+    body: "Fits as expected for a relaxed fit tee with loose sleeves, though it shrunk in length after tumble drying on medium heat. Hang dry is mandatory.",
+    date: "2026-10-21",
+    verifiedPurchase: true,
+    reviewerHeight: `5'9"`,
+    reviewerBuild: "155 lbs \xB7 Slim",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "hm-tee-7",
+    author: "Julian H.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 5,
+    title: "Sturdy cotton and thick ribbed neck",
+    body: "True to size if you want the intended relaxed boxy fit. Dropped shoulders drape nicely and sturdy cotton has zero transparency.",
+    date: "2026-10-18",
+    verifiedPurchase: true,
+    reviewerHeight: `5'8"`,
+    reviewerBuild: "149 lbs \xB7 Regular",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "hm-tee-8",
+    author: "Marcus B.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 5,
+    title: "Generous boxy cut in Size M",
+    body: "Runs large with a generous cut across the chest and waist, and wide elbow-length sleeves. Heavyweight 240 gsm cotton is thick and opaque.",
+    date: "2026-10-29",
+    verifiedPurchase: true,
+    reviewerHeight: `5'10"`,
+    reviewerBuild: "168 lbs \xB7 Regular",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "hm-tee-9",
+    author: "Noah L.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 4,
+    title: "Slightly large before wash, spot on after",
+    body: "Started roomy in the chest and shoulders, and after a cold wash it settled into a perfect fit. Not see-through and very comfortable.",
+    date: "2026-10-26",
+    verifiedPurchase: true,
+    reviewerHeight: `5'11"`,
+    reviewerBuild: "174 lbs \xB7 Athletic",
+    declaredFitTag: "Slightly Large"
+  },
+  {
+    id: "hm-tee-10",
+    author: "Caleb W.",
+    sizePurchased: "M",
+    usualSize: "L",
+    rating: 5,
+    title: "Sized down from L to M for a tailored look",
+    body: "Runs large! Went down a size to M and the chest and waist drape cleanly without swimming in fabric. Thick jersey.",
+    date: "2026-10-22",
+    verifiedPurchase: true,
+    reviewerHeight: `6'0"`,
+    reviewerBuild: "178 lbs \xB7 Lean",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "hm-tee-11",
+    author: "Isaac P.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 4,
+    title: "True to relaxed sizing, thick non-sheer white tee",
+    body: "Buy your normal size M for a modern relaxed drape. Finally a white H&M t-shirt that is heavyweight and not see-through.",
+    date: "2026-10-16",
+    verifiedPurchase: true,
+    reviewerHeight: `5'10"`,
+    reviewerBuild: "165 lbs \xB7 Regular",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "hm-tee-12",
+    author: "Devon G.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 4,
+    title: "Wide in the chest and waist in L",
+    body: "Runs large through the midsection and sleeves. Great 240 gsm heavyweight cotton, just note it shrinks about an inch in torso length if tumble dried.",
+    date: "2026-10-28",
+    verifiedPurchase: true,
+    reviewerHeight: `6'0"`,
+    reviewerBuild: "188 lbs \xB7 Broad",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "hm-tee-13",
+    author: "Soren D.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 5,
+    title: "Spot on relaxed fit for 6ft athletic build",
+    body: "True to size in L! Comfortable across the shoulders and chest with a thick collar that never bacon-necks. Air dry to keep the length.",
+    date: "2026-10-23",
+    verifiedPurchase: true,
+    reviewerHeight: `6'1"`,
+    reviewerBuild: "192 lbs \xB7 Athletic",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "hm-tee-14",
+    author: "Harrison K.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 3,
+    title: "Shrunk in torso length after first wash",
+    body: `Out of the bag it was roomy in the chest, but shrunk noticeably in torso length after the first wash and dryer cycle, making it feel slightly small and short for a 6'2" frame.`,
+    date: "2026-10-19",
+    verifiedPurchase: true,
+    reviewerHeight: `6'2"`,
+    reviewerBuild: "195 lbs \xB7 Tall",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "hm-tee-15",
+    author: "Patrick N.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 5,
+    title: "Substantial opaque jersey",
+    body: "Fits just right in the shoulders and waist. Thick cotton fabric is opaque and drapes well.",
+    date: "2026-10-14",
+    verifiedPurchase: true,
+    reviewerHeight: `6'0"`,
+    reviewerBuild: "185 lbs \xB7 Regular",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "hm-tee-16",
+    author: "Trevor J.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 3,
+    title: "Boxy width in XL but short in the torso after wash",
+    body: "Loose around the waist, but short in the torso length after washing! Shrunk in length so it sits higher on the hips than expected. Thick fabric though.",
+    date: "2026-10-27",
+    verifiedPurchase: true,
+    reviewerHeight: `6'2"`,
+    reviewerBuild: "212 lbs \xB7 Broad",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "hm-tee-17",
+    author: "Roman S.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 4,
+    title: "Good relaxed chest room in XL if you hang dry",
+    body: "True to size in the chest and dropped shoulders as long as you cold wash and hang dry. Opaque heavyweight cotton feels durable.",
+    date: "2026-10-21",
+    verifiedPurchase: true,
+    reviewerHeight: `6'1"`,
+    reviewerBuild: "208 lbs \xB7 Stocky",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "hm-tee-18",
+    author: "Gabe E.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 4,
+    title: "Generous sleeves and chest in XL",
+    body: "Runs large in the sleeves and midsection with a boxy streetwear cut. Substantial cotton weight.",
+    date: "2026-10-15",
+    verifiedPurchase: true,
+    reviewerHeight: `6'0"`,
+    reviewerBuild: "204 lbs \xB7 Regular",
+    declaredFitTag: "Slightly Large"
+  },
+  {
+    id: "hm-tee-19",
+    author: "Victor A.",
+    sizePurchased: "XXL",
+    usualSize: "XXL",
+    rating: 3,
+    title: "XXL chest is wide but body length runs short after wash",
+    body: `Smaller than expected in vertical torso length after the first wash. Tight across the upper back and short in the hem if you are over 6'2", even though the waist is wide.`,
+    date: "2026-10-25",
+    verifiedPurchase: true,
+    reviewerHeight: `6'3"`,
+    reviewerBuild: "232 lbs \xB7 Big & Tall",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "hm-tee-20",
+    author: "Bradford L.",
+    sizePurchased: "XXL",
+    usualSize: "XXL",
+    rating: 4,
+    title: "Heavy opaque tee \u2014 air dry only for XXL",
+    body: "True to size in XXL before washing. Heavyweight 240 gsm cotton is not see-through, just make sure to hang dry so the torso length does not shrink.",
+    date: "2026-10-17",
+    verifiedPurchase: true,
+    reviewerHeight: `6'2"`,
+    reviewerBuild: "225 lbs \xB7 Broad",
+    declaredFitTag: "True to Size"
+  }
+];
+var DENIM_JACKET_REVIEWS = [
+  {
+    id: "dj-1",
+    author: "Marcus V.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 5,
+    title: "Fits my lean frame well",
+    body: "True to size for XS. Fits like a glove in the waist and torso length, though the raw denim starts slightly stiff in the sleeves.",
+    date: "2026-10-18",
+    verifiedPurchase: true,
+    reviewerHeight: `5'7"`,
+    reviewerBuild: "135 lbs \xB7 Lean",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "dj-2",
+    author: "Kenji T.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 4,
+    title: "Snug shoulders but breaks in",
+    body: "Slightly snug across the shoulders at first wear, but overall true to size in the chest and waist.",
+    date: "2026-10-12",
+    verifiedPurchase: true,
+    reviewerHeight: `5'6"`,
+    reviewerBuild: "130 lbs \xB7 Slim",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "dj-3",
+    author: "Liam O.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 3,
+    title: "Runs small in the arms",
+    body: "Runs small through the sleeves and biceps. If you wear anything thicker than a t-shirt underneath, size up.",
+    date: "2026-10-04",
+    verifiedPurchase: true,
+    reviewerHeight: `5'8"`,
+    reviewerBuild: "142 lbs \xB7 Athletic",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-4",
+    author: "Devon S.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 4,
+    title: "Tailored Japanese cut, slightly snug",
+    body: "True to size if you want a vintage cropped silhouette, though it is snug in the chest when buttoned all the way up.",
+    date: "2026-10-21",
+    verifiedPurchase: true,
+    reviewerHeight: `5'8"`,
+    reviewerBuild: "150 lbs \xB7 Regular",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "dj-5",
+    author: "Arthur P.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 3,
+    title: "Runs small after cold soak",
+    body: "Runs small! Shrunk about half an inch in the sleeves and tight across the shoulders. Definitely size up one size.",
+    date: "2026-10-16",
+    verifiedPurchase: true,
+    reviewerHeight: `5'9"`,
+    reviewerBuild: "155 lbs \xB7 Athletic",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-6",
+    author: "Nolan C.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 5,
+    title: "Spot on vintage proportions",
+    body: "Fits just right in the shoulders and waist. High-quality selvedge fabric with zero waist gap.",
+    date: "2026-10-09",
+    verifiedPurchase: true,
+    reviewerHeight: `5'7"`,
+    reviewerBuild: "146 lbs \xB7 Slim",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "dj-7",
+    author: "Julian M.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 2,
+    title: "Way too tight across shoulders",
+    body: "Runs very small in size M. Way too tight across the shoulders and pulls at the chest buttons. Returning to size up to L.",
+    date: "2026-10-25",
+    verifiedPurchase: true,
+    reviewerHeight: `5'10"`,
+    reviewerBuild: "168 lbs \xB7 Athletic",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-8",
+    author: "Lucas H.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 3,
+    title: "Short in the torso and tight cuffs",
+    body: "Smaller than expected. Short in the torso length and very tight in the sleeves and forearms. Order a size larger.",
+    date: "2026-10-19",
+    verifiedPurchase: true,
+    reviewerHeight: `5'11"`,
+    reviewerBuild: "172 lbs \xB7 Regular",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-9",
+    author: "Harrison G.",
+    sizePurchased: "M",
+    usualSize: "S",
+    rating: 5,
+    title: "Sized up to M and it fits great",
+    body: "I usually wear S, sized up to M after reading reviews. Runs small so the M fits my chest and shoulders comfortably.",
+    date: "2026-10-11",
+    verifiedPurchase: true,
+    reviewerHeight: `5'9"`,
+    reviewerBuild: "158 lbs \xB7 Regular",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-10",
+    author: "Evan B.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 4,
+    title: "Snug rockstar fit",
+    body: "True to size if you only wear a light tee underneath. Waist and length sit right at the belt line.",
+    date: "2026-10-03",
+    verifiedPurchase: true,
+    reviewerHeight: `5'10"`,
+    reviewerBuild: "160 lbs \xB7 Slim",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "dj-11",
+    author: "calvin_r",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 2,
+    title: "L fits like a standard US Medium",
+    body: "Runs very small! Couldn\u2019t button it across the chest and uncomfortably tight in the shoulders and armholes. Size up!",
+    date: "2026-10-26",
+    verifiedPurchase: true,
+    reviewerHeight: `6'0"`,
+    reviewerBuild: "188 lbs \xB7 Broad Shoulders",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-12",
+    author: "Derek W.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 3,
+    title: "Restrictive yoke and short sleeves",
+    body: "Runs small. Tight across the shoulders and upper back when reaching forward, and short in the sleeves for a 6ft frame.",
+    date: "2026-10-20",
+    verifiedPurchase: true,
+    reviewerHeight: `6'1"`,
+    reviewerBuild: "185 lbs \xB7 Athletic",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-13",
+    author: "Soren K.",
+    sizePurchased: "L",
+    usualSize: "M",
+    rating: 5,
+    title: "Glad I ordered a size up",
+    body: "Runs small compared to US sizing. Ordered a size up (L instead of M) and the shoulders and torso length are spot on.",
+    date: "2026-10-14",
+    verifiedPurchase: true,
+    reviewerHeight: `5'11"`,
+    reviewerBuild: "175 lbs \xB7 Regular",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-14",
+    author: "Patrick D.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 4,
+    title: "Trim fit through chest",
+    body: "Fits as expected for Japanese raw denim, snug in the chest but comfortable in the waist.",
+    date: "2026-10-05",
+    verifiedPurchase: true,
+    reviewerHeight: `5'11"`,
+    reviewerBuild: "178 lbs \xB7 Slim",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "dj-15",
+    author: "Gabe N.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 2,
+    title: "Grading in XL is way too narrow",
+    body: "Runs extremely small in XL! Way too tight in the chest and shoulders, and shrunk after wash. Disappointed and returning.",
+    date: "2026-10-27",
+    verifiedPurchase: true,
+    reviewerHeight: `6'2"`,
+    reviewerBuild: "208 lbs \xB7 Broad",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-16",
+    author: "Trevor J.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 2,
+    title: "Tight armholes and short body",
+    body: "Smaller than expected. Tight in the sleeves and armholes, and cropped shorter than standard trucker jackets in the torso.",
+    date: "2026-10-17",
+    verifiedPurchase: true,
+    reviewerHeight: `6'1"`,
+    reviewerBuild: "202 lbs \xB7 Stocky",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-17",
+    author: "Roman L.",
+    sizePurchased: "XL",
+    usualSize: "L",
+    rating: 4,
+    title: "Size up to XL if you are normally L",
+    body: "Definitely runs small. I wear L in almost every brand, went up a size to XL and now the shoulders and chest fit great.",
+    date: "2026-10-08",
+    verifiedPurchase: true,
+    reviewerHeight: `6'0"`,
+    reviewerBuild: "190 lbs \xB7 Athletic",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-18",
+    author: "Victor A.",
+    sizePurchased: "XXL",
+    usualSize: "XXL",
+    rating: 2,
+    title: "XXL chest and waist are constricting",
+    body: "Runs very small. Couldn\u2019t button the waist or chest comfortably, and tight across the shoulders. Pattern grading stops scaling after L.",
+    date: "2026-10-23",
+    verifiedPurchase: true,
+    reviewerHeight: `6'3"`,
+    reviewerBuild: "225 lbs \xB7 Big & Tall",
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "dj-19",
+    author: "Bradford E.",
+    sizePurchased: "XXL",
+    usualSize: "XL",
+    rating: 4,
+    title: "XXL works for a true XL buyer",
+    body: "Runs small so sizing up to XXL gave me the room I needed in the shoulders and sleeves. Gorgeous copper hardware.",
+    date: "2026-10-10",
+    verifiedPurchase: true,
+    reviewerHeight: `6'1"`,
+    reviewerBuild: "210 lbs \xB7 Broad",
+    declaredFitTag: "Runs Small"
+  }
+];
+var BOXY_HOODIE_REVIEWS = [
+  {
+    id: "bh-1",
+    author: "Chloe M.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 5,
+    title: "Relaxed streetwear drape without drowning",
+    body: "Runs large by design with a generous cut in the chest and sleeves, but the ribbed waist hem keeps it looking structured and flattering.",
+    date: "2026-10-24",
+    verifiedPurchase: true,
+    reviewerHeight: `5'3"`,
+    reviewerBuild: "112 lbs \xB7 Petite",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-2",
+    author: "Hannah Z.",
+    sizePurchased: "XS",
+    usualSize: "S",
+    rating: 5,
+    title: "Sized down to XS \u2014 perfect fit!",
+    body: "Runs large so I ordered a size down from S to XS. Now the shoulders and length fit like a glove!",
+    date: "2026-10-18",
+    verifiedPurchase: true,
+    reviewerHeight: `5'5"`,
+    reviewerBuild: "124 lbs \xB7 Regular",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-3",
+    author: "Zoe L.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 4,
+    title: "Super roomy in the chest and arms",
+    body: "Bigger than expected in the chest and loose in the sleeves. Super soft 500gsm fleece, just size down if you want a regular fit.",
+    date: "2026-10-22",
+    verifiedPurchase: true,
+    reviewerHeight: `5'6"`,
+    reviewerBuild: "132 lbs \xB7 Slim",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-4",
+    author: "Ethan Y.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 5,
+    title: "Ideal boxy silhouette",
+    body: "True to size for an architectural boxy hoodie. Drop shoulders are roomy and the torso length hits right at the hip.",
+    date: "2026-10-15",
+    verifiedPurchase: true,
+    reviewerHeight: `5'8"`,
+    reviewerBuild: "148 lbs \xB7 Regular",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "bh-5",
+    author: "Noah P.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 4,
+    title: "Runs large and wide in the chest",
+    body: "Runs large! Very boxy through the chest and waist, with long wide sleeves. Comfortable for lounging but definitely oversized.",
+    date: "2026-10-26",
+    verifiedPurchase: true,
+    reviewerHeight: `5'10"`,
+    reviewerBuild: "165 lbs \xB7 Regular",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-6",
+    author: "Maya R.",
+    sizePurchased: "M",
+    usualSize: "L",
+    rating: 5,
+    title: "Sized down to M and love it",
+    body: "Went down a size from L to M because it runs large. The chest drape and shoulder seam sit perfectly now.",
+    date: "2026-10-19",
+    verifiedPurchase: true,
+    reviewerHeight: `5'9"`,
+    reviewerBuild: "160 lbs \xB7 Curvy",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-7",
+    author: "Caleb K.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 5,
+    title: "Heavyweight perfection",
+    body: "Fits as expected with a relaxed oversized drape in the shoulders and chest.",
+    date: "2026-10-11",
+    verifiedPurchase: true,
+    reviewerHeight: `5'11"`,
+    reviewerBuild: "170 lbs \xB7 Athletic",
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "bh-8",
+    author: "Jordan F.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 3,
+    title: "Way too baggy in the waist",
+    body: "Runs very large in size L. Way too boxy and loose around the waist and chest, almost swimming in it. Size down.",
+    date: "2026-10-25",
+    verifiedPurchase: true,
+    reviewerHeight: `6'0"`,
+    reviewerBuild: "182 lbs \xB7 Athletic",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-9",
+    author: "Isaac W.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 4,
+    title: "Generous sizing in shoulders and sleeves",
+    body: "Runs large with very wide sleeves and drop shoulders. Great fabric weight.",
+    date: "2026-10-14",
+    verifiedPurchase: true,
+    reviewerHeight: `6'1"`,
+    reviewerBuild: "190 lbs \xB7 Broad",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-10",
+    author: "Owen T.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 2,
+    title: "Like a tent in the midsection",
+    body: "Runs super large! Swimming in it through the chest and waist while the torso length is strangely cropped. Returning for L.",
+    date: "2026-10-27",
+    verifiedPurchase: true,
+    reviewerHeight: `6'2"`,
+    reviewerBuild: "210 lbs \xB7 Regular",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-11",
+    author: "Leo V.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 3,
+    title: "Overly wide shoulders and sleeves",
+    body: "Bigger than expected. Way too baggy in the sleeves and loose at the waist hem. Definitely size down one full size.",
+    date: "2026-10-16",
+    verifiedPurchase: true,
+    reviewerHeight: `6'1"`,
+    reviewerBuild: "205 lbs \xB7 Stocky",
+    declaredFitTag: "Runs Large"
+  },
+  {
+    id: "bh-12",
+    author: "Dante B.",
+    sizePurchased: "XXL",
+    usualSize: "XXL",
+    rating: 2,
+    title: "XXL is widest hoodie I own",
+    body: "Runs extremely large. Drowning in it around the waist and chest, feels like a sack in XXL. Size down.",
+    date: "2026-10-21",
+    verifiedPurchase: true,
+    reviewerHeight: `6'3"`,
+    reviewerBuild: "230 lbs \xB7 Big & Tall",
+    declaredFitTag: "Runs Large"
+  }
+];
+var MERINO_CREWNECK_REVIEWS = [
+  {
+    id: "mc-1",
+    author: "Claire B.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 5,
+    title: "Impeccable true to size knit",
+    body: "True to size! Fits perfectly across the shoulders, bust, and waist with zero bunching. Softest merino wool.",
+    date: "2026-10-25",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "mc-2",
+    author: "Sienna H.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 5,
+    title: "Exact usual size S",
+    body: "Exact my usual size S. Fits like a glove through the sleeves and torso length.",
+    date: "2026-10-23",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "mc-3",
+    author: "Naomi K.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 5,
+    title: "Flattering drape in S",
+    body: "True to size and very comfortable in the shoulders and chest. Great layering weight.",
+    date: "2026-10-18",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "mc-4",
+    author: "Audrey L.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 5,
+    title: "Spot on M proportions",
+    body: "Fits just right in the chest, waist, and sleeve length. Standard sizing and gorgeous rib texture.",
+    date: "2026-10-22",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "mc-5",
+    author: "camille_d",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 4,
+    title: "True to size with contoured rib",
+    body: "True to size overall, slightly snug in the sleeves because of the ribbed knit but stretches nicely.",
+    date: "2026-10-14",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "mc-6",
+    author: "Rachel G.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 4,
+    title: "True to size in L, slightly trim bust",
+    body: "Fits as expected in the shoulders and length, though the ribbed knit is slightly snug across the bust.",
+    date: "2026-10-20",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "mc-7",
+    author: "Valerie P.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 3,
+    title: "Runs slightly small in the arms for L",
+    body: "Runs small in the sleeves and tight across the chest for a size L. If you have a fuller bust, size up to XL.",
+    date: "2026-10-12",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "mc-8",
+    author: "Monica S.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 3,
+    title: "XL clings tightly at chest and cuffs",
+    body: "Smaller than expected in XL. Tight across the bust and constricting in the forearms and cuffs. Recommend sizing up.",
+    date: "2026-10-24",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "mc-9",
+    author: "Diana W.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 4,
+    title: "Nice length but snug shoulders",
+    body: "Torso length is great, but runs small in the shoulders and bust compared to sizes S and M.",
+    date: "2026-10-15",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "mc-10",
+    author: "Beatrice N.",
+    sizePurchased: "XXL",
+    usualSize: "XXL",
+    rating: 4,
+    title: "Comfortable fit in XXL",
+    body: "True to size in XXL with comfortable waist and hip drape.",
+    date: "2026-10-09",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  }
+];
+var CARGO_PANT_REVIEWS = [
+  {
+    id: "cp-1",
+    author: "Alexei R.",
+    sizePurchased: "XS",
+    usualSize: "XS",
+    rating: 5,
+    title: "Great articulated fit for 27 waist",
+    body: "True to size in XS. Waistband sits securely and the inseam length is spot on.",
+    date: "2026-10-21",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "cp-2",
+    author: "Samir K.",
+    sizePurchased: "S",
+    usualSize: "S",
+    rating: 5,
+    title: "Fits 29-30 waist accurately",
+    body: "True to size! Fits perfectly in the waist and hips with plenty of knee mobility.",
+    date: "2026-10-19",
+    verifiedPurchase: true,
+    declaredFitTag: "True to Size"
+  },
+  {
+    id: "cp-3",
+    author: "Toby M.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 2,
+    title: "Inelastic waistband runs small",
+    body: "Runs small in size M! Way too tight around the waist and hips when sitting down. Zero stretch in the ripstop waistband, size up.",
+    date: "2026-10-26",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "cp-4",
+    author: "Shane L.",
+    sizePurchased: "M",
+    usualSize: "M",
+    rating: 3,
+    title: "Snug thighs and tight waist",
+    body: "Smaller than expected. Tight in the hips and thighs for athletic legs. Order a size larger.",
+    date: "2026-10-17",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "cp-5",
+    author: "Chris P.",
+    sizePurchased: "L",
+    usualSize: "L",
+    rating: 2,
+    title: "Size L measures like a 31 waist",
+    body: "Runs very small! Couldn\u2019t button the waist comfortably and pulls at the hips. Returning for XL.",
+    date: "2026-10-25",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "cp-6",
+    author: "Mitch D.",
+    sizePurchased: "L",
+    usualSize: "M",
+    rating: 5,
+    title: "Sized up to L and fits great",
+    body: "Ordered a size up from M to L because the waist runs small. Now the waist and thigh room are ideal.",
+    date: "2026-10-14",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "cp-7",
+    author: "Warren H.",
+    sizePurchased: "XL",
+    usualSize: "XL",
+    rating: 3,
+    title: "Tight rise and seat in XL",
+    body: "Runs small through the hips, seat, and waistband. Inseam length is fine but waist has no give.",
+    date: "2026-10-22",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  },
+  {
+    id: "cp-8",
+    author: "Greg O.",
+    sizePurchased: "XXL",
+    usualSize: "XXL",
+    rating: 3,
+    title: "Snug waist in XXL",
+    body: "Runs small in the waist and hips. Size up if you have muscular thighs.",
+    date: "2026-10-11",
+    verifiedPurchase: true,
+    declaredFitTag: "Runs Small"
+  }
+];
+var SEED_CATALOG = [
+  aggregateProductFitReport(
+    {
+      id: "hm-heavyweight-relaxed-tee",
+      name: "H&M Relaxed Fit Heavyweight Cotton T-Shirt",
+      brand: "H&M (Blank Staples)",
+      category: "T-Shirts & Tops",
+      sku: "HM-1096385-WHT",
+      price: "$19.99",
+      fabricComposition: "100% Heavyweight Carded Cotton Jersey (240 GSM \xB7 Non-Sheer Opaque Knit)",
+      sourceUrl: "https://www2.hm.com/en_us/productpage.1096385001.html#reviews",
+      scraperTelemetry: {
+        scrapedAt: "2026-10-30T18:15:00Z",
+        domNodesScanned: 684,
+        parseDurationMs: 152,
+        engineMode: "cheerio-dom+deterministic-nlp"
+      }
+    },
+    HM_HEAVYWEIGHT_TEE_REVIEWS
+  ),
+  aggregateProductFitReport(
+    {
+      id: "kuroki-selvedge-jacket",
+      name: "Kuroki 14oz Raw Selvedge Trucker Jacket",
+      brand: "Aethelgard Workwear",
+      category: "Outerwear",
+      sku: "AGW-104-IND",
+      price: "$295",
+      fabricComposition: "100% Unsanforized Japanese Cotton Selvedge (14.2 oz)",
+      sourceUrl: "https://store.aethelgard.example/products/kuroki-14oz-selvedge-jacket#reviews",
+      scraperTelemetry: {
+        scrapedAt: "2026-10-30T17:45:00Z",
+        domNodesScanned: 612,
+        parseDurationMs: 168,
+        engineMode: "cheerio-dom+deterministic-nlp"
+      }
+    },
+    DENIM_JACKET_REVIEWS
+  ),
+  aggregateProductFitReport(
+    {
+      id: "cloudloft-boxy-hoodie",
+      name: "CloudLoft 480gsm Architectural Boxy Hoodie",
+      brand: "Vanguard Athletics",
+      category: "Fleece & Hoodies",
+      sku: "VGA-480-CHR",
+      price: "$148",
+      fabricComposition: "100% Organic Heavyweight Combed French Terry (480 gsm)",
+      sourceUrl: "https://vanguard-athletics.example/collections/fleece/cloudloft-hoodie#reviews",
+      scraperTelemetry: {
+        scrapedAt: "2026-10-30T17:42:00Z",
+        domNodesScanned: 488,
+        parseDurationMs: 142,
+        engineMode: "cheerio-dom+deterministic-nlp"
+      }
+    },
+    BOXY_HOODIE_REVIEWS
+  ),
+  aggregateProductFitReport(
+    {
+      id: "verona-merino-crewneck",
+      name: "Verona Fine Merino Ribbed Crewneck Sweater",
+      brand: "Maison Liora",
+      category: "Knitwear",
+      sku: "MLR-219-OAT",
+      price: "$210",
+      fabricComposition: "96% Extra-Fine Australian Merino Wool, 4% Cashmere",
+      sourceUrl: "https://maisonliora.example/knitwear/verona-merino-crewneck#reviews",
+      scraperTelemetry: {
+        scrapedAt: "2026-10-30T17:38:00Z",
+        domNodesScanned: 394,
+        parseDurationMs: 131,
+        engineMode: "cheerio-dom+deterministic-nlp"
+      }
+    },
+    MERINO_CREWNECK_REVIEWS
+  ),
+  aggregateProductFitReport(
+    {
+      id: "apex-ripstop-cargo",
+      name: "Apex Articulated Ripstop Tapered Cargo Pant",
+      brand: "Terrain Labs",
+      category: "Trousers",
+      sku: "TRL-802-OLV",
+      price: "$185",
+      fabricComposition: "70% Cordura Cotton, 30% Nylon Mechanical Ripstop (Zero Elastane)",
+      sourceUrl: "https://terrainlabs.example/bottoms/apex-ripstop-cargo-pant#reviews",
+      scraperTelemetry: {
+        scrapedAt: "2026-10-30T17:30:00Z",
+        domNodesScanned: 350,
+        parseDurationMs: 119,
+        engineMode: "cheerio-dom+deterministic-nlp"
+      }
+    },
+    CARGO_PANT_REVIEWS
+  )
+];
+
+// webscraper/server/mockStore.ts
+function mockStoreProduct(slug) {
+  return Object.hasOwn(MOCK_STORE_PRODUCTS, slug) ? MOCK_STORE_PRODUCTS[slug] : void 0;
 }
 var MOCK_STORE_PRODUCTS = {
   "hm-heavyweight-relaxed-tee": {
@@ -100403,42 +101398,164 @@ function renderMockStoreHtml(product) {
 </body>
 </html>`;
 }
-function stableHash(input) {
-  let h = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
+
+// webscraper/server/routes.ts
+function chartRowsFromClient(value) {
+  if (!Array.isArray(value)) return [];
+  const rows = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const row = item;
+    if (typeof row.size !== "string" || !row.size.trim()) continue;
+    const measurement = (field) => typeof field === "number" && Number.isFinite(field) ? field : null;
+    rows.push({
+      size: row.size.trim(),
+      sortOrder: typeof row.sortOrder === "number" && Number.isFinite(row.sortOrder) ? row.sortOrder : rows.length,
+      chest_cm: measurement(row.chest_cm),
+      length_cm: measurement(row.length_cm),
+      sleeve_cm: measurement(row.sleeve_cm)
+    });
   }
-  return (h >>> 0).toString(36).toUpperCase();
+  return rows;
 }
-var VALID_CATEGORIES = [
-  "T-Shirts & Tops",
-  "Outerwear",
-  "Knitwear",
-  "Trousers",
-  "Fleece & Hoodies",
-  "Shirting",
-  "Dresses"
-];
-function inferCategory(...hints) {
-  for (const hint of hints) {
-    if (!hint) continue;
-    const exact = VALID_CATEGORIES.find((c) => c.toLowerCase() === hint.toLowerCase());
-    if (exact) return exact;
-    const h = hint.toLowerCase();
-    if (/hoodie|sweatshirt|fleece|crewneck sweat/.test(h)) return "Fleece & Hoodies";
-    if (/jacket|coat|parka|puffer|blazer|outerwear|anorak|vest/.test(h)) return "Outerwear";
-    if (/sweater|knit|cardigan|jumper|pullover/.test(h)) return "Knitwear";
-    if (/trouser|pant|jean|chino|short|legging|jogger/.test(h)) return "Trousers";
-    if (/dress|skirt/.test(h)) return "Dresses";
-    if (/oxford|button[- ]?(down|up)|shirt(?!s? ?&)|flannel|overshirt/.test(h) && !/t-?shirt|tee/.test(h)) return "Shirting";
-    if (/t-?shirt|tee|tank|top|polo|henley/.test(h)) return "T-Shirts & Tops";
-  }
-  return "T-Shirts & Tops";
+function registerMockStoreRoutes(app2) {
+  app2.get("/api/mock-store/:slug", (req, res) => {
+    const product = mockStoreProduct(req.params.slug);
+    if (!product) {
+      res.status(404).send("Product not found");
+      return;
+    }
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(renderMockStoreHtml(product));
+  });
+  app2.get("/api/mock-store/:slug/raw", (req, res) => {
+    const product = mockStoreProduct(req.params.slug);
+    if (!product) {
+      res.status(404).json({ error: "Preset store page not found" });
+      return;
+    }
+    res.json({
+      slug: product.slug,
+      name: product.name,
+      brand: product.brand,
+      sku: product.sku,
+      category: product.category,
+      html: renderMockStoreHtml(product)
+    });
+  });
 }
-function looksLikeFullHtmlDocument(input) {
-  return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5e3));
+function registerPosthogConfigRoute(app2) {
+  app2.get("/api/posthog-config", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      projectToken: process.env.POSTHOG_PROJECT_TOKEN || "",
+      host: process.env.POSTHOG_HOST || ""
+    });
+  });
 }
+function registerDbRoutes(app2) {
+  app2.get("/api/db/remote", async (_req, res) => {
+    try {
+      res.json(await listRemoteFitSkus());
+    } catch (err) {
+      res.status(500).json({ error: err instanceof Error ? err.message : "Could not list the shared fit store" });
+    }
+  });
+  app2.get("/api/db/records", (_req, res) => {
+    res.json(getDatabaseSummary());
+  });
+  app2.post("/api/db/commit", async (req, res) => {
+    try {
+      const { report, reports, charts: incomingCharts } = req.body;
+      const list = reports || (report ? [report] : []);
+      if (!Array.isArray(list) || list.some((r) => !r || typeof r !== "object" || typeof r.sku !== "string" || !r.sku)) {
+        res.status(400).json({ error: "Each report must be an object with a string sku." });
+        return;
+      }
+      if (list.length === 0) {
+        res.status(400).json({ error: "No scraped SKU report provided to dump into database." });
+        return;
+      }
+      for (const item of list) {
+        upsertReportTransaction(item);
+        const rows = chartRowsFromClient(incomingCharts?.[item.sku]);
+        if (rows.length > 0) saveSizeChart(item.sku, rows);
+      }
+      const supabase = await pushFitReports(list, chartsBySku(list));
+      res.json({
+        committedCount: list.length,
+        supabase,
+        ...getDatabaseSummary()
+      });
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : "Database commit failed"
+      });
+    }
+  });
+  const deleteSkuTransaction = db.transaction((sku) => {
+    db.prepare(`DELETE FROM commercial_skus WHERE sku = ?`).run(sku);
+    db.prepare(`DELETE FROM sku_size_metrics WHERE sku = ?`).run(sku);
+    db.prepare(`DELETE FROM sku_reviews WHERE sku = ?`).run(sku);
+    db.prepare(`DELETE FROM size_chart WHERE sku = ?`).run(sku);
+    db.prepare(`
+      INSERT INTO ingestion_log (sku, product_name, action, rows_affected, committed_at)
+      VALUES (?, ?, 'DELETE_SKU', 1, ?)
+    `).run(sku, sku, (/* @__PURE__ */ new Date()).toISOString());
+  });
+  app2.delete("/api/db/sku/:sku", async (req, res) => {
+    try {
+      const sku = req.params.sku;
+      deleteSkuTransaction(sku);
+      const supabase = await deleteRemoteFitSku(sku);
+      res.json({ supabase, ...getDatabaseSummary() });
+    } catch (err) {
+      res.status(500).json({ error: err instanceof Error ? err.message : "Delete failed" });
+    }
+  });
+  app2.get("/api/db/dump.sql", (_req, res) => {
+    const { reports, charts } = getDatabaseSummary();
+    const chartRows = Object.entries(charts).flatMap(
+      ([sku, rows]) => rows.map((row) => ({ sku, ...row }))
+    );
+    const sql = generateSqlInsertDump(reports, chartRows);
+    res.setHeader("Content-Type", "application/sql; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="pearfit_scraper_commercial_db_dump.sql"'
+    );
+    res.send(sql);
+  });
+  app2.get("/api/db/dump.json", (_req, res) => {
+    const skus = db.prepare(`SELECT sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at FROM commercial_skus`).all();
+    const sizeMetrics = db.prepare(`SELECT * FROM sku_size_metrics`).all();
+    const reviews = db.prepare(`SELECT * FROM sku_reviews`).all();
+    const sizeChart = db.prepare(`SELECT * FROM size_chart ORDER BY sku, sort_order`).all();
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="pearfit_scraper_commercial_db_dump.json"'
+    );
+    res.send(
+      JSON.stringify(
+        {
+          exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          engine: "Pearfit Scraper Commercial Apparel Fit Database (SQLite3 + Deterministic NLP)",
+          tables: {
+            commercial_skus: skus,
+            sku_size_metrics: sizeMetrics,
+            sku_reviews: reviews,
+            size_chart: sizeChart
+          }
+        },
+        null,
+        2
+      )
+    );
+  });
+}
+
+// webscraper/server/reviewMerge.ts
 var PLACEHOLDER_AUTHOR = /^(anonymous|verified (buyer|purchaser|customer|reviewer)|customer|guest|a customer|shopper)$/i;
 function startsAtWord(text4, part) {
   let from = text4.indexOf(part);
@@ -100493,23 +101610,112 @@ function mergeScrapedReviews(primary, extra) {
   }
   return merged;
 }
-function chartRowsFromClient(value) {
-  if (!Array.isArray(value)) return [];
-  const rows = [];
-  for (const item of value) {
-    if (!item || typeof item !== "object") continue;
-    const row = item;
-    if (typeof row.size !== "string" || !row.size.trim()) continue;
-    const measurement = (field) => typeof field === "number" && Number.isFinite(field) ? field : null;
-    rows.push({
-      size: row.size.trim(),
-      sortOrder: typeof row.sortOrder === "number" && Number.isFinite(row.sortOrder) ? row.sortOrder : rows.length,
-      chest_cm: measurement(row.chest_cm),
-      length_cm: measurement(row.length_cm),
-      sleeve_cm: measurement(row.sleeve_cm)
-    });
+
+// webscraper/server/domReviews.ts
+function stripSizeLabel(value) {
+  return value.replace(/^\s*(?:size|purchased|ordered|bought)(?:\s+(?:purchased|ordered|bought|size))?\s*[:\-]\s*/i, "").trim();
+}
+function readDomReviewCards($2, selectorsUsed) {
+  const domReviews = [];
+  const completeDomCards = /* @__PURE__ */ new Set();
+  {
+    const reviewElements = $2(REVIEW_CARD_SELECTOR);
+    if (reviewElements.length > 0) {
+      selectorsUsed.push("review-card DOM selectors");
+      reviewElements.each((idx, el) => {
+        const node = $2(el);
+        if (node.find(REVIEW_CARD_SELECTOR).length > 0) return;
+        const nodeText = node.text().replace(/\s+/g, " ").trim();
+        const lines = leafTexts($2, node);
+        const isDate = looksLikeDate;
+        const author = node.attr("data-author") || node.attr("data-reviewer") || node.find('[itemprop="author"]').first().text().trim() || node.find('[class*="feed-item-title"] .title').first().text().trim() || // A hashed CSS-module class ends in "_author"; "_authorInfo" wraps the name and a "Verified Buyer" badge.
+        node.find('[class$="_author"], [class*="_author "]').first().text().trim() || node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, "").trim() || // A masked reviewer name ("1***3", "a***b") alone on its line.
+        lines.find((l) => /^[\p{L}\p{N}]{1,4}\*{2,}[\p{L}\p{N}]{1,4}$/u.test(l)) || "Anonymous";
+        const body = node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], [class*="CommentWithEllipsis"], [class*="_reviewContent"], .main-text, [class*="review-message"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, " ").trim() || longestFreeText(lines, [author]) || // Text written directly in the card. A card of only a rating, a date and a size has none: no review.
+        textOutsideLines(nodeText, lines);
+        const title = node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().replace(/\s+/g, " ").trim() || lines.slice(0, Math.max(0, lines.indexOf(body))).find(
+          (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l) && !isBadgeLine(l)
+        ) || "";
+        const sizePurchased = stripSizeLabel(
+          node.attr("data-size") || node.find(".review-size-tag strong").text().trim() || labelledValue(lines, /^(purchased size|size purchased|size ordered|size bought|size)$/i) || // Loox "Item type: GLACIER / XX-LARGE": the size is the last part.
+          node.find(".item-type-value").first().text().split("/").pop()?.trim() || // Tags become spaces first: "<div>L</div><div>These..." must not read as "LThese".
+          (node.html() ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").match(/Size(?:\s+(?:Purchased|Ordered|Bought))?\s*:\s*([A-Za-z0-9]+)/i)?.[1] || extractSizeFromReviewText(body)
+        );
+        const ratingStr = node.attr("data-rating") || node.attr("data-score") || node.find('[itemprop="ratingValue"]').attr("content") || node.find('[itemprop="ratingValue"]').text().trim() || node.find("[data-score]").attr("data-score") || node.find(".review-rating").text().match(/(\d(?:\.\d)?)/)?.[1] || // Accessible star widgets: aria-label/title like "4 out of 5 stars".
+        ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr("aria-label") ?? node.find('[title*="out of 5" i]').first().attr("title")) || ratingFromLabel(node.find('[aria-label*="/ 5" i]').first().attr("aria-label")) || ratingFromStarIcons($2, node) || ratingFromStarFills($2, node) || // Screen-reader text such as "Rated 5 out of 5" (Okendo and others).
+        nodeText.match(/\brated\s+(\d(?:\.\d)?)\s+out of\s+5\b/i)?.[1] || "";
+        const declaredFitTag = node.attr("data-fit") || node.find(".review-fit-tag").text().replace(/^Fit:\s*/i, "").trim() || labelledValue(lines, /^(how it fits|fit|overall fit|sizing)$/i) || void 0;
+        const date = dateFromAttribute(node.attr("data-date") ?? "") || node.find('[itemprop="datePublished"]').attr("content") || node.find("time").attr("datetime") || lines.find(isDate) || "";
+        const reviewerHeight = labelledValue(lines, /^height$/i) || void 0;
+        const reviewerBuild = labelledValue(lines, /^(weight|body type|build)$/i) || void 0;
+        const usualSize = labelledValue(lines, /^(usual size|normally wears|usually wears)$/i) || void 0;
+        const parsedRating = parseFloat(ratingStr);
+        const words2 = body.split(/[\s,]+/).filter(Boolean);
+        const tokenish = words2.filter((w) => /_/.test(w) || /^[a-z]+\d+$/i.test(w)).length;
+        const WIDGET_WORDS = /\b(facebook|twitter|pinterest|share (this )?review|share|copy link|was this (review )?helpful|report (this )?review|tweet|pin it|by|anonymous|user|yes|no)\b|\d+/gi;
+        const widgetLine = /\b(facebook|twitter|pinterest|share (this )?review|copy link|was this (review )?helpful|report (this )?review)\b/i.test(body) && body.replace(WIDGET_WORDS, " ").split(/[^\p{L}]+/u).filter(Boolean).length <= 2;
+        const debugText = !Number.isFinite(parsedRating) && author === "Anonymous" && (tokenish * 2 >= words2.length || widgetLine);
+        if (body.length > 8 && !debugText) {
+          if (Number.isFinite(parsedRating) && author !== "Anonymous") completeDomCards.add(domReviews.length);
+          domReviews.push({
+            id: `dom-rev-${idx + 1}`,
+            author,
+            sizePurchased,
+            usualSize,
+            // A card whose stars cannot be read has no rating. Never a stand-in such as 3.
+            // (A widget that prints "0" has no rating to show either.)
+            rating: Number.isFinite(parsedRating) && parsedRating > 0 ? Math.min(5, Math.max(1, Math.round(parsedRating))) : null,
+            title,
+            body,
+            date,
+            verifiedPurchase: false,
+            reviewerHeight,
+            reviewerBuild,
+            declaredFitTag
+          });
+        }
+      });
+    }
   }
-  return rows;
+  return { domReviews, completeDomCards };
+}
+
+// webscraper/server/scrapeHtml.ts
+function stableHash(input) {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36).toUpperCase();
+}
+var VALID_CATEGORIES = [
+  "T-Shirts & Tops",
+  "Outerwear",
+  "Knitwear",
+  "Trousers",
+  "Fleece & Hoodies",
+  "Shirting",
+  "Dresses"
+];
+function inferCategory(...hints) {
+  for (const hint of hints) {
+    if (!hint) continue;
+    const exact = VALID_CATEGORIES.find((c) => c.toLowerCase() === hint.toLowerCase());
+    if (exact) return exact;
+    const h = hint.toLowerCase();
+    if (/hoodie|sweatshirt|fleece|crewneck sweat/.test(h)) return "Fleece & Hoodies";
+    if (/jacket|coat|parka|puffer|blazer|outerwear|anorak|vest/.test(h)) return "Outerwear";
+    if (/sweater|knit|cardigan|jumper|pullover/.test(h)) return "Knitwear";
+    if (/trouser|pant|jean|chino|short|legging|jogger/.test(h)) return "Trousers";
+    if (/dress|skirt/.test(h)) return "Dresses";
+    if (/oxford|button[- ]?(down|up)|shirt(?!s? ?&)|flannel|overshirt/.test(h) && !/t-?shirt|tee/.test(h)) return "Shirting";
+    if (/t-?shirt|tee|tank|top|polo|henley/.test(h)) return "T-Shirts & Tops";
+  }
+  return "T-Shirts & Tops";
+}
+function looksLikeFullHtmlDocument(input) {
+  return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5e3));
 }
 function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], productHtml = null, sourceHtml = null) {
   const startTime = Date.now();
@@ -100545,65 +101751,17 @@ function scrapeHtmlWithCheerio(html3, sourceUrl, overrides, jsonResponses = [], 
   const priceCurrency = meta('meta[property="product:price:currency"]') || meta('meta[property="og:price:currency"]');
   const price = structured?.price || meta('meta[name="product:price"]') || (priceAmount ? [priceAmount, priceCurrency].filter(Boolean).join(" ") : null) || $p("[data-price]").attr("data-price") || "Unknown";
   const fabricComposition = structured?.material || meta('meta[name="product:fabric"]') || $p("[data-fabric]").attr("data-fabric") || "Unknown";
-  const domReviews = [];
-  const completeDomCards = /* @__PURE__ */ new Set();
-  {
-    const reviewElements = $2(REVIEW_CARD_SELECTOR);
-    if (reviewElements.length > 0) {
-      selectorsUsed.push("review-card DOM selectors");
-      reviewElements.each((idx, el) => {
-        const node = $2(el);
-        if (node.find(REVIEW_CARD_SELECTOR).length > 0) return;
-        const nodeText = node.text().replace(/\s+/g, " ").trim();
-        const lines = leafTexts($2, node);
-        const isDate = (l) => /^\d{1,2}\/\d{1,2}\/\d{2,4}$|^\d{4}-\d{2}-\d{2}$/.test(l);
-        const author = node.attr("data-author") || node.attr("data-reviewer") || node.find('[itemprop="author"]').first().text().trim() || node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, "").trim() || "Anonymous";
-        const body = node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, " ").trim() || longestFreeText(lines, [author]) || nodeText;
-        const title = node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().replace(/\s+/g, " ").trim() || lines.slice(0, Math.max(0, lines.indexOf(body))).find(
-          (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l)
-        ) || "";
-        const sizePurchased = node.attr("data-size") || node.find(".review-size-tag strong").text().trim() || labelledValue(lines, /^(purchased size|size purchased|size ordered|size bought|size)$/i) || nodeText.match(/Size(?:\s+(?:Purchased|Ordered|Bought))?:\s*([A-Za-z0-9]+)/i)?.[1] || extractSizeFromReviewText(body);
-        const ratingStr = node.attr("data-rating") || node.find('[itemprop="ratingValue"]').attr("content") || node.find('[itemprop="ratingValue"]').text().trim() || node.find("[data-score]").attr("data-score") || node.find(".review-rating").text().match(/(\d(?:\.\d)?)/)?.[1] || // Accessible star widgets: aria-label/title like "4 out of 5 stars".
-        ratingFromLabel(node.find('[aria-label*="out of 5" i], [title*="out of 5" i]').first().attr("aria-label") ?? node.find('[title*="out of 5" i]').first().attr("title")) || ratingFromStarIcons($2, node) || // Screen-reader text such as "Rated 5 out of 5" (Okendo and others).
-        nodeText.match(/\brated\s+(\d(?:\.\d)?)\s+out of\s+5\b/i)?.[1] || "";
-        const declaredFitTag = node.attr("data-fit") || node.find(".review-fit-tag").text().replace(/^Fit:\s*/i, "").trim() || labelledValue(lines, /^(how it fits|fit|overall fit|sizing)$/i) || void 0;
-        const date = node.attr("data-date") || node.find('[itemprop="datePublished"]').attr("content") || node.find("time").attr("datetime") || lines.find(isDate) || "";
-        const reviewerHeight = labelledValue(lines, /^height$/i) || void 0;
-        const reviewerBuild = labelledValue(lines, /^(weight|body type|build)$/i) || void 0;
-        const usualSize = labelledValue(lines, /^(usual size|normally wears|usually wears)$/i) || void 0;
-        const parsedRating = parseFloat(ratingStr);
-        const words = body.split(/[\s,]+/).filter(Boolean);
-        const tokenish = words.filter((w) => /_/.test(w) || /^[a-z]+\d+$/i.test(w)).length;
-        const WIDGET_WORDS = /\b(facebook|twitter|pinterest|share (this )?review|share|copy link|was this (review )?helpful|report (this )?review|tweet|pin it|by|anonymous|user|yes|no)\b|\d+/gi;
-        const widgetLine = /\b(facebook|twitter|pinterest|share (this )?review|copy link|was this (review )?helpful|report (this )?review)\b/i.test(body) && body.replace(WIDGET_WORDS, " ").split(/[^\p{L}]+/u).filter(Boolean).length <= 2;
-        const debugText = !Number.isFinite(parsedRating) && author === "Anonymous" && (tokenish * 2 >= words.length || widgetLine);
-        if (body.length > 8 && !debugText) {
-          if (Number.isFinite(parsedRating) && author !== "Anonymous") completeDomCards.add(domReviews.length);
-          domReviews.push({
-            id: `dom-rev-${idx + 1}`,
-            author,
-            sizePurchased,
-            usualSize,
-            // 3 = neutral midpoint when the card shows no rating.
-            rating: Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, Math.round(parsedRating))) : 3,
-            title,
-            body,
-            date,
-            verifiedPurchase: false,
-            reviewerHeight,
-            reviewerBuild,
-            declaredFitTag
-          });
-        }
-      });
-    }
-  }
+  const { domReviews, completeDomCards } = readDomReviewCards($2, selectorsUsed);
   const jsonSources = jsonResponses.map((r) => ({ url: r.url, value: parseJsonBody(r.body) }));
   $2('script#__NEXT_DATA__, script[type="application/json"]').each((i, el) => {
     const raw = $2(el).contents().text();
     if (raw.length > 0 && /review/i.test(raw)) {
       jsonSources.push({ url: `page:${$2(el).attr("id") || `json-${i}`}`, value: parseJsonBody(raw) });
     }
+  });
+  $2("[data-jdgm-json]").each((i, el) => {
+    const value = parseJsonBody($2(el).attr("data-jdgm-json") ?? "");
+    if (value !== null) jsonSources.push({ url: `page:jdgm-${i}`, value });
   });
   const fromJson = collectJsonReviews(
     jsonSources.filter((source) => source.value !== null),
@@ -100701,13 +101859,16 @@ function pageProductKeys($2, html3, sourceUrl, structuredIds, sku, sourceHtml = 
   }
   return [...keys];
 }
-var PASTE_HINT = " If the reviews show in your own browser, copy them (or View Source) and paste into the raw HTML box instead.";
+
+// webscraper/server/staticFetch.ts
 var FETCH_HEADERS = {
   "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "en-US,en;q=0.9"
 };
-async function fetchStaticHtml(url) {
+var MAX_STATIC_HTML_BYTES = 1e7;
+async function fetchStaticHtml(url, options = {}) {
+  const siteOf = (raw) => registrableDomain(new URL(raw).hostname);
   let current = url;
   for (let hop = 0; hop <= 5; hop++) {
     const blocked = await blockedFetchTargetResolved(current);
@@ -100717,29 +101878,50 @@ async function fetchStaticHtml(url) {
       response = await fetch(current, {
         headers: FETCH_HEADERS,
         redirect: "manual",
-        signal: AbortSignal.timeout(2e4)
+        signal: AbortSignal.timeout(options.timeoutMs ?? 2e4)
       });
     } catch (fetchErr) {
-      const reason = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-      return { status: 502, message: `Could not reach ${url}: ${reason}.`, blocked: false };
+      return describeFetchFailure(url, fetchErr);
     }
     if (response.status >= 300 && response.status < 400) {
       const location2 = response.headers.get("location");
+      if (location2 && isBotCheckRedirect(location2)) {
+        return { status: 400, message: `${url} sent the request to a bot check: the store refuses automated requests.`, blocked: true };
+      }
       if (!location2 || hop === 5) {
+        void response.body?.cancel().catch(() => {
+        });
         return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
       }
-      current = new URL(location2, current).toString();
+      void response.body?.cancel().catch(() => {
+      });
+      try {
+        current = new URL(location2, current).toString();
+      } catch {
+        return { status: 400, message: `${url} redirected to an invalid address.`, blocked: false };
+      }
+      if (options.sameSite && siteOf(current) !== siteOf(url)) {
+        return { status: 400, message: `${url} redirected to another site (${new URL(current).host}).`, blocked: false };
+      }
       continue;
     }
     if (!response.ok) {
-      const refused = [403, 418, 429, 503].includes(response.status);
+      void response.body?.cancel().catch(() => {
+      });
+      const refused = isRefusalStatus(response.status);
       return {
         status: 400,
         message: refused ? `${url} returned HTTP ${response.status}: the store refuses automated requests.` : `Remote server returned HTTP ${response.status} when scraping ${url}.`,
         blocked: refused
       };
     }
-    const html3 = await response.text();
+    const declared = Number(response.headers.get("content-length"));
+    if (Number.isFinite(declared) && declared > MAX_STATIC_HTML_BYTES) {
+      void response.body?.cancel().catch(() => {
+      });
+      return { status: 400, message: `${url} is larger than the ${MAX_STATIC_HTML_BYTES / 1e6} MB the scraper reads.`, blocked: false };
+    }
+    const html3 = (await response.text()).slice(0, MAX_STATIC_HTML_BYTES);
     const blockedBy = blockPageTitle(html3);
     if (blockedBy) {
       return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };
@@ -100755,165 +101937,15 @@ async function fetchStaticHtml(url) {
   }
   return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
 }
-function getDatabaseSummary() {
-  const rows = db.prepare(`SELECT report_json, committed_at FROM commercial_skus ORDER BY committed_at DESC`).all();
-  const reports = rows.map((r) => {
-    const parsed = JSON.parse(r.report_json);
-    parsed.committedToDbAt = r.committed_at;
-    return parsed;
-  });
-  const stats = db.prepare(`
-      SELECT
-        (SELECT COUNT(*) FROM commercial_skus) as skuCount,
-        (SELECT COUNT(*) FROM sku_size_metrics WHERE review_count > 0) as sizeMetricRows,
-        (SELECT COUNT(*) FROM sku_reviews) as reviewRows
-    `).get();
-  const recentLogs = db.prepare(`SELECT id, sku, product_name, action, rows_affected, committed_at FROM ingestion_log ORDER BY id DESC LIMIT 10`).all();
-  const chartRows = db.prepare(
-    `SELECT sku, size_code, sort_order, chest_cm, length_cm, sleeve_cm
-       FROM size_chart ORDER BY sku, sort_order`
-  ).all();
-  const charts = {};
-  for (const row of chartRows) {
-    const list = charts[row.sku] ?? [];
-    list.push({
-      size: row.size_code,
-      sortOrder: row.sort_order,
-      chest_cm: row.chest_cm,
-      length_cm: row.length_cm,
-      sleeve_cm: row.sleeve_cm
-    });
-    charts[row.sku] = list;
-  }
-  return {
-    reports,
-    stats,
-    recentLogs,
-    charts
-  };
+async function fetchGuidePage(href, timeoutMs) {
+  const result = await fetchStaticHtml(href, { timeoutMs, sameSite: true });
+  if (!("html" in result) && process.env.SCRAPER_DEBUG) console.error(`[guides] ${href}: ${result.message}`);
+  return "html" in result ? { html: result.html } : { refused: result.blocked };
 }
-function createApp() {
-  const app2 = (0, import_express.default)();
-  app2.use(import_express.default.json({ limit: "4mb" }));
-  app2.get("/api/mock-store/:slug", (req, res) => {
-    const product = MOCK_STORE_PRODUCTS[req.params.slug];
-    if (!product) {
-      res.status(404).send("Product not found");
-      return;
-    }
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.send(renderMockStoreHtml(product));
-  });
-  app2.get("/api/mock-store/:slug/raw", (req, res) => {
-    const product = MOCK_STORE_PRODUCTS[req.params.slug];
-    if (!product) {
-      res.status(404).json({ error: "Preset store page not found" });
-      return;
-    }
-    res.json({
-      slug: product.slug,
-      name: product.name,
-      brand: product.brand,
-      sku: product.sku,
-      category: product.category,
-      html: renderMockStoreHtml(product)
-    });
-  });
-  app2.get("/api/posthog-config", (_req, res) => {
-    res.setHeader("Cache-Control", "no-store");
-    res.json({
-      projectToken: process.env.POSTHOG_PROJECT_TOKEN || "",
-      host: process.env.POSTHOG_HOST || ""
-    });
-  });
-  app2.get("/api/db/remote", async (_req, res) => {
-    const remote = await listRemoteFitSkus();
-    res.json(remote);
-  });
-  app2.get("/api/db/records", (_req, res) => {
-    res.json(getDatabaseSummary());
-  });
-  app2.post("/api/db/commit", async (req, res) => {
-    try {
-      const { report, reports, charts: incomingCharts } = req.body;
-      const list = reports || (report ? [report] : []);
-      if (list.length === 0) {
-        res.status(400).json({ error: "No scraped SKU report provided to dump into database." });
-        return;
-      }
-      for (const item of list) {
-        upsertReportTransaction(item);
-        const rows = chartRowsFromClient(incomingCharts?.[item.sku]);
-        if (rows.length > 0) saveSizeChart(item.sku, rows);
-      }
-      const supabase = await pushFitReports(list, chartsBySku(list));
-      res.json({
-        committedCount: list.length,
-        supabase,
-        ...getDatabaseSummary()
-      });
-    } catch (err) {
-      res.status(500).json({
-        error: err instanceof Error ? err.message : "Database commit failed"
-      });
-    }
-  });
-  const deleteSkuTransaction = db.transaction((sku) => {
-    db.prepare(`DELETE FROM commercial_skus WHERE sku = ?`).run(sku);
-    db.prepare(`DELETE FROM sku_size_metrics WHERE sku = ?`).run(sku);
-    db.prepare(`DELETE FROM sku_reviews WHERE sku = ?`).run(sku);
-    db.prepare(`DELETE FROM size_chart WHERE sku = ?`).run(sku);
-    db.prepare(`
-      INSERT INTO ingestion_log (sku, product_name, action, rows_affected, committed_at)
-      VALUES (?, ?, 'DELETE_SKU', 1, ?)
-    `).run(sku, sku, (/* @__PURE__ */ new Date()).toISOString());
-  });
-  app2.delete("/api/db/sku/:sku", async (req, res) => {
-    const sku = req.params.sku;
-    deleteSkuTransaction(sku);
-    const supabase = await deleteRemoteFitSku(sku);
-    res.json({ supabase, ...getDatabaseSummary() });
-  });
-  app2.get("/api/db/dump.sql", (_req, res) => {
-    const { reports, charts } = getDatabaseSummary();
-    const chartRows = Object.entries(charts).flatMap(
-      ([sku, rows]) => rows.map((row) => ({ sku, ...row }))
-    );
-    const sql = generateSqlInsertDump(reports, chartRows);
-    res.setHeader("Content-Type", "application/sql; charset=utf-8");
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="pearfit_scraper_commercial_db_dump.sql"'
-    );
-    res.send(sql);
-  });
-  app2.get("/api/db/dump.json", (_req, res) => {
-    const skus = db.prepare(`SELECT sku, product_id, brand, product_name, category, retail_price, fabric_composition, total_reviews, overall_fit_index, overall_verdict, grading_delta, runs_small_pct, true_to_size_pct, runs_large_pct, shrinkage_mention_pct, fabric_opacity_pct, sentiment_score, avg_rating, source_url, scraped_at, committed_at FROM commercial_skus`).all();
-    const sizeMetrics = db.prepare(`SELECT * FROM sku_size_metrics`).all();
-    const reviews = db.prepare(`SELECT * FROM sku_reviews`).all();
-    const sizeChart = db.prepare(`SELECT * FROM size_chart ORDER BY sku, sort_order`).all();
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="pearfit_scraper_commercial_db_dump.json"'
-    );
-    res.send(
-      JSON.stringify(
-        {
-          exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
-          engine: "Pearfit Scraper Commercial Apparel Fit Database (SQLite3 + Deterministic NLP)",
-          tables: {
-            commercial_skus: skus,
-            sku_size_metrics: sizeMetrics,
-            sku_reviews: reviews,
-            size_chart: sizeChart
-          }
-        },
-        null,
-        2
-      )
-    );
-  });
+
+// webscraper/server/scrapeRoute.ts
+var PASTE_HINT = " If the reviews show in your own browser, copy them (or View Source) and paste into the raw HTML box instead.";
+function registerScrapeRoute(app2) {
   app2.post("/api/scrape", async (req, res) => {
     try {
       const {
@@ -100924,19 +101956,26 @@ function createApp() {
         sku,
         category,
         commitToDb = true,
-        render: render3
+        render: render3,
+        chartRender = false
       } = req.body;
+      if (url !== void 0 && typeof url !== "string" || rawHtml !== void 0 && typeof rawHtml !== "string") {
+        res.status(400).json({ error: "url and rawHtml must be strings." });
+        return;
+      }
       const renderMode = render3 === "always" || render3 === "never" ? render3 : "auto";
       let targetHtml = (rawHtml || "").trim();
       let renderedChartHtml = null;
       let renderedFinalHtml = null;
+      let renderedGuidePages = [];
+      let renderedChartJson = [];
       let sourceUrl = (url || "batch://direct-review-payload").trim();
       let isRemoteUrl = false;
       let staticError = null;
       if (!targetHtml && url) {
-        const mockMatch = url.match(/\/api\/mock-store\/([a-z0-9-]+)/i);
-        if (mockMatch && MOCK_STORE_PRODUCTS[mockMatch[1]]) {
-          const mockProd = MOCK_STORE_PRODUCTS[mockMatch[1]];
+        const mockMatch = url.match(/^(?:https?:\/\/[^/?#]+)?\/api\/mock-store\/([a-z0-9-]+)\/?(?:[?#].*)?$/i);
+        const mockProd = mockMatch ? mockStoreProduct(mockMatch[1]) : void 0;
+        if (mockProd) {
           targetHtml = renderMockStoreHtml(mockProd);
           sourceUrl = `https://storefront.pearfitscraper.local/api/mock-store/${mockProd.slug}`;
         } else if (/^https?:\/\//i.test(url)) {
@@ -100959,12 +101998,13 @@ function createApp() {
         }
       }
       const overrides = { productName, brand, sku, category };
+      const staticHtml = targetHtml;
       let scraped = targetHtml ? scrapeHtmlWithCheerio(targetHtml, sourceUrl, overrides) : null;
       let headlessNote = null;
       const needsRender = shouldUseHeadlessRender({
         isRemoteUrl,
         renderMode,
-        staticFailed: staticError !== null,
+        staticFailed: staticError !== null && !staticError.retryInBrowser,
         reviewCount: scraped ? scraped.reviews.length : null,
         reportedReviewCount: scraped?.meta.scraperTelemetry.reportedReviewCount ?? null
       });
@@ -101005,6 +102045,9 @@ function createApp() {
             const staticHasData = (scraped?.meta.scraperTelemetry.reviewSources ?? []).some((src) => src !== "dom" && src !== "json-ld");
             renderedChartHtml = rendered.chartHtml;
             renderedFinalHtml = rendered.html;
+            renderedGuidePages = rendered.guidePages ?? [];
+            renderedChartJson = rendered.chartJson ?? [];
+            if (process.env.SCRAPER_DEBUG) console.error(`[render] size chart JSON fragments: ${renderedChartJson.length}`);
             if (!scraped || renderedScrape.reviews.length >= scraped.reviews.length || renderedHasData && !staticHasData && renderedScrape.reviews.length > 0) {
               scraped = renderedScrape;
               targetHtml = rendered.html;
@@ -101027,8 +102070,31 @@ function createApp() {
         return;
       }
       const { meta, reviews } = scraped;
+      if (isRemoteUrl && url && staticHtml && renderedFinalHtml === null) {
+        const hint = { name: meta.name, url: sourceUrl };
+        const chartFound = () => sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, hint).length > 0;
+        if (!chartFound()) {
+          renderedGuidePages = await fetchGuidePagesByHttp(staticHtml, url, fetchGuidePage);
+          if (process.env.SCRAPER_DEBUG) {
+            console.error(`[guides] ${renderedGuidePages.length} linked guide page(s) read: ${renderedGuidePages.map((h) => `${h.length} chars, ${(h.match(/<table/gi) ?? []).length} tables`).join("; ")}`);
+          }
+          if (!chartFound() && chartRender === true && renderMode === "auto" && !needsRender && !process.env.VERCEL) {
+            try {
+              const chartRender2 = await renderChartOnly(url);
+              const refused = chartRender2.html && (blockPageTitle(chartRender2.html) || blockPageText(chartRender2.html) === "refused");
+              if (chartRender2.html && !refused && (chartRender2.status === null || chartRender2.status < 400)) {
+                renderedChartHtml = chartRender2.chartHtml;
+                renderedFinalHtml = chartRender2.html;
+                renderedGuidePages = [...renderedGuidePages, ...chartRender2.guidePages ?? []];
+                renderedChartJson = chartRender2.chartJson ?? [];
+              }
+            } catch {
+            }
+          }
+        }
+      }
       if (reviews.length === 0) {
-        const sizeChart2 = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
+        const sizeChart2 = sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
         if (commitToDb && sizeChart2.length > 0) {
           const emptyReport = aggregateProductFitReport(meta, []);
           const keptStoredReviews = hasStoredReviews(emptyReport.sku);
@@ -101053,7 +102119,7 @@ function createApp() {
         return;
       }
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = parseSizeChartFirst(targetHtml, renderedChartHtml, renderedFinalHtml);
+      const sizeChart = sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
       let supabase = null;
       if (commitToDb) {
         upsertReportTransaction(report);
@@ -101072,6 +102138,16 @@ function createApp() {
       res.status(500).json({ error: message });
     }
   });
+}
+
+// webscraper/server.ts
+function createApp() {
+  const app2 = (0, import_express.default)();
+  app2.use(import_express.default.json({ limit: "4mb" }));
+  registerMockStoreRoutes(app2);
+  registerPosthogConfigRoute(app2);
+  registerDbRoutes(app2);
+  registerScrapeRoute(app2);
   return app2;
 }
 async function startServer() {
@@ -101085,10 +102161,10 @@ async function startServer() {
     });
     app2.use(vite.middlewares);
   } else {
-    const distPath = import_path.default.join(serverDir(), "dist");
+    const distPath = import_path3.default.join(serverDir(), "dist");
     app2.use(import_express.default.static(distPath));
     app2.get("*", (_req, res) => {
-      res.sendFile(import_path.default.join(distPath, "index.html"));
+      res.sendFile(import_path3.default.join(distPath, "index.html"));
     });
   }
   for (const signal of ["SIGINT", "SIGTERM"]) {

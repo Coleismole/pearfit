@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as cheerio from 'cheerio';
+import { parseSizeChartWithGuides } from './sizeChart.ts';
 import {
   cleanProductTitle,
   isEmptyStarFill,
@@ -8,6 +9,10 @@ import {
   leafTexts,
   longestFreeText,
   looksLikeDate,
+  memoizeParse,
+  parseGuidePageChartCached,
+  parseSizeChartCached,
+  sizeChartFromPages,
   registrableDomain,
   guideLinksFromHtml,
   isBadgeLine,
@@ -234,4 +239,71 @@ test('registrableDomain keeps what a store owns, so a regional subdomain is its 
   assert.notEqual(registrableDomain('rusty.com'), registrableDomain('rusty.com.au'));
   assert.notEqual(registrableDomain('www.mudjeans.eu'), registrableDomain('mudjeans.com'));
   assert.equal(registrableDomain('localhost'), 'localhost');
+});
+
+test('memoizeParse parses each distinct page once, forgets the oldest, and hands out copies', () => {
+  let parsed = 0;
+  const parse = memoizeParse((html) => {
+    parsed++;
+    return [{ size: 'M', sortOrder: 2, chest_cm: html.length, length_cm: null, sleeve_cm: null }];
+  }, 3);
+  const first = parse('<p>a</p>');
+  parse('<p>a</p>');
+  parse('<p>a</p>');
+  assert.equal(parsed, 1);
+  assert.deepEqual(parse.stats, { calls: 3, parses: 1 });
+  // A caller that edits what it got does not change what the next caller gets.
+  first[0].chest_cm = 999;
+  assert.equal(parse('<p>a</p>')[0].chest_cm, 8);
+  // Another hint is another question: the same page is parsed again for it.
+  parse('<p>a</p>', { name: "Women's Tee" });
+  assert.equal(parsed, 2);
+  // Three entries are kept: after b, c and d the first two are gone and 'a' is parsed again.
+  parse('b');
+  parse('c');
+  parse('d');
+  assert.equal(parsed, 5);
+  parse('<p>a</p>');
+  assert.equal(parsed, 6);
+  parse('d'); // still remembered
+  assert.equal(parsed, 6);
+});
+
+const CHART_TABLE = `<table><caption>Size guide (cm)</caption><tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr><tr><td>M</td><td>54</td><td>72</td></tr></table>`;
+
+test('parseSizeChartCached parses a large snapshot once however often the render and the endpoint ask', () => {
+  // A big page: thousands of product tiles around one chart. Unique, so no earlier test has parsed it.
+  const page = `<html><body>${'<div class="tile"><a href="/p">Tile</a></div>'.repeat(5000)}<p>${Math.random()}</p>${CHART_TABLE}</body></html>`;
+  const before = { ...parseSizeChartCached.stats };
+  const rows = Array.from({ length: 6 }, () => parseSizeChartCached(page, { name: 'Tee', url: 'https://shop.example/p/tee' }));
+  assert.equal(parseSizeChartCached.stats.calls - before.calls, 6);
+  assert.equal(parseSizeChartCached.stats.parses - before.parses, 1);
+  for (const r of rows) assert.deepEqual(r, [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+});
+
+test('sizeChartFromPages answers as parseSizeChartWithGuides does, and reads each page once', () => {
+  const unique = `<p>${Math.random()}</p>`;
+  const noChart = `<html><body><h1>Tee</h1>${unique}</body></html>`;
+  const withChart = `<html><body><h1>Tee</h1>${unique}${CHART_TABLE}</body></html>`;
+  const guide = `<html><body><h1>Size chart</h1><h2>Men's</h2>${CHART_TABLE}</body></html>`;
+  const hint = { name: "Men's Tee", url: 'https://shop.example/products/mens-tee' };
+  const cases: [(string | null)[], (string | null)[]][] = [
+    [[noChart, withChart], []],
+    [[noChart, null], [guide]],
+    [[noChart], [null, noChart, guide]],
+    [[], []],
+  ];
+  const beforeOwn = { ...parseSizeChartCached.stats };
+  const beforeGuide = { ...parseGuidePageChartCached.stats };
+  for (const [pages, guides] of cases) {
+    assert.deepEqual(sizeChartFromPages(pages, guides, hint), parseSizeChartWithGuides(pages, guides, hint));
+  }
+  // Asked again, nothing is parsed.
+  const ownParses = parseSizeChartCached.stats.parses;
+  const guideParses = parseGuidePageChartCached.stats.parses;
+  for (const [pages, guides] of cases) sizeChartFromPages(pages, guides, hint);
+  assert.equal(parseSizeChartCached.stats.parses, ownParses);
+  assert.equal(parseGuidePageChartCached.stats.parses, guideParses);
+  assert.equal(ownParses - beforeOwn.parses, 2); // noChart and withChart, once each
+  assert.equal(guideParses - beforeGuide.parses, 2); // noChart as a guide page, and the guide
 });

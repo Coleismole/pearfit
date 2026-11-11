@@ -30,13 +30,14 @@ import {
   type GuideFetchResult,
 } from './headlessFetch.ts';
 import { collectJsonReviews, parseJsonBody, type JsonSource } from './reviewJson.ts';
-import { parseSizeChartWithGuides, type SizeChartRow } from './sizeChart.ts';
+import type { SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
   labelledValue,
   leafTexts,
   LABEL_LINE,
   longestFreeText,
+  sizeChartFromPages,
   registrableDomain,
   looksLikeDate,
   isBadgeLine,
@@ -1902,7 +1903,7 @@ export function createApp() {
       // A page the full render already read is not read again.
       if (isRemoteUrl && url && staticHtml && renderedFinalHtml === null) {
         const hint = { name: meta.name, url: sourceUrl };
-        const chartFound = () => parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, hint).length > 0;
+        const chartFound = () => sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, hint).length > 0;
         if (!chartFound()) {
           renderedGuidePages = await fetchGuidePagesByHttp(staticHtml, url, fetchGuidePage);
           if (process.env.SCRAPER_DEBUG) {
@@ -1927,7 +1928,7 @@ export function createApp() {
       }
 
       if (reviews.length === 0) {
-        const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
+        const sizeChart = sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
         // A chart with no parent SKU never shows up and never reaches Supabase.
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
@@ -1964,7 +1965,7 @@ export function createApp() {
       }
 
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
+      const sizeChart = sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
 
       let supabase: SupabaseSync | null = null;
       if (commitToDb) {

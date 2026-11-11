@@ -2,7 +2,9 @@
  * Pure helpers for pulling review fields out of rendered review-card markup.
  * No I/O; used by server.ts and unit-tested in pageHelpers.test.ts.
  */
+import { createHash } from 'node:crypto';
 import * as cheerio from 'cheerio';
+import { parseGuidePageChart, parseSizeChart, type ProductHint, type SizeChartRow } from './sizeChart.ts';
 
 export type CheerioNode = ReturnType<ReturnType<typeof cheerio.load>>;
 
@@ -337,4 +339,67 @@ export function registrableDomain(host: string): string {
   const last = parts[parts.length - 1];
   const before = parts[parts.length - 2];
   return parts.slice(last.length === 2 && SECOND_LEVEL_LABELS.has(before) ? -3 : -2).join('.');
+}
+
+/** How often a memoized parser was asked, and how often it really parsed. */
+export interface ParseCounters {
+  calls: number;
+  parses: number;
+}
+
+/**
+ * Remembers what `parse` answered for the last `max` distinct pages (and hints), so a snapshot that several steps
+ * ask about is parsed once: the render checks it after each try, and the scrape endpoint reads it again. A page of
+ * several megabytes takes hundreds of milliseconds to parse. The key is a digest of the page, so the cache holds
+ * no page text, and every caller gets its own copy of the rows.
+ */
+export function memoizeParse(
+  parse: (html: string, hint?: ProductHint) => SizeChartRow[],
+  max = 16,
+): ((html: string, hint?: ProductHint) => SizeChartRow[]) & { stats: ParseCounters } {
+  const cache = new Map<string, SizeChartRow[]>();
+  const stats: ParseCounters = { calls: 0, parses: 0 };
+  const run = (html: string, hint?: ProductHint): SizeChartRow[] => {
+    stats.calls++;
+    const key = `${createHash('sha256').update(html).digest('hex')}|${hint?.name ?? ''}|${hint?.url ?? ''}`;
+    let rows = cache.get(key);
+    if (rows) {
+      // Most recently used last, so the oldest entry is the one dropped.
+      cache.delete(key);
+    } else {
+      stats.parses++;
+      rows = parse(html, hint);
+    }
+    cache.set(key, rows);
+    if (cache.size > max) cache.delete(cache.keys().next().value as string);
+    return rows.map((row) => ({ ...row }));
+  };
+  return Object.assign(run, { stats });
+}
+
+/** parseSizeChart, parsing each distinct page once. */
+export const parseSizeChartCached = memoizeParse(parseSizeChart);
+/** parseGuidePageChart, parsing each distinct guide page once. */
+export const parseGuidePageChartCached = memoizeParse((html, hint) => parseGuidePageChart(html, hint ?? {}));
+
+/**
+ * The chart from the product's own pages, else from the size-guide pages it linked to: the same answer as
+ * parseSizeChartWithGuides, with every distinct page parsed once however often this is asked.
+ */
+export function sizeChartFromPages(
+  pages: (string | null | undefined)[],
+  guidePages: (string | null | undefined)[],
+  hint: ProductHint,
+): SizeChartRow[] {
+  for (const html of pages) {
+    if (!html) continue;
+    const rows = parseSizeChartCached(html, hint);
+    if (rows.length > 0) return rows;
+  }
+  for (const html of guidePages) {
+    if (!html) continue;
+    const rows = parseGuidePageChartCached(html, hint);
+    if (rows.length > 0) return rows;
+  }
+  return [];
 }

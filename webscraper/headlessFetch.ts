@@ -12,8 +12,8 @@
 import type { Browser, Locator, Page } from 'playwright';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 import { extractReviewsFromJson, parseJsonBody, reviewIdentity } from './reviewJson.ts';
-import { GUIDE_LABEL, GUIDE_NAME, GUIDE_PATH, guideLinksFromHtml } from './pageHelpers.ts';
-import { parseSizeChart, type ProductHint } from './sizeChart.ts';
+import { GUIDE_LABEL, GUIDE_NAME, GUIDE_PATH, guideLinksFromHtml, parseSizeChartCached } from './pageHelpers.ts';
+import type { ProductHint } from './sizeChart.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
 export const REVIEW_CARD_SELECTOR =
@@ -457,7 +457,7 @@ export async function openSizeGuideWith(ops: SizeGuideOps, until: number, maxTri
         }
       }
       const html = await ops.serialize().catch(() => '');
-      if (html && parseSizeChart(html, hint).length > 0) return html;
+      if (html && parseSizeChartCached(html, hint).length > 0) return html;
       await ops.escape().catch(() => {});
     }
     if (tries >= maxTries) break;
@@ -1163,10 +1163,10 @@ async function renderChartOnlyWithPlaywright(url: string): Promise<RenderedPage>
     await clickFirst(page, 'button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
     const snapshot = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     const hint = await playwrightProductHint(page);
-    const chartHtml = parseSizeChart(snapshot, hint).length > 0 ? snapshot : ((await openSizeGuide(page, startedAt + CHART_RENDER_BUDGET_MS - 17_000, 4, hint)) ?? snapshot);
+    const chartHtml = parseSizeChartCached(snapshot, hint).length > 0 ? snapshot : ((await openSizeGuide(page, startedAt + CHART_RENDER_BUDGET_MS - 17_000, 4, hint)) ?? snapshot);
     const html = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     const guidePages =
-      parseSizeChart(chartHtml, hint).length === 0 && parseSizeChart(html, hint).length === 0
+      parseSizeChartCached(chartHtml, hint).length === 0 && parseSizeChartCached(html, hint).length === 0
         ? await fetchGuidePages(page, startedAt + CHART_RENDER_BUDGET_MS - 4_000)
         : [];
     await capture.settle(1000);
@@ -1306,7 +1306,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const timeLeft = stopPagingAt - Date.now();
     if (reviewPage && stated !== null && capture.reviewCount() < stated && timeLeft > 25_000) {
       // Keep the earlier snapshot unless the opened guide holds a chart (the view may already show reviews only).
-      if (parseSizeChart(chartHtml, hint).length === 0) chartHtml = (await openSizeGuide(page, Date.now() + 10_000, 4, hint)) ?? chartHtml;
+      if (parseSizeChartCached(chartHtml, hint).length === 0) chartHtml = (await openSizeGuide(page, Date.now() + 10_000, 4, hint)) ?? chartHtml;
       if (process.env.SCRAPER_DEBUG) console.error(`[render] following review page ${reviewPage}`);
       // Navigation may not run past the paging stop, so a slow review page cannot hit the hard deadline.
       await page
@@ -1367,7 +1367,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
 
     // A size chart is often behind a button, tab, accordion or drawer. Only controls that stay on the page
     // are clicked; a chart already in the snapshot needs no click.
-    if (parseSizeChart(chartHtml, hint).length === 0) {
+    if (parseSizeChartCached(chartHtml, hint).length === 0) {
       chartHtml = (await openSizeGuide(page, startedAt + renderBudgetMs() - 18_000, 4, hint)) ?? chartHtml;
       await page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {});
     }
@@ -1377,7 +1377,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
     const html = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     // Still no chart: the guide may be a page of its own. Read the pages the product page links to.
     const guidePages =
-      parseSizeChart(chartHtml, hint).length === 0 && parseSizeChart(html, hint).length === 0
+      parseSizeChartCached(chartHtml, hint).length === 0 && parseSizeChartCached(html, hint).length === 0
         ? await fetchGuidePages(page, startedAt + renderBudgetMs() - 8_000)
         : [];
     return {
@@ -1720,7 +1720,7 @@ export async function renderWithServerlessBrowser(browser: ServerlessBrowser, ur
     // A size chart is often behind a button, tab, accordion or drawer. Same steps as the Playwright render: only
     // controls that stay on the page are clicked, and a chart already in the snapshot needs no click.
     let guideHtml: string | null = null;
-    if (parseSizeChart(chartHtml, hint).length === 0) {
+    if (parseSizeChartCached(chartHtml, hint).length === 0) {
       guideHtml = await openSizeGuideWith(serverlessGuideOps(page, sleep), startedAt + renderBudgetMs() - 18_000, 4, hint);
       await page.waitForNetworkIdle({ timeout: 2000 }).catch(() => {});
     }
@@ -1729,7 +1729,7 @@ export async function renderWithServerlessBrowser(browser: ServerlessBrowser, ur
     const html = (await page.evaluate(SERIALIZE_WITH_SHADOW_ROOTS)) as string;
     // Still no chart: the guide may be a page of its own. Read the pages the product page links to.
     const guidePages =
-      !guideHtml && parseSizeChart(chartHtml, hint).length === 0 && parseSizeChart(html, hint).length === 0
+      !guideHtml && parseSizeChartCached(chartHtml, hint).length === 0 && parseSizeChartCached(html, hint).length === 0
         ? await fetchGuidePagesWith(
             serverlessGuidePageOps(page, async () => {
               const tab = await browser.newPage();

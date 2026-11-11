@@ -25,6 +25,7 @@ import {
   type ServerlessPage,
   type SizeGuideOps,
 } from './headlessFetch.ts';
+import { parseSizeChartCached } from './pageHelpers.ts';
 import { parseSizeChart, parseSizeChartFirst, parseSizeChartWithGuides } from './sizeChart.ts';
 
 // A product page whose reviews exist only after JavaScript runs: one batch appears after
@@ -528,6 +529,23 @@ test('openSizeGuideWith starts no try that does not fit in the time left, and ca
   const many = fakeGuideOps({ controls: { 0: 3, 1: 3, 2: 3 } });
   assert.equal(await openSizeGuideWith(many.ops, many.now() + 600_000, 4), null);
   assert.equal(many.log.filter((entry) => entry.startsWith('click')).length, 4);
+});
+
+test('openSizeGuideWith parses a snapshot once however many tries serialize the same page', async () => {
+  // Three controls that open nothing new: each try serializes the same large page.
+  const page = `<html><body>${'<div class="tile"><a href="/p">Tile</a></div>'.repeat(3000)}<p>${Math.random()}</p></body></html>`;
+  const fake = fakeGuideOps({
+    controls: { 1: 3 },
+    onClick: (_g, _i, state) => {
+      state.tables = 1;
+      state.html = page;
+    },
+  });
+  const before = { ...parseSizeChartCached.stats };
+  assert.equal(await openSizeGuideWith(fake.ops, fake.now() + 60_000), null);
+  assert.equal(fake.log.filter((entry) => entry.startsWith('click')).length, 3);
+  assert.equal(parseSizeChartCached.stats.calls - before.calls, 3);
+  assert.equal(parseSizeChartCached.stats.parses - before.parses, 1);
 });
 
 test('openSizeGuideWith retries with a pointer click only when the script click opened nothing', async () => {

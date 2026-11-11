@@ -294,7 +294,7 @@
       case 'bad_request':
         return error.message ? `The size service did not accept that: ${error.message}` : 'The size service did not accept that request.';
       case 'not_found':
-        return 'That product is no longer in the fit table. Pick another one.';
+        return 'That product is no longer available. Pick another one.';
       case 'invalid_response':
         return 'The size service sent an answer this page could not read. Try again in a moment.';
       default:
@@ -420,24 +420,29 @@
       retryEl.hidden = !showRetry;
     }
 
+    function showPicker(visible) {
+      productEl.closest('label').hidden = !visible;
+      searchEl.closest('label').hidden = !visible;
+    }
+
     function renderProducts() {
       if (loadState === 'loading' || loadState === 'idle') {
+        showPicker(true);
         productEl.innerHTML = '<option value="">Loading products…</option>';
         productEl.disabled = true;
-        setPickStatus('Loading the products in the fit table…', false);
+        setPickStatus('Loading products…', false);
         return;
       }
-      if (loadState === 'failed') {
-        productEl.innerHTML = '<option value="">Products unavailable</option>';
+      // With no list to choose from (the service failed, or has nothing yet) the empty dropdown is hidden and one
+      // friendly line takes its place, with the retry button.
+      if (loadState === 'failed' || candidates.length === 0) {
+        showPicker(false);
+        productEl.innerHTML = '<option value="">Products are loading, try again in a moment</option>';
         productEl.disabled = true;
+        setPickStatus('Products are loading, try again in a moment.', true);
         return;
       }
-      if (candidates.length === 0) {
-        productEl.innerHTML = '<option value="">No products yet</option>';
-        productEl.disabled = true;
-        setPickStatus('The fit table has no t-shirts with a size chart yet, so there is nothing to size. Run the scraper on a product page to add one.', false);
-        return;
-      }
+      showPicker(true);
       const { shown, total } = demo.filterCandidates(candidates, searchEl.value);
       const previous = productEl.value;
       productEl.disabled = shown.length === 0;
@@ -447,7 +452,7 @@
           : shown.map((c) => `<option value="${esc(c.id)}"${c.id === previous ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
       const word = total === 1 ? 'product' : 'products';
       setPickStatus(
-        total > shown.length ? `Showing the first ${shown.length} of ${total} ${word}. Type to narrow the list.` : `${total} ${word} in the fit table.`,
+        total > shown.length ? `Showing the first ${shown.length} of ${total} ${word}. Type to narrow the list.` : `${total} ${word} to choose from.`,
         false,
       );
     }
@@ -465,7 +470,6 @@
         if (!result.ok) {
           loadState = 'failed';
           renderProducts();
-          setPickStatus(demo.describeError(result), true);
           track('demo_failed', { source: 'candidate_list', reason: result.kind, status: result.status, duration_ms: Math.round(performance.now() - startedAt) });
           return;
         }
@@ -521,7 +525,7 @@
     }
 
     function showIdle() {
-      setResult('idle', '<p class="try-result-empty">Your answer appears here. It comes from the same comparison engine the scraper feeds.</p>');
+      setResult('idle', '<p class="try-result-empty">Your answer appears here. It is worked out from your shirts and the product you pick.</p>');
     }
 
     function chartHtml(candidate, size) {
@@ -629,8 +633,7 @@
           setResult(
             'error',
             `<p class="try-result-error" role="alert">We have not read a product at ${esc(host)} that matches this link yet.</p>
-             <p>The fit table only holds products the scraper has already read, and this page cannot read a store for you. Run the scraper on that page to add it, or pick one of the products we have.</p>
-             <p><a class="btn btn-ghost" href="/scraper">Open the scraper</a></p>`,
+             <p>This page can only size products we have already read. Pick one of the products in the list instead.</p>`,
           );
           resultEl.focus();
           return;

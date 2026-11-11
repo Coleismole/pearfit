@@ -671,10 +671,8 @@ button:focus-visible {
   gap: 32px;
 }
 .steps li { min-width: 0; }
-.steps h3 { font-size: 1.02rem; margin-bottom: 0.35rem; }
 .steps p {
-  font-size: 0.9rem;
-  color: var(--ink-2);
+  font-size: 0.98rem;
   margin: 0;
 }
 .step-n {
@@ -943,7 +941,9 @@ html:not(.js) .roi-result { display: none; }
   gap: 52px;
   align-items: start;
 }
-.inquiry-switch { margin: 1.25rem 0; }
+.form-alt { margin: 14px 0 0; text-align: center; font-size: 0.86rem; }
+.form-alt a { color: var(--ink-2); }
+.try-submit-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .pilot-steps {
   padding-left: 1.2rem;
   display: grid;
@@ -1091,6 +1091,7 @@ details p {
   .try-shirt-dims { gap: 8px; }
   .try-result { padding: 20px; }
   .try-form .btn { justify-self: stretch; }
+  .try-submit-row .btn { flex: 1 1 100%; }
   .nav-actions .btn-sm { padding: 0.6rem 0.85rem; }
   .trust-list { flex-direction: column; }
   .segmented { display: flex; flex-wrap: wrap; width: 100%; }

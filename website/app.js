@@ -1,4 +1,4 @@
-// Where pilot and investor requests are sent.
+// Where brand pilot requests are sent.
 const INQUIRY_INBOX = 'customerservice@pearfit.app';
 
 const fmtInt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
@@ -65,58 +65,6 @@ function renderRoi() {
 }
 
 // Inquiry Mode Switch (Brand Pilot vs Investor Relations)
-let inquiryMode = 'pilot';
-
-function setInquiryMode(mode) {
-  inquiryMode = mode;
-  capture('inquiry_mode_selected', { inquiry_mode: inquiryMode });
-  document.querySelectorAll('#inquiry-tabs button').forEach((b) => {
-    b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
-  });
-
-  document.getElementById('pilot-heading').textContent =
-    mode === 'pilot'
-      ? 'Start a 6-week pilot on one category'
-      : 'Connect with the Pearfit founding team';
-
-  document.getElementById('store-label-text').textContent =
-    mode === 'pilot' ? 'Storefront URL' : 'Firm or Organization';
-  const storeInput = document.getElementById('pilot-store-input');
-  if (mode === 'pilot') {
-    storeInput.type = 'url';
-    storeInput.placeholder = 'https://';
-  } else {
-    storeInput.type = 'text';
-    storeInput.placeholder = 'Firm name or https://';
-  }
-  document.getElementById('volume-label-text').textContent =
-    mode === 'pilot' ? 'Monthly order volume' : 'Primary interest';
-
-  const selectEl = document.getElementById('pilot-volume-select');
-  if (mode === 'pilot') {
-    selectEl.innerHTML = `
-      <option value="Under 1,000">Under 1,000 orders / mo</option>
-      <option value="1,000 – 10,000" selected>1,000 – 10,000 orders / mo</option>
-      <option value="10,000 – 50,000">10,000 – 50,000 orders / mo</option>
-      <option value="50,000+">50,000+ orders / mo</option>`;
-    document.getElementById('pilot-steps-list').innerHTML = `
-      <li><b>Scrape one category:</b> The scraper reads reviews and stores numerical fit values for each size.</li>
-      <li><b>Read the shared table:</b> Those fit rows are in the same database from any machine that runs the scraper.</li>
-      <li><b>Decide what to look at next:</b> A storefront size advisor is a later step. This starts with the fit table.</li>`;
-    document.getElementById('pilot-submit-btn').textContent = 'Request 6-Week Brand Pilot';
-  } else {
-    selectEl.innerHTML = `
-      <option value="Seed / Institutional Investment" selected>Seed / Institutional Investment</option>
-      <option value="Angel / Operator Syndicate">Angel / Operator Syndicate</option>
-      <option value="Ecommerce Agency / Tech Partner">Ecommerce Agency / Tech Partner</option>`;
-    document.getElementById('pilot-steps-list').innerHTML = `
-      <li><b>The fit table:</b> What is stored for each SKU and each size.</li>
-      <li><b>What stays local:</b> Full review text remains on the machine that scraped it.</li>
-      <li><b>How a brand runs it:</b> Clone the repo, scrape, and read the same shared fit rows.</li>`;
-    document.getElementById('pilot-submit-btn').textContent = 'Send an investor inquiry';
-  }
-}
-
 async function handlePilot(e) {
   e.preventDefault();
   const form = e.target;
@@ -125,10 +73,6 @@ async function handlePilot(e) {
   const submit = document.getElementById('pilot-submit-btn');
   if (String(d.get('_honey') || '').trim()) return;
 
-  const subject =
-    inquiryMode === 'investor'
-      ? 'Pearfit inquiry'
-      : 'Pearfit brand pilot inquiry';
   submit.disabled = true;
   note.textContent = 'Sending…';
   try {
@@ -138,11 +82,11 @@ async function handlePilot(e) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
-          _subject: subject,
+          _subject: 'Pearfit brand pilot inquiry',
           _template: 'table',
           _captcha: 'false',
           _replyto: d.get('email'),
-          inquiry_type: inquiryMode === 'investor' ? 'Investor / Partner' : 'Brand Pilot',
+          inquiry_type: 'Brand Pilot',
           name: d.get('name'),
           email: d.get('email'),
           organization: d.get('store'),
@@ -155,11 +99,11 @@ async function handlePilot(e) {
       throw new Error(data.message || 'The inquiry was not accepted.');
     }
     note.textContent = data.message || `Sent to ${INQUIRY_INBOX}.`;
-    capture('inquiry_submitted', { inquiry_mode: inquiryMode });
-    logPostHog('info', 'inquiry delivered', { inquiry_mode: inquiryMode });
+    capture('inquiry_submitted', { inquiry_mode: 'pilot' });
+    logPostHog('info', 'inquiry delivered', { inquiry_mode: 'pilot' });
     form.reset();
   } catch (err) {
-    logPostHog('warn', 'inquiry delivery failed', { inquiry_mode: inquiryMode });
+    logPostHog('warn', 'inquiry delivery failed', { inquiry_mode: 'pilot' });
     note.textContent =
       err instanceof Error && err.message
         ? err.message
@@ -170,14 +114,6 @@ async function handlePilot(e) {
 }
 
 // Initialize all interactive controls
-document.querySelectorAll('#inquiry-tabs button').forEach((btn) => {
-  btn.addEventListener('click', () => setInquiryMode(btn.dataset.mode));
-});
-
-document.querySelectorAll('[data-inquiry-switch]').forEach((link) => {
-  link.addEventListener('click', () => setInquiryMode(link.dataset.inquirySwitch));
-});
-
 renderRoi();
 const roiForm = document.getElementById('roi-form');
 if (roiForm) {

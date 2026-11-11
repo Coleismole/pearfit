@@ -368,9 +368,11 @@
         <div>
           <h2>Estimate what fewer fit returns would be worth to you.</h2>
           <p class="muted">
-            Enter your own monthly orders and return rates. The reduction slider is your
-            assumption. This calculator does not report a measured Pearfit result.
+            Enter your own monthly orders and return rates. The starting numbers are examples, not
+            customer data, and the reduction slider is your assumption: nothing here is a measured
+            Pearfit result.
           </p>
+          <noscript><p class="muted">The calculator needs JavaScript.</p></noscript>
           <form class="roi-form" id="roi-form" onsubmit="return false">
             <div class="roi-form-row">
               <label>Orders per month <input type="number" name="orders" value="8000" min="0" step="500" /></label>
@@ -393,7 +395,7 @@
 
         <div class="roi-result" aria-live="polite">
           <div>
-            <span class="kicker">Projected Annual P&amp;L Impact</span>
+            <p class="roi-label roi-heading">Example estimate, from the inputs on the left</p>
             <div class="roi-metrics-grid">
               <div class="roi-big">
                 <span class="roi-label">Fit returns avoided / yr</span>

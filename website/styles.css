@@ -1096,6 +1096,9 @@ input, select {
   font: 500 0.76rem var(--mono);
   color: var(--ink-2);
 }
+.roi-heading { margin: 0 0 12px; }
+/* The numbers are filled in by app.js; without it they would read as a row of dashes, so the block is hidden. */
+html:not(.js) .roi-result { display: none; }
 .roi-val {
   font: 400 clamp(2.1rem, 3.8vw, 3rem)/1.05 var(--serif);
   font-variant-numeric: tabular-nums;

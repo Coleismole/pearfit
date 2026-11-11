@@ -208,9 +208,9 @@ async function runChecks(browser, base) {
 function pushChecks() {
   const git = (...a) => spawnSync('git', a, { cwd: repo, encoding: 'utf8' }).stdout.trim();
   const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
-  spawnSync('git', ['fetch', '-q', 'origin', branch], { cwd: repo });
   const local = git('rev-parse', 'HEAD');
-  const remote = git('rev-parse', '--verify', '-q', `origin/${branch}`);
+  // Ask the remote itself: a shallow or single-branch clone has no origin/<branch> ref to compare with.
+  const remote = git('ls-remote', 'origin', `refs/heads/${branch}`).split(/\s/)[0] || '';
   const dirty = git('status', '--porcelain', '--', 'website');
   return [
     { name: `pushed: origin/${branch} matches this commit`, ok: Boolean(remote) && local === remote, detail: `${local.slice(0, 7)} vs ${remote.slice(0, 7) || 'not pushed'}` },

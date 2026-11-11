@@ -1,3 +1,8 @@
+// The footer's copyright year. The HTML holds the year it was written, so the page is right without scripts too.
+document.querySelectorAll('[data-year]').forEach((el) => {
+  el.textContent = String(new Date().getFullYear());
+});
+
 // Narrow screens: the primary links live in a menu under the bar, opened by the menu button. Shared by every page.
 (function initNavMenu() {
   const nav = document.querySelector('.nav');

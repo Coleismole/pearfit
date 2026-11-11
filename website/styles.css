@@ -598,7 +598,8 @@ button:focus-visible {
 /* Supported stores page */
 .stores-intro { padding-bottom: 40px; }
 .stores-intro h1 { margin-bottom: 0.5rem; }
-.stores-intro .lede { max-width: 68ch; }
+/* .lede is coloured for the dark hero; this intro sits on paper. */
+.stores-intro .lede { max-width: 68ch; color: var(--ink-2); }
 .stores-tested { min-height: 1.65em; margin-top: 1rem; } /* filled in once stores.json loads; the height is held so nothing moves */
 .stores-count { font: 500 0.9rem var(--sans); color: var(--ink-2); margin-left: 0.5rem; letter-spacing: 0; }
 .stores-filters {
@@ -973,14 +974,27 @@ html:not(.js) .roi-result { display: none; }
   margin: 0;
   text-align: center;
 }
-.form-success {
+.form-note a { color: var(--pear); font-weight: 600; }
+.form-note.form-success,
+.form-note.form-error {
   padding: 12px 14px;
   border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+}
+.form-success {
   background: var(--pear-soft);
   color: var(--pear);
-  font-size: 0.85rem;
-  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--pear) 35%, transparent);
 }
+.form-error {
+  background: color-mix(in srgb, var(--small) 12%, var(--card));
+  color: var(--small-ink);
+  border: 1px solid color-mix(in srgb, var(--small) 40%, transparent);
+}
+.form-error a { color: inherit; }
+.pilot-form .btn:disabled { opacity: 0.6; cursor: progress; }
 
 /* FAQ */
 details {
@@ -1037,6 +1051,33 @@ details p {
   color: var(--ink-2);
 }
 .footer-links a:hover { color: var(--ink); }
+.footer-legal {
+  flex-basis: 100%;
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 0.82rem;
+}
+.footer-legal a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink-2);
+}
+.footer-legal a:hover { color: var(--ink); }
+
+/* 404 */
+.notfound {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 72px 0;
+}
+.notfound h1 { margin-bottom: 1rem; }
+.notfound p { color: var(--ink-2); max-width: 46ch; margin: 0 auto 1.75rem; }
+.notfound .notfound-ctas { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
 
 /* Responsive */
 @media (max-width: 960px) {

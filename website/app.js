@@ -64,17 +64,42 @@ function renderRoi() {
     `Your model: ${fmtInt.format(avoided)} avoided returns × $${cost} logistics fee = ${fmtUsd.format(savedUsd)} processing saved, plus ${fmtUsd.format(retainedGmvUsd)} if 45% of those shoppers keep the order instead of refunding. The reduction rate and the 45% share are assumptions in this calculator.`;
 }
 
-// Inquiry Mode Switch (Brand Pilot vs Investor Relations)
+const INQUIRY_MAILTO = `<a href="mailto:${INQUIRY_INBOX}">${INQUIRY_INBOX}</a>`;
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+// state is '', 'success' or 'error'. Only escaped visitor text reaches innerHTML.
+function setFormNote(state, html) {
+  const note = document.getElementById('form-note');
+  if (!note) return;
+  note.className = `form-note${state ? ` form-${state}` : ''}`;
+  note.innerHTML = html;
+}
+
+// The browser blocks the submit and points at the first bad field; say which one in the note as well.
+let invalidNoteShown = false;
+function showInvalidField(e) {
+  if (invalidNoteShown) return;
+  invalidNoteShown = true;
+  requestAnimationFrame(() => { invalidNoteShown = false; });
+  const field = e.target;
+  const label = field.closest('label')?.textContent.trim().split('\n')[0].trim() || 'This field';
+  setFormNote('error', `${escapeHtml(label)}: ${escapeHtml(field.validationMessage)}`);
+}
+
 async function handlePilot(e) {
   e.preventDefault();
   const form = e.target;
   const d = new FormData(form);
-  const note = document.getElementById('form-note');
   const submit = document.getElementById('pilot-submit-btn');
+  const submitLabel = submit.textContent;
   if (String(d.get('_honey') || '').trim()) return;
 
   submit.disabled = true;
-  note.textContent = 'Sending…';
+  submit.textContent = 'Sending…';
+  setFormNote('', 'Sending your inquiry…');
   try {
     const response = await fetch(
       `https://formsubmit.co/ajax/${encodeURIComponent(INQUIRY_INBOX)}`,
@@ -98,18 +123,22 @@ async function handlePilot(e) {
     if (!response.ok || data.success === false || data.success === 'false') {
       throw new Error(data.message || 'The inquiry was not accepted.');
     }
-    note.textContent = data.message || `Sent to ${INQUIRY_INBOX}.`;
+    const name = String(d.get('name') || '').trim();
+    setFormNote(
+      'success',
+      `Thanks${name ? `, ${escapeHtml(name)}` : ''}. Your inquiry reached ${INQUIRY_MAILTO}, and the reply goes to ${escapeHtml(d.get('email'))}.`
+    );
     capture('inquiry_submitted', { inquiry_mode: 'pilot' });
     logPostHog('info', 'inquiry delivered', { inquiry_mode: 'pilot' });
     form.reset();
   } catch (err) {
     logPostHog('warn', 'inquiry delivery failed', { inquiry_mode: 'pilot' });
-    note.textContent =
-      err instanceof Error && err.message
-        ? err.message
-        : `The inquiry was not sent. Write to ${INQUIRY_INBOX} instead.`;
+    // A TypeError is the browser's own network failure text, which says nothing useful to a visitor.
+    const reason = err instanceof Error && err.message && err.name !== 'TypeError' ? `${escapeHtml(err.message)} ` : '';
+    setFormNote('error', `Your inquiry was not sent. ${reason}Try again, or email ${INQUIRY_MAILTO}.`);
   } finally {
     submit.disabled = false;
+    submit.textContent = submitLabel;
   }
 }
 
@@ -123,3 +152,4 @@ if (roiForm) {
   });
 }
 document.getElementById('pilot-form')?.addEventListener('submit', handlePilot);
+document.getElementById('pilot-form')?.addEventListener('invalid', showInvalidField, true);

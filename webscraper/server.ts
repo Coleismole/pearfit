@@ -1,9 +1,7 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import * as cheerio from 'cheerio';
 import Database from 'better-sqlite3';
-import dotenv from 'dotenv';
 import {
   aggregateProductFitReport,
   generateSqlInsertDump,
@@ -14,11 +12,7 @@ import {
   type ScraperTelemetry,
 } from './fitAnalyzer.ts';
 import { HM_HEAVYWEIGHT_TEE_REVIEWS } from './seedCatalog.ts';
-import {
-  extractSizeFromReviewText,
-  extractStructuredProduct,
-  parseJsonLdScripts,
-} from './structuredData.ts';
+import { extractSizeFromReviewText, extractStructuredProduct, parseJsonLdScripts } from './structuredData.ts';
 import {
   closeHeadlessBrowser,
   fetchGuidePagesByHttp,
@@ -54,24 +48,15 @@ import {
   ratingFromLabel,
   ratingFromStarIcons,
 } from './pageHelpers.ts';
-import { checkFitStore, deleteRemoteFitSku, listRemoteFitSkus, pushFitReports, type SupabaseSync } from './supabaseFit.ts';
+import {
+  checkFitStore,
+  deleteRemoteFitSku,
+  listRemoteFitSkus,
+  pushFitReports,
+  type SupabaseSync,
+} from './supabaseFit.ts';
 import { blockedFetchTargetResolved } from './publicUrl.ts';
-
-function serverDir(): string {
-  // The Vercel bundle is CommonJS, where import.meta.url is empty. Skip it there.
-  if (process.env.VERCEL) return path.join(process.cwd(), 'api', 'scraper');
-  return path.dirname(fileURLToPath(import.meta.url));
-}
-
-function loadEnvFiles() {
-  const dirs = [serverDir(), path.join(process.cwd(), 'webscraper'), path.join(process.cwd(), 'api', 'scraper')];
-  for (const name of ['.env.local', '.env', '.env.example']) {
-    for (const dir of dirs) {
-      dotenv.config({ path: path.join(dir, name) });
-    }
-  }
-}
-loadEnvFiles();
+import { serverDir } from './server/env.ts';
 
 // Local clones keep the database next to the server. Vercel can only write to /tmp,
 // and that copy disappears when the function instance goes away. Fit numbers still go to Supabase.

@@ -55,6 +55,8 @@ test('slugify gives lowercase-with-dashes ids', () => {
 test('platformOf names the platform, and a named platform beats wording about how it was reached', () => {
   const cases = [
     ['Bazaarvoice (opened from the rating summary)', 'Bazaarvoice'],
+    ['Trustpilot', 'Trustpilot'],
+    ['Structured data in the page', 'Embedded in the page'],
     ['Bazaarvoice data through L.L.Bean\'s own endpoint ("Load 10 more" needs a real click)', 'Bazaarvoice'],
     ['PowerReviews through Vineyard Vines\' own endpoint', 'PowerReviews'],
     ['TurnTo, on the product\'s own review page (followed from "See Reviews")', 'TurnTo'],
@@ -199,11 +201,62 @@ test('ids are unique across the supported list and across the not supported list
   assert.equal(new Set(data.not_supported.map((s) => s.id)).size, data.not_supported.length);
 });
 
+// ---- later rounds and the verified list ----
+
+const ROUNDS = `# Stores
+
+## Reviews and fit
+
+| Store | Product tested | Reviews come from | Read / stated | Size bought | Fit answer |
+|---|---|---|---|---|---|
+| Faherty | The Movement Shirt | Yotpo | 40 / 40 | yes | yes |
+
+## Round 7: 3 more stores
+
+Prose that is not a table.
+
+| Store | Product tested | Reviews come from | Read / stated | Size bought | Fit answer |
+|---|---|---|---|---|---|
+| Bad Birdie | Active Short | Okendo | 142 / 172 | yes | yes |
+| Dickies | Work Shirt | Structured data in the page | 12 / 12 | no field | no field |
+| Faherty | The Movement Shirt again | Yotpo | 5 / 5 | yes | yes |
+
+- **Bad Birdie** states the size on every review.
+
+## Refused or unavailable (reported, not retried)
+
+| Store | What happened |
+|---|---|
+| Dickies | Reviews not read: 403. |
+`;
+
+test('a table under a "Round N" heading lists supported stores, and a store named twice is one entry (the first)', () => {
+  const rounds = parseSupportedStores(ROUNDS);
+  assert.deepEqual(rounds.supported.map((s) => s.id), ['faherty', 'bad-birdie', 'dickies']);
+  assert.equal(rounds.supported[0].product_tested, 'The Movement Shirt');
+  assert.equal(rounds.supported.find((s) => s.id === 'dickies').platform, 'Embedded in the page');
+  assert.deepEqual(rounds.supported.find((s) => s.id === 'bad-birdie').notes, ['Bad Birdie states the size on every review.']);
+});
+
+test('the size chart is "yes" only where the verified list says a chart was read, matched by store name', () => {
+  const verified = {
+    stores: [
+      { id: 'bad-birdie', name: 'Bad Birdie', has_size_chart: false },
+      // the verified list suffixes an id it already used; the entry still belongs to the store named Dickies
+      { id: 'dickies-2', name: 'Dickies', has_size_chart: true },
+    ],
+    needs_url: [{ id: 'faherty', name: 'Faherty', has_size_chart: false }],
+  };
+  const withCharts = parseSupportedStores(ROUNDS, verified);
+  assert.deepEqual(withCharts.supported.map((s) => [s.id, s.size_chart]), [['faherty', 'not_recorded'], ['bad-birdie', 'not_recorded'], ['dickies', 'yes']]);
+  assert.deepEqual(parseSupportedStores(ROUNDS).supported.map((s) => s.size_chart), ['not_recorded', 'not_recorded', 'not_recorded']);
+});
+
 // ---- the real file ----
 
 test('the real SUPPORTED_STORES.md parses into a plausible list with a platform for every store', () => {
   const real = loadSource();
-  assert.ok(real.supported.length >= 60, `${real.supported.length} supported`);
+  assert.ok(real.supported.length >= 200, `${real.supported.length} supported (the Round 7 tables are read too)`);
   assert.ok(real.not_supported.length >= 50, `${real.not_supported.length} not supported`);
   const unknown = real.supported.filter((s) => s.platform === 'Other').map((s) => s.name);
   assert.deepEqual(unknown, [], 'a store whose review platform is not recognised: add it to PLATFORMS in scripts/build-stores.mjs');

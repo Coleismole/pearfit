@@ -27,7 +27,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <!-- Vercel Speed Insights - Queue initialization -->
   <script>
@@ -41,17 +41,13 @@
     <div class="wrap nav-inner">
       <a href="./" class="brand-wordmark"><img class="brand-mark" src="logo-mark.svg" alt="" width="20" height="30" />Pearfit</a>
       <nav class="nav-links" id="nav-links" aria-label="Primary">
-        <a href="#try">Try it</a>
-        <a href="#benefits">Why Pearfit</a>
-        <a href="#demo">Sample</a>
-        <a href="stores.html">Stores</a>
         <a href="#how">How it works</a>
-        <a href="#roi">ROI Calculator</a>
+        <a href="#try">Try it</a>
+        <a href="#pilot" data-inquiry-switch="pilot">For brands</a>
         <a href="#faq">FAQ</a>
-        <a href="/scraper">Scraper</a>
       </nav>
       <div class="nav-actions">
-        <a href="#pilot" data-inquiry-switch="pilot" class="btn btn-sm">Book Brand Pilot</a>
+        <a href="/app" class="btn btn-sm">Try it live</a>
         <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="nav-links"><span class="nav-toggle-bars" aria-hidden="true"></span></button>
       </div>
     </div>
@@ -60,99 +56,32 @@
   <main id="main" tabindex="-1">
     <!-- Hero -->
     <section class="hero" data-section="hero">
-      <div class="wrap">
-        <div class="hero-grid">
-          <div class="hero-copy">
-            <h1>Pearfit tells you what size to buy, and which shirt you already own it fits like.</h1>
-            <p class="lede">
-              Pick a shirt you are thinking of buying. Pearfit compares each of its sizes with the
-              shirts you already own, then says which size to get, how sure it is, and which of your
-              shirts it fits most like.
-            </p>
-            <div class="hero-ctas">
-              <a href="#pilot" data-inquiry-switch="pilot" class="btn">Launch 6-Week Pilot</a>
-            </div>
-            <div class="hero-meta">
-              <span>For brands: a pilot starts with one product category</span>
-            </div>
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="hero-pill">Free to try · works with your own wardrobe</p>
+          <h1>The size that fits like your favorite shirt.</h1>
+          <p class="lede">Compare any shirt to ones you own. Get the size, with a confidence level.</p>
+          <div class="hero-ctas">
+            <a href="/app" class="btn btn-lime">Try it live</a>
+            <a href="#pilot" data-inquiry-switch="pilot" class="hero-link">For brands <span aria-hidden="true">→</span></a>
           </div>
-
-          <!-- Product visual: when website/images/app-result.png exists (a screenshot of the app's result
-               screen), put it here in place of the sample card below, and remove the sample card. -->
-          <figure class="pdp" aria-label="Sample preview of a size comparison on a product page">
-            <div class="pdp-bar">
-              <span>studiomercer.com/products/washed-oxford</span>
-              <span>Sample silhouette</span>
-            </div>
-            <div class="pdp-body">
-              <div class="pdp-visual">
-                <div class="overlay-stage">
-                  <svg viewBox="0 0 200 195" class="overlay-svg" id="overlay-svg" role="img" aria-label="Garment silhouette overlay comparing Studio Mercer Oxford Shirt against your reference garment">
-                    <path id="overlay-target-path" class="overlay-target-shape" d="" />
-                    <path id="overlay-ref-path" class="overlay-ref-shape" d="" />
-                    <line x1="56" y1="82" x2="144" y2="82" class="overlay-axis" />
-                  </svg>
-                  <div class="overlay-legend">
-                    <div class="overlay-legend-item">
-                      <span class="swatch-solid" aria-hidden="true"></span>
-                      <span id="overlay-target-label">Target Size M (58 cm chest)</span>
-                    </div>
-                    <div class="overlay-legend-item">
-                      <span class="swatch-dashed" aria-hidden="true"></span>
-                      <span id="overlay-ref-label">Your Uniqlo (M · 56.5 cm)</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pdp-ClosetPicker">
-                  <label for="closet-select">Shopper’s reference garment:</label>
-                  <select id="closet-select">
-                    <option value="uniqlo-oxford-m">Uniqlo Oxford Regular Fit Shirt (M)</option>
-                    <option value="jcrew-broken-in-m">J.Crew Broken-in Organic Cotton Tee (M)</option>
-                    <option value="cos-relaxed-l">COS Relaxed Heavyweight Overshirt (L)</option>
-                    <option value="patagonia-fiord-s">Patagonia Fjord Flannel Shirt (S)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="pdp-info">
-                <p class="pdp-meta-line">Woven Shirts · 195 gsm organic cotton</p>
-                <p class="pdp-title">Washed Everyday Oxford Shirt</p>
-                <p class="pdp-price">$88</p>
-                <div class="pdp-sizes" id="pdp-sizes" role="group" aria-label="Inspect target garment size silhouette"></div>
-                <div class="advisor" id="pdp-advisor" aria-live="polite"></div>
-              </div>
-            </div>
-          </figure>
         </div>
-
-        <!-- Full-width 4-column KPI Proof Strip below Hero -->
-        <div class="kpi-strip" role="group" aria-label="What Pearfit stores">
-          <div class="kpi-item">
-            <span class="kpi-val">Fit values</span>
-            <span class="kpi-label">Per size, from reviews</span>
-            <span class="kpi-sub">Runs small, true to size, and runs large</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-val">One row</span>
-            <span class="kpi-label">Per size of a SKU</span>
-            <span class="kpi-sub">Review count, skew, verdict, shrinkage</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-val">Blank</span>
-            <span class="kpi-label">When a measurement is missing</span>
-            <span class="kpi-sub">Nothing is filled in to make a size look closer</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-val">Shared</span>
-            <span class="kpi-label">Fit table for every machine</span>
-            <span class="kpi-sub">Every scrape writes to the same table</span>
+        <div class="hero-visual">
+          <div class="phone">
+            <img src="images/app-result.png" width="720" height="1081" alt="The Pearfit app showing its answer for a shirt: an 85% match, medium confidence, and the advice to get the M because it fits like a Uniqlo shirt already in the wardrobe." fetchpriority="high" />
           </div>
         </div>
       </div>
     </section>
 
-    <div class="tape" aria-hidden="true"></div>
+    <!-- Trust strip: each claim is checked against engine/ and app/ -->
+    <div class="trust" role="group" aria-label="How Pearfit works">
+      <ul class="wrap trust-list">
+        <li>Every answer shows a confidence level</li>
+        <li>Missing measurements stay blank, never guessed</li>
+        <li>Your wardrobe is saved only on your device</li>
+      </ul>
+    </div>
 
     <!-- Live demo: the real engine through the site's API -->
     <section id="try" class="section" data-section="try" aria-labelledby="try-heading">
@@ -359,8 +288,6 @@
         </div>
       </div>
     </section>
-
-    <div class="tape" aria-hidden="true"></div>
 
     <!-- ROI Calculator -->
     <section id="roi" class="section">

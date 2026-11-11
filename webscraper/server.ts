@@ -21,19 +21,28 @@ import {
 } from './structuredData.ts';
 import {
   closeHeadlessBrowser,
+  fetchGuidePagesByHttp,
+  renderChartOnly,
   renderPageHtml,
   REVIEW_CARD_SELECTOR,
   shouldUseHeadlessRender,
   type CapturedJson,
+  type GuideFetchResult,
 } from './headlessFetch.ts';
 import { collectJsonReviews, parseJsonBody, type JsonSource } from './reviewJson.ts';
-import { parseSizeChartWithGuides, type SizeChartRow } from './sizeChart.ts';
+import type { SizeChartRow } from './sizeChart.ts';
 import {
   cleanProductTitle,
   labelledValue,
   leafTexts,
   LABEL_LINE,
   longestFreeText,
+  sizeChartFromPages,
+  registrableDomain,
+  looksLikeDate,
+  isBadgeLine,
+  dateFromAttribute,
+  textOutsideLines,
   productIdFromUrl,
   blockPageTitle,
   describeFetchFailure,
@@ -1141,13 +1150,14 @@ function scrapeHtmlWithCheerio(
         const nodeText = node.text().replace(/\s+/g, ' ').trim();
         const lines = leafTexts($, node);
 
-        const isDate = (l: string) => /^\d{1,2}\/\d{1,2}\/\d{2,4}$|^\d{4}-\d{2}-\d{2}$/.test(l);
+        const isDate = looksLikeDate;
         const author =
           node.attr('data-author') ||
           node.attr('data-reviewer') ||
           node.find('[itemprop="author"]').first().text().trim() ||
           node.find('[class*="feed-item-title"] .title').first().text().trim() ||
-          node.find('[class*="_author"]').first().text().trim() ||
+          // A hashed CSS-module class ends in "_author"; "_authorInfo" wraps the name and a "Verified Buyer" badge.
+          node.find('[class$="_author"], [class*="_author "]').first().text().trim() ||
           node.find('[class*="reviewer-name"], .review-author, [class*="review-author"], .jdgm-rev__author, .yotpo-user-name, [class*="reviewUserInfo"] > :first-child, [class*="user-info" i] > :first-child').first().text().replace(/^[\s\u2014-]+/, '').trim() ||
           // A masked reviewer name ("1***3", "a***b") alone on its line.
           lines.find((l) => /^[\p{L}\p{N}]{1,4}\*{2,}[\p{L}\p{N}]{1,4}$/u.test(l)) ||
@@ -1155,12 +1165,13 @@ function scrapeHtmlWithCheerio(
         const body =
           node.find('[itemprop="reviewBody"], .review-body-copy, [class*="review-body"], [class*="review-content"], [class*="review-text"], [class*="reviewContent-body"], [class*="reviewBody"], [class*="review_body"], [class*="CommentWithEllipsis"], [class*="_reviewContent"], .main-text, [class*="review-message"], .jdgm-rev__body, .bv-content-summary-body-text, .pr-rd-description-text').first().text().replace(/\s+/g, ' ').trim() ||
           longestFreeText(lines, [author]) ||
-          nodeText;
+          // Text written directly in the card. A card of only a rating, a date and a size has none: no review.
+          textOutsideLines(nodeText, lines);
         // Unlabelled markup: the first short free-text line before the body is the title.
         const title =
           node.find('[itemprop="name"], [class*="review-title"], h3, h4').first().text().replace(/\s+/g, ' ').trim() ||
           lines.slice(0, Math.max(0, lines.indexOf(body))).find(
-            (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l)
+            (l) => l !== author && l.length <= 150 && !LABEL_LINE.test(l) && !isDate(l) && !isBadgeLine(l)
           ) ||
           '';
         const sizePurchased = stripSizeLabel(
@@ -1194,7 +1205,7 @@ function scrapeHtmlWithCheerio(
           labelledValue(lines, /^(how it fits|fit|overall fit|sizing)$/i) ||
           undefined;
         const date =
-          node.attr('data-date') ||
+          dateFromAttribute(node.attr('data-date') ?? '') ||
           node.find('[itemprop="datePublished"]').attr('content') ||
           node.find('time').attr('datetime') ||
           lines.find(isDate) ||
@@ -1226,8 +1237,9 @@ function scrapeHtmlWithCheerio(
             author,
             sizePurchased,
             usualSize,
-            // 3 = neutral midpoint when the card shows no rating.
-            rating: Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, Math.round(parsedRating))) : 3,
+            // A card whose stars cannot be read has no rating. Never a stand-in such as 3.
+            // (A widget that prints "0" has no rating to show either.)
+            rating: Number.isFinite(parsedRating) && parsedRating > 0 ? Math.min(5, Math.max(1, Math.round(parsedRating))) : null,
             title,
             body,
             date,
@@ -1423,7 +1435,11 @@ function stripSizeLabel(value: string): string {
 
 const MAX_STATIC_HTML_BYTES = 10_000_000;
 
-async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFetchError> {
+async function fetchStaticHtml(
+  url: string,
+  options: { timeoutMs?: number; /** Refuse a redirect to another store (a size-guide page is read only on the product's own site). */ sameSite?: boolean } = {},
+): Promise<{ html: string } | StaticFetchError> {
+  const siteOf = (raw: string) => registrableDomain(new URL(raw).hostname);
   let current = url;
   for (let hop = 0; hop <= 5; hop++) {
     const blocked = await blockedFetchTargetResolved(current);
@@ -1433,7 +1449,7 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
       response = await fetch(current, {
         headers: FETCH_HEADERS,
         redirect: 'manual',
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(options.timeoutMs ?? 20000),
       });
     } catch (fetchErr) {
       return describeFetchFailure(url, fetchErr);
@@ -1452,6 +1468,9 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
         current = new URL(location, current).toString();
       } catch {
         return { status: 400, message: `${url} redirected to an invalid address.`, blocked: false };
+      }
+      if (options.sameSite && siteOf(current) !== siteOf(url)) {
+        return { status: 400, message: `${url} redirected to another site (${new URL(current).host}).`, blocked: false };
       }
       continue;
     }
@@ -1488,6 +1507,16 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
     return { html };
   }
   return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
+}
+
+/**
+ * One size-guide page by plain fetch, under the same safeguards as the product page (public addresses only,
+ * size cap, block pages), on the same site only. A refusal is reported as one so that no other guide is tried.
+ */
+async function fetchGuidePage(href: string, timeoutMs: number): Promise<GuideFetchResult> {
+  const result = await fetchStaticHtml(href, { timeoutMs, sameSite: true });
+  if (!('html' in result) && process.env.SCRAPER_DEBUG) console.error(`[guides] ${href}: ${result.message}`);
+  return 'html' in result ? { html: result.html } : { refused: result.blocked };
 }
 
 function getDatabaseSummary() {
@@ -1716,6 +1745,7 @@ export function createApp() {
         category,
         commitToDb = true,
         render,
+        chartRender = false,
       } = req.body as {
         url?: string;
         rawHtml?: string;
@@ -1725,6 +1755,8 @@ export function createApp() {
         category?: ProductFitReport['category'];
         commitToDb?: boolean;
         render?: RenderMode;
+        /** Also run a short render for the size chart alone when nothing else found one (see below). Off by default. */
+        chartRender?: boolean;
       };
 
       if ((url !== undefined && typeof url !== 'string') || (rawHtml !== undefined && typeof rawHtml !== 'string')) {
@@ -1737,6 +1769,7 @@ export function createApp() {
       let renderedChartHtml: string | null = null; // headless snapshot from before the review steps
       let renderedFinalHtml: string | null = null; // headless page at the end, when the source page's reviews won
       let renderedGuidePages: string[] = []; // size guide pages the product page linked to, read by the headless browser
+      let renderedChartJson: string[] = []; // size chart tables that arrived as HTML inside JSON the page received
       let sourceUrl = (url || 'batch://direct-review-payload').trim();
       let isRemoteUrl = false;
       let staticError: StaticFetchError | null = null;
@@ -1769,6 +1802,7 @@ export function createApp() {
       }
 
       const overrides = { productName, brand, sku, category };
+      const staticHtml = targetHtml; // the page as the server sent it, before any render replaces targetHtml
       let scraped = targetHtml ? scrapeHtmlWithCheerio(targetHtml, sourceUrl, overrides) : null;
       let headlessNote: string | null = null;
 
@@ -1827,6 +1861,8 @@ export function createApp() {
             renderedChartHtml = rendered.chartHtml;
             renderedFinalHtml = rendered.html;
             renderedGuidePages = rendered.guidePages ?? [];
+            renderedChartJson = rendered.chartJson ?? [];
+            if (process.env.SCRAPER_DEBUG) console.error(`[render] size chart JSON fragments: ${renderedChartJson.length}`);
             if (
               !scraped ||
               renderedScrape.reviews.length >= scraped.reviews.length ||
@@ -1860,8 +1896,39 @@ export function createApp() {
 
       const { meta, reviews } = scraped;
 
+      // A page whose reviews were all in its source needed no render, so its size guide was never opened.
+      // Look for the chart anyway: first the size-guide pages the source links to (plain fetch, no browser, a
+      // second or two). Only when the request asks for it (chartRender), a short render for the chart alone
+      // follows: 15 to 45 seconds a page, and on 15 such stores it found no chart the plain fetch had missed.
+      // A page the full render already read is not read again.
+      if (isRemoteUrl && url && staticHtml && renderedFinalHtml === null) {
+        const hint = { name: meta.name, url: sourceUrl };
+        const chartFound = () => sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, hint).length > 0;
+        if (!chartFound()) {
+          renderedGuidePages = await fetchGuidePagesByHttp(staticHtml, url, fetchGuidePage);
+          if (process.env.SCRAPER_DEBUG) {
+            console.error(`[guides] ${renderedGuidePages.length} linked guide page(s) read: ${renderedGuidePages.map((h) => `${h.length} chars, ${(h.match(/<table/gi) ?? []).length} tables`).join('; ')}`);
+          }
+          if (!chartFound() && chartRender === true && renderMode === 'auto' && !needsRender && !process.env.VERCEL) {
+            try {
+              const chartRender = await renderChartOnly(url);
+              const refused = chartRender.html && (blockPageTitle(chartRender.html) || blockPageText(chartRender.html) === 'refused');
+              // A store that answers the browser with a refusal is not asked again, and nothing from that page is used.
+              if (chartRender.html && !refused && (chartRender.status === null || chartRender.status < 400)) {
+                renderedChartHtml = chartRender.chartHtml;
+                renderedFinalHtml = chartRender.html;
+                renderedGuidePages = [...renderedGuidePages, ...(chartRender.guidePages ?? [])];
+                renderedChartJson = chartRender.chartJson ?? [];
+              }
+            } catch {
+              // No chart this time; the reviews were read and stand.
+            }
+          }
+        }
+      }
+
       if (reviews.length === 0) {
-        const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, { name: meta.name, url: sourceUrl });
+        const sizeChart = sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
         // A chart with no parent SKU never shows up and never reaches Supabase.
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
@@ -1898,7 +1965,7 @@ export function createApp() {
       }
 
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, { name: meta.name, url: sourceUrl });
+      const sizeChart = sizeChartFromPages([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
 
       let supabase: SupabaseSync | null = null;
       if (commitToDb) {

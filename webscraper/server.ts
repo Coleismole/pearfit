@@ -35,6 +35,7 @@ import {
   LABEL_LINE,
   longestFreeText,
   productIdFromUrl,
+  uniqloProductCode,
   blockPageTitle,
   describeFetchFailure,
   isBotCheckRedirect,
@@ -1100,6 +1101,9 @@ function scrapeHtmlWithCheerio(
 
   const sku =
     overrides?.sku ||
+    // uniqlo.com pages carry a colour/size variant id in their data (sometimes another article code), which
+    // would save the product under a different SKU than the rows we already have. The URL's code is stable.
+    uniqloProductCode(sourceUrl) ||
     structured?.sku ||
     meta('meta[name="product:sku"]') ||
     meta('meta[property="product:retailer_item_id"]') ||

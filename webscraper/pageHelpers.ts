@@ -123,6 +123,23 @@ export function productIdFromUrl(url: string): string | null {
   return numericSegment ? numericSegment[1] : null;
 }
 
+/**
+ * The product code in a uniqlo.com product URL (/ca/en/products/E465193-000/00 -> "E465193-000"), or null for any
+ * other site or URL shape. Uniqlo's page data names a colour and size variant ("E475352-09-003-000", sometimes under
+ * another article code), so the URL's code is the one that matches the rows already stored (E<digits>-000).
+ */
+export function uniqloProductCode(url: string): string | null {
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  if (host !== 'uniqlo.com' && !host.endsWith('.uniqlo.com')) return null;
+  const code = productIdFromUrl(url);
+  return code && /^E\d+-000$/i.test(code) ? code.toUpperCase() : null;
+}
+
 /** "4.5 out of 5 stars" -> "4.5". Ratings on other scales are rescaled to 1-5. */
 export function ratingFromLabel(label: string | undefined): string {
   // "4 out of 5 stars", "Rating icons: 5 / 5 star review" (Loox).

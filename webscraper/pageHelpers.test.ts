@@ -8,6 +8,7 @@ import {
   leafTexts,
   longestFreeText,
   productIdFromUrl,
+  uniqloProductCode,
   blockPageTitle,
   describeFetchFailure,
   isBotCheckRedirect,
@@ -148,4 +149,22 @@ test('a thrown fetch is reported with its cause and may be retried in a browser'
   assert.equal(failure.blocked, false);
   assert.equal(failure.retryInBrowser, true);
   assert.match(failure.message, /fetch failed \(UND_ERR_HEADERS_OVERFLOW\)/);
+});
+
+test('uniqloProductCode reads the E<digits>-000 code from a uniqlo.com product URL', () => {
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-000/00'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-000/00?colorDisplayCode=09&sizeDisplayCode=003'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-000/00/reviews'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://uniqlo.com/ca/en/products/E465193-000/00'), 'E465193-000');
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/e465193-000/00'), 'E465193-000'); // stored rows are upper case
+});
+
+test('uniqloProductCode is null for other hosts, look-alike hosts, and Uniqlo URLs without a -000 code', () => {
+  assert.equal(uniqloProductCode('https://shop.example/products/E465193-000'), null);
+  assert.equal(uniqloProductCode('https://www.nike.com/t/some-tee/E465193-000'), null);
+  assert.equal(uniqloProductCode('https://uniqlo.com.evil.example/ca/en/products/E465193-000/00'), null);
+  assert.equal(uniqloProductCode('https://notuniqlo.com/ca/en/products/E465193-000/00'), null);
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/'), null); // no product in the URL
+  assert.equal(uniqloProductCode('https://www.uniqlo.com/ca/en/products/E465193-09-003-000'), null); // a variant id is not a product code
+  assert.equal(uniqloProductCode('not a url'), null);
 });

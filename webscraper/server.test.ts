@@ -729,3 +729,52 @@ test('mock store pages are found by their own slugs only, and bad body types are
     server.close();
   }
 });
+
+// A Uniqlo product page names a colour/size variant in its structured data, here under another article code.
+function uniqloLikeHtml(structuredSku: string): string {
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'AIRism Cotton T-Shirt',
+    sku: structuredSku,
+    review: [{ '@type': 'Review', author: 'Ann', reviewBody: 'True to size, soft.', reviewRating: { ratingValue: 5 } }],
+  };
+  return `<!DOCTYPE html><html><head><title>AIRism Cotton T-Shirt</title>
+    <script type="application/ld+json">${JSON.stringify(ld)}</script></head><body><h1>AIRism Cotton T-Shirt</h1></body></html>`;
+}
+
+test('a uniqlo.com page is saved under the product code in its URL, not the variant id in its data', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const url = 'https://www.uniqlo.com/ca/en/products/E465193-000/00?colorDisplayCode=09&sizeDisplayCode=003';
+    const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: uniqloLikeHtml('E475352-09-003-000'), url, commitToDb: false, render: 'never' });
+    assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+    assert.equal((scraped.json.report as { sku: string }).sku, 'E465193-000'); // the URL code, not E475352-09-003-000
+
+    // An explicit sku still wins over the URL.
+    const overridden = await request(port, 'POST', '/api/scrape', { rawHtml: uniqloLikeHtml('E475352-09-003-000'), url, sku: 'MY-SKU-1', commitToDb: false, render: 'never' });
+    assert.equal((overridden.json.report as { sku: string }).sku, 'MY-SKU-1');
+
+    // A Uniqlo URL with no product code falls back to the page's own sku, as before.
+    const noCode = await request(port, 'POST', '/api/scrape', { rawHtml: uniqloLikeHtml('E475352-09-003-000'), url: 'https://www.uniqlo.com/ca/en/', commitToDb: false, render: 'never' });
+    assert.equal((noCode.json.report as { sku: string }).sku, 'E475352-09-003-000');
+  } finally {
+    server.close();
+  }
+});
+
+test('other stores keep the sku from their structured data, even when the URL holds a similar code', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    for (const url of [
+      'https://shop.example/products/E465193-000',
+      'https://uniqlo.com.evil.example/ca/en/products/E465193-000/00',
+    ]) {
+      const scraped = await request(port, 'POST', '/api/scrape', { rawHtml: uniqloLikeHtml('ABC-1'), url, commitToDb: false, render: 'never' });
+      assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+      assert.equal((scraped.json.report as { sku: string }).sku, 'ABC-1', url);
+    }
+  } finally {
+    server.close();
+  }
+});

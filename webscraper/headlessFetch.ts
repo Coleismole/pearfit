@@ -9,20 +9,19 @@
  *
  * Playwright is imported lazily so the server still starts when no browser is installed.
  */
-import type { Browser, Page } from 'playwright';
+import type { Browser } from 'playwright';
 import {
   REVIEW_CARD_SELECTOR,
   NAV_TIMEOUT_MS,
   RENDER_TAIL_MS,
   REVIEW_WAIT_MS,
-  MAX_REVIEW_PAGES,
   MAX_REVIEWS,
   MAX_LINKED_REVIEW_PAGES,
   REVIEW_WIDGET_SELECTOR,
 } from './render/constants.ts';
-import type { RenderedPage, CapturedJson } from './render/types.ts';
-import { embeddedWidgetHtml, JsonCapture } from './render/jsonCapture.ts';
-import { linkStaysOnProduct, navigationTimedOutAfterLoading, isReviewWidgetFrame } from './render/decisions.ts';
+import type { RenderedPage } from './render/types.ts';
+import { JsonCapture } from './render/jsonCapture.ts';
+import { navigationTimedOutAfterLoading } from './render/decisions.ts';
 import { startUrlAllowsPrivate, renderBudgetMs, getBrowser, queueRender } from './render/browser.ts';
 import {
   OPEN_RATING_SUMMARY,
@@ -35,9 +34,7 @@ import {
   SCROLL_TO_BOTTOM,
   REVIEW_WIDGETS_INTO_VIEW,
   CLICK_NEXT_REVIEWS,
-  SORT_NEWEST,
   SERIALIZE_WITH_SHADOW_ROOTS,
-  CLICK_FRAME_LOAD_MORE,
 } from './render/pageScripts.ts';
 import {
   SIZE_GUIDE_LABEL,
@@ -53,6 +50,18 @@ import {
   SIZE_GUIDE_CONTROL_IN_PAGE,
 } from './render/sizeGuide.ts';
 import { sortReviewsNewest, pageThroughReviews } from './render/paging.ts';
+import {
+  clickFirst,
+  playwrightProductHint,
+  evaluateStable,
+  countReviews,
+  hasReviews,
+  waitForMoreReviews,
+  reviewFramePages,
+  widgetPages,
+  newGuardedContext,
+  sortNewestByRealClick,
+} from './render/playwrightHelpers.ts';
 import { createRequestHostGuard } from './publicUrl.ts';
 import { parseSizeChartCached } from './pageHelpers.ts';
 import type { ProductHint } from './sizeChart.ts';
@@ -65,107 +74,6 @@ export { closeHeadlessBrowser } from './render/browser.ts';
 export { SIZE_GUIDE_LABEL, openSizeGuideWith, openSizeGuide, fetchGuidePagesWith, fetchGuidePages, fetchGuidePagesByHttp } from './render/sizeGuide.ts';
 export type { SizeGuideOps, GuidePageOps, GuideFetchResult } from './render/sizeGuide.ts';
 export { pageThroughReviews } from './render/paging.ts';
-
-/** Clicks the first visible element matching a role + name pattern. Best effort. */
-async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: RegExp): Promise<boolean> {
-  const loc = page.getByRole(role, { name }).first();
-  try {
-    if (await loc.isVisible({ timeout: 500 })) {
-      if (role === 'link' && !linkStaysOnProduct(await loc.getAttribute('href', { timeout: 500 }), page.url())) return false;
-      await loc.click({ timeout: 2000 });
-      return true;
-    }
-  } catch {
-    // not clickable; ignore
-  }
-  return false;
-}
-
-/**
- * What the product page says about its product (title and address), taken once while the product view is
- * showing. A chart is read against it, so a page that holds several tables (men's and women's, tops and
- * bottoms) gives the one for this product, even after a review click moved the browser elsewhere.
- */
-async function playwrightProductHint(page: Page): Promise<ProductHint> {
-  return { url: page.url(), name: await page.title().catch(() => '') };
-}
-
-/**
- * page.evaluate that survives the page navigating under it (a locale or geo redirect, a consent reload):
- * "Execution context was destroyed". Waits for the new page to settle and runs the script again.
- */
-async function evaluateStable(page: Page, script: string): Promise<unknown> {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await page.evaluate(script);
-    } catch (error) {
-      if (attempt >= 2 || !/execution context was destroyed|navigation/i.test(String(error))) throw error;
-      await page.waitForLoadState('domcontentloaded', { timeout: 15_000 }).catch(() => {});
-      await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
-    }
-  }
-}
-
-async function countReviews(page: Page): Promise<number> {
-  return page.locator(REVIEW_CARD_SELECTOR).count();
-}
-
-async function hasReviews(page: Page): Promise<boolean> {
-  return (await countReviews(page)) > 0;
-}
-
-/** Waits until more review cards than `before` are present, or the timeout passes. */
-async function waitForMoreReviews(page: Page, before: number, timeoutMs: number): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if ((await countReviews(page)) > before) return true;
-    await page.waitForTimeout(250);
-  }
-  return false;
-}
-
-/**
- * Review widgets that live in an iframe: pages the widget through its own "Show more reviews" button, then
- * returns the frame's markup. Capped at MAX_REVIEWS cards and the paging deadline.
- */
-async function reviewFramePages(page: Page, stopAt: number): Promise<string[]> {
-  const pages: string[] = [];
-  for (const frame of page.frames()) {
-    if (frame === page.mainFrame() || !isReviewWidgetFrame(frame.url())) continue;
-    // The widget drops cards that scroll out of view, so the cards are collected after every click.
-    const seen = new Set<string>();
-    const collect = async () => {
-      const cards = (await frame.evaluate(
-        `(() => { const all = [...document.querySelectorAll(${JSON.stringify(REVIEW_CARD_SELECTOR)})]; return all.filter((el) => !all.some((o) => o !== el && el.contains(o))).map((el) => el.outerHTML); })()`,
-      )) as string[];
-      for (const card of cards) seen.add(card);
-    };
-    try {
-      await collect();
-      for (let i = 0; i < MAX_REVIEW_PAGES && Date.now() < stopAt && seen.size < MAX_REVIEWS; i++) {
-        const clicked = (await frame.evaluate(CLICK_FRAME_LOAD_MORE)) as string;
-        if (process.env.SCRAPER_DEBUG) console.error(`[frame] ${i}: cards=${seen.size} clicked=${JSON.stringify(clicked)}`);
-        if (!clicked) break;
-        const before = seen.size;
-        const until = Math.min(Date.now() + 4000, stopAt);
-        while (Date.now() < until && seen.size <= before) {
-          await page.waitForTimeout(250);
-          await collect();
-        }
-      }
-      await collect();
-    } catch {
-      // the frame went away; keep what was collected
-    }
-    if (seen.size > 0) pages.push(`<div>${[...seen].join('')}</div>`);
-  }
-  return pages;
-}
-
-/** Review cards that came as HTML inside JSON responses, one entry per distinct response. */
-function widgetPages(items: CapturedJson[]): string[] {
-  return [...new Set(items.map((item) => embeddedWidgetHtml(item.body)).filter((html): html is string => html !== null))];
-}
 
 export async function renderPageHtml(url: string): Promise<RenderedPage> {
   return queueRender(() => renderPageHtmlOnce(url));
@@ -187,24 +95,6 @@ export async function renderChartOnly(url: string): Promise<RenderedPage> {
 async function renderPageHtmlOnce(url: string): Promise<RenderedPage> {
   if (process.env.VERCEL) return renderWithServerlessChromium(url);
   return renderWithPlaywright(url);
-}
-
-/** A fresh browser context whose every request, redirects included, is checked against the resolved address of its host. */
-async function newGuardedContext(browser: Browser, url: string) {
-  const context = await browser.newContext({
-    locale: 'en-US',
-    viewport: { width: 1366, height: 900 },
-  });
-  const allowPrivate = startUrlAllowsPrivate(url);
-  const hostIsBlocked = createRequestHostGuard();
-  // Images, video and fonts are irrelevant to review text; skipping them makes renders faster.
-  await context.route('**/*', async (route) => {
-    const type = route.request().resourceType();
-    if (type === 'image' || type === 'media' || type === 'font') return route.abort();
-    if (!allowPrivate && (await hostIsBlocked(route.request().url()))) return route.abort();
-    return route.continue();
-  });
-  return context;
 }
 
 async function renderChartOnlyWithPlaywright(url: string): Promise<RenderedPage> {
@@ -473,28 +363,6 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
   } finally {
     clearTimeout(deadline);
     await context.close().catch(() => {});
-  }
-}
-
-/**
- * Some sort menus (Material UI on Vuori) open only on a real pointer click, and a sign-up pop-up can sit
- * over them. Escape closes the pop-up; then the "Sort by" menu button is clicked and newest is picked.
- */
-async function sortNewestByRealClick(page: Page): Promise<string> {
-  const button = page
-    .locator('[aria-haspopup="menu"], [aria-haspopup="listbox"], [aria-haspopup="true"], [role="combobox"]')
-    .filter({ hasText: /^\s*sort\b/i })
-    .or(page.locator('[aria-haspopup][aria-label^="sort" i]'))
-    .first();
-  try {
-    if (!(await button.isVisible({ timeout: 500 }))) return '';
-    await page.keyboard.press('Escape');
-    await button.scrollIntoViewIfNeeded({ timeout: 2000 });
-    await button.click({ timeout: 3000 });
-    await page.waitForTimeout(600);
-    return ((await page.evaluate(`${SORT_NEWEST}('pick')`)) as string) || '';
-  } catch {
-    return '';
   }
 }
 

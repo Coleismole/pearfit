@@ -7,6 +7,8 @@
 //
 // esbuild comes from webscraper's install (the same way scripts/assemble-site.mjs gets it), so the engine
 // has no extra dependency. Run `npm install` in webscraper/ first if it is missing.
+// @sentry/node is resolved from webscraper's install too (CI installs only webscraper/ and app/), so a local build and
+// CI's build bundle the same copy. engine/ lists it only so the typechecker finds its types.
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,10 +19,12 @@ const require = createRequire(path.join(repo, 'webscraper', 'package.json'));
 const esbuild = require('esbuild');
 
 const functions = ['recommend', 'candidates'];
+const sentryNode = path.dirname(require.resolve('@sentry/node/package.json'));
 for (const name of functions) {
   await esbuild.build({
     entryPoints: [path.join(engine, 'api', `${name}.ts`)],
     bundle: true,
+    alias: { '@sentry/node': sentryNode },
     platform: 'node',
     target: 'node22',
     format: 'cjs',

@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Pilot 1 size matching scorer. Pure TypeScript, runs on Node 22.18+ with no build step.",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "recommend": "node cli/recommend.ts",
     "eval": "node cli/eval.ts",
@@ -17,5 +19,8 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "@sentry/node": "^11.12.0"
   }
 }

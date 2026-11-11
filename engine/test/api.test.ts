@@ -243,6 +243,15 @@ test("a candidate the wardrobe cannot be compared with is a 200 with nulls, not 
   });
 });
 
+test("a candidate-loading failure is passed to onError and still answered as a 502", async () => {
+  const seen: unknown[] = [];
+  const down = createCandidatesHandler({ getCandidates: async () => { throw new Error("Supabase down"); }, onError: (e) => seen.push(e) });
+  const r = await call(down, { method: "GET" });
+  assert.equal(r.status, 502);
+  assert.equal(seen.length, 1);
+  assert.equal((seen[0] as Error).message, "Supabase down");
+});
+
 test("a candidate-loading failure is a 502 with the reason", async () => {
   const down = createRecommendHandler({ getCandidates: async () => { throw new Error("Supabase down"); } });
   const r = await call(down, { method: "POST", body: goodBody });

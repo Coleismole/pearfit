@@ -10,6 +10,8 @@
  *   scrapeRoute.ts  POST /api/scrape
  * vercelHandler.ts and the tests import createApp from here.
  */
+import './server/instrument.ts';
+import * as Sentry from '@sentry/node';
 import express from 'express';
 import path from 'path';
 import { closeHeadlessBrowser } from './headlessFetch.ts';
@@ -26,6 +28,9 @@ export function createApp() {
   registerPosthogConfigRoute(app);
   registerDbRoutes(app);
   registerScrapeRoute(app);
+
+  // After the routes: reports any error they pass on, before Express's own default handler answers.
+  Sentry.setupExpressErrorHandler(app);
 
   return app;
 }

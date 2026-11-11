@@ -830,3 +830,127 @@ test('a card whose stars cannot be read has no rating, not a neutral 3', async (
     server.close();
   }
 });
+
+/**
+ * Runs `body` with fetch answering for the made-up host shop.example from `pages` (path -> status and html, or a
+ * redirect). Requests to the test server itself go through. Returns the shop.example addresses that were asked.
+ */
+async function withShopFetch(
+  pages: Record<string, { status?: number; html?: string; location?: string }>,
+  body: (asked: string[]) => Promise<void>,
+): Promise<string[]> {
+  const realFetch = globalThis.fetch;
+  const asked: string[] = [];
+  globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    const address = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    if (!address.startsWith('https://shop.example')) return realFetch(input, init);
+    asked.push(address);
+    const page = pages[new URL(address).pathname];
+    if (!page) return new Response('not found', { status: 404 });
+    return new Response(page.html ?? '', {
+      status: page.status ?? 200,
+      headers: { 'content-type': 'text/html', ...(page.location ? { location: page.location } : {}) },
+    });
+  }) as typeof fetch;
+  try {
+    await body(asked);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  return asked;
+}
+
+const SOURCE_REVIEWS = `<article class="review-card" data-author="Ana" data-rating="4"><p class="review-body-copy">Runs a little small, I ordered a medium.</p></article>
+  <article class="review-card" data-author="Bo" data-rating="5"><p class="review-body-copy">True to size and very soft.</p></article>`;
+const productPage = (links: string) => `<!DOCTYPE html><html><head><title>Mens Tee</title></head><body><h1>Mens Tee</h1>${SOURCE_REVIEWS}${links}</body></html>`;
+const GUIDE_TABLE_CM = `<h2>Men's size chart</h2><table><caption>Size guide (cm)</caption>
+  <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr><tr><td>M</td><td>54</td><td>72</td></tr><tr><td>L</td><td>57</td><td>74</td></tr></table>`;
+
+test('a page whose reviews are all in its source still gets its size chart from the guide page it links to', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const asked = await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-chart">Size chart</a><a href="https://other.example/size-guide">Size guide</a><a href="/products/other-tee">Size guide</a>') },
+        '/pages/size-chart': { html: `<!DOCTYPE html><html><body><h1>Size chart</h1>${GUIDE_TABLE_CM}</body></html>` },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 2);
+        assert.deepEqual(scraped.json.sizeChart, [
+          { size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null },
+          { size: 'L', sortOrder: 3, chest_cm: 57, length_cm: 74, sleeve_cm: null },
+        ]);
+      },
+    );
+    // The product page and the one guide on the same site; not the other site, not another product.
+    assert.deepEqual(asked, ['https://shop.example/products/tee', 'https://shop.example/pages/size-chart']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a size guide that refuses the request ends the guide fetch, and the reviews still stand', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const asked = await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-chart">Size chart</a><a href="/pages/fit-guide">Fit guide</a>') },
+        '/pages/size-chart': { status: 403, html: 'Forbidden' },
+        '/pages/fit-guide': { html: GUIDE_TABLE_CM },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.equal((scraped.json.report as { totalReviews: number }).totalReviews, 2);
+        assert.deepEqual(scraped.json.sizeChart, []);
+      },
+    );
+    assert.deepEqual(asked, ['https://shop.example/products/tee', 'https://shop.example/pages/size-chart']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a size guide that redirects to another site is not followed', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const asked = await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-chart">Size chart</a>') },
+        '/pages/size-chart': { status: 302, location: 'https://elsewhere.example/size-chart' },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.deepEqual(scraped.json.sizeChart, []);
+      },
+    );
+    assert.deepEqual(asked, ['https://shop.example/products/tee', 'https://shop.example/pages/size-chart']);
+  } finally {
+    server.close();
+  }
+});
+
+test('a linked size guide that only gives body ranges leaves the chart empty, not guessed', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    await withShopFetch(
+      {
+        '/products/tee': { html: productPage('<a href="/pages/size-guide">Size guide</a>') },
+        '/pages/size-guide': {
+          html: `<!DOCTYPE html><html><body><h1>Size guide</h1><table><caption>Body measurements (in)</caption>
+            <tr><th>Size</th><th>Chest</th><th>Waist</th></tr><tr><td>M</td><td>38-40</td><td>32-34</td></tr><tr><td>L</td><td>41-43</td><td>35-37</td></tr></table></body></html>`,
+        },
+      },
+      async () => {
+        const scraped = await request(port, 'POST', '/api/scrape', { url: 'https://shop.example/products/tee', commitToDb: false, render: 'never' });
+        assert.equal(scraped.status, 200, JSON.stringify(scraped.json));
+        assert.deepEqual(scraped.json.sizeChart, []);
+      },
+    );
+  } finally {
+    server.close();
+  }
+});

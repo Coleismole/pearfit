@@ -21,10 +21,13 @@ import {
 } from './structuredData.ts';
 import {
   closeHeadlessBrowser,
+  fetchGuidePagesByHttp,
+  renderChartOnly,
   renderPageHtml,
   REVIEW_CARD_SELECTOR,
   shouldUseHeadlessRender,
   type CapturedJson,
+  type GuideFetchResult,
 } from './headlessFetch.ts';
 import { collectJsonReviews, parseJsonBody, type JsonSource } from './reviewJson.ts';
 import { parseSizeChartWithGuides, type SizeChartRow } from './sizeChart.ts';
@@ -34,6 +37,7 @@ import {
   leafTexts,
   LABEL_LINE,
   longestFreeText,
+  registrableDomain,
   looksLikeDate,
   isBadgeLine,
   dateFromAttribute,
@@ -1430,7 +1434,11 @@ function stripSizeLabel(value: string): string {
 
 const MAX_STATIC_HTML_BYTES = 10_000_000;
 
-async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFetchError> {
+async function fetchStaticHtml(
+  url: string,
+  options: { timeoutMs?: number; /** Refuse a redirect to another store (a size-guide page is read only on the product's own site). */ sameSite?: boolean } = {},
+): Promise<{ html: string } | StaticFetchError> {
+  const siteOf = (raw: string) => registrableDomain(new URL(raw).hostname);
   let current = url;
   for (let hop = 0; hop <= 5; hop++) {
     const blocked = await blockedFetchTargetResolved(current);
@@ -1440,7 +1448,7 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
       response = await fetch(current, {
         headers: FETCH_HEADERS,
         redirect: 'manual',
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(options.timeoutMs ?? 20000),
       });
     } catch (fetchErr) {
       return describeFetchFailure(url, fetchErr);
@@ -1459,6 +1467,9 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
         current = new URL(location, current).toString();
       } catch {
         return { status: 400, message: `${url} redirected to an invalid address.`, blocked: false };
+      }
+      if (options.sameSite && siteOf(current) !== siteOf(url)) {
+        return { status: 400, message: `${url} redirected to another site (${new URL(current).host}).`, blocked: false };
       }
       continue;
     }
@@ -1495,6 +1506,16 @@ async function fetchStaticHtml(url: string): Promise<{ html: string } | StaticFe
     return { html };
   }
   return { status: 400, message: `Too many redirects while scraping ${url}.`, blocked: false };
+}
+
+/**
+ * One size-guide page by plain fetch, under the same safeguards as the product page (public addresses only,
+ * size cap, block pages), on the same site only. A refusal is reported as one so that no other guide is tried.
+ */
+async function fetchGuidePage(href: string, timeoutMs: number): Promise<GuideFetchResult> {
+  const result = await fetchStaticHtml(href, { timeoutMs, sameSite: true });
+  if (!('html' in result) && process.env.SCRAPER_DEBUG) console.error(`[guides] ${href}: ${result.message}`);
+  return 'html' in result ? { html: result.html } : { refused: result.blocked };
 }
 
 function getDatabaseSummary() {
@@ -1723,6 +1744,7 @@ export function createApp() {
         category,
         commitToDb = true,
         render,
+        chartRender = false,
       } = req.body as {
         url?: string;
         rawHtml?: string;
@@ -1732,6 +1754,8 @@ export function createApp() {
         category?: ProductFitReport['category'];
         commitToDb?: boolean;
         render?: RenderMode;
+        /** Also run a short render for the size chart alone when nothing else found one (see below). Off by default. */
+        chartRender?: boolean;
       };
 
       if ((url !== undefined && typeof url !== 'string') || (rawHtml !== undefined && typeof rawHtml !== 'string')) {
@@ -1776,6 +1800,7 @@ export function createApp() {
       }
 
       const overrides = { productName, brand, sku, category };
+      const staticHtml = targetHtml; // the page as the server sent it, before any render replaces targetHtml
       let scraped = targetHtml ? scrapeHtmlWithCheerio(targetHtml, sourceUrl, overrides) : null;
       let headlessNote: string | null = null;
 
@@ -1866,6 +1891,36 @@ export function createApp() {
       }
 
       const { meta, reviews } = scraped;
+
+      // A page whose reviews were all in its source needed no render, so its size guide was never opened.
+      // Look for the chart anyway: first the size-guide pages the source links to (plain fetch, no browser, a
+      // second or two). Only when the request asks for it (chartRender), a short render for the chart alone
+      // follows: 15 to 45 seconds a page, and on 15 such stores it found no chart the plain fetch had missed.
+      // A page the full render already read is not read again.
+      if (isRemoteUrl && url && staticHtml && renderedFinalHtml === null) {
+        const hint = { name: meta.name, url: sourceUrl };
+        const chartFound = () => parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, hint).length > 0;
+        if (!chartFound()) {
+          renderedGuidePages = await fetchGuidePagesByHttp(staticHtml, url, fetchGuidePage);
+          if (process.env.SCRAPER_DEBUG) {
+            console.error(`[guides] ${renderedGuidePages.length} linked guide page(s) read: ${renderedGuidePages.map((h) => `${h.length} chars, ${(h.match(/<table/gi) ?? []).length} tables`).join('; ')}`);
+          }
+          if (!chartFound() && chartRender === true && renderMode === 'auto' && !needsRender && !process.env.VERCEL) {
+            try {
+              const chartRender = await renderChartOnly(url);
+              const refused = chartRender.html && (blockPageTitle(chartRender.html) || blockPageText(chartRender.html) === 'refused');
+              // A store that answers the browser with a refusal is not asked again, and nothing from that page is used.
+              if (chartRender.html && !refused && (chartRender.status === null || chartRender.status < 400)) {
+                renderedChartHtml = chartRender.chartHtml;
+                renderedFinalHtml = chartRender.html;
+                renderedGuidePages = [...renderedGuidePages, ...(chartRender.guidePages ?? [])];
+              }
+            } catch {
+              // No chart this time; the reviews were read and stand.
+            }
+          }
+        }
+      }
 
       if (reviews.length === 0) {
         const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, { name: meta.name, url: sourceUrl });

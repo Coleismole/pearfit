@@ -8,6 +8,8 @@ import {
   leafTexts,
   longestFreeText,
   looksLikeDate,
+  registrableDomain,
+  guideLinksFromHtml,
   isBadgeLine,
   dateFromAttribute,
   textOutsideLines,
@@ -193,4 +195,43 @@ test('longestFreeText skips dates, and textOutsideLines never takes the whole ca
   assert.equal(textOutsideLines('Jane Great fit overall 2026-01-01', ['Jane', '2026-01-01']), 'Great fit overall');
   // A card with no child elements at all is its own text.
   assert.equal(textOutsideLines('Runs small in the chest', []), 'Runs small in the chest');
+});
+
+test('guideLinksFromHtml finds same-site size-guide pages, best first, and leaves everything else', () => {
+  const page = 'https://www.shop.example/products/mens-tee';
+  const html = `<html><body>
+    <a href="/pages/fit-guide">Fit guide</a>
+    <a href="/pages/size-chart-mens">Size Chart</a>
+    <a href="https://shop.example/pages/how-to-measure">How to measure</a>
+    <a href="https://other.example/pages/size-guide">Size guide</a>
+    <a href="/products/other-tee">Size guide of another product</a>
+    <a href="/en-gb/collections/size-chart-tees">Size chart tees</a>
+    <a href="/products/mens-tee?variant=1">Size guide</a>
+    <a href="/pages/shipping">Shipping</a>
+    <a href="#size-guide">Size guide</a>
+    <a href="mailto:help@shop.example">Size guide</a>
+    <a href="/pages/size-chart-mens#top">Size chart again</a>
+    </body></html>`;
+  // The size chart page outranks the how-to-measure page and the fit guide (which describes cuts). Off-site
+  // links, product and collection addresses, the page itself, hash links and mail links are left out. Two links
+  // to one address count once.
+  assert.deepEqual(guideLinksFromHtml(html, page), [
+    'https://www.shop.example/pages/size-chart-mens',
+    'https://www.shop.example/pages/fit-guide',
+    'https://shop.example/pages/how-to-measure',
+  ]);
+  assert.deepEqual(guideLinksFromHtml(html, page, 1), ['https://www.shop.example/pages/size-chart-mens']);
+  assert.deepEqual(guideLinksFromHtml('<p>no links</p>', page), []);
+  assert.deepEqual(guideLinksFromHtml(html, 'not a url'), []);
+});
+
+test('registrableDomain keeps what a store owns, so a regional subdomain is its own site and another store is not', () => {
+  assert.equal(registrableDomain('www.seafolly.com'), 'seafolly.com');
+  assert.equal(registrableDomain('au.seafolly.com'), 'seafolly.com');
+  assert.equal(registrableDomain('seafolly.com'), 'seafolly.com');
+  assert.equal(registrableDomain('www.collectif.co.uk'), 'collectif.co.uk');
+  assert.equal(registrableDomain('shop.rusty.com.au'), 'rusty.com.au');
+  assert.notEqual(registrableDomain('rusty.com'), registrableDomain('rusty.com.au'));
+  assert.notEqual(registrableDomain('www.mudjeans.eu'), registrableDomain('mudjeans.com'));
+  assert.equal(registrableDomain('localhost'), 'localhost');
 });

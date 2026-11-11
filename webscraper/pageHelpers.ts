@@ -2,7 +2,7 @@
  * Pure helpers for pulling review fields out of rendered review-card markup.
  * No I/O; used by server.ts and unit-tested in pageHelpers.test.ts.
  */
-import type * as cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 
 export type CheerioNode = ReturnType<ReturnType<typeof cheerio.load>>;
 
@@ -274,4 +274,67 @@ export function decodeHtmlEntities(text: string): string {
     }
     return named[body.toLowerCase()] ?? whole;
   });
+}
+
+/** Words that make a link a size guide: its label ("Size chart", "How to measure"). */
+export const GUIDE_LABEL = /size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|how to measure|measurement guide/i;
+/** The same in an address: /pages/size-guide, /sizing-chart, /how-to-measure. */
+export const GUIDE_PATH = /size[-_]?(guide|chart)s?\b|sizing[-_]?(guide|chart)?|fit[-_]?guide|measure/i;
+/** A name that says size chart or size guide (a "fit guide" usually describes cuts, not measurements, and ranks lower). */
+export const GUIDE_NAME = /size\s*[-_]?\s*(guide|chart)s?|sizing\s*[-_]?\s*(guide|chart)?/i;
+
+/**
+ * Addresses of size guides that are pages of their own ("/pages/size-chart"), read from a page's links: same-site
+ * links whose text or path says size guide, best first. Product, collection and cart addresses are left out, as
+ * are links back to the page itself. headlessFetch runs the same rules inside the browser (GUIDE_LINKS).
+ */
+export function guideLinksFromHtml(html: string, pageUrl: string, limit = 3): string[] {
+  let page: URL;
+  try {
+    page = new URL(pageUrl);
+  } catch {
+    return [];
+  }
+  const site = (host: string) => host.replace(/^www\./, '');
+  const $ = cheerio.load(html);
+  const found = new Map<string, { href: string; score: number }>();
+  $('a[href]').each((_i, a) => {
+    const raw = ($(a).attr('href') ?? '').trim();
+    if (!raw || raw.startsWith('#') || /^(javascript|mailto|tel):/i.test(raw)) return;
+    let target: URL;
+    try {
+      target = new URL(raw, page);
+    } catch {
+      return;
+    }
+    if (!/^https?:$/.test(target.protocol)) return;
+    if (site(target.host) !== site(page.host) || target.pathname === page.pathname) return;
+    if (/^\/([a-z]{2}(-[a-z]{2})?\/)?(products|collections|cart|account|search)\b/i.test(target.pathname)) return;
+    if (/[?&](prefn1|prefv1|filter|sort|variant)=/i.test(target.search)) return;
+    const label = ($(a).attr('aria-label') || $(a).text() || '').replace(/\s+/g, ' ').trim();
+    const byLabel = label.length < 60 && GUIDE_LABEL.test(label);
+    if (!byLabel && !GUIDE_PATH.test(target.pathname)) return;
+    const score = (GUIDE_NAME.test(label) ? 2 : 0) + (GUIDE_NAME.test(target.pathname) ? 2 : 0) + (byLabel ? 1 : 0);
+    const key = target.origin + target.pathname;
+    if (!found.has(key) || found.get(key)!.score < score) found.set(key, { href: target.href, score });
+  });
+  return [...found.values()]
+    .sort((x, y) => y.score - x.score)
+    .map((x) => x.href)
+    .slice(0, limit);
+}
+
+const SECOND_LEVEL_LABELS = new Set(['co', 'com', 'org', 'net', 'gov', 'edu', 'ac']);
+
+/**
+ * The part of a host a store owns: "au.seafolly.com" and "www.seafolly.com" are both "seafolly.com";
+ * "www.collectif.co.uk" is "collectif.co.uk". A short rule for the usual country endings, not the full public
+ * suffix list. Used to tell a store's own regional redirect from a redirect to another store.
+ */
+export function registrableDomain(host: string): string {
+  const parts = host.toLowerCase().split('.').filter(Boolean);
+  if (parts.length <= 2) return parts.join('.');
+  const last = parts[parts.length - 1];
+  const before = parts[parts.length - 2];
+  return parts.slice(last.length === 2 && SECOND_LEVEL_LABELS.has(before) ? -3 : -2).join('.');
 }

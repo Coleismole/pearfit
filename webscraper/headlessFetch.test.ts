@@ -5,12 +5,14 @@ import type { AddressInfo } from 'node:net';
 import {
   closeHeadlessBrowser,
   embeddedWidgetHtml,
+  fetchGuidePagesByHttp,
   fetchGuidePagesWith,
   isReviewWidgetFrame,
   navigationTimedOutAfterLoading,
   JsonCapture,
   linkStaysOnProduct,
   openSizeGuideWith,
+  renderChartOnly,
   renderPageHtml,
   renderWithServerlessBrowser,
   serverlessGuideOps,
@@ -799,4 +801,69 @@ test("serverless render does not take a men's guide chart for a women's product"
   assert.equal(women.chartHtml !== null && parseSizeChart(women.chartHtml).length, 0);
   const men = await renderServerlessLocalPage({ '/products/tee': GENDERED_GUIDE("Men's Tee") }, '/products/tee');
   assert.equal(men.chartHtml !== null && parseSizeChart(men.chartHtml)[0]?.chest_cm, 54);
+});
+
+test('fetchGuidePagesByHttp reads the linked guides without a browser, and a refusal ends it', async () => {
+  const html = `<a href="/pages/size-chart">Size chart</a><a href="/pages/fit-guide">Fit guide</a><a href="https://other.example/size-guide">Size guide</a>`;
+  const asked: string[] = [];
+  const answers: Record<string, { html: string } | { refused: boolean }> = {
+    'https://shop.example/pages/size-chart': { html: '<table>chart</table>' },
+    'https://shop.example/pages/fit-guide': { html: '<p>fit</p>' },
+  };
+  const pages = await fetchGuidePagesByHttp(html, 'https://shop.example/products/tee', async (href) => {
+    asked.push(href);
+    return answers[href] ?? { refused: false };
+  });
+  assert.deepEqual(pages, ['<table>chart</table>', '<p>fit</p>']);
+  assert.deepEqual(asked, ['https://shop.example/pages/size-chart', 'https://shop.example/pages/fit-guide']); // not the other site
+
+  // The first guide is refused: the second is not tried.
+  asked.length = 0;
+  const refused = await fetchGuidePagesByHttp(html, 'https://shop.example/products/tee', async (href) => {
+    asked.push(href);
+    return { refused: true };
+  });
+  assert.deepEqual(refused, []);
+  assert.deepEqual(asked, ['https://shop.example/pages/size-chart']);
+
+  // No time left: nothing is fetched.
+  asked.length = 0;
+  assert.deepEqual(await fetchGuidePagesByHttp(html, 'https://shop.example/products/tee', async (href) => { asked.push(href); return { html: 'x' }; }, Date.now() + 5_000), []);
+  assert.deepEqual(asked, []);
+});
+
+test('renderChartOnly opens the size guide and reads a linked guide page, and never pages reviews', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const server = http.createServer((req, res) => {
+    const path = new URL(req.url ?? '/', 'http://x').pathname;
+    const pages: Record<string, string> = {
+      '/products/button-tee': `<!DOCTYPE html><html><head><title>Tee</title></head><body><h1>Tee</h1>
+        <button id="open">Size Guide</button><div id="modal"></div>
+        <script>document.getElementById('open').addEventListener('click', () => { document.getElementById('modal').innerHTML = ${JSON.stringify(GUIDE_TABLE)}; });</script></body></html>`,
+      '/products/link-tee': `<!DOCTYPE html><html><head><title>Men's Tee</title></head><body><h1>Men's Tee</h1><a href="/pages/size-chart">Size chart</a></body></html>`,
+      '/pages/size-chart': `<!DOCTYPE html><html><body><h1>Size chart</h1>${GUIDE_TABLE}</body></html>`,
+      '/products/nothing': `<!DOCTYPE html><html><head><title>Tee</title></head><body><h1>Tee</h1></body></html>`,
+    };
+    res.writeHead(pages[path] === undefined ? 404 : 200, { 'content-type': 'text/html' });
+    res.end(pages[path] ?? 'not found');
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    const started = Date.now();
+    const button = await renderChartOnly(`http://127.0.0.1:${port}/products/button-tee`);
+    assert.equal(parseSizeChartFirst(button.html, button.chartHtml)[0]?.chest_cm, 54);
+    assert.deepEqual(button.guidePages, []);
+    const link = await renderChartOnly(`http://127.0.0.1:${port}/products/link-tee`);
+    assert.equal(parseSizeChart(link.html).length, 0);
+    assert.equal(link.guidePages?.length, 1);
+    assert.equal(parseSizeChartWithGuides([link.html], link.guidePages ?? [], { name: "Men's Tee", url: 'http://x/products/link-tee' })[0]?.chest_cm, 54);
+    const none = await renderChartOnly(`http://127.0.0.1:${port}/products/nothing`);
+    assert.deepEqual(parseSizeChartFirst(none.html, none.chartHtml), []);
+    const missing = await renderChartOnly(`http://127.0.0.1:${port}/products/gone`);
+    assert.equal(missing.status, 404);
+    // Three short renders: no 10 s review wait and no scrolling for more reviews.
+    assert.ok(Date.now() - started < 60_000, `took ${Date.now() - started} ms`);
+  } finally {
+    server.close();
+  }
 });

@@ -12,6 +12,7 @@
 import type { Browser, Locator, Page } from 'playwright';
 import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
 import { extractReviewsFromJson, parseJsonBody, reviewIdentity } from './reviewJson.ts';
+import { GUIDE_LABEL, GUIDE_NAME, GUIDE_PATH, guideLinksFromHtml } from './pageHelpers.ts';
 import { parseSizeChart, type ProductHint } from './sizeChart.ts';
 
 /** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
@@ -459,9 +460,9 @@ function playwrightGuideOps(page: Page): SizeGuideOps {
  * path says size guide. Product, collection and cart addresses are left out, as are links back to this page.
  */
 const GUIDE_LINKS = `(() => {
-  const labelRe = /size\\s*(guide|chart)|sizing\\s*(guide|chart)|fit\\s*guide|size\\s*(&|and|\\+)\\s*fit|how to measure|measurement guide/i;
-  const pathRe = /size[-_]?(guide|chart)s?\\b|sizing[-_]?(guide|chart)?|fit[-_]?guide|measure/i;
-  const sizeRe = /size\\s*[-_]?\\s*(guide|chart)s?|sizing\\s*[-_]?\\s*(guide|chart)?/i;
+  const labelRe = new RegExp(${JSON.stringify(GUIDE_LABEL.source)}, 'i');
+  const pathRe = new RegExp(${JSON.stringify(GUIDE_PATH.source)}, 'i');
+  const sizeRe = new RegExp(${JSON.stringify(GUIDE_NAME.source)}, 'i');
   const site = (h) => h.replace(/^www\\./, '');
   const found = new Map();
   for (const a of document.querySelectorAll('a[href]')) {
@@ -528,6 +529,36 @@ export async function fetchGuidePages(page: Page, until: number): Promise<string
         } finally {
           await guide.close().catch(() => {});
         }
+      },
+    },
+    until,
+  );
+}
+
+/** The answer to one plain fetch of a guide page: its html, or whether the store refused the request. */
+export type GuideFetchResult = { html: string } | { refused: boolean };
+
+/**
+ * Reads the size guides a product page links to by plain fetch, with no browser: for a page whose reviews
+ * needed no render, so its size guide was never opened. Same rules as the browser path (same site, best two
+ * links, stops at the time limit). A refusal ends it: the store said no, and no other guide is tried.
+ */
+export async function fetchGuidePagesByHttp(
+  html: string,
+  pageUrl: string,
+  fetchPage: (href: string, timeoutMs: number) => Promise<GuideFetchResult>,
+  until = Date.now() + 30_000,
+): Promise<string[]> {
+  let refused = false;
+  return fetchGuidePagesWith(
+    {
+      links: async () => guideLinksFromHtml(html, pageUrl),
+      load: async (href, timeoutMs) => {
+        if (refused) return null;
+        const result = await fetchPage(href, timeoutMs);
+        if ('html' in result) return result.html;
+        if (result.refused) refused = true;
+        return null;
       },
     },
     until,
@@ -1012,8 +1043,9 @@ function widgetPages(items: CapturedJson[]): string[] {
   return [...new Set(items.map((item) => embeddedWidgetHtml(item.body)).filter((html): html is string => html !== null))];
 }
 
-export async function renderPageHtml(url: string): Promise<RenderedPage> {
-  const run = renderTail.then(() => renderPageHtmlOnce(url));
+/** One render at a time: the browser is shared and a page of several megabytes needs the memory. */
+function queueRender<T>(job: () => Promise<T>): Promise<T> {
+  const run = renderTail.then(job);
   renderTail = run.then(
     () => {},
     () => {},
@@ -1021,13 +1053,30 @@ export async function renderPageHtml(url: string): Promise<RenderedPage> {
   return run;
 }
 
+export async function renderPageHtml(url: string): Promise<RenderedPage> {
+  return queueRender(() => renderPageHtmlOnce(url));
+}
+
+/** Whole chart-only render, including opening the guide and reading linked guide pages. */
+export const CHART_RENDER_BUDGET_MS = 45_000;
+
+/**
+ * A short render for the size chart alone, for a page whose reviews were all in its source (so no full render
+ * ran) and whose chart is not in the source either. It loads the page, opens the size guide and reads linked
+ * guide pages; it never touches the review widget. Playwright only: the hosted function has no time for it.
+ */
+export async function renderChartOnly(url: string): Promise<RenderedPage> {
+  if (process.env.VERCEL) throw new Error('A chart-only render is not available on the hosted function.');
+  return queueRender(() => renderChartOnlyWithPlaywright(url));
+}
+
 async function renderPageHtmlOnce(url: string): Promise<RenderedPage> {
   if (process.env.VERCEL) return renderWithServerlessChromium(url);
   return renderWithPlaywright(url);
 }
 
-async function renderWithPlaywright(url: string): Promise<RenderedPage> {
-  const browser = (await getBrowser()) as Browser;
+/** A fresh browser context whose every request, redirects included, is checked against the resolved address of its host. */
+async function newGuardedContext(browser: Browser, url: string) {
   const context = await browser.newContext({
     locale: 'en-US',
     viewport: { width: 1366, height: 900 },
@@ -1035,13 +1084,59 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
   const allowPrivate = startUrlAllowsPrivate(url);
   const hostIsBlocked = createRequestHostGuard();
   // Images, video and fonts are irrelevant to review text; skipping them makes renders faster.
-  // Every other request, redirects included, is checked against the resolved address of its host.
   await context.route('**/*', async (route) => {
     const type = route.request().resourceType();
     if (type === 'image' || type === 'media' || type === 'font') return route.abort();
     if (!allowPrivate && (await hostIsBlocked(route.request().url()))) return route.abort();
     return route.continue();
   });
+  return context;
+}
+
+async function renderChartOnlyWithPlaywright(url: string): Promise<RenderedPage> {
+  const browser = (await getBrowser()) as Browser;
+  const context = await newGuardedContext(browser, url);
+  const page = await context.newPage();
+  const startedAt = Date.now();
+  let timedOut = false;
+  const deadline = setTimeout(() => {
+    timedOut = true;
+    context.close().catch(() => {});
+  }, CHART_RENDER_BUDGET_MS);
+  try {
+    const response = await page
+      .goto(url, { waitUntil: 'domcontentloaded', timeout: 20_000 })
+      .catch((err: unknown) => {
+        if (navigationTimedOutAfterLoading(err, page.url())) return null;
+        throw err;
+      });
+    const status = response?.status() ?? null;
+    if (status !== null && status >= 400) {
+      return { html: '', status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml: null, jsonResponses: [] };
+    }
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+    await clickFirst(page, 'button', /^(accept( all)?( cookies)?|i accept|agree|allow all|got it|ok)$/i);
+    const snapshot = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    const hint = await playwrightProductHint(page);
+    const chartHtml = parseSizeChart(snapshot, hint).length > 0 ? snapshot : ((await openSizeGuide(page, startedAt + CHART_RENDER_BUDGET_MS - 17_000, 4, hint)) ?? snapshot);
+    const html = (await evaluateStable(page, SERIALIZE_WITH_SHADOW_ROOTS)) as string;
+    const guidePages =
+      parseSizeChart(chartHtml, hint).length === 0 && parseSizeChart(html, hint).length === 0
+        ? await fetchGuidePages(page, startedAt + CHART_RENDER_BUDGET_MS - 4_000)
+        : [];
+    return { html, status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml, jsonResponses: [], guidePages };
+  } catch (err) {
+    if (timedOut) throw new Error(`Headless chart render timed out after ${CHART_RENDER_BUDGET_MS / 1000}s`);
+    throw err;
+  } finally {
+    clearTimeout(deadline);
+    await context.close().catch(() => {});
+  }
+}
+
+async function renderWithPlaywright(url: string): Promise<RenderedPage> {
+  const browser = (await getBrowser()) as Browser;
+  const context = await newGuardedContext(browser, url);
 
   const page = await context.newPage();
   const capture = new JsonCapture();

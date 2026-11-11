@@ -43,7 +43,7 @@
       <nav class="nav-links" id="nav-links" aria-label="Primary">
         <a href="#how">How it works</a>
         <a href="#try">Try it</a>
-        <a href="#pilot" data-inquiry-switch="pilot">For brands</a>
+        <a href="#pilot">For brands</a>
         <a href="#faq">FAQ</a>
       </nav>
       <div class="nav-actions">
@@ -63,7 +63,7 @@
           <p class="lede">Compare any shirt to ones you own. Get the size, with a confidence level.</p>
           <div class="hero-ctas">
             <a href="/app" class="btn btn-lime">Try it live</a>
-            <a href="#pilot" data-inquiry-switch="pilot" class="hero-link">For brands <span aria-hidden="true">→</span></a>
+            <a href="#pilot" class="hero-link">For brands <span aria-hidden="true">→</span></a>
           </div>
         </div>
         <div class="hero-visual">
@@ -87,10 +87,7 @@
     <section id="try" class="section" data-section="try" aria-labelledby="try-heading">
       <div class="wrap">
         <h2 id="try-heading">Try it with your own shirts.</h2>
-        <p class="muted narrow">
-          Add the shirts you own, pick a product, and get a size with a confidence level.
-          Your measurements are sent to the size service to work out the answer and are not stored.
-        </p>
+        <p class="muted narrow">Add shirts you own, pick a product, and get a size and how sure we are.</p>
 
         <div class="try-grid">
           <form id="try-form" class="try-form ph-no-capture" novalidate>
@@ -117,7 +114,7 @@
                 <button type="button" class="btn btn-ghost btn-sm" id="try-add">Add another shirt</button>
                 <button type="button" class="try-link" id="try-example">Fill in two example shirts</button>
               </div>
-              <p class="try-hint try-hint-small">The examples are the documented sample wardrobe from the engine, not a real shopper.</p>
+              <p class="try-hint try-hint-small">These two shirts are examples, not a real shopper’s wardrobe.</p>
             </div>
 
             <div class="try-step">
@@ -128,7 +125,7 @@
               </div>
 
               <div id="try-pick" class="try-choose">
-                <label class="try-field">Search products <input type="search" id="try-search" autocomplete="off" placeholder="Name or SKU" /></label>
+                <label class="try-field">Search products <input type="search" id="try-search" autocomplete="off" placeholder="Product name" /></label>
                 <label class="try-field">Product
                   <select id="try-product" aria-describedby="try-pick-status"><option value="">Loading products…</option></select>
                 </label>
@@ -139,14 +136,18 @@
               <div id="try-paste" class="try-choose" hidden>
                 <label class="try-field">Product link <input type="url" id="try-url" autocomplete="off" placeholder="https://www.example.com/products/…" aria-describedby="try-paste-hint" /></label>
                 <p class="try-hint try-hint-small" id="try-paste-hint">
-                  The link is matched against products already in the fit table, in your browser. It is not
-                  opened, fetched or stored. A product we have not read yet will say so.
+                  The link is checked in your browser against the products we already have. It is not opened
+                  or stored. If we do not have the product yet, we will say so.
                 </p>
               </div>
             </div>
 
             <p class="try-error" id="try-form-error" role="alert" tabindex="-1"></p>
-            <button type="submit" class="btn" id="try-submit">Get my size</button>
+            <div class="try-submit-row">
+              <button type="submit" class="btn" id="try-submit">Get my size</button>
+              <a class="btn btn-ghost" href="/app">Prefer your phone? Open the app</a>
+            </div>
+            <p class="try-hint try-hint-small">Your measurements are sent to our size service to work out the answer. They are not stored.</p>
           </form>
 
           <div class="try-result" id="try-result" role="region" aria-label="Size answer" aria-live="polite" aria-busy="false" tabindex="-1" data-state="idle"></div>
@@ -170,9 +171,9 @@
           <div>
             <h3>For brands</h3>
             <ul class="ticks">
-              <li><strong>One verdict per size:</strong> Review count, fit skew, and the share of reviews in each direction.</li>
-              <li><strong>Shrinkage and opacity, counted:</strong> Mentions are tallied.</li>
-              <li><strong>The same table everywhere:</strong> A scrape on any machine writes that SKU’s fit numbers to the shared database.</li>
+              <li><strong>A fit note for each size:</strong> How many reviews there are, and how many say it runs small, true to size, or large.</li>
+              <li><strong>Shrinkage and see-through fabric:</strong> Mentions are counted.</li>
+              <li><strong>One place for fit numbers:</strong> Each product’s numbers go into the same shared database, so everyone sees the same ones.</li>
             </ul>
           </div>
         </div>
@@ -186,32 +187,11 @@
     <section id="how" class="section">
       <div class="wrap">
         <h2>How a size answer is made.</h2>
-        <p class="muted narrow">
-          The scraper reads a product page and classifies reviews with deterministic rules.
-          Fit numbers are stored per size. A separate comparison engine measures a candidate
-          against a garment the shopper already owns.
-        </p>
         <ol class="steps">
-          <li>
-            <span class="step-n">01</span>
-            <h3>Read the reviews on a product page</h3>
-            <p>The scraper loads the page and classifies each review by size, fit direction, shrinkage, and sentiment.</p>
-          </li>
-          <li>
-            <span class="step-n">02</span>
-            <h3>Keep the numbers</h3>
-            <p>Each size gets a row: review count, fit skew, verdict, and shrinkage mentions. Full review text stays on the machine that scraped it.</p>
-          </li>
-          <li>
-            <span class="step-n">03</span>
-            <h3>Measure against an owned garment</h3>
-            <p>The comparison engine scores the sizes it has measurements for. A missing centimeter stays empty.</p>
-          </li>
-          <li>
-            <span class="step-n">04</span>
-            <h3>A later scrape updates that SKU</h3>
-            <p>Scraping the same SKU again replaces its size rows in the shared table. It does not add a second copy.</p>
-          </li>
+          <li><span class="step-n">01</span><p>We read a shirt’s size chart and what reviewers say about the fit.</p></li>
+          <li><span class="step-n">02</span><p>We compare each size with a shirt you already own.</p></li>
+          <li><span class="step-n">03</span><p>You get a size suggestion and how sure we are about it.</p></li>
+          <li><span class="step-n">04</span><p>As more shirts and reviews are added, more products can be sized.</p></li>
         </ol>
       </div>
     </section>
@@ -221,19 +201,14 @@
       <div class="wrap pilot-grid">
         <div>
           <h2 id="pilot-heading">Start a 6-week pilot on one category</h2>
-          <div class="inquiry-switch">
-            <div class="segmented" id="inquiry-tabs" role="group" aria-label="Inquiry mode">
-              <button type="button" aria-pressed="true" data-mode="pilot">Brand Pilot Program</button>
-              <button type="button" aria-pressed="false" data-mode="investor">Investor &amp; Partner Relations</button>
-            </div>
-          </div>
-          <ol class="pilot-steps" id="pilot-steps-list">
-            <li><b>Scrape one category:</b> The scraper reads reviews and stores numerical fit values for each size.</li>
-            <li><b>Read the shared table:</b> Those fit rows are in the same database from any machine that runs the scraper.</li>
-            <li><b>Decide what to look at next:</b> A storefront size advisor is a later step. This starts with the fit table.</li>
+          <ol class="pilot-steps">
+            <li><b>We start with one product category.</b> We read the reviews and size charts on your product pages for it.</li>
+            <li><b>You get fit numbers for each size.</b> What reviewers say about each size: runs small, true to size, or runs large.</li>
+            <li><b>A size tool on your store comes later.</b> This first step is the fit data. A size advisor on your own product pages is a later step.</li>
           </ol>
         </div>
 
+        <div>
         <form class="pilot-form" id="pilot-form">
           <label class="inquiry-honey" aria-hidden="true">Company website <input name="_honey" tabindex="-1" autocomplete="off" /></label>
           <label>Full name <input name="name" required autocomplete="name" placeholder="Alex Rivera" /></label>
@@ -251,6 +226,8 @@
           <button type="submit" class="btn btn-block" id="pilot-submit-btn">Request 6-Week Brand Pilot</button>
           <p class="form-note" id="form-note" role="status">Sends this inquiry to customerservice@pearfit.app.</p>
         </form>
+        <p class="form-alt"><a href="mailto:jchen@pearfit.app">Investor or partner? Email us</a></p>
+        </div>
       </div>
     </section>
 
@@ -260,15 +237,15 @@
         <h2>Answers for brands and partners</h2>
         <details>
           <summary>What data does Pearfit need to launch a pilot?</summary>
-          <p>Product page URLs. The scraper reads the reviews on those pages and stores numerical fit values per size. A size chart on the page is stored with those fit rows. A measurement the chart does not state stays blank.</p>
+          <p>Links to the product pages you want covered. We read the reviews and the size chart on those pages and keep what reviewers say about each size. A measurement the chart does not state stays blank.</p>
         </details>
         <details>
           <summary>How do shoppers tell Pearfit what clothes they already own?</summary>
-          <p>The live demo on this page lets you type in your own shirts and sends them to the comparison engine, which compares them with a product in the fit table.</p>
+          <p>The live demo on this page lets you type in your own shirts and compares them with a product we already have.</p>
         </details>
         <details>
           <summary>Does an AI model pick the size?</summary>
-          <p>No. The scraper classifies review text with deterministic rules and stores the resulting numbers. When a measurement is missing, it stays blank.</p>
+          <p>No. Fixed rules sort the reviews, not an AI model, and the size comes from comparing measurements. When a measurement is missing, it stays blank.</p>
         </details>
         <details>
           <summary>How do you measure ROI during the 6-week pilot?</summary>
@@ -276,7 +253,7 @@
         </details>
         <details>
           <summary>How is shopper privacy handled?</summary>
-          <p>The live demo sends your measurements to the size service only to work out the answer. The scraper keeps review text on the machine that scraped it, and the shared database receives only the fit numbers.</p>
+          <p>The live demo sends your measurements to our size service only to work out the answer. Full review text is not kept in the shared database, only the fit numbers for each size.</p>
         </details>
       </div>
     </section>
@@ -289,7 +266,6 @@
       <nav class="footer-links" aria-label="Footer">
         <a href="#try">Try it</a>
         <a href="stores.html">Supported stores</a>
-        <a href="/scraper">Scraper</a>
         <a href="#faq">FAQ</a>
         <a href="#pilot">Book a pilot</a>
       </nav>

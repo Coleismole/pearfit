@@ -22,6 +22,8 @@ Open `website/index.html` in a browser, or run `npx serve website`.
 
 `website/vercel.json` is what `www.pearfit.app` deploys. `/` is this page and `/scraper` is the built scraper checked in under `website/scraper`. Refresh those files with `node scripts/assemble-site.mjs` from the repo root.
 
+The shopper app (`app/`) is served at `/app`, built into `website/app` by the same command; run `(cd app && npm ci)` first, and commit the result.
+
 The Vercel project now deploys from `Coleismole/pearfit`.
 
 ## Generated files

@@ -58,6 +58,18 @@ await mkdir(websiteApi, { recursive: true });
 await cp(outfile, path.join(websiteApi, '[[...path]].js'));
 await cp(path.join(root, 'webscraper', '.env.example'), path.join(websiteApi, '.env.example'));
 
+// The shopper app is served at /app by the same project. APP_BASE gives its built files absolute /app/ asset paths,
+// so the /app rewrites in vercel.json can answer any /app/<path> with index.html. It reaches site/ with the copy below.
+const appBuild = spawnSync('npm', ['run', 'build'], {
+  cwd: path.join(root, 'app'),
+  env: { ...process.env, APP_BASE: '/app/' },
+  stdio: 'inherit',
+});
+if (appBuild.status !== 0) process.exit(appBuild.status ?? 1);
+const websiteApp = path.join(website, 'app');
+await rm(websiteApp, { recursive: true, force: true });
+await cp(path.join(root, 'app', 'dist'), websiteApp, { recursive: true });
+
 await rm(site, { recursive: true, force: true });
 await mkdir(site, { recursive: true });
 await cp(website, site, {

@@ -38,6 +38,8 @@ npm run preview   # serve dist/ on http://localhost:4173 to check the build
 `dist/` is plain static files. Asset paths are relative and the routes are in the URL hash (`#/wardrobe`), so
 the build works at a domain root or under a sub-path, and needs no rewrite rules.
 
+The app is served at **https://www.pearfit.app/app**. Rebuild and commit it from the repo root with `node scripts/assemble-site.mjs` (it runs `npm run build` here with `APP_BASE=/app/` and copies `dist/` to `website/app/`); the `check-bundles` CI job fails if `website/app/` is stale.
+
 ## Tests and typecheck
 
 ```bash

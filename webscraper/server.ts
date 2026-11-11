@@ -1768,6 +1768,7 @@ export function createApp() {
       let renderedChartHtml: string | null = null; // headless snapshot from before the review steps
       let renderedFinalHtml: string | null = null; // headless page at the end, when the source page's reviews won
       let renderedGuidePages: string[] = []; // size guide pages the product page linked to, read by the headless browser
+      let renderedChartJson: string[] = []; // size chart tables that arrived as HTML inside JSON the page received
       let sourceUrl = (url || 'batch://direct-review-payload').trim();
       let isRemoteUrl = false;
       let staticError: StaticFetchError | null = null;
@@ -1859,6 +1860,8 @@ export function createApp() {
             renderedChartHtml = rendered.chartHtml;
             renderedFinalHtml = rendered.html;
             renderedGuidePages = rendered.guidePages ?? [];
+            renderedChartJson = rendered.chartJson ?? [];
+            if (process.env.SCRAPER_DEBUG) console.error(`[render] size chart JSON fragments: ${renderedChartJson.length}`);
             if (
               !scraped ||
               renderedScrape.reviews.length >= scraped.reviews.length ||
@@ -1899,7 +1902,7 @@ export function createApp() {
       // A page the full render already read is not read again.
       if (isRemoteUrl && url && staticHtml && renderedFinalHtml === null) {
         const hint = { name: meta.name, url: sourceUrl };
-        const chartFound = () => parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, hint).length > 0;
+        const chartFound = () => parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, hint).length > 0;
         if (!chartFound()) {
           renderedGuidePages = await fetchGuidePagesByHttp(staticHtml, url, fetchGuidePage);
           if (process.env.SCRAPER_DEBUG) {
@@ -1914,6 +1917,7 @@ export function createApp() {
                 renderedChartHtml = chartRender.chartHtml;
                 renderedFinalHtml = chartRender.html;
                 renderedGuidePages = [...renderedGuidePages, ...(chartRender.guidePages ?? [])];
+                renderedChartJson = chartRender.chartJson ?? [];
               }
             } catch {
               // No chart this time; the reviews were read and stand.
@@ -1923,7 +1927,7 @@ export function createApp() {
       }
 
       if (reviews.length === 0) {
-        const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, { name: meta.name, url: sourceUrl });
+        const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
         // A chart with no parent SKU never shows up and never reaches Supabase.
         // Store an empty fit report so the chart has a row to hang on.
         if (commitToDb && sizeChart.length > 0) {
@@ -1960,7 +1964,7 @@ export function createApp() {
       }
 
       const report = aggregateProductFitReport(meta, reviews);
-      const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml], renderedGuidePages, { name: meta.name, url: sourceUrl });
+      const sizeChart = parseSizeChartWithGuides([targetHtml, renderedChartHtml, renderedFinalHtml, ...renderedChartJson], renderedGuidePages, { name: meta.name, url: sourceUrl });
 
       let supabase: SupabaseSync | null = null;
       if (commitToDb) {

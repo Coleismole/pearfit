@@ -20,6 +20,7 @@ import {
   shouldUseHeadlessRender,
   SIZE_GUIDE_LABEL,
   type GuidePageOps,
+  type RenderedPage,
   type ServerlessBrowser,
   type ServerlessPage,
   type SizeGuideOps,
@@ -866,4 +867,85 @@ test('renderChartOnly opens the size guide and reads a linked guide page, and ne
   } finally {
     server.close();
   }
+});
+
+// ---- Size charts that arrive as HTML inside JSON (Salesforce storefronts: Product-SizeChart) ----
+
+const sfChartJson = (content: string) =>
+  JSON.stringify({ action: 'Product-SizeChart', queryString: 'cid=size-guide', locale: 'default', content: `<style type="text/css">table, td, th { text-align:left; font-size:11px; }</style>${content}` });
+const GARMENT_CHART = `<h2>Men's size chart</h2><table><caption>Size guide (cm)</caption>
+  <tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr><tr><td>M</td><td>54</td><td>72</td></tr></table>`;
+// What Hot Topic, BoxLunch and Orvis send: the shopper's body (bust, waist, hip; a chest range), not a garment.
+const BODY_CHART = `<h2>Guy's Tops</h2><table><tr><th>US</th><th>CHEST</th></tr><tr><td>XS</td><td>34" - 36"</td></tr><tr><td>SM</td><td>36" - 38"</td></tr></table>
+  <h2>Girl's Junior Sizes</h2><table><tr><th>US</th><th>BUST</th><th>WAIST</th><th>LOW HIP</th></tr><tr><td>XS</td><td>31"</td><td>25"</td><td>36"</td></tr><tr><td>SM</td><td>34"</td><td>27"</td><td>38"</td></tr></table>`;
+
+test('JsonCapture keeps the tables of a size-chart JSON response and nothing else', () => {
+  const capture = new JsonCapture();
+  const chartUrl = 'https://shop.example/on/demandware.store/Sites-x-Site/default/Product-SizeChart?cid=size-guide';
+  capture.add(chartUrl, sfChartJson(GARMENT_CHART));
+  // The same response with its markup escaped the way some servers write it.
+  capture.add('https://shop.example/other?size-chart=1', JSON.stringify({ content: '<table><tr><td>x</td></tr></table>' }).replace(/</g, '\u003c'));
+  // A table in JSON that is not about size, JSON about size with no table, and a chart past the cap are not kept.
+  capture.add('https://shop.example/api/shipping', JSON.stringify({ content: '<table><tr><td>Shipping</td></tr></table>' }));
+  capture.add('https://shop.example/api/size-guide', JSON.stringify({ content: 'No table here' }));
+  const pages = capture.chartPages();
+  assert.equal(pages.length, 2);
+  assert.deepEqual(parseSizeChartFirst(...pages), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+  assert.equal(capture.ratingFields, 0); // not review data
+  assert.equal(capture.items.length, 0);
+  for (let i = 0; i < 10; i++) capture.add(`${chartUrl}&n=${i}`, sfChartJson(`<table><tr><th>Size</th><th>Chest (cm)</th></tr><tr><td>S</td><td>${50 + i}</td></tr></table>`));
+  assert.equal(capture.chartPages().length, 4); // two bodies were kept before; the cap of four stops the rest
+});
+
+test('a Salesforce size chart that only gives body measurements reads as no chart, so no dimension is invented', () => {
+  const capture = new JsonCapture();
+  capture.add('https://shop.example/on/demandware.store/Sites-x-Site/default/Product-SizeChart?cid=size-guide', sfChartJson(BODY_CHART));
+  assert.equal(capture.chartPages().length, 1); // the table is read...
+  // ...and the chart parser takes no chest, length or sleeve from bust, waist, hip or a chest range.
+  assert.deepEqual(parseSizeChartFirst(...capture.chartPages()), []);
+  assert.deepEqual(parseSizeChartWithGuides([], capture.chartPages(), { name: "Men's Graphic Tee", url: 'https://shop.example/product/tee.html' }), []);
+});
+
+/** A product page whose size guide button fetches the chart as JSON and shows it in a closed shadow root. */
+async function renderChartJsonPage(render: (url: string) => Promise<RenderedPage>) {
+  const server = http.createServer((req, res) => {
+    const path = new URL(req.url ?? '/', 'http://x').pathname;
+    if (path === '/on/demandware.store/Product-SizeChart') {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(sfChartJson(GARMENT_CHART));
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end(`<!DOCTYPE html><html><head><title>Men's Tee</title></head><body><h1>Men's Tee</h1>${REVIEW}
+      <button id="open">Size Guide</button><div id="host"></div>
+      <script>document.getElementById('open').addEventListener('click', async () => {
+        const json = await (await fetch('/on/demandware.store/Product-SizeChart?cid=size-guide')).json();
+        // A closed shadow root is not part of the page html the render saves.
+        document.getElementById('host').attachShadow({ mode: 'closed' }).innerHTML = json.content;
+      });</script></body></html>`);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    return await render(`http://127.0.0.1:${port}/products/tee`);
+  } finally {
+    server.close();
+  }
+}
+
+test('renderPageHtml returns the size chart that came as HTML inside JSON', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const result = await renderChartJsonPage(renderPageHtml);
+  assert.deepEqual(parseSizeChartFirst(result.html, result.chartHtml), []); // the page html has no chart
+  assert.deepEqual(parseSizeChartFirst(...(result.chartJson ?? [])), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+});
+
+test('serverless render returns the size chart that came as HTML inside JSON', { skip: serverlessSkip }, async () => {
+  const result = await renderChartJsonPage((url) => renderWithServerlessBrowser(serverlessBrowser!, url));
+  assert.deepEqual(parseSizeChartFirst(result.html, result.chartHtml), []);
+  assert.deepEqual(parseSizeChartFirst(...(result.chartJson ?? [])), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+});
+
+test('renderChartOnly returns the size chart that came as HTML inside JSON', { skip: !browserAvailable && 'no Chromium installed' }, async () => {
+  const result = await renderChartJsonPage(renderChartOnly);
+  assert.deepEqual(parseSizeChartFirst(...(result.chartJson ?? [])), [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
 });

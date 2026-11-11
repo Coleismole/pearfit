@@ -77,6 +77,11 @@ export interface RenderedPage {
    */
   extraHtml?: string[];
   /**
+   * HTML tables that arrived inside JSON the page itself received (Salesforce: { action: "Product-SizeChart",
+   * content: "<table>…" }). Each entry is one HTML fragment, read as a chart candidate beside the page.
+   */
+  chartJson?: string[];
+  /**
    * Size guides that are pages of their own, linked from the product page ("/pages/size-chart"), loaded when
    * the product page itself showed no chart. They hold the store's tables for every product: use
    * parseSizeChartWithGuides, which picks the table that fits the product.
@@ -98,6 +103,25 @@ export function embeddedWidgetHtml(body: string): string | null {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
   const widget = (value as Record<string, unknown>).widget;
   return typeof widget === 'string' && /class="stamped-review[ "]/.test(widget) ? widget : null;
+}
+
+/** Table markup inside a JSON string: raw, or with the angle bracket escaped as \\u003c. */
+const TABLE_MARKUP = /(?:<|\\u003c)table\b/i;
+const SIZE_CHART_WORDS = /size[-_ ]?(?:chart|guide)|sizing[-_ ]?(?:chart|guide)/i;
+/** Most chart-bearing JSON bodies kept from one render. */
+const MAX_CHART_BODIES = 4;
+
+/** Every string in a JSON value that holds a table. */
+function htmlWithTables(value: unknown, found: string[] = [], depth = 0): string[] {
+  if (depth > 12 || value === null) return found;
+  if (typeof value === 'string') {
+    if (/<table\b/i.test(value)) found.push(value);
+  } else if (Array.isArray(value)) {
+    for (const item of value) htmlWithTables(item, found, depth + 1);
+  } else if (typeof value === 'object') {
+    for (const item of Object.values(value as Record<string, unknown>)) htmlWithTables(item, found, depth + 1);
+  }
+  return found;
 }
 
 const RATING_FIELD = /"(rating|score|Rating|reviewRating|stars|starRating|star_rating|ratingValue|overallRating|rate)"\s*:/;
@@ -129,10 +153,26 @@ export class JsonCapture {
     const wrapped = body[0] !== '{' && body[0] !== '[' ? JSONP.exec(body) : null;
     if (wrapped) body = wrapped[1];
     if (body[0] !== '{' && body[0] !== '[') return;
+    // A size chart some stores send as HTML inside JSON. It has no rating field, so it is kept on its own.
+    if (this.chartBodies.length < MAX_CHART_BODIES && TABLE_MARKUP.test(body) && (SIZE_CHART_WORDS.test(url) || SIZE_CHART_WORDS.test(body))) {
+      this.chartBodies.push(body);
+      this.bytes += body.length;
+    }
     if (!RATING_FIELD.test(body)) return;
     this.items.push({ url, body });
     this.bytes += body.length;
     this.ratingFields += (body.match(new RegExp(RATING_FIELD.source, 'g')) ?? []).length;
+  }
+
+  private readonly chartBodies: string[] = [];
+
+  /**
+   * The HTML tables found in the size-chart JSON the page received, one fragment each. Where such a table
+   * gives only body measurements the chart parser reads nothing from it, so the dimension stays null.
+   */
+  chartPages(): string[] {
+    const pages = this.chartBodies.flatMap((body) => htmlWithTables(parseJsonBody(body)));
+    return [...new Set(pages)].map((html) => `<div>${html}</div>`);
   }
 
   private readonly counted = new Set<string>();
@@ -1097,6 +1137,11 @@ async function renderChartOnlyWithPlaywright(url: string): Promise<RenderedPage>
   const browser = (await getBrowser()) as Browser;
   const context = await newGuardedContext(browser, url);
   const page = await context.newPage();
+  // Only the size-chart JSON is kept from this render (see JsonCapture.chartPages).
+  const capture = new JsonCapture();
+  page.on('response', (response) => {
+    capture.offer(response.url(), response.status(), response.headers()['content-type'] ?? '', () => response.text());
+  });
   const startedAt = Date.now();
   let timedOut = false;
   const deadline = setTimeout(() => {
@@ -1124,7 +1169,8 @@ async function renderChartOnlyWithPlaywright(url: string): Promise<RenderedPage>
       parseSizeChart(chartHtml, hint).length === 0 && parseSizeChart(html, hint).length === 0
         ? await fetchGuidePages(page, startedAt + CHART_RENDER_BUDGET_MS - 4_000)
         : [];
-    return { html, status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml, jsonResponses: [], guidePages };
+    await capture.settle(1000);
+    return { html, status, finalUrl: page.url(), reviewSelectorFound: false, chartHtml, jsonResponses: [], chartJson: capture.chartPages(), guidePages };
   } catch (err) {
     if (timedOut) throw new Error(`Headless chart render timed out after ${CHART_RENDER_BUDGET_MS / 1000}s`);
     throw err;
@@ -1341,6 +1387,7 @@ async function renderWithPlaywright(url: string): Promise<RenderedPage> {
       reviewSelectorFound,
       chartHtml,
       jsonResponses: capture.items,
+      chartJson: capture.chartPages(),
       extraHtml: [...extraHtml, ...widgetPages(capture.items), ...framePages],
       guidePages,
     };
@@ -1699,6 +1746,7 @@ export async function renderWithServerlessBrowser(browser: ServerlessBrowser, ur
       reviewSelectorFound,
       chartHtml: guideHtml ?? chartHtml,
       jsonResponses: capture.items,
+      chartJson: capture.chartPages(),
       guidePages,
     };
   } catch (err) {

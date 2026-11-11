@@ -11,62 +11,11 @@ const SAMPLE_SIZES = [
   { size: 'XXL', reviews: 6, small: 17, tts: 66, large: 17 },
 ];
 
-const REFERENCE_GARMENTS = [
-  {
-    id: 'uniqlo-oxford-m',
-    brand: 'Uniqlo',
-    item: 'Oxford Regular Fit Shirt',
-    size: 'M',
-    measurements: { chestCm: 56.5, shoulderCm: 46.0, lengthCm: 74.5 },
-  },
-  {
-    id: 'jcrew-broken-in-m',
-    brand: 'J.Crew',
-    item: 'Broken-in Organic Cotton Tee',
-    size: 'M',
-    measurements: { chestCm: 53.5, shoulderCm: 45.0, lengthCm: 71.0 },
-  },
-  {
-    id: 'cos-relaxed-l',
-    brand: 'COS',
-    item: 'Relaxed Heavyweight Overshirt',
-    size: 'L',
-    measurements: { chestCm: 60.5, shoulderCm: 49.0, lengthCm: 75.5 },
-  },
-  {
-    id: 'patagonia-fiord-s',
-    brand: 'Patagonia',
-    item: 'Fjord Flannel Shirt',
-    size: 'S',
-    measurements: { chestCm: 52.0, shoulderCm: 43.5, lengthCm: 70.5 },
-  },
-];
-
-const TARGET_OXFORD_SHIRT = {
-  id: 'washed-oxford-shirt',
-  brand: 'Studio Mercer',
-  title: 'Washed Everyday Oxford Shirt',
-  price: 88,
-  category: 'Woven Shirts · 195 gsm organic cotton',
-  sizes: {
-    S: { chestCm: 53.0, shoulderCm: 44.0, lengthCm: 71.5 },
-    M: { chestCm: 58.0, shoulderCm: 46.5, lengthCm: 73.5 },
-    L: { chestCm: 61.5, shoulderCm: 48.5, lengthCm: 75.5 },
-    XL: { chestCm: 65.0, shoulderCm: 50.5, lengthCm: 77.5 },
-  },
-};
-
 const SIZE_UP_AT = -0.3;
 const SIZE_DOWN_AT = 0.35;
 
 const fmtInt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const fmtUsd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-
-function formatDelta(val) {
-  if (val > 0) return `+${val.toFixed(1)} cm`;
-  if (val < 0) return `−${Math.abs(val).toFixed(1)} cm`;
-  return '0.0 cm';
-}
 
 // Events go through analytics.js (window.PearfitAnalytics), which allow-lists them, queues until PostHog has
 // started and does nothing when it never does. If that script is missing, these still do nothing instead of throwing.
@@ -76,148 +25,6 @@ function capture(event, properties) {
 
 function logPostHog(level, message, attributes) {
   window.PearfitAnalytics?.log(level, message, attributes);
-}
-
-function buildShirtSvgPath(m) {
-  const cx = 100;
-  const topY = 22;
-  const halfShoulder = Number((50 + (m.shoulderCm - 46) * 2.2).toFixed(1));
-  const halfChest = Number((42 + (m.chestCm - 56.5) * 1.9).toFixed(1));
-  const bodyBottomY = Number((topY + 140 + (m.lengthCm - 74.5) * 3.0).toFixed(1));
-
-  const sleeveTipX = Number((halfShoulder + 22).toFixed(1));
-  const sleeveTopY = Number((topY + 18).toFixed(1));
-  const sleeveBottomY = Number((topY + 52).toFixed(1));
-  const armpitY = Number((topY + 46).toFixed(1));
-
-  return [
-    `M ${cx - 18} ${topY}`,
-    `Q ${cx} ${topY + 10} ${cx + 18} ${topY}`,
-    `L ${cx + halfShoulder} ${topY + 8}`,
-    `L ${cx + sleeveTipX} ${sleeveTopY}`,
-    `L ${cx + sleeveTipX - 9} ${sleeveBottomY}`,
-    `L ${cx + halfChest} ${armpitY}`,
-    `L ${cx + halfChest} ${bodyBottomY}`,
-    `L ${cx - halfChest} ${bodyBottomY}`,
-    `L ${cx - halfChest} ${armpitY}`,
-    `L ${cx - sleeveTipX + 9} ${sleeveBottomY}`,
-    `L ${cx - sleeveTipX} ${sleeveTopY}`,
-    `L ${cx - halfShoulder} ${topY + 8}`,
-    'Z',
-  ].join(' ');
-}
-
-function matchGarmentToProduct(reference, product = TARGET_OXFORD_SHIRT) {
-  const sizeKeys = Object.keys(product.sizes);
-  let bestSize = sizeKeys[0];
-  let bestScore = Infinity;
-
-  for (const sz of sizeKeys) {
-    const m = product.sizes[sz];
-    const chestDiff = Math.abs(m.chestCm - reference.measurements.chestCm) * 1.6;
-    const shoulderDiff = Math.abs(m.shoulderCm - reference.measurements.shoulderCm) * 1.4;
-    const lengthDiff = Math.abs(m.lengthCm - reference.measurements.lengthCm) * 0.7;
-    const score = chestDiff + shoulderDiff + lengthDiff;
-    if (score < bestScore) {
-      bestScore = score;
-      bestSize = sz;
-    }
-  }
-  return { recommendedSize: bestSize };
-}
-
-function computeGarmentOverlay(reference, selectedSize, product = TARGET_OXFORD_SHIRT) {
-  const targetMeasurements = product.sizes[selectedSize] || product.sizes.M;
-  const referenceMeasurements = reference.measurements;
-
-  const chestDeltaCm = Number((targetMeasurements.chestCm - referenceMeasurements.chestCm).toFixed(1));
-  const shoulderDeltaCm = Number((targetMeasurements.shoulderCm - referenceMeasurements.shoulderCm).toFixed(1));
-  const lengthDeltaCm = Number((targetMeasurements.lengthCm - referenceMeasurements.lengthCm).toFixed(1));
-
-  const distanceScore =
-    Math.abs(chestDeltaCm) * 1.6 + Math.abs(shoulderDeltaCm) * 1.4 + Math.abs(lengthDeltaCm) * 0.7;
-  const inspectedConfidence = Math.max(42, Math.min(97, Math.round(96 - distanceScore * 1.8)));
-  const inspectedReviewRow = SAMPLE_SIZES.find((r) => r.size === selectedSize) || SAMPLE_SIZES[2];
-
-  let fitNote = 'Balanced ease across chest and shoulder';
-  if (chestDeltaCm < -2.0 || shoulderDeltaCm < -1.5) {
-    fitNote = 'Tighter through chest & shoulders than your reference';
-  } else if (chestDeltaCm > 3.5 || shoulderDeltaCm > 2.0) {
-    fitNote = 'Noticeably wider & longer oversize drape';
-  } else if (Math.abs(chestDeltaCm) <= 1.8 && Math.abs(shoulderDeltaCm) <= 1.2) {
-    fitNote = 'Closest silhouette match to your closet piece';
-  }
-
-  return {
-    targetSize: selectedSize,
-    targetMeasurements,
-    referenceMeasurements,
-    chestDeltaCm,
-    shoulderDeltaCm,
-    lengthDeltaCm,
-    targetPath: buildShirtSvgPath(targetMeasurements),
-    referencePath: buildShirtSvgPath(referenceMeasurements),
-    fitNote,
-    inspectedConfidence,
-    inspectedReviewRow,
-  };
-}
-
-// Hero PDP state
-let selectedRefId = REFERENCE_GARMENTS[0].id;
-let manualPdpSize = null;
-
-function renderHeroPdp() {
-  const selectedRef = REFERENCE_GARMENTS.find((g) => g.id === selectedRefId) || REFERENCE_GARMENTS[0];
-  const match = matchGarmentToProduct(selectedRef);
-  const displayedSize = manualPdpSize || match.recommendedSize;
-  const geo = computeGarmentOverlay(selectedRef, displayedSize);
-
-  document.getElementById('overlay-target-path').setAttribute('d', geo.targetPath);
-  document.getElementById('overlay-ref-path').setAttribute('d', geo.referencePath);
-  document.getElementById('overlay-target-label').textContent =
-    `Target Size ${displayedSize} (${geo.targetMeasurements.chestCm} cm chest)`;
-  document.getElementById('overlay-ref-label').textContent =
-    `Your ${selectedRef.brand} (${selectedRef.size} · ${geo.referenceMeasurements.chestCm} cm)`;
-
-  const sizesHost = document.getElementById('pdp-sizes');
-  sizesHost.innerHTML = Object.keys(TARGET_OXFORD_SHIRT.sizes)
-    .map(
-      (sz) =>
-        `<button type="button" class="${displayedSize === sz ? 'on' : ''}" aria-pressed="${displayedSize === sz}" data-sz="${sz}">${sz}</button>`
-    )
-    .join('');
-
-  sizesHost.querySelectorAll('button').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      manualPdpSize = btn.dataset.sz;
-      capture('fit_size_inspected', {
-        product_id: TARGET_OXFORD_SHIRT.id,
-        selected_size: manualPdpSize,
-      });
-      renderHeroPdp();
-      document.querySelector(`#pdp-sizes [data-sz="${manualPdpSize}"]`)?.focus();
-    });
-  });
-
-  const headline =
-    displayedSize === match.recommendedSize
-      ? `Sample: size ${match.recommendedSize}`
-      : `Sample: inspecting size ${displayedSize} (closest: ${match.recommendedSize})`;
-
-  document.getElementById('pdp-advisor').innerHTML = `
-    <div class="advisor-head">
-      <strong>${headline}</strong>
-      <span class="advisor-conf">${geo.inspectedConfidence}% sample score</span>
-    </div>
-    <p>Overlaying Size <b>${displayedSize}</b> onto your <b>${selectedRef.brand} ${selectedRef.item}</b> (${selectedRef.size}). ${geo.fitNote}.</p>
-    <dl class="ease">
-      <div><dt>Chest</dt><dd>${formatDelta(geo.chestDeltaCm)}</dd></div>
-      <div><dt>Shoulder</dt><dd>${formatDelta(geo.shoulderDeltaCm)}</dd></div>
-      <div><dt>Length</dt><dd>${formatDelta(geo.lengthDeltaCm)}</dd></div>
-    </dl>
-    <p class="advisor-foot">Review signal in Size ${displayedSize}: ${geo.inspectedReviewRow.tts}% report true to size (${geo.inspectedReviewRow.reviews} reviews)</p>
-  `;
 }
 
 // Audience Bento Filter
@@ -490,13 +297,6 @@ async function handlePilot(e) {
 }
 
 // Initialize all interactive controls
-document.getElementById('closet-select').addEventListener('change', (e) => {
-  selectedRefId = e.target.value;
-  manualPdpSize = null;
-  capture('fit_reference_selected', { reference_garment_id: selectedRefId });
-  renderHeroPdp();
-});
-
 document.querySelectorAll('#inquiry-tabs button').forEach((btn) => {
   btn.addEventListener('click', () => setInquiryMode(btn.dataset.mode));
 });
@@ -505,7 +305,6 @@ document.querySelectorAll('[data-inquiry-switch]').forEach((link) => {
   link.addEventListener('click', () => setInquiryMode(link.dataset.inquirySwitch));
 });
 
-renderHeroPdp();
 initStakeholderTabs();
 renderUsual();
 renderMatrix();

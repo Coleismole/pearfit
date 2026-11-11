@@ -211,9 +211,9 @@
         <div>
         <form class="pilot-form" id="pilot-form">
           <label class="inquiry-honey" aria-hidden="true">Company website <input name="_honey" tabindex="-1" autocomplete="off" /></label>
-          <label>Full name <input name="name" required autocomplete="name" placeholder="Alex Rivera" /></label>
-          <label>Work email <input name="email" type="email" required autocomplete="email" placeholder="alex@yourbrand.com" /></label>
-          <label><span id="store-label-text">Storefront URL</span> <input id="pilot-store-input" name="store" type="url" placeholder="https://" required /></label>
+          <label>Full name <input name="name" required autocomplete="name" /></label>
+          <label>Work email <input name="email" type="email" required autocomplete="email" inputmode="email" /></label>
+          <label><span id="store-label-text">Storefront URL</span> <input id="pilot-store-input" name="store" type="text" inputmode="url" autocomplete="url" placeholder="yourbrand.com" required /></label>
           <label>
             <span id="volume-label-text">Monthly order volume</span>
             <select name="volume" id="pilot-volume-select">
@@ -224,7 +224,7 @@
             </select>
           </label>
           <button type="submit" class="btn btn-block" id="pilot-submit-btn">Request 6-Week Brand Pilot</button>
-          <p class="form-note" id="form-note" role="status">Sends this inquiry to customerservice@pearfit.app.</p>
+          <p class="form-note" id="form-note" role="status">Sends this inquiry to <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a>.</p>
         </form>
         <p class="form-alt"><a href="mailto:jchen@pearfit.app">Investor or partner? Email us</a></p>
         </div>
@@ -261,14 +261,16 @@
 
   <footer class="footer">
     <div class="wrap footer-inner">
-      <span class="brand-wordmark"><img class="brand-mark" src="logo-mark.svg" alt="" width="20" height="30" loading="lazy" decoding="async" />Pearfit</span>
+      <a href="./" class="brand-wordmark" aria-label="Pearfit home"><img class="brand-mark" src="logo-mark.svg" alt="" width="20" height="30" loading="lazy" decoding="async" />Pearfit</a>
       <span class="muted">Pearfit compares a shirt with the shirts you already own, and tells you what size to buy.</span>
       <nav class="footer-links" aria-label="Footer">
         <a href="#try">Try it</a>
         <a href="stores.html">Supported stores</a>
         <a href="#faq">FAQ</a>
         <a href="#pilot">Book a pilot</a>
+        <a href="roi.html">ROI calculator</a>
       </nav>
+      <p class="footer-legal">&copy; <span data-year>2026</span> Pearfit. <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a></p>
     </div>
   </footer>
 

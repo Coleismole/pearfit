@@ -1,0 +1,52 @@
+# Checks the static pages in website/ in Chromium whenever they change:
+#   - website unit tests (npm test in website/, no dependencies)
+#   - website/scripts/audit-site.mjs: layout, contrast, tap targets, focus, head tags, on every page
+#   - website/scripts/verify-site.mjs: links (also to sections on other pages), logos, footer email and year,
+#     the mobile menu, the inquiry form's messages (FormSubmit is mocked; nothing is sent) and the 404 page
+# A green tick means all three passed. Both browser scripts take Playwright from webscraper's install.
+name: Verify website
+
+on:
+  pull_request:
+    paths:
+      - "website/**"
+      - ".github/workflows/verify-website.yml"
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - ".github/workflows/verify-website.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: webscraper/package-lock.json
+      - name: Website unit tests
+        working-directory: website
+        run: node --test test/*.test.mjs
+      - name: Install Playwright and Chromium (from webscraper)
+        working-directory: webscraper
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Audit every page
+        run: node website/scripts/audit-site.mjs --pages index.html,stores.html,roi.html,404.html
+      - name: Check links, menu, form messages and the 404 page
+        run: node website/scripts/verify-site.mjs

@@ -146,6 +146,12 @@ p { margin: 0 0 1rem; }
   width: auto;
   flex-shrink: 0;
 }
+/* The "pearfit" text logo; the aspect ratio comes from its cropped viewBox. */
+.brand-text {
+  height: 1.3rem;
+  width: auto;
+  flex-shrink: 0;
+}
 .nav-links {
   display: flex;
   align-items: center;

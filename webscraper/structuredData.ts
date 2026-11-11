@@ -162,8 +162,8 @@ export function extractStructuredProduct(jsonLdBlocks: unknown[]): StructuredPro
       id: `jsonld-rev-${idx}`,
       author: text(r.author) ?? 'Anonymous',
       sizePurchased: extractSizeFromReviewText(body),
-      // classifyReviewFitAndSentiment expects a rating; 3 is the neutral midpoint when absent.
-      rating: rating ?? 3,
+      // A JSON-LD review with no rating has none: null, not a neutral 3.
+      rating,
       title: text(r.name) ?? text(r.headline) ?? '',
       body,
       date: text(r.datePublished) ?? '',

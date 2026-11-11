@@ -129,8 +129,8 @@ db.exec(`
     raw_size TEXT NOT NULL,
     fit_direction TEXT NOT NULL,
     fit_skew REAL NOT NULL,
-    sentiment_score INTEGER NOT NULL,
-    rating INTEGER NOT NULL,
+    sentiment_score INTEGER,
+    rating INTEGER,
     mentions_shrinkage INTEGER NOT NULL,
     fabric_opacity TEXT,
     author TEXT,
@@ -217,6 +217,44 @@ if (opacityColumn?.notnull === 1) {
     FROM commercial_skus;
     DROP TABLE commercial_skus;
     ALTER TABLE commercial_skus__opacity RENAME TO commercial_skus;
+    COMMIT;
+  `);
+}
+
+// A review whose stars could not be read has no rating and no sentiment score: NULL, never a stand-in 3.
+// Databases created before that cannot store it, so rebuild sku_reviews with the two columns nullable.
+const reviewColumns = db.prepare(`PRAGMA table_info(sku_reviews)`).all() as { name: string; notnull: number }[];
+if (reviewColumns.some((column) => (column.name === 'rating' || column.name === 'sentiment_score') && column.notnull === 1)) {
+  db.exec(`
+    BEGIN;
+    CREATE TABLE sku_reviews__nullable (
+      review_uid TEXT PRIMARY KEY,
+      sku TEXT NOT NULL,
+      size_code TEXT NOT NULL,
+      raw_size TEXT NOT NULL,
+      fit_direction TEXT NOT NULL,
+      fit_skew REAL NOT NULL,
+      sentiment_score INTEGER,
+      rating INTEGER,
+      mentions_shrinkage INTEGER NOT NULL,
+      fabric_opacity TEXT,
+      author TEXT,
+      review_date TEXT,
+      title TEXT,
+      body TEXT
+    );
+    INSERT INTO sku_reviews__nullable (
+      review_uid, sku, size_code, raw_size, fit_direction, fit_skew,
+      sentiment_score, rating, mentions_shrinkage, fabric_opacity,
+      author, review_date, title, body
+    )
+    SELECT
+      review_uid, sku, size_code, raw_size, fit_direction, fit_skew,
+      sentiment_score, rating, mentions_shrinkage, fabric_opacity,
+      author, review_date, title, body
+    FROM sku_reviews;
+    DROP TABLE sku_reviews;
+    ALTER TABLE sku_reviews__nullable RENAME TO sku_reviews;
     COMMIT;
   `);
 }

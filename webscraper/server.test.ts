@@ -132,6 +132,44 @@ test('two reviews that share an id still commit', async () => {
   }
 });
 
+test('a review with no star rating commits locally and keeps a null rating', async () => {
+  const { server, port } = await listen(createApp());
+  try {
+    const report = aggregateProductFitReport(
+      {
+        id: 'unrated',
+        name: 'Unrated Tee',
+        brand: 'Example',
+        category: 'T-Shirts & Tops',
+        sku: 'UNRATED-1',
+        price: 'Unknown',
+        fabricComposition: '100% cotton',
+        sourceUrl: 'https://example.test/unrated',
+      },
+      [
+        {
+          id: 'u1',
+          author: 'A',
+          sizePurchased: 'M',
+          rating: null,
+          title: '',
+          body: 'True to size and fits perfectly in the chest.',
+          date: '',
+          verifiedPurchase: false,
+        },
+      ]
+    );
+    assert.equal(report.reviews[0].rating, null);
+    assert.equal(report.reviews[0].sentimentScore, null);
+    const committed = await request(port, 'POST', '/api/db/commit', { report });
+    assert.equal(committed.status, 200, JSON.stringify(committed.json));
+    const removed = await request(port, 'DELETE', '/api/db/sku/UNRATED-1');
+    assert.equal(removed.status, 200);
+  } finally {
+    server.close();
+  }
+});
+
 test('a failed page fetch does not claim the page was scraped', async () => {
   const { server, port } = await listen(createApp());
   try {

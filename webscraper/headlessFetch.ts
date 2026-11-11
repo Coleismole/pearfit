@@ -13,7 +13,6 @@ import type { Browser, Locator, Page } from 'playwright';
 import {
   REVIEW_CARD_SELECTOR,
   NAV_TIMEOUT_MS,
-  RENDER_DEADLINE_MS,
   RENDER_TAIL_MS,
   REVIEW_WAIT_MS,
   MAX_REVIEW_PAGES,
@@ -24,7 +23,8 @@ import {
 import type { RenderedPage, CapturedJson } from './render/types.ts';
 import { embeddedWidgetHtml, JsonCapture } from './render/jsonCapture.ts';
 import { linkStaysOnProduct, navigationTimedOutAfterLoading, isReviewWidgetFrame } from './render/decisions.ts';
-import { createRequestHostGuard, isBlockedHostname } from './publicUrl.ts';
+import { startUrlAllowsPrivate, renderBudgetMs, getBrowser, queueRender } from './render/browser.ts';
+import { createRequestHostGuard } from './publicUrl.ts';
 import { GUIDE_LABEL, GUIDE_NAME, GUIDE_PATH, guideLinksFromHtml, parseSizeChartCached } from './pageHelpers.ts';
 import type { ProductHint } from './sizeChart.ts';
 
@@ -32,70 +32,7 @@ export { REVIEW_CARD_SELECTOR, RENDER_DEADLINE_MS, REVIEW_WIDGET_SELECTOR } from
 export type { RenderedPage, CapturedJson } from './render/types.ts';
 export { embeddedWidgetHtml, JsonCapture } from './render/jsonCapture.ts';
 export { shouldUseHeadlessRender, linkStaysOnProduct, navigationTimedOutAfterLoading, isReviewWidgetFrame } from './render/decisions.ts';
-
-let browserPromise: Promise<{ close(): Promise<void> }> | null = null;
-let renderTail: Promise<void> = Promise.resolve();
-
-/** Chromium pack for Vercel. The full Playwright browser does not fit in that function. */
-const SERVERLESS_CHROMIUM_PACK =
-  'https://github.com/Sparticuz/chromium/releases/download/v153.0.0/chromium-v153.0.0-pack.x64.tar';
-
-/** A test page on localhost may load private hosts. A public product page may not. */
-function startUrlAllowsPrivate(raw: string): boolean {
-  try {
-    return isBlockedHostname(new URL(raw).hostname);
-  } catch {
-    return false;
-  }
-}
-
-function renderBudgetMs(): number {
-  // The hosted function is capped at 60s, including the Chromium download on a cold start.
-  return process.env.VERCEL ? 50_000 : RENDER_DEADLINE_MS;
-}
-
-async function getBrowser(): Promise<{ close(): Promise<void> }> {
-  if (!browserPromise) {
-    browserPromise = (process.env.VERCEL ? launchServerlessBrowser() : launchPlaywrightBrowser()).catch((err) => {
-      browserPromise = null;
-      throw err;
-    });
-  }
-  return browserPromise;
-}
-
-async function launchPlaywrightBrowser(): Promise<Browser> {
-  const { chromium } = await import('playwright');
-  return chromium.launch({
-    headless: true,
-    args: ['--no-sandbox'],
-  });
-}
-
-async function launchServerlessBrowser(): Promise<{ close(): Promise<void> }> {
-  const chromiumMod = await import('@sparticuz/chromium-min');
-  const puppeteerMod = await import('puppeteer-core');
-  const chromium = chromiumMod.default ?? chromiumMod;
-  const puppeteer = puppeteerMod.default ?? puppeteerMod;
-  chromium.setGraphicsMode = false;
-  return puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(SERVERLESS_CHROMIUM_PACK),
-    headless: true,
-    defaultViewport: { width: 1366, height: 900 },
-  });
-}
-
-export async function closeHeadlessBrowser(): Promise<void> {
-  if (!browserPromise) return;
-  const pending = browserPromise;
-  browserPromise = null;
-  try {
-    await (await pending).close();
-  } catch {
-    // already closed
-  }
-}
+export { closeHeadlessBrowser } from './render/browser.ts';
 
 /** Clicks the first visible element matching a role + name pattern. Best effort. */
 async function clickFirst(page: Page, role: 'button' | 'link' | 'tab', name: RegExp): Promise<boolean> {
@@ -847,16 +784,6 @@ async function reviewFramePages(page: Page, stopAt: number): Promise<string[]> {
 /** Review cards that came as HTML inside JSON responses, one entry per distinct response. */
 function widgetPages(items: CapturedJson[]): string[] {
   return [...new Set(items.map((item) => embeddedWidgetHtml(item.body)).filter((html): html is string => html !== null))];
-}
-
-/** One render at a time: the browser is shared and a page of several megabytes needs the memory. */
-function queueRender<T>(job: () => Promise<T>): Promise<T> {
-  const run = renderTail.then(job);
-  renderTail = run.then(
-    () => {},
-    () => {},
-  );
-  return run;
 }
 
 export async function renderPageHtml(url: string): Promise<RenderedPage> {

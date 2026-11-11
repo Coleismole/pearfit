@@ -1,6 +1,6 @@
 # Scraper tools
 
-Command-line helpers around the local scraper (`webscraper/server.ts`). They live apart from the scraper's own
+Command-line helpers around the local scraper (`webscraper/server.ts`, which assembles the modules in `webscraper/server/`). They live apart from the scraper's own
 code and only talk to it over HTTP, the way the front end does. Run them from `webscraper/`.
 
 | Tool | Command | What it does |

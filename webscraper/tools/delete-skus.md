@@ -17,7 +17,7 @@ rows stay.
 | `URL-S82ZSJ` | Alex Mill / "Mill Shirt in Oxford" | 13 | 2026-11-09 15:57 | `7293397631035` (same name, 13 reviews) |
 
 Their SKUs are `URL-` plus a hash of the page address, the scraper's last fallback when it has found no SKU
-(`server.ts`, `` `URL-${stableHash(sourceUrl)}` `` at the end of the `sku` chain in `scrapeHtmlWithCheerio`). Later scrapes of the same
+(`server/scrapeHtml.ts`, `` `URL-${stableHash(sourceUrl)}` `` at the end of the `sku` chain in `scrapeHtmlWithCheerio`). Later scrapes of the same
 pages found a real id, so each product is in the store twice. The duplicates show up as extra candidates in the export
 and in `GET /candidates`. Deleting a row also deletes its `sku_size_metrics` and `sku_size_chart` rows (`on delete cascade`).
 
@@ -27,7 +27,7 @@ Do not delete the other `URL-` rows. Honeylove (`URL-HOB9N2`) and Summersalt (`U
 
 ## Way 1: through the local scraper's delete endpoint
 
-`DELETE /api/db/sku/:sku` (`webscraper/server.ts`, `app.delete('/api/db/sku/:sku', ...)`) deletes the SKU from the local SQLite
+`DELETE /api/db/sku/:sku` (`webscraper/server/routes.ts`, `app.delete('/api/db/sku/:sku', ...)`) deletes the SKU from the local SQLite
 copy, writes a `DELETE_SKU` row to `ingestion_log`, then calls `deleteRemoteFitSku(sku)` (`supabaseFit.ts`), which calls
 the `delete_fit_sku` function with the secret key.
 

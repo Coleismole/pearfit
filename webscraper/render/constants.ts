@@ -1,13 +1,8 @@
 /** Selectors and limits shared by the headless render modules. */
 
-/** Selectors that indicate review content has rendered. Kept in sync with server.ts. */
+/** Selectors that indicate review content has rendered. Kept in sync with the card reader in server/domReviews.ts. */
 export const REVIEW_CARD_SELECTOR =
   '[data-review-card], .review-card, [itemprop="review"], .review-item, .yotpo-review, .jdgm-rev, .spr-review, .bv-content-review, .pr-review, .okeReviews-review, .oke-w-review, .stamped-review, [data-bv-show="reviews"] li, [class*="ReviewCard"], [class*="review-card"], [class*="aftership-reviews-widget"][class*="cardContainer"], .detailReviewItem, [class$="_review"]:has([class*="reviewContent"]), article:has([aria-label="review item"]), .grid-item:has(.main-text), .product-detail__rating__review, .pdp-review, li:has(> div > [data-testid="ITORating"]), li:has([class*="reviewUserInfo"])';
-
-/**
- * The browser keeps its own user agent. A desktop-Chrome string on headless Linux contradicts what the
- * browser reports elsewhere, and some stores answer that with an error page (Roots: HTTP 502).
- */
 
 export const NAV_TIMEOUT_MS = 45_000;
 /** Whole render, including scrolling and paging. One page cannot hold the browser longer than this. */

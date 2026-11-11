@@ -7,8 +7,8 @@ Status: a design note. Nothing here is applied or implemented. `sku-keys.propose
 
 Round 7 did not save two stores because their SKU was already in the shared store: CT Shirts (SKU `SUD50BLK`, Charles
 Tyrwhitt's) and Reitmans.com (SKU `8522040574052`, Reitmans.ca's). `commercial_skus.sku` is the only key
-(`fit_store.sql:10`, `server.ts:75`), and both writers replace on a clash: `on conflict (sku) do update` (`fit_store.sql:186`) and
-`INSERT OR REPLACE` (`server.ts:239`). Saving the second would have overwritten the first, so it was skipped.
+(`fit_store.sql:10`, the `commercial_skus` table in `server/db.ts`), and both writers replace on a clash: `on conflict (sku) do update` (`fit_store.sql:186`) and
+`INSERT OR REPLACE` (`upsertReportTransaction` in `server/db.ts`). Saving the second would have overwritten the first, so it was skipped.
 
 Looking at the saved reports, neither pair was two products:
 
@@ -26,8 +26,8 @@ SKUs, but nothing would catch it.
 
 **A. No migration: detect, do not overwrite.** Before a commit, if the shared store (or the local copy) has the SKU and its
 `source_url` is on another host with another product name or brand, stop and say so. A real clash then commits under a SKU
-the scraper already accepts as an override (`sku` in `POST /api/scrape`, `server.ts:1715`), such as `acme.com:1000`. Same product
-on two domains (Reitmans) stays one row. This touches `server.ts` (the commit paths) and its tests only.
+the scraper already accepts as an override (`sku` in `POST /api/scrape`, read in `server/scrapeRoute.ts`), such as `acme.com:1000`. Same product
+on two domains (Reitmans) stays one row. This touches `server/` (the commit paths) and its tests only.
 
 **B. Store-scoped key (the proposal below).** Every row gets a `store` and a `product_key = lower(store || ':' || sku)` that is the primary key.
 The same SKU at two stores is two rows. Cost: a schema change, new candidate ids in the engine and API, rebuilt bundles. And
@@ -67,9 +67,9 @@ Not tested: Supabase itself, its PostgREST layer, or any client code.
 | Where | What changes |
 |---|---|
 | `webscraper/fit_store.sql` | Fold the migration in once it is applied: the three tables (`:9`, `:33`, `:53`), `commit_fit_report` (`:120`, conflict targets `:159`, `:186`, child deletes `:208`, `:237`), `delete_fit_sku` (`:264`), `list_fit_catalog` (`:275`, joins `:306`, `:323`). |
-| `webscraper/server.ts` SKU choice | Add a `storeOf(finalUrl)` next to the `sku` chain (`:1101`-`:1111`). `fetchStaticHtml` (`:1426`) follows redirects but returns only `{ html }`; it must return the final URL too (the headless path already has `rendered.finalUrl`, `headlessFetch.ts:63`). Without it a requested `ctshirts.com` address would give a different store from the page it lands on. |
-| `server.ts` local SQLite | `commercial_skus` (`:74`), `sku_size_metrics` (`:99`), `sku_reviews` (`:116`, `review_uid` is built from the SKU at `:309`), `size_chart` (`:145`), `ingestion_log` (`:133`) all key on `sku`. SQLite cannot change a primary key in place: use the table-copy pattern already at `:166`-`:210`. `upsertReportTransaction` (`:234`, `INSERT OR REPLACE` `:239`), `hasStoredReviews` (`:216`), `loadStoredReport` (`:224`), `loadSizeChart` (`:333`), `saveSizeChart` (`:361`), `chartsBySku` (`:355`) and the reads in `getDatabaseSummary` (`:1493`) look rows up by SKU. |
-| `server.ts` endpoints | `POST /api/db/commit` (`:1605`, `charts[item.sku]`), `deleteSkuTransaction` and `DELETE /api/db/sku/:sku` (`:1642`, `:1653`: take a `product_key`), the scrape handler's chart-only branch (`:1871`-`:1874`) and commit (`:1907`). |
+| `webscraper/server/scrapeHtml.ts` SKU choice | Add a `storeOf(finalUrl)` next to the `sku` chain in `scrapeHtmlWithCheerio`. `fetchStaticHtml` (`server/staticFetch.ts`) follows redirects but returns only `{ html }`; it must return the final URL too (the headless path already has `rendered.finalUrl`, set in `render/playwrightRender.ts`). Without it a requested `ctshirts.com` address would give a different store from the page it lands on. |
+| `server/db.ts` local SQLite | `commercial_skus`, `sku_size_metrics`, `sku_reviews` (`review_uid` is built from the SKU in `upsertReportTransaction`), `size_chart` and `ingestion_log` all key on `sku`. SQLite cannot change a primary key in place: use the table-copy pattern already used for the `fabric_opacity_pct` and `sku_reviews` migrations in the same file. `upsertReportTransaction` (`INSERT OR REPLACE`), `hasStoredReviews`, `loadStoredReport`, `loadSizeChart`, `saveSizeChart`, `chartsBySku` and the reads in `getDatabaseSummary` look rows up by SKU. |
+| `server/routes.ts`, `server/scrapeRoute.ts` endpoints | `POST /api/db/commit` (`charts[item.sku]`), `deleteSkuTransaction` and `DELETE /api/db/sku/:sku` (take a `product_key`) in `routes.ts`; the scrape handler's chart-only branch and its commit in `scrapeRoute.ts`. |
 | `webscraper/fitPayload.ts` | `FitPayload` (`:5`) and `fitPayloadFromReport` (`:60`, `sku: report.sku` `:66`): add `store`. `ProductFitReport` (`fitAnalyzer.ts`) gains `store` and `productKey`. |
 | `webscraper/supabaseFit.ts` | `pushFitReports` (`:54`) keys the chart map by `report.sku`; `RemoteFitSku` (`:73`) and `remoteSkusFromCatalog` (`:95`) gain `productKey` and `store`; `deleteRemoteFitSku` (`:133`) sends a `product_key`. |
 | `webscraper/App.tsx` | The delete call (`:134`), the list replace by `item.sku` (`:114`), the remote list comparisons and `key={row.sku}` (`:363`-`:392`). |

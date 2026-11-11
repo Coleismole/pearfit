@@ -147,7 +147,7 @@
           <div class="kpi-item">
             <span class="kpi-val">Shared</span>
             <span class="kpi-label">Fit table for every machine</span>
-            <span class="kpi-sub">Review text stays in the local scrape file</span>
+            <span class="kpi-sub">Every scrape writes to the same table</span>
           </div>
         </div>
       </div>
@@ -180,7 +180,7 @@
               </p>
               <ul class="ticks">
                 <li><strong>One verdict per size:</strong> Review count, fit skew, and the share of reviews in each direction.</li>
-                <li><strong>Shrinkage and opacity, counted:</strong> Mentions are tallied. The wording of the reviews is not copied into the shared table.</li>
+                <li><strong>Shrinkage and opacity, counted:</strong> Mentions are tallied.</li>
                 <li><strong>The same table everywhere:</strong> A scrape on any machine writes that SKU’s fit numbers to the shared database.</li>
               </ul>
             </div>
@@ -194,19 +194,16 @@
             <div>
               <h3>Compare a garment with one the shopper already wears.</h3>
               <p>
-                The comparison engine measures a candidate size against an owned garment. The
-                preview on this page is a sample of that idea, using made-up shirts and a score
-                computed only for the illustration.
+                The comparison engine measures each size of a shirt against one the shopper
+                already owns.
               </p>
               <ul class="ticks">
-                <li><strong>Sample overlay:</strong> Chest, shoulder, and length for one oxford and four reference shirts.</li>
-                <li><strong>Sample review split:</strong> The size matrix below uses a fixed set of review percentages.</li>
-                <li><strong>No body scan:</strong> The sample asks the shopper to pick a reference garment.</li>
+                <li><strong>No body scan:</strong> The shopper picks a shirt they own as the reference.</li>
               </ul>
             </div>
             <div class="bento-proof">
-              <span class="bento-proof-metric">Sample preview</span>
-              <span class="bento-proof-text">The match score on this page is not the comparison engine</span>
+              <span class="bento-proof-metric">Compared with a shirt you own</span>
+              <span class="bento-proof-text">Chest, length and sleeve, in centimeters</span>
             </div>
           </article>
 
@@ -214,8 +211,7 @@
             <div>
               <h3>Each scrape adds that SKU’s fit numbers to the shared table.</h3>
               <p>
-                A second scrape of the same SKU replaces its size rows. Full review text stays
-                in the local file on the machine that scraped it.
+                A second scrape of the same SKU replaces its size rows.
               </p>
             </div>
             <div class="bento-proof">
@@ -232,11 +228,10 @@
       <div class="wrap demo-grid">
         <div>
           <span class="kicker">02. Sample fit preview</span>
-          <h2>A sample of a size preview, using made-up review splits.</h2>
+          <h2>See how a review split becomes a size note.</h2>
           <p class="muted">
-            The percentages below are sample data for one heavyweight tee. Pick a usual size to
-            see how this page turns that sample split into a size note. The score is computed
-            here for the illustration.
+            Sample data: these review percentages are made up, for one heavyweight tee. Pick
+            your usual size to see the note they would give.
           </p>
           <div class="usual" role="group" aria-label="Shopper's usual size" id="usual-size"></div>
           <div class="reco" id="reco" aria-live="polite"></div>
@@ -251,7 +246,7 @@
           </div>
           <div id="matrix-rows"></div>
           <p class="matrix-note">
-            Sample note for L–XL: <b>shoulders wide (38% of mentions)</b> · <b>body length long (24%)</b>
+            L–XL: <b>shoulders wide (38% of mentions)</b> · <b>body length long (24%)</b>
           </p>
         </div>
       </div>
@@ -263,7 +258,7 @@
         <span class="kicker">03. Try it with your own shirts</span>
         <h2 id="try-heading">Get a size from the real engine.</h2>
         <p class="muted narrow">
-          Unlike the sample above, this calls the comparison engine. Tell it about shirts you own and
+          This one calls the real comparison engine. Tell it about shirts you own and
           how they fit, pick a product from the shared fit table, and it answers with a size and a
           confidence level. Your measurements are sent to the size service to work out the answer and
           are not stored.
@@ -339,7 +334,7 @@
         <p class="muted narrow">
           The scraper reads a product page and classifies reviews with deterministic rules.
           Fit numbers are stored per size. A separate comparison engine measures a candidate
-          against a garment the shopper already owns. Missing measurements stay blank.
+          against a garment the shopper already owns.
         </p>
         <ol class="steps">
           <li>
@@ -365,8 +360,7 @@
         </ol>
         <div class="callout">
           <strong>Missing measurements stay blank.</strong> The comparison engine leaves an
-          unknown centimeter empty. The match score in the sample above is a separate illustration
-          on this page.
+          unknown centimeter empty.
         </div>
       </div>
     </section>
@@ -499,15 +493,15 @@
         <h2>Answers for brands and partners</h2>
         <details>
           <summary>What data does Pearfit need to launch a pilot?</summary>
-          <p>Product page URLs. The scraper reads the reviews on those pages and stores numerical fit values per size. Full review text stays on the machine that scraped it. A size chart on the page is stored with those fit rows. A measurement the chart does not state stays blank.</p>
+          <p>Product page URLs. The scraper reads the reviews on those pages and stores numerical fit values per size. A size chart on the page is stored with those fit rows. A measurement the chart does not state stays blank.</p>
         </details>
         <details>
           <summary>How do shoppers tell Pearfit what clothes they already own?</summary>
-          <p>The sample at the top of this page lets you pick one of four made-up reference shirts. The live demo lets you type in your own shirts and sends them to the comparison engine, which compares them with a product in the fit table. This page does not store what you enter.</p>
+          <p>The sample at the top of this page lets you pick one of four made-up reference shirts. The live demo lets you type in your own shirts and sends them to the comparison engine, which compares them with a product in the fit table.</p>
         </details>
         <details>
           <summary>Does an AI model pick the size?</summary>
-          <p>No. The scraper classifies review text with deterministic rules and stores the resulting numbers. When a measurement is missing, it stays blank. The sample score on this page is an illustration, separate from the comparison engine.</p>
+          <p>No. The scraper classifies review text with deterministic rules and stores the resulting numbers. When a measurement is missing, it stays blank.</p>
         </details>
         <details>
           <summary>How do you measure ROI during the 6-week pilot?</summary>
@@ -515,7 +509,7 @@
         </details>
         <details>
           <summary>How is shopper privacy handled?</summary>
-          <p>Nothing on this page is stored. The live demo sends your measurements to the size service only to work out the answer. The scraper keeps review text on the machine that scraped it. The shared database receives the fit numbers.</p>
+          <p>The live demo sends your measurements to the size service only to work out the answer. The scraper keeps review text on the machine that scraped it, and the shared database receives only the fit numbers.</p>
         </details>
       </div>
     </section>

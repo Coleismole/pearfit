@@ -1,5 +1,5 @@
 # Fails when the generated files committed under website/ no longer match the sources.
-# website/api/recommend.js, candidates.js, website/api/scraper, website/scraper and website/stores.json are build
+# website/api/recommend.js, candidates.js, website/api/scraper, website/scraper, website/app and website/stores.json are build
 # output that Vercel serves as committed (the project is rooted at website/). See scripts/check-bundles.mjs for how the
 # check works and why a plain rebuild-and-diff is reliable.
 name: Check generated bundles
@@ -25,12 +25,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: webscraper/package-lock.json
+          cache-dependency-path: |
+            webscraper/package-lock.json
+            app/package-lock.json
       # esbuild and vite come from webscraper's install, for both generators.
       - name: Install webscraper dependencies
         working-directory: webscraper
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: npm ci
+      # The shopper app is built by scripts/assemble-site.mjs into website/app.
+      - name: Install app dependencies
+        working-directory: app
         run: npm ci
       - name: Rebuild the generated bundles and compare them with the committed ones
         run: node scripts/check-bundles.mjs

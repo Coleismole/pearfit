@@ -2,7 +2,9 @@
  * Pure helpers for pulling review fields out of rendered review-card markup.
  * No I/O; used by server.ts and unit-tested in pageHelpers.test.ts.
  */
-import type * as cheerio from 'cheerio';
+import { createHash } from 'node:crypto';
+import * as cheerio from 'cheerio';
+import { parseGuidePageChart, parseSizeChart, type ProductHint, type SizeChartRow } from './sizeChart.ts';
 
 export type CheerioNode = ReturnType<ReturnType<typeof cheerio.load>>;
 
@@ -30,14 +32,75 @@ export function labelledValue(lines: string[], label: RegExp): string {
   return '';
 }
 
-/** Longest leaf text that is not a "Label: value" line: the review body on unlabelled markup. */
+const MONTH = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+const DATE_LINE = new RegExp(
+  [
+    // 12/05/2025, 12.05.2025, 12-5-25
+    '^\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}$',
+    // 2025-05-12, 2025.05.12, 2025/5/12
+    '^\\d{4}[/.-]\\d{1,2}[/.-]\\d{1,2}$',
+    // 08 September 2026, 8th Sep. 2026, 8 of May 2026
+    `^\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?${MONTH}\\.?,?\\s+\\d{4}$`,
+    // September 8, 2026, Sep. 8th 2026
+    `^${MONTH}\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}$`,
+  ].join('|'),
+  'i',
+);
+
+/** A line that is only a date: "13 January 2025", "Nov 8, 2026", "2026.08.12", "12/05/2025". */
+export function looksLikeDate(line: string): boolean {
+  return DATE_LINE.test(line.replace(/\s+/g, ' ').trim());
+}
+
+/** A badge a widget prints beside the reviewer ("Verified Buyer", "Verified Purchase"): a label, never a title or words. */
+export function isBadgeLine(line: string): boolean {
+  return /^verified(?: (?:buyer|purchase|purchaser|customer|reviewer|review))?$/i.test(line.replace(/\s+/g, ' ').trim());
+}
+
+/**
+ * A date stated by a card attribute (data-date). Some storefronts write a Unix time in milliseconds as a float
+ * ("1.7888256E12"); that becomes an ISO date. Any other text is returned as it is.
+ */
+export function dateFromAttribute(value: string): string {
+  const raw = value.trim();
+  if (/^\d+(?:\.\d+)?(?:e\+?\d+)?$/i.test(raw)) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 1e9) {
+      const date = new Date(n > 1e12 ? n : n * 1000);
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+  }
+  return raw;
+}
+
+/**
+ * Longest leaf text that is not a "Label: value" line or a date: the review body on unlabelled markup. A card
+ * with no text of its own (a rating and a date only) has none, so it does not read as a review whose words
+ * are its date.
+ */
 export function longestFreeText(lines: string[], exclude: string[]): string {
   let best = '';
   for (const line of lines) {
-    if (LABEL_LINE.test(line) || exclude.includes(line)) continue;
+    if (LABEL_LINE.test(line) || exclude.includes(line) || looksLikeDate(line) || isBadgeLine(line)) continue;
     if (line.length > best.length) best = line;
   }
   return best;
+}
+
+/**
+ * The words of a card that sit outside every leaf line: text written directly in the card beside its child
+ * elements. Used when no leaf line is free text. A card made only of leaf lines (rating, date, size, place)
+ * has none, so the whole card text is never taken for a review.
+ */
+export function textOutsideLines(cardText: string, lines: string[]): string {
+  let rest = ` ${cardText} `;
+  // Longest lines first, so a line that holds another one is removed whole.
+  for (const line of [...lines].sort((a, b) => b.length - a.length)) {
+    const at = rest.indexOf(line);
+    if (at >= 0) rest = `${rest.slice(0, at)} ${rest.slice(at + line.length)}`;
+  }
+  rest = rest.replace(/\s+/g, ' ').trim();
+  return looksLikeDate(rest) ? '' : rest;
 }
 
 /** Empty stars are drawn transparent or light grey (e.g. #DADADA, #eee). */
@@ -213,4 +276,130 @@ export function decodeHtmlEntities(text: string): string {
     }
     return named[body.toLowerCase()] ?? whole;
   });
+}
+
+/** Words that make a link a size guide: its label ("Size chart", "How to measure"). */
+export const GUIDE_LABEL = /size\s*(guide|chart)|sizing\s*(guide|chart)|fit\s*guide|size\s*(&|and|\+)\s*fit|how to measure|measurement guide/i;
+/** The same in an address: /pages/size-guide, /sizing-chart, /how-to-measure. */
+export const GUIDE_PATH = /size[-_]?(guide|chart)s?\b|sizing[-_]?(guide|chart)?|fit[-_]?guide|measure/i;
+/** A name that says size chart or size guide (a "fit guide" usually describes cuts, not measurements, and ranks lower). */
+export const GUIDE_NAME = /size\s*[-_]?\s*(guide|chart)s?|sizing\s*[-_]?\s*(guide|chart)?/i;
+
+/**
+ * Addresses of size guides that are pages of their own ("/pages/size-chart"), read from a page's links: same-site
+ * links whose text or path says size guide, best first. Product, collection and cart addresses are left out, as
+ * are links back to the page itself. headlessFetch runs the same rules inside the browser (GUIDE_LINKS).
+ */
+export function guideLinksFromHtml(html: string, pageUrl: string, limit = 3): string[] {
+  let page: URL;
+  try {
+    page = new URL(pageUrl);
+  } catch {
+    return [];
+  }
+  const site = (host: string) => host.replace(/^www\./, '');
+  const $ = cheerio.load(html);
+  const found = new Map<string, { href: string; score: number }>();
+  $('a[href]').each((_i, a) => {
+    const raw = ($(a).attr('href') ?? '').trim();
+    if (!raw || raw.startsWith('#') || /^(javascript|mailto|tel):/i.test(raw)) return;
+    let target: URL;
+    try {
+      target = new URL(raw, page);
+    } catch {
+      return;
+    }
+    if (!/^https?:$/.test(target.protocol)) return;
+    if (site(target.host) !== site(page.host) || target.pathname === page.pathname) return;
+    if (/^\/([a-z]{2}(-[a-z]{2})?\/)?(products|collections|cart|account|search)\b/i.test(target.pathname)) return;
+    if (/[?&](prefn1|prefv1|filter|sort|variant)=/i.test(target.search)) return;
+    const label = ($(a).attr('aria-label') || $(a).text() || '').replace(/\s+/g, ' ').trim();
+    const byLabel = label.length < 60 && GUIDE_LABEL.test(label);
+    if (!byLabel && !GUIDE_PATH.test(target.pathname)) return;
+    const score = (GUIDE_NAME.test(label) ? 2 : 0) + (GUIDE_NAME.test(target.pathname) ? 2 : 0) + (byLabel ? 1 : 0);
+    const key = target.origin + target.pathname;
+    if (!found.has(key) || found.get(key)!.score < score) found.set(key, { href: target.href, score });
+  });
+  return [...found.values()]
+    .sort((x, y) => y.score - x.score)
+    .map((x) => x.href)
+    .slice(0, limit);
+}
+
+const SECOND_LEVEL_LABELS = new Set(['co', 'com', 'org', 'net', 'gov', 'edu', 'ac']);
+
+/**
+ * The part of a host a store owns: "au.seafolly.com" and "www.seafolly.com" are both "seafolly.com";
+ * "www.collectif.co.uk" is "collectif.co.uk". A short rule for the usual country endings, not the full public
+ * suffix list. Used to tell a store's own regional redirect from a redirect to another store.
+ */
+export function registrableDomain(host: string): string {
+  const parts = host.toLowerCase().split('.').filter(Boolean);
+  if (parts.length <= 2) return parts.join('.');
+  const last = parts[parts.length - 1];
+  const before = parts[parts.length - 2];
+  return parts.slice(last.length === 2 && SECOND_LEVEL_LABELS.has(before) ? -3 : -2).join('.');
+}
+
+/** How often a memoized parser was asked, and how often it really parsed. */
+export interface ParseCounters {
+  calls: number;
+  parses: number;
+}
+
+/**
+ * Remembers what `parse` answered for the last `max` distinct pages (and hints), so a snapshot that several steps
+ * ask about is parsed once: the render checks it after each try, and the scrape endpoint reads it again. A page of
+ * several megabytes takes hundreds of milliseconds to parse. The key is a digest of the page, so the cache holds
+ * no page text, and every caller gets its own copy of the rows.
+ */
+export function memoizeParse(
+  parse: (html: string, hint?: ProductHint) => SizeChartRow[],
+  max = 16,
+): ((html: string, hint?: ProductHint) => SizeChartRow[]) & { stats: ParseCounters } {
+  const cache = new Map<string, SizeChartRow[]>();
+  const stats: ParseCounters = { calls: 0, parses: 0 };
+  const run = (html: string, hint?: ProductHint): SizeChartRow[] => {
+    stats.calls++;
+    const key = `${createHash('sha256').update(html).digest('hex')}|${hint?.name ?? ''}|${hint?.url ?? ''}`;
+    let rows = cache.get(key);
+    if (rows) {
+      // Most recently used last, so the oldest entry is the one dropped.
+      cache.delete(key);
+    } else {
+      stats.parses++;
+      rows = parse(html, hint);
+    }
+    cache.set(key, rows);
+    if (cache.size > max) cache.delete(cache.keys().next().value as string);
+    return rows.map((row) => ({ ...row }));
+  };
+  return Object.assign(run, { stats });
+}
+
+/** parseSizeChart, parsing each distinct page once. */
+export const parseSizeChartCached = memoizeParse(parseSizeChart);
+/** parseGuidePageChart, parsing each distinct guide page once. */
+export const parseGuidePageChartCached = memoizeParse((html, hint) => parseGuidePageChart(html, hint ?? {}));
+
+/**
+ * The chart from the product's own pages, else from the size-guide pages it linked to: the same answer as
+ * parseSizeChartWithGuides, with every distinct page parsed once however often this is asked.
+ */
+export function sizeChartFromPages(
+  pages: (string | null | undefined)[],
+  guidePages: (string | null | undefined)[],
+  hint: ProductHint,
+): SizeChartRow[] {
+  for (const html of pages) {
+    if (!html) continue;
+    const rows = parseSizeChartCached(html, hint);
+    if (rows.length > 0) return rows;
+  }
+  for (const html of guidePages) {
+    if (!html) continue;
+    const rows = parseGuidePageChartCached(html, hint);
+    if (rows.length > 0) return rows;
+  }
+  return [];
 }

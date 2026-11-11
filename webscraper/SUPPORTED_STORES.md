@@ -293,11 +293,18 @@ were read wrongly (Filson, Simms, State and Liberty: the low end of a body range
 Suzy Shier: a skirt table) were left out.
 
 **Known limits of this round**
-- **Nudie Jeans:** 9 of 14 reviews sit behind a control inside a dialog that is not paged.
+- **Nudie Jeans:** the page states 14 reviews and the scraper reads 5. The other 9 are rating-only (stars, a name and a date, no
+  words), and a card without text is never counted as a review. Authors now read clean ("Pascal", not "PascalVerified Buyer").
 - **Halara:** the same URL serves two layouts, both are read; the product page layout stops at about 230 reviews (time and 300 caps).
-  Reviews whose stars cannot be read default to a rating of 3.
-- **Phase Eight** was fixed (Salesforce review cards, numbered pager) but not re-run in the final pass; **Rawganique** shows
-  "2 reviews" that were not found.
+- **Phase Eight** (re-run live): the scraper reads 8 reviews with real text and ISO dates. The page says "4 of 10 reviews" while its
+  markup holds 12 cards on 3 pages of 4, four of them without text. Why 12 and 10 differ is not explained.
+- **Rawganique:** the "2 reviews" are only a hidden Judge.me badge (`data-number-of-reviews="2"`, `display:none`). No review widget is
+  installed and no review text is on the page, so there is nothing to read without calling Judge.me ourselves, which is not allowed.
+- Reviews whose stars cannot be read now have a rating of null, not 3. They are left out of the star averages, and their score is null.
+- A linked size guide on the same site is fetched by plain HTTP when the page itself has no chart (at most 2 pages, a refusal stops it).
+  The chart-only render is opt-in (`chartRender: true`): on 15 stores that skipped the render it found no new chart and cost 15 to 45 s each.
+- Hot Topic, BoxLunch and Orvis send their size chart as HTML inside JSON (`Product-SizeChart`). It is read, and all three are body
+  measurements (bust/waist/hip, chest ranges), so no dimension is stored.
 - Loox reviews render in an iframe; they are read after each "Show more" click (Voormi, YoungLA, Woolx).
 - Review totals above about 300 are sampled.
 

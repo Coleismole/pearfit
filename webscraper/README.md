@@ -28,6 +28,13 @@ Stores that refuse automated requests (HTTP 403/418/429/503, a block page, or a 
 
 To see what a render does on a store (review data found, sort, each paging click), run the server with `SCRAPER_DEBUG=1`.
 
+## Code layout
+
+`server.ts` (`createApp`) and `headlessFetch.ts` (the render functions) are the entry points; `vercelHandler.ts`, the tests and the site bundler import from them. The code behind them is split by job:
+
+- `server/`: `env.ts` (the scraper's folder and env files), `db.ts` (local SQLite schema, migrations and queries, opened when it loads), `mockStore.ts` (sample store pages), `scrapeHtml.ts` (one page of HTML to product and reviews), `domReviews.ts` (review cards in the markup), `reviewMerge.ts` (merging review sources), `staticFetch.ts` (plain HTTP fetch of product and size-guide pages), `routes.ts` (mock-store, PostHog and database endpoints), `scrapeRoute.ts` (`POST /api/scrape`).
+- `render/`: `constants.ts`, `types.ts`, `jsonCapture.ts` (review and size-chart JSON a page receives), `decisions.ts` (`shouldUseHeadlessRender` and other small decisions), `browser.ts` (shared browser, one render at a time), `pageScripts.ts` (scripts that run inside the page), `sizeGuide.ts` (opening size guides, reading linked guide pages), `paging.ts` (newest-first sort, "load more" paging), `playwrightHelpers.ts` and `playwrightRender.ts` (local render), `serverlessRender.ts` (Vercel render on Puppeteer), `renderPage.ts` (`renderPageHtml`, `renderChartOnly`).
+
 ## Analytics (PostHog)
 
 The page reports to PostHog when `POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` are set (see `.env.example`; with either empty, nothing loads). The browser gets them from `/api/posthog-config`, so the build holds no keys. On pearfit.app the scraper shares the marketing site's origin and PostHog project, so one visitor is one person across both.

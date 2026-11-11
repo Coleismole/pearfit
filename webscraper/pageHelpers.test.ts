@@ -1,12 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as cheerio from 'cheerio';
+import { parseSizeChartWithGuides } from './sizeChart.ts';
 import {
   cleanProductTitle,
   isEmptyStarFill,
   labelledValue,
   leafTexts,
   longestFreeText,
+  looksLikeDate,
+  memoizeParse,
+  parseGuidePageChartCached,
+  parseSizeChartCached,
+  sizeChartFromPages,
+  registrableDomain,
+  guideLinksFromHtml,
+  isBadgeLine,
+  dateFromAttribute,
+  textOutsideLines,
   productIdFromUrl,
   blockPageTitle,
   describeFetchFailure,
@@ -148,4 +159,151 @@ test('a thrown fetch is reported with its cause and may be retried in a browser'
   assert.equal(failure.blocked, false);
   assert.equal(failure.retryInBrowser, true);
   assert.match(failure.message, /fetch failed \(UND_ERR_HEADERS_OVERFLOW\)/);
+});
+
+test('looksLikeDate recognises a line that is only a date, in the layouts stores print', () => {
+  for (const line of ['13 January 2025', '08 September 2026', '8th Sep. 2026', 'Nov 8, 2026', 'September 8th 2026', '2026.08.12', '2025-01-13', '12/05/2025', '12.05.25']) {
+    assert.equal(looksLikeDate(line), true, line);
+  }
+  // A sentence that mentions a date is words, and so is a bare year or a size.
+  for (const line of ['Bought on 13 January 2025 and love it', 'Size: 14', '2025', 'Verified Buyer', 'May', 'Runs small']) {
+    assert.equal(looksLikeDate(line), false, line);
+  }
+});
+
+test('isBadgeLine names the labels a widget prints beside a reviewer, and nothing longer', () => {
+  for (const line of ['Verified Buyer', 'verified purchase', 'Verified', 'Verified Customer']) assert.equal(isBadgeLine(line), true, line);
+  for (const line of ['Verified buyer: runs small', 'Great fit', 'Not verified']) assert.equal(isBadgeLine(line), false, line);
+  // A badge is not the body of a card that has nothing else.
+  assert.equal(longestFreeText(['Hugo T', 'Verified Buyer', '2026.09.01'], ['Hugo T']), '');
+});
+
+test('dateFromAttribute turns a Unix time written as a float into an ISO date and leaves other text alone', () => {
+  // 1788825600000 ms is 2026-09-08 00:00 UTC (20704 days after 1970-01-01).
+  assert.equal(dateFromAttribute('1.7888256E12'), '2026-09-08T00:00:00.000Z');
+  assert.equal(dateFromAttribute('1788825600000'), '2026-09-08T00:00:00.000Z');
+  // Seconds, as some stores write them.
+  assert.equal(dateFromAttribute('1788825600'), '2026-09-08T00:00:00.000Z');
+  assert.equal(dateFromAttribute(' 2026-09-08 '), '2026-09-08');
+  assert.equal(dateFromAttribute('2026'), '2026');
+  assert.equal(dateFromAttribute(''), '');
+});
+
+test('longestFreeText skips dates, and textOutsideLines never takes the whole card for its words', () => {
+  // A card of a date and labelled details has no words.
+  const lines = ['13 January 2025', 'Size: 14', 'Purchased: Web', 'Location: Madinah'];
+  assert.equal(longestFreeText(lines, []), '');
+  assert.equal(textOutsideLines(lines.join(' '), lines), '');
+  // The words win over the date even when the date is longer.
+  assert.equal(longestFreeText(['08 September 2026', 'Lovely'], []), 'Lovely');
+  // Words written straight in the card, beside child elements, are found.
+  assert.equal(textOutsideLines('Jane Great fit overall 2026-01-01', ['Jane', '2026-01-01']), 'Great fit overall');
+  // A card with no child elements at all is its own text.
+  assert.equal(textOutsideLines('Runs small in the chest', []), 'Runs small in the chest');
+});
+
+test('guideLinksFromHtml finds same-site size-guide pages, best first, and leaves everything else', () => {
+  const page = 'https://www.shop.example/products/mens-tee';
+  const html = `<html><body>
+    <a href="/pages/fit-guide">Fit guide</a>
+    <a href="/pages/size-chart-mens">Size Chart</a>
+    <a href="https://shop.example/pages/how-to-measure">How to measure</a>
+    <a href="https://other.example/pages/size-guide">Size guide</a>
+    <a href="/products/other-tee">Size guide of another product</a>
+    <a href="/en-gb/collections/size-chart-tees">Size chart tees</a>
+    <a href="/products/mens-tee?variant=1">Size guide</a>
+    <a href="/pages/shipping">Shipping</a>
+    <a href="#size-guide">Size guide</a>
+    <a href="mailto:help@shop.example">Size guide</a>
+    <a href="/pages/size-chart-mens#top">Size chart again</a>
+    </body></html>`;
+  // The size chart page outranks the how-to-measure page and the fit guide (which describes cuts). Off-site
+  // links, product and collection addresses, the page itself, hash links and mail links are left out. Two links
+  // to one address count once.
+  assert.deepEqual(guideLinksFromHtml(html, page), [
+    'https://www.shop.example/pages/size-chart-mens',
+    'https://www.shop.example/pages/fit-guide',
+    'https://shop.example/pages/how-to-measure',
+  ]);
+  assert.deepEqual(guideLinksFromHtml(html, page, 1), ['https://www.shop.example/pages/size-chart-mens']);
+  assert.deepEqual(guideLinksFromHtml('<p>no links</p>', page), []);
+  assert.deepEqual(guideLinksFromHtml(html, 'not a url'), []);
+});
+
+test('registrableDomain keeps what a store owns, so a regional subdomain is its own site and another store is not', () => {
+  assert.equal(registrableDomain('www.seafolly.com'), 'seafolly.com');
+  assert.equal(registrableDomain('au.seafolly.com'), 'seafolly.com');
+  assert.equal(registrableDomain('seafolly.com'), 'seafolly.com');
+  assert.equal(registrableDomain('www.collectif.co.uk'), 'collectif.co.uk');
+  assert.equal(registrableDomain('shop.rusty.com.au'), 'rusty.com.au');
+  assert.notEqual(registrableDomain('rusty.com'), registrableDomain('rusty.com.au'));
+  assert.notEqual(registrableDomain('www.mudjeans.eu'), registrableDomain('mudjeans.com'));
+  assert.equal(registrableDomain('localhost'), 'localhost');
+});
+
+test('memoizeParse parses each distinct page once, forgets the oldest, and hands out copies', () => {
+  let parsed = 0;
+  const parse = memoizeParse((html) => {
+    parsed++;
+    return [{ size: 'M', sortOrder: 2, chest_cm: html.length, length_cm: null, sleeve_cm: null }];
+  }, 3);
+  const first = parse('<p>a</p>');
+  parse('<p>a</p>');
+  parse('<p>a</p>');
+  assert.equal(parsed, 1);
+  assert.deepEqual(parse.stats, { calls: 3, parses: 1 });
+  // A caller that edits what it got does not change what the next caller gets.
+  first[0].chest_cm = 999;
+  assert.equal(parse('<p>a</p>')[0].chest_cm, 8);
+  // Another hint is another question: the same page is parsed again for it.
+  parse('<p>a</p>', { name: "Women's Tee" });
+  assert.equal(parsed, 2);
+  // Three entries are kept: after b, c and d the first two are gone and 'a' is parsed again.
+  parse('b');
+  parse('c');
+  parse('d');
+  assert.equal(parsed, 5);
+  parse('<p>a</p>');
+  assert.equal(parsed, 6);
+  parse('d'); // still remembered
+  assert.equal(parsed, 6);
+});
+
+const CHART_TABLE = `<table><caption>Size guide (cm)</caption><tr><th>Size</th><th>Pit to pit</th><th>Length</th></tr><tr><td>M</td><td>54</td><td>72</td></tr></table>`;
+
+test('parseSizeChartCached parses a large snapshot once however often the render and the endpoint ask', () => {
+  // A big page: thousands of product tiles around one chart. Unique, so no earlier test has parsed it.
+  const page = `<html><body>${'<div class="tile"><a href="/p">Tile</a></div>'.repeat(5000)}<p>${Math.random()}</p>${CHART_TABLE}</body></html>`;
+  const before = { ...parseSizeChartCached.stats };
+  const rows = Array.from({ length: 6 }, () => parseSizeChartCached(page, { name: 'Tee', url: 'https://shop.example/p/tee' }));
+  assert.equal(parseSizeChartCached.stats.calls - before.calls, 6);
+  assert.equal(parseSizeChartCached.stats.parses - before.parses, 1);
+  for (const r of rows) assert.deepEqual(r, [{ size: 'M', sortOrder: 2, chest_cm: 54, length_cm: 72, sleeve_cm: null }]);
+});
+
+test('sizeChartFromPages answers as parseSizeChartWithGuides does, and reads each page once', () => {
+  const unique = `<p>${Math.random()}</p>`;
+  const noChart = `<html><body><h1>Tee</h1>${unique}</body></html>`;
+  const withChart = `<html><body><h1>Tee</h1>${unique}${CHART_TABLE}</body></html>`;
+  const guide = `<html><body><h1>Size chart</h1><h2>Men's</h2>${CHART_TABLE}</body></html>`;
+  const hint = { name: "Men's Tee", url: 'https://shop.example/products/mens-tee' };
+  const cases: [(string | null)[], (string | null)[]][] = [
+    [[noChart, withChart], []],
+    [[noChart, null], [guide]],
+    [[noChart], [null, noChart, guide]],
+    [[], []],
+  ];
+  const beforeOwn = { ...parseSizeChartCached.stats };
+  const beforeGuide = { ...parseGuidePageChartCached.stats };
+  for (const [pages, guides] of cases) {
+    assert.deepEqual(sizeChartFromPages(pages, guides, hint), parseSizeChartWithGuides(pages, guides, hint));
+  }
+  // Asked again, nothing is parsed.
+  const ownParses = parseSizeChartCached.stats.parses;
+  const guideParses = parseGuidePageChartCached.stats.parses;
+  for (const [pages, guides] of cases) sizeChartFromPages(pages, guides, hint);
+  assert.equal(parseSizeChartCached.stats.parses, ownParses);
+  assert.equal(parseGuidePageChartCached.stats.parses, guideParses);
+  assert.equal(ownParses - beforeOwn.parses, 2); // noChart and withChart, once each
+  assert.equal(guideParses - beforeGuide.parses, 2); // noChart as a guide page, and the guide
 });

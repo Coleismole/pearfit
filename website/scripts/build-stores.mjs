@@ -3,20 +3,22 @@
 //   node website/scripts/build-stores.mjs           write website/stores.json
 //   node website/scripts/build-stores.mjs --check   exit 1 if the committed stores.json is stale (no write)
 //
-// The markdown stays the source of truth for now. Everything that reads it is in `loadSource` and the parser
-// below, so switching to the machine-readable verified-stores list that is being built under webscraper/tools/
-// means replacing those two and keeping `buildStores`' output shape. The output has no timestamp, so the same
-// markdown always gives byte-identical JSON and a stale file shows up as a plain diff.
+// The markdown stays the source of truth. Every table under "Reviews and fit" or a "Round N" heading is a list of
+// supported stores, so a new round added to SUPPORTED_STORES.md shows up here without a code change. The one fact the
+// markdown does not carry is whether a size chart was read: that comes from webscraper/tools/verified-stores.json
+// (has_size_chart), when that file is there. The output has no timestamp, so the same inputs always give
+// byte-identical JSON and a stale file shows up as a plain diff.
 //
-// Nothing is invented. A fact the markdown does not state is null (or "not_recorded" for the size chart): the
-// supported-stores list records the review platform and whether reviews state the size bought and a fit
-// answer for every store, but it records a size chart only for the size-chart-only store(s).
+// Nothing is invented. A fact the sources do not state is null (or "not_recorded" for the size chart): a store
+// whose verified entry says no chart was read stays "not_recorded", because that covers both "the page has none"
+// and "the guide only measures the body", and the list cannot tell them apart.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SOURCE = path.join(root, 'webscraper', 'SUPPORTED_STORES.md');
+const VERIFIED = path.join(root, 'webscraper', 'tools', 'verified-stores.json');
 const OUTPUT = path.join(root, 'website', 'stores.json');
 const SOURCE_LABEL = 'webscraper/SUPPORTED_STORES.md';
 
@@ -110,6 +112,7 @@ const PLATFORMS = [
   [/judge\.me/i, 'Judge.me'],
   [/junip/i, 'Junip'],
   [/reviews\.io/i, 'Reviews.io'],
+  [/trustpilot/i, 'Trustpilot'],
 ];
 
 /**
@@ -119,7 +122,7 @@ const PLATFORMS = [
  */
 export function platformOf(text) {
   for (const [pattern, name] of PLATFORMS) if (pattern.test(text)) return name;
-  if (/embedded in the page|page markup|page's markup/i.test(text)) return 'Embedded in the page';
+  if (/embedded in the page|page markup|page's markup|structured data/i.test(text)) return 'Embedded in the page';
   if (/own (review )?(service|endpoint|data)/i.test(text)) return "Store's own service";
   if (/review pages/i.test(text)) return 'Review pages';
   return 'Other';
@@ -194,13 +197,23 @@ export function notesByStore(bullets) {
 
 const column = (header, wanted) => header.findIndex((name) => name.toLowerCase() === wanted);
 
+/** Headings whose tables list stores that returned reviews: the first section and every later "Round N: ..." one. */
+const SUPPORTED_HEADING = /^(reviews and fit|round \d+)/i;
+
 /**
  * Markdown in, the site's data out:
  * { source, tested_on, platforms, supported: [...], not_supported: [...] }
+ *
+ * `verified` is the parsed verified-stores.json (optional). A store whose entry there says has_size_chart is
+ * recorded as having a size chart; every other store stays "not_recorded". Entries are matched by store name, not id:
+ * the verified list suffixes the id of a name it has already used ("dickies-2"), this list keeps the first.
  */
-export function parseSupportedStores(markdown) {
+export function parseSupportedStores(markdown, verified = null) {
   const tables = parseTables(markdown);
-  const bullets = parseBullets(markdown).filter((item) => /^reviews and fit/i.test(item.heading));
+  const bullets = parseBullets(markdown).filter((item) => SUPPORTED_HEADING.test(item.heading));
+  const chartRead = new Set(
+    [...(verified?.stores ?? []), ...(verified?.needs_url ?? [])].filter((entry) => entry.has_size_chart === true).map((entry) => slugify(entry.name))
+  );
   const notes = notesByStore(bullets);
   const noteFor = (name) => notes.get(looseName(name)) ?? [];
 
@@ -208,7 +221,7 @@ export function parseSupportedStores(markdown) {
   const seen = new Set();
 
   for (const table of tables) {
-    if (/^reviews and fit/i.test(table.heading)) {
+    if (SUPPORTED_HEADING.test(table.heading)) {
       const at = (row, name) => {
         const index = column(table.header, name);
         return index === -1 ? '' : row[index];
@@ -230,7 +243,7 @@ export function parseSupportedStores(markdown) {
           size_bought_text: at(row, 'size bought') || null,
           fit_answer: answerLevel(at(row, 'fit answer')),
           fit_answer_text: at(row, 'fit answer') || null,
-          size_chart: 'not_recorded',
+          size_chart: chartRead.has(slugify(name)) ? 'yes' : 'not_recorded',
           notes: noteFor(name),
         });
       }
@@ -297,10 +310,11 @@ export function parseSupportedStores(markdown) {
   };
 }
 
-/** Where the data comes from today. Swap this (and the parser) for the verified-stores list when it exists. */
-export function loadSource(file = SOURCE) {
+/** SUPPORTED_STORES.md, plus the size-chart flags from the verified-stores list when that file exists. */
+export function loadSource(file = SOURCE, verifiedFile = VERIFIED) {
   if (!existsSync(file)) throw new Error(`${file} not found`);
-  return parseSupportedStores(readFileSync(file, 'utf8'));
+  const verified = existsSync(verifiedFile) ? JSON.parse(readFileSync(verifiedFile, 'utf8')) : null;
+  return parseSupportedStores(readFileSync(file, 'utf8'), verified);
 }
 
 export function renderJson(data) {

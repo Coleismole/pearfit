@@ -242,6 +242,7 @@ function inPage() {
     title: document.title,
     description: meta('meta[name="description"]'),
     canonical: document.querySelector('link[rel="canonical"]')?.href ?? null,
+    noindex: /noindex/i.test(meta('meta[name="robots"]') || ''),
     viewport: meta('meta[name="viewport"]'),
     themeColor: meta('meta[name="theme-color"]'),
     ogTitle: meta('meta[property="og:title"]'),
@@ -347,7 +348,9 @@ try {
         if (width === 390 && scheme === 'light') {
           const h = r.head;
           const need = (key, label = key) => { if (!h[key]) add(pageName, viewport, 'fail', 'head', `missing ${label}`); };
-          ['title', 'description', 'canonical', 'viewport', 'ogTitle', 'ogDescription', 'ogType', 'ogUrl', 'ogImage', 'ogSiteName', 'twitterCard', 'twitterImage'].forEach((k) => need(k));
+          // A noindex page (404.html) is never shared or indexed, so it needs no canonical or social tags.
+          const social = ['canonical', 'ogTitle', 'ogDescription', 'ogType', 'ogUrl', 'ogImage', 'ogSiteName', 'twitterCard', 'twitterImage'];
+          ['title', 'description', 'viewport', ...(h.noindex ? [] : social)].forEach((k) => need(k));
           if (h.description && (h.description.length < 70 || h.description.length > 160)) add(pageName, viewport, 'warn', 'head', `description is ${h.description.length} characters (aim for 70 to 160)`);
           if (h.title && h.title.length > 65) add(pageName, viewport, 'warn', 'head', `title is ${h.title.length} characters (aim for 65 or fewer)`);
           if (h.twitterCard === 'summary_large_image' && !h.twitterImage) add(pageName, viewport, 'fail', 'head', 'twitter:card is summary_large_image but there is no twitter:image');

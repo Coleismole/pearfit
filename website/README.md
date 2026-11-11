@@ -16,6 +16,8 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `posthog-init.js`, `speed-insights-init.js` — Analytics loaders.
 - `test/` — Unit tests: `npm test` in `website/` (Node 22, no dependencies).
 - `scripts/audit-site.mjs` — Browser audit of the pages (see below).
+- `scripts/verify-site.mjs` — Browser check of links, menu, footer, form messages and the 404 page (see Verify).
+- `404.html` — The page Vercel shows for a missing path. Its links and assets are absolute, because it is served at any URL.
 
 ## Preview
 Open `website/index.html` in a browser, or run `npx serve website`.
@@ -94,3 +96,14 @@ Privacy rule: hostnames and counts only. No review text, names, emails, full URL
 `node website/scripts/audit-site.mjs` (from the repo root, after `npm ci` in `webscraper/`) serves `website/` locally and checks each page in Chromium at 360, 390 and 1280 px, light and dark: horizontal overflow, clipped text, images without `alt`, links and buttons with no name, form controls with no label, heading order and a single `h1`, landmarks, ARIA misuse, tap targets under 44 px, text contrast measured on the rendered colors, a visible keyboard focus ring, `prefers-reduced-motion`, lazy images, layout shift, and the title, description, canonical, Open Graph and Twitter tags and the icon files. It exits 1 on any failure. Options: `--pages index.html,stores.html`, `--shots <dir>` for full-page screenshots, `--json`.
 
 Layout shift is measured with the Google Fonts request blocked, so a shift caused by the web fonts swapping in is not covered. The share image is the 180 px app icon, so the Twitter card is `summary`; a 1200 x 630 image would allow `summary_large_image`.
+
+## Verify
+`node website/scripts/verify-site.mjs` (from the repo root, same setup as the audit) checks behaviour the audit does not: every link resolves, including a `#section` on another page; both logos link home; each footer has `customerservice@pearfit.app` as a link and the current year; no email address is shown without a link; no page scrolls sideways from 320 to 1280 px; the mobile menu opens and Escape or a link closes it; the inquiry form names a missing field, accepts a bare domain, and shows its success and error messages (FormSubmit is mocked, so nothing is sent); and a missing path answers 404 with `404.html`. Run locally, it also checks that the branch is pushed.
+
+Give it a URL to check a deploy, and `--attempts`/`--wait` to retry while the deploy finishes:
+
+```sh
+node website/scripts/verify-site.mjs https://www.pearfit.app --attempts 10 --wait 30
+```
+
+The `Verify website` workflow (`.github/workflows/verify-website.yml`) runs the unit tests, the audit on all four pages and this check on every pull request that changes `website/`, and on pushes to `main`.

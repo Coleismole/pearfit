@@ -752,6 +752,12 @@ select.input {
   padding: 12px;
 }
 
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 .list-row__text {
   flex: 1;
   min-width: 0;
@@ -1190,6 +1196,20 @@ dl.rows {
   border: 2px solid var(--lime);
   background: var(--lime);
   color: var(--ink);
+}
+
+/* A size with its match percentage under it. */
+.size--scored {
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px;
+  min-height: 52px;
+}
+
+.size__percent {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.85;
 }
 
 .stat__value {

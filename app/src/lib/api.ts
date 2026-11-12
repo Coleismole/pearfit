@@ -1,9 +1,9 @@
 // The Pearfit API client. These are the only two network calls the app makes:
 //   GET  {base}/api/candidates  -> [{ id, name, garmentType, sizes }]
-//   POST {base}/api/recommend   -> { size, confidence, matchPercent, fitsLike, verdict, notes, garmentType }
+//   POST {base}/api/recommend   -> { size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes, similar }
 // The base URL is passed in (it comes from src/config.ts), and so is fetch, which keeps this file testable.
 import { DIMS, GARMENT_TYPES } from "./types.ts";
-import type { Confidence, GarmentType, Measurements, PickerCandidate, RecommendRequest, RecommendResponse } from "./types.ts";
+import type { Confidence, GarmentType, Measurements, PickerCandidate, RecommendRequest, RecommendResponse, SimilarShirt, SizeMatch } from "./types.ts";
 
 // network: no answer at all (offline, or the browser blocked the call because of CORS)
 // http:    the API answered with an error status
@@ -101,6 +101,31 @@ export function parseCandidates(raw: unknown): PickerCandidate[] {
   });
 }
 
+const isPercent = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+
+// `sizes` and `similar` are missing from answers saved on the device before the API sent them: that reads as an
+// empty list. A list that is there but has the wrong shape is an error like any other field.
+function parseSizes(raw: unknown): SizeMatch[] {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) invalid("sizes");
+  return raw.map((entry: unknown) => {
+    if (!isRecord(entry) || typeof entry.size !== "string") invalid("sizes");
+    const { size, matchPercent, fitsLike } = entry;
+    if (matchPercent !== null && !isPercent(matchPercent)) invalid("sizes");
+    if (fitsLike !== null && typeof fitsLike !== "string") invalid("sizes");
+    return { size, matchPercent, fitsLike };
+  });
+}
+
+function parseSimilar(raw: unknown): SimilarShirt[] {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) invalid("similar");
+  return raw.map((entry: unknown) => {
+    if (!isRecord(entry) || typeof entry.shirtId !== "string" || !isPercent(entry.matchPercent)) invalid("similar");
+    return { shirtId: entry.shirtId, matchPercent: entry.matchPercent };
+  });
+}
+
 const CONFIDENCE_LEVELS: readonly Confidence[] = ["high", "medium", "low"];
 
 export function parseRecommendResponse(raw: unknown): RecommendResponse {
@@ -120,5 +145,7 @@ export function parseRecommendResponse(raw: unknown): RecommendResponse {
     verdict,
     notes: notes as string[],
     garmentType: parseGarmentType(raw.garmentType),
+    sizes: parseSizes(raw.sizes),
+    similar: parseSimilar(raw.similar),
   };
 }

@@ -55,9 +55,13 @@ The app makes two calls to the API. Apart from those, the only network traffic i
 | Call | Used for | Answer |
 | --- | --- | --- |
 | `GET /api/candidates` | the catalog picker | `[{ id, name, garmentType, sizes }]` |
-| `POST /api/recommend` with `{ wardrobe: [...], candidateId }` | the size suggestion | `{ size, confidence, matchPercent, fitsLike, verdict, notes, garmentType }` |
+| `POST /api/recommend` with `{ wardrobe: [...], candidateId }` | the size suggestion | `{ size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes, similar }` |
 
 Both calls are in [`src/lib/api.ts`](src/lib/api.ts).
+
+`sizes` is `[{ size, matchPercent, fitsLike }]`, one entry per size with its closest great shirt (`null` when that size
+could not be compared). `similar` is `[{ shirtId, matchPercent }]`, the great shirts against the suggested size, closest
+first. An answer saved on the device before the API sent these two reads as two empty lists.
 
 When `size` is `null` the API could not suggest a size and `verdict` says why (for example, the wardrobe has no
 shirt of that kind). The app shows that verdict as a normal message, not as an error. Errors are only shown when a
@@ -139,11 +143,9 @@ every shirt a person owns.
 - **Tag scanner.** There is no camera step. The SKU printed on the tag can be typed into the search box.
 - **Fit score 0–100.** The wardrobe format has `label`: `great`, `tight` or `loose`. The app asks for that
   instead of a score.
-- **Suitability per size.** The API returns one percentage, for the suggested size. The other sizes are listed
-  without a percentage, and their measurements can be compared.
-- **Most similar in your wardrobe.** The API returns one shirt (`fitsLike`), so one is shown, not a ranked list.
-  The similarity percentage between two wardrobe shirts (screens 14 and 15) is left out for the same reason:
-  the app does not compute scores itself.
+- **Most similar in your wardrobe.** The three closest shirts from the API's `similar` list are shown, each with
+  its match for the suggested size. The similarity percentage between two wardrobe shirts (screens 14 and 15) is
+  left out: the API does not return it, and the app does not compute scores itself.
 - **Customer reviews.** The API does not return review data, so the section is not there.
 - **Measurements.** Chest width, length and sleeve length only: those are the three in the data format. The
   design also shows shoulder, waist and hem.

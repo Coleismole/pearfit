@@ -25,7 +25,7 @@ command from the folder named in its row. Run the tests and the typecheck before
 
 | Part | What an agent uses it for | How |
 | --- | --- | --- |
-| `engine/` | Get a size recommendation from code, or change the matching | CLI: `npm run recommend -- sample [candidateId]` and `npm run eval`. Over HTTP: `GET https://www.pearfit.app/api/candidates`, then `POST https://www.pearfit.app/api/recommend` with `{ wardrobe, candidateId }`. The answer is `{ size, confidence, matchPercent, fitsLike, verdict, notes, garmentType }`. |
+| `engine/` | Get a size recommendation from code, or change the matching | CLI: `npm run recommend -- sample [candidateId]` and `npm run eval`. Over HTTP: `GET https://www.pearfit.app/api/candidates`, then `POST https://www.pearfit.app/api/recommend` with `{ wardrobe, candidateId }`. The answer is `{ size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes, similar }`. `sizes` is `[{ size, matchPercent, fitsLike }]` for every size and `similar` is `[{ shirtId, matchPercent }]`, the great shirts against the suggested size, closest first. |
 | `webscraper/` | Collect fit values, size charts and reviews from a store page | `npm run dev`, then use the page or the endpoints on http://127.0.0.1:3000. Helpers: `webscraper/tools/README.md`. |
 | `app/` | See the shopper flow, or check a change to the API contract | `npm run dev`, then open http://localhost:5173 (not `127.0.0.1`: the API's CORS allows `localhost` only). |
 | `website/` | Edit the marketing site and its demo | Edit the files as committed. `npm test` and `node scripts/audit-site.mjs` check it. |

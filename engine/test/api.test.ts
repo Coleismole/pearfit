@@ -88,7 +88,7 @@ test("a valid request is normalised: id trimmed, nulls and garmentType kept, ext
 
 // ---- response shape ----
 
-test("the response carries size, confidence, matchPercent, fitsLike, verdict, notes and garmentType", () => {
+test("the response carries size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes and similar", () => {
   const wardrobe = [{ ...blueTee, label: "great" as const }];
   const response = toRecommendResponse(recommend(wardrobe, teeCandidate), teeCandidate);
   assert.deepEqual(response, {
@@ -99,7 +99,36 @@ test("the response carries size, confidence, matchPercent, fitsLike, verdict, no
     verdict: "Get the M, fits like your blue tee.",
     notes: [],
     garmentType: "tee",
+    sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }],
+    similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
   });
+});
+
+test("sizes lists every size with its own closest shirt, and similar ranks the great shirts for the suggested size", () => {
+  // Chest only, so distance = |chest difference| and match = 100 * exp(-distance / 3).
+  // Great shirts: a-tee 54, b-tee 57. The tight c-tee (50) is never a reference. XL has no measurements.
+  //   S 52: a 2 cm (51.3), b 5 cm         -> closest a-tee, 51.3
+  //   M 54: a 0 cm (100),  b 3 cm (36.8)  -> closest a-tee, 100   <- smallest distance, so the suggested size
+  //   L 58: a 4 cm,        b 1 cm (71.7)  -> closest b-tee, 71.7
+  const chest = (cm: number | null) => m(cm, null, null);
+  const wardrobe = [
+    { id: "b-tee", label: "great" as const, measurements: chest(57) },
+    { id: "a-tee", label: "great" as const, measurements: chest(54) },
+    { id: "c-tee", label: "tight" as const, measurements: chest(50) },
+  ];
+  const threeSizes: Candidate = { id: "e500-000", name: "Three sizes", review: null, sizes: { S: chest(52), M: chest(54), L: chest(58), XL: chest(null) } };
+  const response = toRecommendResponse(recommend(wardrobe, threeSizes), threeSizes);
+  assert.equal(response.size, "M");
+  assert.deepEqual(response.sizes, [
+    { size: "S", matchPercent: 51.3, fitsLike: "a-tee" },
+    { size: "M", matchPercent: 100, fitsLike: "a-tee" },
+    { size: "L", matchPercent: 71.7, fitsLike: "b-tee" },
+    { size: "XL", matchPercent: null, fitsLike: null }, // nothing to compare: null, not a guess
+  ]);
+  assert.deepEqual(response.similar, [
+    { shirtId: "a-tee", matchPercent: 100 },
+    { shirtId: "b-tee", matchPercent: 36.8 },
+  ]);
 });
 
 test("with no recommendation, size, matchPercent and fitsLike are null, not invented", () => {
@@ -112,6 +141,8 @@ test("with no recommendation, size, matchPercent and fitsLike are null, not inve
     verdict: "No comparable shirts in your wardrobe. This is a polo, and your wardrobe has none.",
     notes: [],
     garmentType: "polo",
+    sizes: [{ size: "M", matchPercent: null, fitsLike: null }],
+    similar: [],
   });
 });
 
@@ -244,6 +275,7 @@ test("POST /recommend returns the engine's answer, matches the SKU in any case, 
   assert.deepEqual(ok.body, {
     size: "M", confidence: "high", matchPercent: 67.6, fitsLike: "blue-tee",
     verdict: "Get the M, fits like your blue tee.", notes: [], garmentType: "tee",
+    sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }], similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
   });
   assert.equal(ok.headers["Access-Control-Allow-Origin"], "https://pearfit.app");
   assert.equal(ok.headers["Cache-Control"], "no-store");
@@ -281,6 +313,7 @@ test("a candidate the wardrobe cannot be compared with is a 200 with nulls, not 
   assert.deepEqual(r.body, {
     size: null, confidence: "low", matchPercent: null, fitsLike: null,
     verdict: "No comparable shirts in your wardrobe. This is a polo, and your wardrobe has none.", notes: [], garmentType: "polo",
+    sizes: [{ size: "M", matchPercent: null, fitsLike: null }], similar: [],
   });
 });
 

@@ -62988,7 +62988,8 @@ function validateRecommendRequest(body) {
   }
 }
 function toRecommendResponse(rec, candidate) {
-  const best = rec.size === null ? void 0 : rec.ranking[0];
+  const ranking = rec.size === null ? [] : rec.ranking;
+  const best = ranking[0];
   return {
     size: rec.size,
     confidence: rec.confidence,
@@ -62996,7 +62997,13 @@ function toRecommendResponse(rec, candidate) {
     fitsLike: best ? best.shirtId : null,
     verdict: rec.verdict,
     notes: rec.notes,
-    garmentType: garmentTypeOf(candidate)
+    garmentType: garmentTypeOf(candidate),
+    sizes: rec.sizes.map((s) => ({
+      size: s.size,
+      matchPercent: s.matches[0]?.matchPct ?? null,
+      fitsLike: s.matches[0]?.shirtId ?? null
+    })),
+    similar: ranking.map((m) => ({ shirtId: m.shirtId, matchPercent: m.matchPct }))
   };
 }
 

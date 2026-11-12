@@ -1,5 +1,6 @@
 // The app shell: providers, then one screen picked from the address. The routes are listed in README.md.
 import { CatalogProvider } from "./catalog.tsx";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { Notice } from "./components/Messages.tsx";
 import { link } from "./lib/router.ts";
 import type { Route } from "./lib/router.ts";
@@ -73,7 +74,10 @@ export function App() {
     <StoreProvider>
       <CatalogProvider>
         <div className="app">
-          <Screen route={route} />
+          {/* key: going to another screen clears a crash message, so Home and Back work after one. */}
+          <ErrorBoundary key={route.segments.join("/")}>
+            <Screen route={route} />
+          </ErrorBoundary>
         </div>
       </CatalogProvider>
     </StoreProvider>

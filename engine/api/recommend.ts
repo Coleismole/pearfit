@@ -3,4 +3,4 @@ import { createRecommendHandler } from "./handlers.ts";
 import { reportError, withSentry } from "./sentry.ts";
 import { createSupabaseCandidateSource } from "./supabase-candidates.ts";
 
-export default withSentry(createRecommendHandler({ getCandidates: createSupabaseCandidateSource(), onError: reportError }));
+export default withSentry(createRecommendHandler({ getCandidates: createSupabaseCandidateSource(process.env, reportError), onError: reportError }));

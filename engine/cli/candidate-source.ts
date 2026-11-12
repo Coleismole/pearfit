@@ -35,6 +35,9 @@ export function readSupabaseEnv(env: NodeJS.ProcessEnv = process.env): SupabaseE
 // PostgREST caps a response at 1000 rows by default. Paging with Range means a bigger table is never silently cut off.
 const PAGE_SIZE = 1000;
 
+// A request with no answer after this long is given up, so a hung connection fails instead of holding the caller.
+const REQUEST_TIMEOUT_MS = 10_000;
+
 async function fetchTable(
   env: SupabaseEnv,
   table: string,
@@ -52,6 +55,7 @@ async function fetchTable(
           "Range-Unit": "items",
           Range: `${from}-${from + PAGE_SIZE - 1}`,
         },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (err) {
       throw new Error(`Supabase ${table}: request failed (${err instanceof Error ? err.message : String(err)})`);

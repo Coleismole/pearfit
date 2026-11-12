@@ -164,7 +164,7 @@ src/
   store.tsx            wardrobe and planned list (React state, saved on the device)
   catalog.tsx          the list from GET /api/candidates, loaded once
   useRecommendation.ts POST /api/recommend for one catalog shirt
-  components/          shared pieces (search box, compare table, messages, tab bar)
+  components/          shared pieces (search box, compare table, messages, tab bar, the crash message)
   screens/             one file per screen or pair of screens
   styles.css           colours and sizes from the design
 test/                  unit tests for lib/, with hand-computed expected values

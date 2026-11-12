@@ -4,6 +4,13 @@ import type { GarmentType } from "../src/types.ts";
 // How long the candidate list stays in memory before it is read from Supabase again.
 export const CANDIDATE_CACHE_MS = 5 * 60 * 1000;
 
+// When Supabase cannot be read, the last list that loaded is still served until it is this old. Size charts change
+// rarely, so an hour-old list is better than no answer.
+export const CANDIDATE_MAX_STALE_MS = 60 * 60 * 1000;
+
+// After a failed read, how long the old list is served before Supabase is tried again.
+export const CANDIDATE_RETRY_MS = 30 * 1000;
+
 // A wardrobe bigger than this is rejected, so one request cannot make the engine score thousands of shirts.
 export const MAX_WARDROBE_SHIRTS = 200;
 

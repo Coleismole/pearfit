@@ -30,6 +30,7 @@ They are committed because the `website/` project has no build step and cannot i
 ## CI
 | Workflow | Runs on | What it does |
 | --- | --- | --- |
+| `test.yml` | Every pull request and push to `main` | Runs the typecheck and the unit tests in `engine/`, `app/` and `webscraper/`, one job each |
 | `check-bundles.yml` | Every pull request and push to `main` | Rebuilds every generated file and fails when the committed copy is stale. Locally: `node scripts/check-bundles.mjs` |
 | `verify-website.yml` | Pull requests and pushes to `main` touching `website/**` | Runs the website unit tests, `audit-site.mjs` and `verify-site.mjs` in Chromium. See `website/README.md` |
 | `verify-stores.yml` | Mondays, or by hand | Re-scrapes one product per confirmed store, read-only. See `webscraper/tools/README.md` |

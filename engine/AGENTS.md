@@ -13,8 +13,8 @@ a wardrobe file or a candidate file.
   `engine/scripts/build-api.mjs` (`npm run build:api`) bundles them into `website/api/recommend.js` and
   `website/api/candidates.js`. The bundles are committed, like `website/api/scraper`, because the Vercel
   project is rooted at `website/` and cannot import `engine/`. The handlers read candidates from Supabase with
-  `SUPABASE_URL` and the publishable key only (never the secret key), cache them in memory for 5 minutes,
-  validate input with `engine/cli/validate.ts`, call `recommend()`, and send CORS headers only for pearfit.app
+  `SUPABASE_URL` and the publishable key only (never the secret key), cache them in memory for 5 minutes
+  (and keep serving the last list for up to an hour when Supabase cannot be read), validate input with `engine/cli/validate.ts`, call `recommend()`, and send CORS headers only for pearfit.app
   and localhost. The engine (`engine/src/`) stays pure: no I/O, no network, and it imports nothing from the API.
   `/parse-product` and `/ingest-gmail` are still future endpoints.
 

@@ -62739,6 +62739,7 @@ function readSupabaseEnv(env = process.env) {
   return { url, key };
 }
 var PAGE_SIZE = 1e3;
+var REQUEST_TIMEOUT_MS = 1e4;
 async function fetchTable(env, table, order, fetchFn) {
   const rows = [];
   for (let from = 0; ; from += PAGE_SIZE) {
@@ -62750,7 +62751,8 @@ async function fetchTable(env, table, order, fetchFn) {
           Authorization: `Bearer ${env.key}`,
           "Range-Unit": "items",
           Range: `${from}-${from + PAGE_SIZE - 1}`
-        }
+        },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
       });
     } catch (err) {
       throw new Error(`Supabase ${table}: request failed (${err instanceof Error ? err.message : String(err)})`);
@@ -62880,6 +62882,8 @@ async function loadCandidatesFromSupabase(env, fetchFn = fetch) {
 
 // api/config.ts
 var CANDIDATE_CACHE_MS = 5 * 60 * 1e3;
+var CANDIDATE_MAX_STALE_MS = 60 * 60 * 1e3;
+var CANDIDATE_RETRY_MS = 30 * 1e3;
 var MAX_WARDROBE_SHIRTS = 200;
 var ALLOWED_ORIGINS = [
   /^https:\/\/(www\.)?pearfit\.app$/,
@@ -62997,6 +63001,7 @@ function toRecommendResponse(rec, candidate) {
 }
 
 // api/handlers.ts
+var CANDIDATES_UNAVAILABLE = "Could not load the catalog right now. Try again in a moment.";
 function parseBody(body) {
   if (typeof body !== "string") return { ok: true, value: body };
   try {
@@ -63010,7 +63015,7 @@ async function loadCandidates(deps, res) {
     return await deps.getCandidates();
   } catch (e) {
     deps.onError?.(e);
-    sendJson(res, 502, { error: `Could not load candidates: ${e.message}` });
+    sendJson(res, 502, { error: CANDIDATES_UNAVAILABLE });
     return null;
   }
 }
@@ -63066,17 +63071,26 @@ function withSentry(handler) {
 }
 
 // api/cache.ts
-function createCache(load, ttlMs, now = Date.now) {
+function createCache(load, ttlMs, now = Date.now, stale) {
   let value;
   let loadedAt = 0;
+  let retryAt = 0;
   let inFlight = null;
   return async () => {
-    if (value !== void 0 && now() - loadedAt < ttlMs) return value;
+    if (value !== void 0 && (now() - loadedAt < ttlMs || now() < retryAt)) return value;
     if (inFlight) return inFlight;
     inFlight = load().then((fresh) => {
       value = fresh;
       loadedAt = now();
+      retryAt = 0;
       return fresh;
+    }).catch((error) => {
+      if (stale && value !== void 0 && now() - loadedAt < stale.maxStaleMs) {
+        retryAt = now() + stale.retryMs;
+        stale.onError?.(error);
+        return value;
+      }
+      throw error;
     }).finally(() => {
       inFlight = null;
     });
@@ -63085,15 +63099,17 @@ function createCache(load, ttlMs, now = Date.now) {
 }
 
 // api/supabase-candidates.ts
-function createSupabaseCandidateSource(env = process.env) {
+function createSupabaseCandidateSource(env = process.env, onError) {
   return createCache(
     () => loadCandidatesFromSupabase({ SUPABASE_URL: env.SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY }),
-    CANDIDATE_CACHE_MS
+    CANDIDATE_CACHE_MS,
+    Date.now,
+    { maxStaleMs: CANDIDATE_MAX_STALE_MS, retryMs: CANDIDATE_RETRY_MS, onError }
   );
 }
 
 // api/recommend.ts
-var recommend_default = withSentry(createRecommendHandler({ getCandidates: createSupabaseCandidateSource(), onError: reportError }));
+var recommend_default = withSentry(createRecommendHandler({ getCandidates: createSupabaseCandidateSource(process.env, reportError), onError: reportError }));
 /*! Bundled license information:
 
 @sentry/core/build/cjs/utils/env.js:

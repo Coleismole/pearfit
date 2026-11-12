@@ -170,6 +170,47 @@ test("the candidate cache loads once per 5 minutes, shares a load in flight, and
   assert.equal(attempts, 2);
 });
 
+test("with stale options, a failed reload serves the last value, waits before retrying, and gives up when too old", async () => {
+  let now = 0;
+  let fail = false;
+  let loads = 0;
+  const errors: unknown[] = [];
+  // Fresh for 1,000 ms, usable when stale until 10,000 ms old, 100 ms between retries.
+  const get = createCache(
+    async () => { loads++; if (fail) throw new Error("down"); return [loads]; },
+    1_000, () => now, { maxStaleMs: 10_000, retryMs: 100, onError: (e) => errors.push(e) },
+  );
+
+  assert.deepEqual(await get(), [1]); // loaded at 0
+  fail = true;
+  now = 1_000; // expired; the reload fails and the old value is served
+  assert.deepEqual(await get(), [1]);
+  assert.equal(loads, 2);
+  assert.equal((errors[0] as Error).message, "down");
+
+  now = 1_099; // inside the 100 ms retry wait: no new load
+  assert.deepEqual(await get(), [1]);
+  assert.equal(loads, 2);
+  now = 1_100; // the wait is over: tried again, still failing, still served
+  assert.deepEqual(await get(), [1]);
+  assert.equal(loads, 3);
+  assert.equal(errors.length, 2);
+
+  now = 10_000; // the value is now 10,000 ms old: too old to serve, so the failure is thrown
+  await assert.rejects(get(), /down/);
+  assert.equal(loads, 4);
+
+  fail = false; // the source is back: a fresh value replaces the old one
+  assert.deepEqual(await get(), [5]);
+  now = 10_500;
+  assert.deepEqual(await get(), [5]);
+  assert.equal(loads, 5);
+
+  // With nothing loaded yet there is nothing to fall back on.
+  const cold = createCache(async (): Promise<string[]> => { throw new Error("down"); }, 1_000, () => now, { maxStaleMs: 10_000, retryMs: 100 });
+  await assert.rejects(cold(), /down/);
+});
+
 // ---- CORS ----
 
 test("only pearfit.app and localhost origins are allowed", () => {
@@ -252,11 +293,11 @@ test("a candidate-loading failure is passed to onError and still answered as a 5
   assert.equal((seen[0] as Error).message, "Supabase down");
 });
 
-test("a candidate-loading failure is a 502 with the reason", async () => {
+test("a candidate-loading failure is a 502 with a fixed message, not the upstream reason", async () => {
   const down = createRecommendHandler({ getCandidates: async () => { throw new Error("Supabase down"); } });
   const r = await call(down, { method: "POST", body: goodBody });
   assert.equal(r.status, 502);
-  assert.deepEqual(r.body, { error: "Could not load candidates: Supabase down" });
+  assert.deepEqual(r.body, { error: "Could not load the catalog right now. Try again in a moment." });
 });
 
 test("OPTIONS preflight is a 204, with CORS headers only for allowed origins", async () => {

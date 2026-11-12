@@ -9,6 +9,9 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `styles.css` — Stylesheet, including a dark color scheme.
 - `app.js` — Sample silhouette, sample size matrix, ROI model, mobile menu, and the inquiry form.
 - `stores.html`, `stores.js`, `stores.json` — The supported-stores page and its data (see Supported stores).
+- `fit/`, `sitemap.xml` — The fit guide pages and the sitemap, both generated (see Fit guides).
+- `scripts/build-fit-pages.mjs` — Builds them from `data/fit-pages/catalog.json`.
+- `robots.txt` — Lets crawlers read everything except `/api/`, and names the sitemap.
 - `nav.js` — The mobile menu, shared by the pages.
 - `scripts/build-stores.mjs` — Builds `stores.json` from `webscraper/SUPPORTED_STORES.md`.
 - `demo.js` — The live size demo (`#try`): form, validation, the two API calls, the result card.
@@ -29,13 +32,14 @@ The shopper app (`app/`) is served at `/app`, built into `website/app` by the sa
 The Vercel project now deploys from `Coleismole/pearfit`.
 
 ## Generated files
-`api/recommend.js`, `api/candidates.js`, `api/scraper/`, `scraper/` and `stores.json` are build output, committed because the Vercel project is rooted at `website/`. Do not edit them by hand.
+`api/recommend.js`, `api/candidates.js`, `api/scraper/`, `scraper/`, `stores.json`, `fit/` and `sitemap.xml` are build output, committed because the Vercel project is rooted at `website/`. Do not edit them by hand.
 
 | Output | Rebuild with (repo root) |
 | --- | --- |
 | `api/recommend.js`, `api/candidates.js` | `(cd engine && npm run build:api)` |
 | `scraper/`, `api/scraper/` | `node scripts/assemble-site.mjs` |
 | `stores.json` | `node website/scripts/build-stores.mjs` (from `webscraper/SUPPORTED_STORES.md`) |
+| `fit/`, `sitemap.xml` | `node website/scripts/build-fit-pages.mjs` (from `data/fit-pages/catalog.json`) |
 
 Both need `npm ci` in `webscraper/` first (esbuild and vite are installed there). The `Check generated bundles` workflow (`.github/workflows/check-bundles.yml`) rebuilds both on every pull request and push to `main` and fails, listing the changed files and the diff stat, when the committed copies are stale. Run the same check locally with `node scripts/check-bundles.mjs` from a tree where those paths are committed. The Vite file names are content hashes, so with the lockfile installed the rebuild is byte-for-byte reproducible and a plain diff is a fair test.
 
@@ -66,6 +70,40 @@ node website/scripts/build-stores.mjs --check  # exits 1 if the committed file i
 The `Check generated bundles` workflow runs the same check. The output has no timestamp, so the same markdown always gives the same bytes. When the machine-readable verified-stores list under `webscraper/tools/` lands, switch `loadSource` and the parser in that script to it and keep the output shape.
 
 What the markdown does not say is not made up. It records the review platform and the size bought and fit answer for every store, but a size chart only for the size-chart-only store, so every other store reads "Not recorded yet" for the size chart. "Read / stated" and the "Limits we found" notes are copied from the markdown's table and its "Known limits" list. The review platform is normalised from the "Reviews come from" cell (a named platform wins over wording about how it was reached); `node website/scripts/build-stores.mjs` warns, and a test fails, when a new store's platform is not recognised.
+
+## Fit guides
+`fit/<product>.html` is one page per product that answers "does it run small?" from the review numbers in the fit
+store, with the size chart where there is one. `fit/index.html` lists them by brand and `sitemap.xml` lists every
+page of the site. They exist so that a search for how a product fits can land on Pearfit; each page links into the
+shopper app.
+
+The pages are built from `data/fit-pages/catalog.json`, a committed snapshot of the fit store. To pick up newly
+scraped products, refresh the snapshot and rebuild, from the repo root:
+
+```sh
+(cd engine && npm run export-fit-catalog)       # reads Supabase, writes data/fit-pages/catalog.json
+node website/scripts/build-fit-pages.mjs          # writes website/fit/ and website/sitemap.xml
+node website/scripts/build-fit-pages.mjs --check  # exits 1 if the committed pages are stale
+```
+
+The export needs `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (see `engine/.env.example`). The build needs nothing:
+it reads the snapshot only, and the date on the pages is the snapshot's, so the same snapshot always gives the same
+bytes. The `Check generated bundles` workflow rebuilds the pages and fails when they are stale.
+
+Rules the script keeps, all set at the top of `scripts/build-fit-pages.mjs`:
+
+- A product gets a page only with at least 10 reviews, a real brand and a name that reads as a product. The scraper
+  stores what a store's page says, which is sometimes an error page's title.
+- Every number is a stored number. The answer and the advice are picked from the shares by fixed thresholds
+  (`fitVerdict`); no language model writes them. The shares count only reviews that say how the product fits, and
+  the page says so.
+- A chart cell with no trusted number prints "unknown". A product with no chart says it has none.
+- No review text, reviewer name or store URL is published. The snapshot does not hold any.
+- A tee with a size chart links straight to its check in the app (`/app/#/check/<id>`); anything else links to `/app`.
+
+`test/fit-pages.test.mjs` covers the rules with a hand-written catalog and checks that the committed pages match the
+committed snapshot. The audit and the verify script both cover `fit/index.html`, and the verify script follows its
+links, so a missing guide page fails there.
 
 ## Analytics
 PostHog is loaded by `posthog-init.js`, which reads `/api/posthog-config` (`POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` on Vercel). Every event goes through `PearfitAnalytics.track(name, props)` in `analytics.js`. It never throws and does nothing when PostHog is blocked, unconfigured or absent (the GitHub Pages copy has no `/api`): events queue (at most 50) until PostHog starts and are dropped once `posthog:unavailable` fires.
@@ -106,4 +144,4 @@ Give it a URL to check a deploy, and `--attempts`/`--wait` to retry while the de
 node website/scripts/verify-site.mjs https://www.pearfit.app --attempts 10 --wait 30
 ```
 
-The `Verify website` workflow (`.github/workflows/verify-website.yml`) runs the unit tests, the audit on all four pages and this check on every pull request that changes `website/`, and on pushes to `main`.
+The `Verify website` workflow (`.github/workflows/verify-website.yml`) runs the unit tests, the audit on the four hand-written pages and `fit/index.html`, and this check on every pull request that changes `website/`, and on pushes to `main`.

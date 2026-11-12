@@ -21,6 +21,7 @@ Read this before you touch Supabase, SQLite, `webscraper/fit_store.sql` or any k
 | Scraper's Supabase client | `webscraper/supabaseFit.ts` |
 | Scraper's local SQLite schema and queries | `webscraper/server/db.ts` |
 | Engine-side read for the export | `engine/cli/export-candidates.ts`, `engine/cli/candidate-source.ts` |
+| Engine-side read for the fit guide pages' snapshot | `engine/cli/export-fit-catalog.ts` |
 | API-side read for `/recommend` and `/candidates` | `engine/api/supabase-candidates.ts` |
 | Project URL and publishable key | `webscraper/.env.example` (committed on purpose) |
 | Key names the engine needs | `engine/.env.example` |

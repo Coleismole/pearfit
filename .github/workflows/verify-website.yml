@@ -47,6 +47,6 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
       - name: Audit every page
-        run: node website/scripts/audit-site.mjs --pages index.html,stores.html,roi.html,404.html
+        run: node website/scripts/audit-site.mjs --pages index.html,stores.html,roi.html,404.html,fit/index.html
       - name: Check links, menu, form messages and the 404 page
         run: node website/scripts/verify-site.mjs

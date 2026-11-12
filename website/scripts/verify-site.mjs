@@ -30,7 +30,8 @@ const attempts = Math.max(1, flag('--attempts', 1));
 const waitSeconds = Math.max(0, flag('--wait', 20));
 const target = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
 
-const PAGES = ['/', '/stores.html', '/roi.html'];
+// '/fit/' is the generated list of fit guides. Its links cover every guide page, so a missing one fails here.
+const PAGES = ['/', '/stores.html', '/roi.html', '/fit/'];
 const MISSING = '/this-page-does-not-exist';
 const WIDTHS = [320, 375, 414, 768, 1280];
 const INBOX = 'customerservice@pearfit.app';
@@ -50,7 +51,7 @@ async function launchBrowser() {
   throw new Error(`Could not start Chromium through Playwright. Run \`npx playwright install chromium\` in webscraper/.\n${errors.join('\n')}`);
 }
 
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json' };
+const TYPES = { '.xml': 'application/xml', '.txt': 'text/plain', '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json' };
 
 // Like Vercel for this site: /scraper and /app are separate apps (answered with a stub), /api is not run,
 // and a missing file gets 404.html with status 404.

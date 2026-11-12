@@ -1,0 +1,7 @@
+# Everything on the site may be crawled except the API, which answers requests and has no pages.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /scraper/api/
+
+Sitemap: https://www.pearfit.app/sitemap.xml

@@ -1,0 +1,8148 @@
+{
+ "exported_on": "2026-11-12",
+ "products": [
+  {
+   "sku": "000130",
+   "candidateId": "000130",
+   "brand": "Lilly Pulitzer",
+   "name": "Finn Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "00040",
+   "candidateId": "00040",
+   "brand": "Unknown brand",
+   "name": "An Error Occurred!",
+   "garmentType": "other",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "0131-15940147-119500",
+   "candidateId": "0131-15940147-119500",
+   "brand": "Suzy Shier",
+   "name": "2-Fer Cotton-Blend Jumpsuit",
+   "garmentType": "other",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 25,
+    "trueToSizePct": 75,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "0225-1916-267400",
+   "candidateId": "0225-1916-267400",
+   "brand": "Hobbs",
+   "name": "Philipa Knit Mittens With Wool",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "1-4-zip-work-shirt-dk0a88a10dn",
+   "candidateId": "1-4-zip-work-shirt-dk0a88a10dn",
+   "brand": "Dickies",
+   "name": "1/4 Zip Work Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 0,
+    "trueToSizePct": 67,
+    "runsLargePct": 33
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "1000119919",
+   "candidateId": "1000119919",
+   "brand": "L.L.Bean",
+   "name": "Men's Carefree Unshrinkable Tee, Traditional Fit, Short-Sleeve",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 304,
+    "runsSmallPct": 2,
+    "trueToSizePct": 83,
+    "runsLargePct": 15
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10012058",
+   "candidateId": "10012058",
+   "brand": "Hot Topic",
+   "name": "The Rolling Stones '89 Tongue T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 163,
+    "runsSmallPct": 2,
+    "trueToSizePct": 92,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "1002-ITAKIS-S",
+   "candidateId": "1002-itakis-s",
+   "brand": "YoungLA",
+   "name": "1002 - Naruto Sweat Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 23,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "100268202-S",
+   "candidateId": "100268202-s",
+   "brand": "Reebok",
+   "name": "Men's Identity Small Logo T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 42,
+    "runsSmallPct": 7,
+    "trueToSizePct": 93,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10064",
+   "candidateId": "10064",
+   "brand": "Sitka",
+   "name": "Core Lightweight Crew LS",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 300,
+    "runsSmallPct": 6,
+    "trueToSizePct": 94,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10101001000100000",
+   "candidateId": "10101001000100000",
+   "brand": "Unknown brand",
+   "name": "Giro d'Italia Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "1013-03850",
+   "candidateId": "1013-03850",
+   "brand": "Mammut",
+   "name": "Sender IN Hybrid Jacket Men",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "1014-fit-destructed-dark-wash-jeans-blue",
+   "candidateId": "1014-fit-destructed-dark-wash-jeans-blue",
+   "brand": "Stetson",
+   "name": "1014 Rocker Fit Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10316587139418",
+   "candidateId": "10316587139418",
+   "brand": "Collectif",
+   "name": "Alda Ric Rac Black Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 206,
+    "runsSmallPct": 4,
+    "trueToSizePct": 94,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10393133973793",
+   "candidateId": "10393133973793",
+   "brand": "Jaanuu",
+   "name": "After-Hours Crewneck Sweatshirt - Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 100,
+    "trueToSizePct": 0,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10424761680056",
+   "candidateId": "10424761680056",
+   "brand": "Outerknown",
+   "name": "Blanket Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 300,
+    "runsSmallPct": 6,
+    "trueToSizePct": 85,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10450402508993",
+   "candidateId": "10450402508993",
+   "brand": "Bad Birdie",
+   "name": "Active Short - Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 142,
+    "runsSmallPct": 2,
+    "trueToSizePct": 94,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10595-HAV-XS",
+   "candidateId": "10595-hav-xs",
+   "brand": "LAKE Pajamas",
+   "name": "BalanceKnit™ Wave Tank Gown in Haven Blue — XS",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 20,
+    "trueToSizePct": 60,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10671055438017",
+   "candidateId": "10671055438017",
+   "brand": "Balega US",
+   "name": "Blister Resist Crew",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 76,
+    "runsSmallPct": 1,
+    "trueToSizePct": 98,
+    "runsLargePct": 1
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10718378698",
+   "candidateId": "10718378698",
+   "brand": "Raleigh Denim",
+   "name": "Alexander Resin Rinse",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10728C-BLKT",
+   "candidateId": "10728c-blkt",
+   "brand": "Capezio",
+   "name": "3-Layer Tutu - Girls",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "10830-111-152-1000",
+   "candidateId": "10830-111-152-1000",
+   "brand": "Suntect",
+   "name": "19th Hole | Men's Drive Long Sleeve Golf Polo | White",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 41,
+    "runsSmallPct": 10,
+    "trueToSizePct": 75,
+    "runsLargePct": 15
+   },
+   "sizes": null
+  },
+  {
+   "sku": "11545070",
+   "candidateId": "11545070",
+   "brand": "BoxLunch",
+   "name": "Nintendo The Legend of Zelda Link Love Womens Tank Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "116143",
+   "candidateId": "116143",
+   "brand": "Tory Sport",
+   "name": "French Terry Varsity Crewneck",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "12EP",
+   "candidateId": "12ep",
+   "brand": "Barbour",
+   "name": "Barbour® Classic Beaufort Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 181,
+    "runsSmallPct": 2,
+    "trueToSizePct": 92,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "13023-AS-S",
+   "candidateId": "13023-as-s",
+   "brand": "KUIU",
+   "name": "Alpine Hooded Jacket | Ash",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 201,
+    "runsSmallPct": 13,
+    "trueToSizePct": 84,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "142504431880",
+   "candidateId": "142504431880",
+   "brand": "Topo Designs",
+   "name": "Alpine High Label Hoodie",
+   "garmentType": "other",
+   "reviews": {
+    "total": 16,
+    "runsSmallPct": 13,
+    "trueToSizePct": 81,
+    "runsLargePct": 6
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "143007TTLICS",
+   "candidateId": "143007ttlics",
+   "brand": "VOORMI",
+   "name": "Camp Sweater",
+   "garmentType": "other",
+   "reviews": {
+    "total": 47,
+    "runsSmallPct": 0,
+    "trueToSizePct": 85,
+    "runsLargePct": 15
+   },
+   "sizes": null
+  },
+  {
+   "sku": "14694701007218",
+   "candidateId": "14694701007218",
+   "brand": "IBEX",
+   "name": "Men's GOAT Long Sleeve Tee",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 14,
+    "runsSmallPct": 0,
+    "trueToSizePct": 93,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "14892206752126",
+   "candidateId": "14892206752126",
+   "brand": "O'Neill",
+   "name": "Baay Bikini Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "14929386242411",
+   "candidateId": "14929386242411",
+   "brand": "Greyson Clothiers",
+   "name": "15\" Phoenix Skirt",
+   "garmentType": "other",
+   "reviews": {
+    "total": 150,
+    "runsSmallPct": 7,
+    "trueToSizePct": 88,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15018643128690",
+   "candidateId": "15018643128690",
+   "brand": "Cherokee Uniforms",
+   "name": "Men's 12-Pocket Scrub Pant",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 40,
+    "runsLargePct": 60
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15022335426930",
+   "candidateId": "15022335426930",
+   "brand": "Burt's Bees Baby",
+   "name": "2 Pack Pants - Bloodgood Maple",
+   "garmentType": "other",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 86,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "150600",
+   "candidateId": "150600",
+   "brand": "Nudie Jeans",
+   "name": "Gunde Logo Hoodie Greymelange",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 20,
+    "trueToSizePct": 80,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15093049033036",
+   "candidateId": "15093049033036",
+   "brand": "Organic Basics",
+   "name": "Waffle Raglan Long Sleeve - Truffle",
+   "garmentType": "other",
+   "reviews": {
+    "total": 14,
+    "runsSmallPct": 0,
+    "trueToSizePct": 86,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15193951928561",
+   "candidateId": "15193951928561",
+   "brand": "Bonobos",
+   "name": "All Season Flannel",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "15239045480819",
+   "candidateId": "15239045480819",
+   "brand": "Addition Elle",
+   "name": "24-7 Denim Jegging - Addition Elle",
+   "garmentType": "other",
+   "reviews": {
+    "total": 21,
+    "runsSmallPct": 0,
+    "trueToSizePct": 95,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15265328071027",
+   "candidateId": "15265328071027",
+   "brand": "Robert Graham",
+   "name": "52 PICK UP LONG SLEEVE BUTTON DOWN SHIRT",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15434291773574",
+   "candidateId": "15434291773574",
+   "brand": "DUER",
+   "name": "PurePima Only Tee - Slate Blue",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 115,
+    "runsSmallPct": 2,
+    "trueToSizePct": 94,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15459469262982",
+   "candidateId": "15459469262982",
+   "brand": "Shapermint",
+   "name": "Shapermint Essentials High-Waisted Butt-Lifting Shaping Jelly Short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 154,
+    "runsSmallPct": 1,
+    "trueToSizePct": 99,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "1551",
+   "candidateId": "1551",
+   "brand": "Rapanui",
+   "name": "Lightning Bolt T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 90,
+    "runsLargePct": 10
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15514564329853",
+   "candidateId": "15514564329853",
+   "brand": "Oh Polly",
+   "name": "3D Embellished Bandeau Maxi Dress in Liquid Gold",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 80,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15530243752320",
+   "candidateId": "15530243752320",
+   "brand": "KAPPA IT",
+   "name": "222 BANDA ANNISTON SLIM - Jacket - Fleece - Man - BLACK - PINK PRISM - WHITE - Black Men's Slim Fit Sportswear Fleece with Full Zip Opening",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15545543360585",
+   "candidateId": "15545543360585",
+   "brand": "Wolf & Shepherd",
+   "name": "Crossover Track Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15815991689600",
+   "candidateId": "15815991689600",
+   "brand": "Castelli",
+   "name": "ALPHA 150 JACKET",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "15AEGJH2",
+   "candidateId": "15aegjh2",
+   "brand": "Kryptek",
+   "name": "Aegis Jacket (Kryptek Highlander™ Camo)",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 96,
+    "runsSmallPct": 6,
+    "trueToSizePct": 93,
+    "runsLargePct": 1
+   },
+   "sizes": null
+  },
+  {
+   "sku": "16038745899338",
+   "candidateId": "16038745899338",
+   "brand": "MUD Jeans",
+   "name": "Alex Mid Loose - Medium Stone",
+   "garmentType": "other",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 13,
+    "trueToSizePct": 87,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "17122401KIES",
+   "candidateId": "17122401kies",
+   "brand": "PEARL iZUMi",
+   "name": "Graphic Short Sleeve T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 31,
+    "trueToSizePct": 61,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "190649779020",
+   "candidateId": "190649779020",
+   "brand": "MENS LS SHIRTS - OTHER",
+   "name": "100% Linen Button-Down Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "196445527223",
+   "candidateId": "196445527223",
+   "brand": "Brooklyn Cloth",
+   "name": "2 Pack 7\" Fleece Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "196992560155",
+   "candidateId": "196992560155",
+   "brand": "SPANX",
+   "name": "SPANX® BoostUp Strappy Tank",
+   "garmentType": "other",
+   "reviews": {
+    "total": 29,
+    "runsSmallPct": 28,
+    "trueToSizePct": 65,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "197206649352",
+   "candidateId": "197206649352",
+   "brand": "IZOD SPORTSWEAR",
+   "name": "5 POCKET SUPER SOFT PANT - NAVY BLAZER",
+   "garmentType": "other",
+   "reviews": {
+    "total": 117,
+    "runsSmallPct": 4,
+    "trueToSizePct": 96,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "1V011322",
+   "candidateId": "1v011322",
+   "brand": "Unknown brand",
+   "name": "Edgartown Short-Sleeve Pocket Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 16,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "268817",
+   "candidateId": "268817",
+   "brand": "Roller Rabbit",
+   "name": "Alpha Chi Omega Monkey Polo Pajamas",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "26F12305-4T7-2",
+   "candidateId": "26f12305-4t7-2",
+   "brand": "Tea Collection",
+   "name": "360 Twirl Dress",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "2828",
+   "candidateId": "2828",
+   "brand": "Fruit of the Loom",
+   "name": "Men's Short Sleeve Crew T-Shirt, White 3 Pack",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 83,
+    "runsSmallPct": 6,
+    "trueToSizePct": 92,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "3-4-dance-pants",
+   "candidateId": "3-4-dance-pants",
+   "brand": "Lorna Jane",
+   "name": "3/4 Dance pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 10,
+    "trueToSizePct": 90,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "3099-JB-XXS",
+   "candidateId": "3099-jb-xxs",
+   "brand": "Girlfriend Collective",
+   "name": "Black Meredith Bow Tank",
+   "garmentType": "other",
+   "reviews": {
+    "total": 24,
+    "runsSmallPct": 8,
+    "trueToSizePct": 92,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "3226693058005",
+   "candidateId": "3226693058005",
+   "brand": "Outdoor Research",
+   "name": "Men's Astroman Short Sleeve Sun Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "33",
+   "candidateId": "33",
+   "brand": "Uniform Advantage",
+   "name": "UA Best Buy Scrubs Women's 3-Pocket Moderate Flare Leg Drawstring Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 197,
+    "runsSmallPct": 4,
+    "trueToSizePct": 92,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "39031035",
+   "candidateId": "39031035",
+   "brand": "Roots",
+   "name": "Mens Organic Cooper Beaver Long Sleeve T-shirt",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 0,
+    "trueToSizePct": 67,
+    "runsLargePct": 33
+   },
+   "sizes": null
+  },
+  {
+   "sku": "3FLSHO-BLK-S",
+   "candidateId": "3flsho-blk-s",
+   "brand": "Ryderwear",
+   "name": "3\" Fleece Shorts - Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 14,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "400639-450-XS",
+   "candidateId": "400639-450-xs",
+   "brand": "Stio",
+   "name": "Grand Horizon Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "401630",
+   "candidateId": "401630",
+   "brand": "https://www.injinji.com/",
+   "name": "Ultra Run Mini-Crew Wool",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "40615-0238-003-XS",
+   "candidateId": "40615-0238-003-xs",
+   "brand": "Dudley Stephens",
+   "name": "Cleo Top in French Terry (Heather Grey)",
+   "garmentType": "other",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 90,
+    "runsLargePct": 10
+   },
+   "sizes": null
+  },
+  {
+   "sku": "4067983297342",
+   "candidateId": "4067983297342",
+   "brand": "PUMA",
+   "name": "Essentials No. 1 Logo Men's Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 80,
+    "trueToSizePct": 20,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "41193TCCHRTXXS",
+   "candidateId": "41193tcchrtxxs",
+   "brand": "Frankies Bikinis",
+   "name": "Academy Terry Mini Shorts - Cheer Team",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "4250104142292-02",
+   "candidateId": "4250104142292-02",
+   "brand": "Marine Layer",
+   "name": "Tahoe Fresh Tracks Flannel Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "433025",
+   "candidateId": "433025",
+   "brand": "White Stuff",
+   "name": "Selina Jersey Jumpsuit",
+   "garmentType": "other",
+   "reviews": {
+    "total": 308,
+    "runsSmallPct": 7,
+    "trueToSizePct": 22,
+    "runsLargePct": 71
+   },
+   "sizes": null
+  },
+  {
+   "sku": "440775002",
+   "candidateId": "440775002",
+   "brand": "Gap",
+   "name": "Classic T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 307,
+    "runsSmallPct": 4,
+    "trueToSizePct": 94,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "450305293018",
+   "candidateId": "450305293018",
+   "brand": "Laura Canada",
+   "name": "'Allo Paris' T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "4573",
+   "candidateId": "4573",
+   "brand": "Johnston & Murphy",
+   "name": "Fine-Stripe Polo",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "46525984309409",
+   "candidateId": "46525984309409",
+   "brand": "Dockers®",
+   "name": "All Seasons 5-Pocket Pant, Straight Fit",
+   "garmentType": "other",
+   "reviews": {
+    "total": 18,
+    "runsSmallPct": 11,
+    "trueToSizePct": 78,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "4798TTLNAOKXS",
+   "candidateId": "4798ttlnaokxs",
+   "brand": "AG Jeans",
+   "name": "Adam Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "5-pocket-denim-pant-ho25",
+   "candidateId": "5-pocket-denim-pant-ho25",
+   "brand": "Unknown brand",
+   "name": "5 POCKET DENIM PANT",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "502261-132",
+   "candidateId": "502261-132",
+   "brand": "Chubbies",
+   "name": "The Pit Stop",
+   "garmentType": "other",
+   "reviews": {
+    "total": 300,
+    "runsSmallPct": 11,
+    "trueToSizePct": 86,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "5063467207806",
+   "candidateId": "5063467207806",
+   "brand": "Represent Clo",
+   "name": "247 Aero Shorts Jet Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "5173336834093",
+   "candidateId": "5173336834093",
+   "brand": "NYDJ Apparel",
+   "name": "Ami Skinny Jeans - Cooper",
+   "garmentType": "other",
+   "reviews": {
+    "total": 168,
+    "runsSmallPct": 3,
+    "trueToSizePct": 92,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "54268W",
+   "candidateId": "54268w",
+   "brand": "Saucony",
+   "name": "Outpace 2.5\" Split Short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "54928058",
+   "candidateId": "54928058",
+   "brand": "Trenery",
+   "name": "Alpaca Merino Blend Polo",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "56493",
+   "candidateId": "56493",
+   "brand": "Haggar.com",
+   "name": "Big & Tall Active Series™ Herringbone Suit Pant",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "5866304340136",
+   "candidateId": "5866304340136",
+   "brand": "Berne",
+   "name": "Berne Script Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "5904541548710",
+   "candidateId": "5904541548710",
+   "brand": "halara",
+   "name": "Basic Padded Workout Cropped Low Support Tank Top A-D Cups",
+   "garmentType": "other",
+   "reviews": {
+    "total": 233,
+    "runsSmallPct": 9,
+    "trueToSizePct": 89,
+    "runsLargePct": 2
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "6543854534715",
+   "candidateId": "6543854534715",
+   "brand": "Primary.com",
+   "name": "Baby bike short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 101,
+    "runsSmallPct": 15,
+    "trueToSizePct": 84,
+    "runsLargePct": 1
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6599",
+   "candidateId": "6599",
+   "brand": "Quince",
+   "name": "100% Organic Cotton Heavyweight Relaxed Fit Jersey Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 157,
+    "runsSmallPct": 2,
+    "trueToSizePct": 91,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6624129515727",
+   "candidateId": "6624129515727",
+   "brand": "Sunice",
+   "name": "Boy's Reign Ski Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6757764857990",
+   "candidateId": "6757764857990",
+   "brand": "AFENDS",
+   "name": "Abbie - Rib Cropped Tee - Black",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6806698918090",
+   "candidateId": "6806698918090",
+   "brand": "Gymshark | We Do Gym",
+   "name": "Vengeance Long Sleeve T-Shirt",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 87,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6841925828692",
+   "candidateId": "6841925828692",
+   "brand": "Princess Polly Lower Impact",
+   "name": "Hibiscus Haven Oversized Tee Pink",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 109,
+    "runsSmallPct": 0,
+    "trueToSizePct": 63,
+    "runsLargePct": 37
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6869508161673",
+   "candidateId": "6869508161673",
+   "brand": "T.M.Lewin",
+   "name": "Max Performance White Twill Slim Fit Double Cuff Cutaway Collar Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 21,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6884642029681",
+   "candidateId": "6884642029681",
+   "brand": "404",
+   "name": "404 Silhouette Pants Off White",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6937877807176",
+   "candidateId": "6937877807176",
+   "brand": "CLUB MONACO",
+   "name": "Baxter 7\" Short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "6953109815368",
+   "candidateId": "6953109815368",
+   "brand": "True Classic",
+   "name": "White Stretch Oxford 2.0",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 111,
+    "runsSmallPct": 17,
+    "trueToSizePct": 76,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "698HBM1",
+   "candidateId": "698hbm1",
+   "brand": "Russell Athletic",
+   "name": "DRI-POWER ® Unisex Sweatshirt",
+   "garmentType": "other",
+   "reviews": {
+    "total": 303,
+    "runsSmallPct": 2,
+    "trueToSizePct": 96,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7014012616776",
+   "candidateId": "7014012616776",
+   "brand": "mnml",
+   "name": "994 Wolf L/S Tee - Black",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7027767377992",
+   "candidateId": "7027767377992",
+   "brand": "THINX",
+   "name": "Butterfly Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7058090459219",
+   "candidateId": "7058090459219",
+   "brand": "Kotn",
+   "name": "Men's Midweight Crew in Natural",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 0,
+    "runsSmallPct": 0,
+    "trueToSizePct": 0,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 49,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 63,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7091604750395_41119598444603",
+   "candidateId": "7091604750395-41119598444603",
+   "brand": "Christy Dawn",
+   "name": "Half Moon Half Sun Long Sleeve Tee | Blue Tie Dye",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 49.5,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 51.4,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.9,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 60.3,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 69.2,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7093912633419",
+   "candidateId": "7093912633419",
+   "brand": "Fresh Clean Threads",
+   "name": "Active Essentials Performance Cool Polo 3-Pack",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 120,
+    "runsSmallPct": 15,
+    "trueToSizePct": 81,
+    "runsLargePct": 4
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7116595495051",
+   "candidateId": "7116595495051",
+   "brand": "Bluffworks",
+   "name": "Ascender Chino Regular Fit - Aged Clay",
+   "garmentType": "other",
+   "reviews": {
+    "total": 280,
+    "runsSmallPct": 3,
+    "trueToSizePct": 91,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "715044304402",
+   "candidateId": "715044304402",
+   "brand": "Ben Davis Co",
+   "name": "Bernal Jacket - Black",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 0,
+    "trueToSizePct": 93,
+    "runsLargePct": 7
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7285583577173",
+   "candidateId": "7285583577173",
+   "brand": "OISELLE",
+   "name": "Float Tank",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7293397631035",
+   "candidateId": "7293397631035",
+   "brand": "Alex Mill",
+   "name": "Mill Shirt in Oxford",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 15,
+    "trueToSizePct": 62,
+    "runsLargePct": 23
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7310892335162",
+   "candidateId": "7310892335162",
+   "brand": "DONNI.",
+   "name": "The Baby Rib Baby Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 40,
+    "trueToSizePct": 60,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7390591123514",
+   "candidateId": "7390591123514",
+   "brand": "Ingrid & Isabel",
+   "name": "A-Line Sweater Knit Maternity Nursing Midi Dress",
+   "garmentType": "other",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 10,
+    "trueToSizePct": 90,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7418365673541",
+   "candidateId": "7418365673541",
+   "brand": "Faherty Brand",
+   "name": "TheMovement Shirt - Cedar Creek Plaid",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 21,
+    "runsSmallPct": 0,
+    "trueToSizePct": 95,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7428580540494",
+   "candidateId": "7428580540494",
+   "brand": "Café du Cycliste",
+   "name": "Adrienne",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7454611800141",
+   "candidateId": "7454611800141",
+   "brand": "Taylor Stitch",
+   "name": "The Cutter Overshirt in Timber Plaid",
+   "garmentType": "other",
+   "reviews": {
+    "total": 24,
+    "runsSmallPct": 8,
+    "trueToSizePct": 92,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7478846914654",
+   "candidateId": "7478846914654",
+   "brand": "Rothy's",
+   "name": "The Casual Clog - Blue Raffia-Knit",
+   "garmentType": "other",
+   "reviews": {
+    "total": 180,
+    "runsSmallPct": 6,
+    "trueToSizePct": 55,
+    "runsLargePct": 39
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7493498044503",
+   "candidateId": "7493498044503",
+   "brand": "Ten Thousand",
+   "name": "Core Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 98,
+    "runsSmallPct": 10,
+    "trueToSizePct": 82,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7569216471103",
+   "candidateId": "7569216471103",
+   "brand": "Le Col Cycling Apparel",
+   "name": "ARC Cargo Bib Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 141,
+    "runsSmallPct": 8,
+    "trueToSizePct": 83,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7571687702595",
+   "candidateId": "7571687702595",
+   "brand": "Eddie Bauer",
+   "name": "Men's Legend Wash 100% Cotton Short-Sleeve Pocket T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 200,
+    "runsSmallPct": 11,
+    "trueToSizePct": 86,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "760563235287",
+   "candidateId": "760563235287",
+   "brand": "Bally Total Fitness",
+   "name": "2 Pack Biker Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7682476212269",
+   "candidateId": "7682476212269",
+   "brand": "SPLITS59",
+   "name": "Airweight 3.5\" Short Jumpsuit - Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 50,
+    "runsLargePct": 50
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7743527223392",
+   "candidateId": "7743527223392",
+   "brand": "Triangl",
+   "name": "ALBI RUBY RED SPARKLE Skirt",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7781437833259",
+   "candidateId": "7781437833259",
+   "brand": "Gorman",
+   "name": "70’s Patch Suede Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 550,
+    "runsSmallPct": 1,
+    "trueToSizePct": 95,
+    "runsLargePct": 4
+   },
+   "sizes": {
+    "4": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "6": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "8": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "10": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "12": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "14": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "16": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "18": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "20": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7793350410333",
+   "candidateId": "7793350410333",
+   "brand": "Unknown brand",
+   "name": "Bandeau Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7793935384772-acadia-long-sleeve-poplin-shirt",
+   "candidateId": "7793935384772-acadia-long-sleeve-poplin-shirt",
+   "brand": "Kit and Ace",
+   "name": "Acadia Long Sleeve Poplin Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 50,
+    "runsLargePct": 50
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7799710056484",
+   "candidateId": "7799710056484",
+   "brand": "Criquet",
+   "name": "Ace Performance Hoodie - Dusty Blue",
+   "garmentType": "other",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "784677062",
+   "candidateId": "784677062",
+   "brand": "Athleta",
+   "name": "Move With Ease Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 300,
+    "runsSmallPct": 5,
+    "trueToSizePct": 86,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7849299902507",
+   "candidateId": "7849299902507",
+   "brand": "Lunya",
+   "name": "Airy Cotton Tie Front Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 0,
+    "runsLargePct": 100
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7861509317",
+   "candidateId": "7861509317",
+   "brand": "UNTUCKit",
+   "name": "Wrinkle-Free Black Stone Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 300,
+    "runsSmallPct": 4,
+    "trueToSizePct": 94,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7867927232546",
+   "candidateId": "7867927232546",
+   "brand": "Free Fly Apparel",
+   "name": "Women's Sol Tee - Heather Birch",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7886925103146",
+   "candidateId": "7886925103146",
+   "brand": "Knix",
+   "name": "SculptRib™ Cotton Tank - Last Call",
+   "garmentType": "other",
+   "reviews": {
+    "total": 144,
+    "runsSmallPct": 35,
+    "trueToSizePct": 62,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7898883031123",
+   "candidateId": "7898883031123",
+   "brand": "good american",
+   "name": "ALWAYS FITS GOOD CLASSIC BOOTCUT JEANS LONG | INDIGO446",
+   "garmentType": "other",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 90,
+    "runsLargePct": 10
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7901723132082",
+   "candidateId": "7901723132082",
+   "brand": "MATE the Label",
+   "name": "Men's Organic Heavyweight Cotton Relaxed Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 75,
+    "runsLargePct": 25
+   },
+   "sizes": null
+  },
+  {
+   "sku": "797098011",
+   "candidateId": "797098011",
+   "brand": "Gap Factory",
+   "name": "Everyday Soft Crewneck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 305,
+    "runsSmallPct": 5,
+    "trueToSizePct": 95,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7994248659030",
+   "candidateId": "7994248659030",
+   "brand": "Everlane",
+   "name": "Brushed Flannel Shirt | Birch/Black",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "7C00188-L",
+   "candidateId": "7c00188-l",
+   "brand": "Swiftwick",
+   "name": "Aspire Crew 1 / Blue Gray / LG",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "7MZ90F14-BCK",
+   "candidateId": "7mz90f14-bck",
+   "brand": "7 For All Mankind",
+   "name": "3 Pack Luxe Performance Tee in Black",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8042037739657",
+   "candidateId": "8042037739657",
+   "brand": "O5 Quiksilver",
+   "name": "Everyday UPF 50 Short Sleeve Surf Tee - Black",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 8,
+    "trueToSizePct": 67,
+    "runsLargePct": 25
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "8045768212671",
+   "candidateId": "8045768212671",
+   "brand": "Duck Head",
+   "name": "5\" Gold School Chino Short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 49,
+    "runsSmallPct": 0,
+    "trueToSizePct": 98,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8049097212006",
+   "candidateId": "8049097212006",
+   "brand": "Lifestyle Group (UK) Ltd",
+   "name": "Ambra nautical swing dress",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8069500567651",
+   "candidateId": "8069500567651",
+   "brand": "Rusty",
+   "name": "18 Degrees Mock Layer Stripe Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "811425012",
+   "candidateId": "811425012",
+   "brand": "Banana Republic",
+   "name": "Authentic Supima® Midweight T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 192,
+    "runsSmallPct": 8,
+    "trueToSizePct": 92,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8125408215140",
+   "candidateId": "8125408215140",
+   "brand": "PACT Inc.",
+   "name": "PACT Logo Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8143569486010",
+   "candidateId": "8143569486010",
+   "brand": "tentree",
+   "name": "Northern Aurora T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8198577225785",
+   "candidateId": "8198577225785",
+   "brand": "Papinelle Sleepwear AU",
+   "name": "Amber Frill Short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 100,
+    "trueToSizePct": 0,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8208154034229",
+   "candidateId": "8208154034229",
+   "brand": "Medelita Scrubs",
+   "name": "Men's Anthony Flap Pocket 38\" Lab Coat",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 50,
+    "runsLargePct": 50
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8220208103526",
+   "candidateId": "8220208103526",
+   "brand": "ThirdLove",
+   "name": "24/7® Classic Adjustable Strap Wireless Bra",
+   "garmentType": "other",
+   "reviews": {
+    "total": 165,
+    "runsSmallPct": 1,
+    "trueToSizePct": 99,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8228161814683",
+   "candidateId": "8228161814683",
+   "brand": "Reef",
+   "name": "Anders Long Sleeve Woven Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 167,
+    "runsSmallPct": 2,
+    "trueToSizePct": 98,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "82696REG-R",
+   "candidateId": "82696reg-r",
+   "brand": "Judy Blue",
+   "name": "Angelina Tailored Column Trouser",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 80,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "840312955861",
+   "candidateId": "840312955861",
+   "brand": "Outdoor Voices",
+   "name": "ThinkFast Mesh Muscle Tank",
+   "garmentType": "other",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 75,
+    "trueToSizePct": 25,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8522040574052",
+   "candidateId": "8522040574052",
+   "brand": "Reitmans",
+   "name": "3/4-Sleeve Embroidered Blouse",
+   "garmentType": "other",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 90,
+    "runsLargePct": 10
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8541864788124",
+   "candidateId": "8541864788124",
+   "brand": "First Lite",
+   "name": "At First Lite 2.0 T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8650354000062",
+   "candidateId": "8650354000062",
+   "brand": "SimmsFishing",
+   "name": "Headwaters Vest",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8663511760948",
+   "candidateId": "8663511760948",
+   "brand": "Seafolly Ladies",
+   "name": "Bandeau Maxi Dress",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8682102751415",
+   "candidateId": "8682102751415",
+   "brand": "On Running",
+   "name": "2 in 1 Performance Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8733647962302",
+   "candidateId": "8733647962302",
+   "brand": "NOBULL",
+   "name": "Men's Adapt Polo",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 129,
+    "runsSmallPct": 5,
+    "trueToSizePct": 93,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8747341709490",
+   "candidateId": "8747341709490",
+   "brand": "ThreadC",
+   "name": "JASPER SHIRT - LONG SLEEVE",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 26,
+    "runsSmallPct": 4,
+    "trueToSizePct": 73,
+    "runsLargePct": 23
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8750653243605",
+   "candidateId": "8750653243605",
+   "brand": "KNOWN SUPPLY",
+   "name": "Ada Pullover - Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8764982394903",
+   "candidateId": "8764982394903",
+   "brand": "Review Australia",
+   "name": "Abbey Mini Dress",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8786349719710",
+   "candidateId": "8786349719710",
+   "brand": "TYR US",
+   "name": "Airtec Men's Tank - Solid / Blue Moon",
+   "garmentType": "other",
+   "reviews": {
+    "total": 57,
+    "runsSmallPct": 0,
+    "trueToSizePct": 98,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8809251307878",
+   "candidateId": "8809251307878",
+   "brand": "Little Sleepies",
+   "name": "Little Sleepies Acorn Woods Relaxed Pocket Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 21.6,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 26,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 30.5,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 34.9,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 39.4,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "8862204788913",
+   "candidateId": "8862204788913",
+   "brand": "Negative Underwear",
+   "name": "Airis Scoop Bra in Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 13,
+    "trueToSizePct": 62,
+    "runsLargePct": 25
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8862414504015",
+   "candidateId": "8862414504015",
+   "brand": "Cariloha",
+   "name": "Bamboo Comfort Crew Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 264,
+    "runsSmallPct": 3,
+    "trueToSizePct": 94,
+    "runsLargePct": 3
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "8901841780904",
+   "candidateId": "8901841780904",
+   "brand": "Peppermayo Exclusive",
+   "name": "Aamari Maxi Dress - Red",
+   "garmentType": "other",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 86,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8921862209713",
+   "candidateId": "8921862209713",
+   "brand": "HATCH Collection",
+   "name": "The All Tri Jumpsuit",
+   "garmentType": "other",
+   "reviews": {
+    "total": 28,
+    "runsSmallPct": 7,
+    "trueToSizePct": 79,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "8958757699753",
+   "candidateId": "8958757699753",
+   "brand": "RAILS",
+   "name": "ADDY SWEATER - FLORAL CABLES",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "9.0SWIM-23-003-BBX3-GRN",
+   "candidateId": "9-0swim-23-003-bbx3-grn",
+   "brand": "9.0 Swim",
+   "name": "9.0 Swim Bianca Green Floral Bikini Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 29,
+    "runsSmallPct": 17,
+    "trueToSizePct": 80,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "9332491",
+   "candidateId": "9332491",
+   "brand": "adidas Originals",
+   "name": "Essential Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 236,
+    "runsSmallPct": 1,
+    "trueToSizePct": 92,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "95167414631",
+   "candidateId": "95167414631",
+   "brand": "Alo Yoga",
+   "name": "Airbrush Splendor Dress - Azure Blue",
+   "garmentType": "other",
+   "reviews": {
+    "total": 166,
+    "runsSmallPct": 7,
+    "trueToSizePct": 92,
+    "runsLargePct": 1
+   },
+   "sizes": null
+  },
+  {
+   "sku": "9D50623-020-S",
+   "candidateId": "9d50623-020-s",
+   "brand": "Garneau",
+   "name": "Active Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "A-93249836",
+   "candidateId": "a-93249836",
+   "brand": "Unknown brand",
+   "name": "Men's Short Sleeve Crew Neck T-Shirt - Goodfellow & Co™ Heathered Gray L: Cotton Blend, Jersey Fabric",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 87,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "AFS_195115256258",
+   "candidateId": "afs-195115256258",
+   "brand": "Marmot",
+   "name": "Men's Coastal Short-Sleeve T-Shirt (Spring 2025)",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 13,
+    "trueToSizePct": 74,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "AM-SH-11150-1586-30T",
+   "candidateId": "am-sh-11150-1586-30t",
+   "brand": "American Tall",
+   "name": "10 Pocket Hiking Short for Tall Men in Pebble Grey 30 / Tall / Pebble Grey",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 20,
+    "trueToSizePct": 60,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "BB1001",
+   "candidateId": "bb1001",
+   "brand": "Boody",
+   "name": "Boody Baby Bodysuit",
+   "garmentType": "other",
+   "reviews": {
+    "total": 32,
+    "runsSmallPct": 3,
+    "trueToSizePct": 91,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "BB24-30026-ACP-BONE-XL",
+   "candidateId": "bb24-30026-acp-bone-xl",
+   "brand": "Buffbunny-One More",
+   "name": "Adventure Cargo Pant - Bone",
+   "garmentType": "other",
+   "reviews": {
+    "total": 26,
+    "runsSmallPct": 4,
+    "trueToSizePct": 73,
+    "runsLargePct": 23
+   },
+   "sizes": null
+  },
+  {
+   "sku": "BL-CHF-SF",
+   "candidateId": "bl-chf-sf",
+   "brand": "Helikon-Tex",
+   "name": "Covert Hoodie - Fullzip",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 100,
+    "trueToSizePct": 0,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 56,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 58,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 60,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 62,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 66,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXXL": {
+     "chest_cm": 68,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "BT327206-033",
+   "candidateId": "bt327206-033",
+   "brand": "Tommy Bahama",
+   "name": "Big & Tall Nova Wave Cotton-Blend Long-Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 75,
+    "runsLargePct": 25
+   },
+   "sizes": null
+  },
+  {
+   "sku": "BVA01XXCARMED",
+   "candidateId": "bva01xxcarmed",
+   "brand": "Rapha",
+   "name": "Rapha - Women's Pro Team Cycling Bib Shorts III - Long - Black - Medium",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 50,
+    "runsLargePct": 50
+   },
+   "sizes": null
+  },
+  {
+   "sku": "BWB500GPS",
+   "candidateId": "bwb500gps",
+   "brand": "Minus33 Merino Wool Clothing",
+   "name": "Big Woods Bucks Heavyweight Wool Guide Shirt Jacket - 34.4oz",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "CPM253TE73036",
+   "candidateId": "cpm253te73036",
+   "brand": "Champion",
+   "name": "Classic Graphic T-Shirt, Script Logo",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 128,
+    "runsSmallPct": 5,
+    "trueToSizePct": 84,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "DTC26-131I-S",
+   "candidateId": "dtc26-131i-s",
+   "brand": "Thrills Co.",
+   "name": "A Haven for the Restless Merch Fit Tee - Aubergine",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E422992-000",
+   "candidateId": "e422992-000",
+   "brand": "UNIQLO",
+   "name": "Men's Crew Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 89,
+    "runsLargePct": 7
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.2,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.7,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.9,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.7,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.1,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.9,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E424873-000",
+   "candidateId": "e424873-000",
+   "brand": "UNIQLO",
+   "name": "Crew Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 15,
+    "trueToSizePct": 85,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 38.1,
+     "length_cm": 55.3,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 40.6,
+     "length_cm": 57.2,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 43.2,
+     "length_cm": 59.1,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 45.7,
+     "length_cm": 61,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 48.9,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 52.1,
+     "length_cm": 65.4,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 55.2,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E440522-000",
+   "candidateId": "e440522-000",
+   "brand": "UNIQLO",
+   "name": "Men's WAFFLE CREW NECK T-SHIRT",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 48,
+    "runsSmallPct": 4,
+    "trueToSizePct": 81,
+    "runsLargePct": 15
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.8,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 53.3,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 56.5,
+     "length_cm": 68.6,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 60.3,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E440526-000",
+   "candidateId": "e440526-000",
+   "brand": "UNIQLO",
+   "name": "Men's SOFT TOUCH TURTLENECK LONG SLEEVE T-SHIRT",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 24,
+    "runsSmallPct": 8,
+    "trueToSizePct": 88,
+    "runsLargePct": 4
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 48.9,
+     "length_cm": 62.9,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.1,
+     "length_cm": 66.1,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.2,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.1,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 62.9,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E450179-000",
+   "candidateId": "e450179-000",
+   "brand": "UNIQLO",
+   "name": "Men's Soft Brushed Crew Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.2,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.7,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.9,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.7,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.1,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 75,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E450260-000",
+   "candidateId": "e450260-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 94,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E452299-000",
+   "candidateId": "e452299-000",
+   "brand": "UNIQLO",
+   "name": "Men's OXFORD SLIM FIT SHIRT",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 26,
+    "runsSmallPct": 19,
+    "trueToSizePct": 81,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.2,
+     "length_cm": 70.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.7,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.9,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.7,
+     "length_cm": 77.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.1,
+     "length_cm": 78.8,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 79.4,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E455365-000",
+   "candidateId": "e455365-000",
+   "brand": "UNIQLO",
+   "name": "Men's SUPIMA® Cotton T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 94,
+    "runsLargePct": 2
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 48.3,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 51.4,
+     "length_cm": 65.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 54.6,
+     "length_cm": 68.6,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 58.4,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 62.2,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 65.4,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E455486-000",
+   "candidateId": "e455486-000",
+   "brand": "UNIQLO",
+   "name": "Men's AIRsense Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 91,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E455957-000",
+   "candidateId": "e455957-000",
+   "brand": "UNIQLO",
+   "name": "Men's Premium Linen Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 89,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E456588-000",
+   "candidateId": "e456588-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 9,
+    "trueToSizePct": 89,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E456590-000",
+   "candidateId": "e456590-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 91,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E456592-000",
+   "candidateId": "e456592-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 93,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E456630-000",
+   "candidateId": "e456630-000",
+   "brand": "UNIQLO",
+   "name": "Men's Oxford Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 9,
+    "trueToSizePct": 86,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E460318-000",
+   "candidateId": "e460318-000",
+   "brand": "UNIQLO",
+   "name": "Waffle Crew Neck T-Shirt | 2025",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 21,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 47.6,
+     "length_cm": 59.7,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 50.8,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 53.3,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 56.5,
+     "length_cm": 68,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 60.3,
+     "length_cm": 71.2,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E462055-000",
+   "candidateId": "e462055-000",
+   "brand": "UNIQLO",
+   "name": "Men's WAFFLE HENLEY NECK LONG SLEEVE T-SHIRT",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 7,
+    "trueToSizePct": 78,
+    "runsLargePct": 15
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.8,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 53.3,
+     "length_cm": 68,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 56.5,
+     "length_cm": 71.2,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 60.3,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": 76.2,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 76.2,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E462197-000",
+   "candidateId": "e462197-000",
+   "brand": "UNIQLO",
+   "name": "Men's Pleated Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 0,
+    "trueToSizePct": 98,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E462336-000",
+   "candidateId": "e462336-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 40,
+    "runsSmallPct": 8,
+    "trueToSizePct": 87,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E462368-000",
+   "candidateId": "e462368-000",
+   "brand": "UNIQLO",
+   "name": "Men's Oxford Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 18,
+    "trueToSizePct": 78,
+    "runsLargePct": 4
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.2,
+     "length_cm": 70.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.7,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.9,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.7,
+     "length_cm": 77.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.1,
+     "length_cm": 78.8,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 79.4,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E462429-000",
+   "candidateId": "e462429-000",
+   "brand": "UNIQLO",
+   "name": "Men's Pleated Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 39,
+    "runsSmallPct": 3,
+    "trueToSizePct": 89,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E463247-000",
+   "candidateId": "e463247-000",
+   "brand": "UNIQLO",
+   "name": "Mens Ultra Light Down Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 94,
+    "runsSmallPct": 14,
+    "trueToSizePct": 85,
+    "runsLargePct": 1
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 48.5,
+     "length_cm": 58,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 51.5,
+     "length_cm": 60,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 54.5,
+     "length_cm": 62,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 57.5,
+     "length_cm": 64,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 61.5,
+     "length_cm": 67,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 65.5,
+     "length_cm": 68,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 68.5,
+     "length_cm": 69,
+     "sleeve_cm": null
+    },
+    "XXXL": {
+     "chest_cm": 72.5,
+     "length_cm": 70,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E465185-000",
+   "candidateId": "e465185-000",
+   "brand": "UNIQLO",
+   "name": "Men's AIRism Cotton Oversized T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 300,
+    "runsSmallPct": 0,
+    "trueToSizePct": 83,
+    "runsLargePct": 17
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 52.7,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 55.2,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 58.4,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 62.2,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 66.7,
+     "length_cm": 75,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 69.2,
+     "length_cm": 75,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E465187-000",
+   "candidateId": "e465187-000",
+   "brand": "UNIQLO",
+   "name": "Men's Dry Colour T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 91,
+    "runsLargePct": 4
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 48.3,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 50.8,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 54,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 57.8,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 62.2,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 66,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E465193-000",
+   "candidateId": "e465193-000",
+   "brand": "UNIQLO",
+   "name": "AIRism Cotton T-Shirt | Long Sleeve",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 0,
+    "trueToSizePct": 85,
+    "runsLargePct": 15
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 48.9,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 52.1,
+     "length_cm": 64.2,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 55.2,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 57.8,
+     "length_cm": 69.9,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 62.2,
+     "length_cm": 73.1,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 66,
+     "length_cm": 75,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 69.2,
+     "length_cm": 75.6,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E465196-000",
+   "candidateId": "e465196-000",
+   "brand": "UNIQLO",
+   "name": "Men's AIRism Cotton Pique Polo Shirt",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 9,
+    "trueToSizePct": 86,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 48.9,
+     "length_cm": 62.9,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.1,
+     "length_cm": 66.1,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.2,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.1,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 62.9,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 66,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E465751-000",
+   "candidateId": "e465751-000",
+   "brand": "UNIQLO",
+   "name": "Soft Ribbed T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 36.2,
+     "length_cm": 55.9,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 38.7,
+     "length_cm": 57.8,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 41.9,
+     "length_cm": 59.7,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 45.1,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 48.3,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E465760-000",
+   "candidateId": "e465760-000",
+   "brand": "UNIQLO",
+   "name": "Mini T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 13,
+    "trueToSizePct": 87,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 34.9,
+     "length_cm": 43.2,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 37.5,
+     "length_cm": 44.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 40,
+     "length_cm": 46.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 43.2,
+     "length_cm": 48.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 45.7,
+     "length_cm": 50.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 48.9,
+     "length_cm": 52.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 52.1,
+     "length_cm": 54.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E467153-000",
+   "candidateId": "e467153-000",
+   "brand": "UNIQLO",
+   "name": "Men's Knitted Polo Shirt",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 13,
+    "trueToSizePct": 49,
+    "runsLargePct": 38
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": 52.1,
+     "length_cm": 61.6,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.2,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.1,
+     "length_cm": 67.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 62.9,
+     "length_cm": 70.5,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E467483-000",
+   "candidateId": "e467483-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Slim Fit Long Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 27,
+    "runsSmallPct": 7,
+    "trueToSizePct": 93,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E469871-000",
+   "candidateId": "e469871-000",
+   "brand": "UNIQLO",
+   "name": "Women's PUFFTECH Parka",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 83,
+    "runsLargePct": 15
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E470143-000",
+   "candidateId": "e470143-000",
+   "brand": "UNIQLO",
+   "name": "Soft Knitted Fleece T-Shirt | Long Sleeve",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 5,
+    "trueToSizePct": 65,
+    "runsLargePct": 30
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 50.8,
+     "length_cm": 55.3,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 52.7,
+     "length_cm": 57.2,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 55.2,
+     "length_cm": 59.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 58.4,
+     "length_cm": 61.6,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 61.6,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": 65.4,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E470182-000",
+   "candidateId": "e470182-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 0,
+    "trueToSizePct": 89,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E470187-000",
+   "candidateId": "e470187-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Checked Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 88,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E471808-000",
+   "candidateId": "e471808-000",
+   "brand": "UNIQLO",
+   "name": "Men's Sweat Oversized Pullover Hoodie",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 86,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E471809-000",
+   "candidateId": "e471809-000",
+   "brand": "UNIQLO",
+   "name": "Men's Sweat Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 7,
+    "trueToSizePct": 89,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E473295-000",
+   "candidateId": "e473295-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 8,
+    "trueToSizePct": 92,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E473533-000",
+   "candidateId": "e473533-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Jersey Slim Fit Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 17,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E473534-000",
+   "candidateId": "e473534-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Jersey Slim Fit Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 36,
+    "runsSmallPct": 0,
+    "trueToSizePct": 94,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E473535-000",
+   "candidateId": "e473535-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Jersey Slim Fit Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 93,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E473715-000",
+   "candidateId": "e473715-000",
+   "brand": "UNIQLO",
+   "name": "Men's Sweat Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 0,
+    "trueToSizePct": 95,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E473791-000",
+   "candidateId": "e473791-000",
+   "brand": "UNIQLO",
+   "name": "Women's Linen Blend Easy Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 93,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E475344-000",
+   "candidateId": "e475344-000",
+   "brand": "UNIQLO",
+   "name": "Women's Jersey Barrel Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 86,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E475647-000",
+   "candidateId": "e475647-000",
+   "brand": "UNIQLO",
+   "name": "Women's Premium Linen Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 94,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E475649-000",
+   "candidateId": "e475649-000",
+   "brand": "UNIQLO",
+   "name": "Women's Premium Linen Skipper Collar Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 0,
+    "trueToSizePct": 84,
+    "runsLargePct": 16
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E476217-000",
+   "candidateId": "e476217-000",
+   "brand": "UNIQLO",
+   "name": "Men's AIRism Cotton Polo Shirt",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 24,
+    "runsSmallPct": 4,
+    "trueToSizePct": 58,
+    "runsLargePct": 38
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": 59.1,
+     "length_cm": 66.1,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 62.2,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 66,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 69.9,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E477177-000",
+   "candidateId": "e477177-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Jersey Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 13,
+    "trueToSizePct": 74,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E477181-000",
+   "candidateId": "e477181-000",
+   "brand": "UNIQLO",
+   "name": "Men's Cotton Linen Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 87,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E477345-000",
+   "candidateId": "e477345-000",
+   "brand": "UNIQLO",
+   "name": "Women's Jersey Barrel Leg Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 88,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E478009-000",
+   "candidateId": "e478009-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 11,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E478965-000",
+   "candidateId": "e478965-000",
+   "brand": "UNIQLO",
+   "name": "HEATTECH Ultra Warm Crew Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 36.2,
+     "length_cm": 52.7,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 38.7,
+     "length_cm": 54.7,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 40.6,
+     "length_cm": 56.6,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 42.5,
+     "length_cm": 58.5,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 44.5,
+     "length_cm": 60.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 46.4,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 48.3,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E479000-000",
+   "candidateId": "e479000-000",
+   "brand": "UNIQLO",
+   "name": "Women's Barrel Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 82,
+    "runsLargePct": 16
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E479071-000",
+   "candidateId": "e479071-000",
+   "brand": "UNIQLO",
+   "name": "Women's Rayon Blouse",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 15,
+    "trueToSizePct": 85,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E479073-000",
+   "candidateId": "e479073-000",
+   "brand": "UNIQLO",
+   "name": "Women's Rayon Skipper Collar Blouse",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 93,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E479284-000",
+   "candidateId": "e479284-000",
+   "brand": "UNIQLO",
+   "name": "Women's Brushed Jersey Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 92,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E479285-000",
+   "candidateId": "e479285-000",
+   "brand": "UNIQLO",
+   "name": "Women's Brushed Jersey Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 17,
+    "runsSmallPct": 29,
+    "trueToSizePct": 71,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E479525-000",
+   "candidateId": "e479525-000",
+   "brand": "UNIQLO",
+   "name": "Men's HEATTECH Ultra Warm T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 0,
+    "trueToSizePct": 98,
+    "runsLargePct": 2
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 45.7,
+     "length_cm": 60.4,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 48.3,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 51.4,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 55.2,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 59.7,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 63.5,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E479620-000",
+   "candidateId": "e479620-000",
+   "brand": "UNIQLO",
+   "name": "Women's Sweat Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 85,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E479791-000",
+   "candidateId": "e479791-000",
+   "brand": "UNIQLO",
+   "name": "Soft Knitted Fleece Crew Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 21,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.8,
+     "length_cm": 60.4,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 54,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 57.2,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 61,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.9,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E480764-000",
+   "candidateId": "e480764-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 8,
+    "trueToSizePct": 84,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E480868-000",
+   "candidateId": "e480868-000",
+   "brand": "UNIQLO",
+   "name": "HEATTECH Ultra Warm High Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 36.2,
+     "length_cm": 52.7,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 38.7,
+     "length_cm": 54.7,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 40.6,
+     "length_cm": 56.6,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 42.5,
+     "length_cm": 58.5,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 44.5,
+     "length_cm": 60.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 46.4,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 48.3,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E481224-000",
+   "candidateId": "e481224-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Checked Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 46,
+    "runsSmallPct": 2,
+    "trueToSizePct": 91,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482281-000",
+   "candidateId": "e482281-000",
+   "brand": "UNIQLO",
+   "name": "Women's EZY Wide Straight Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 86,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482299-000",
+   "candidateId": "e482299-000",
+   "brand": "UNIQLO",
+   "name": "Men's DRY-EX T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 91,
+    "runsLargePct": 4
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 45.7,
+     "length_cm": 61.6,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 48.9,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 52.1,
+     "length_cm": 67.4,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 55.9,
+     "length_cm": 70.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 59.7,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 62.9,
+     "length_cm": 73.1,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E482304-000",
+   "candidateId": "e482304-000",
+   "brand": "UNIQLO",
+   "name": "Men's Dry Pique Polo Shirt",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 77,
+    "runsLargePct": 18
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482305-000",
+   "candidateId": "e482305-000",
+   "brand": "UNIQLO",
+   "name": "Men's DRY-EX Polo Shirt",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 7,
+    "trueToSizePct": 91,
+    "runsLargePct": 2
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": 48.9,
+     "length_cm": 66.1,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 52.1,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 55.9,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 59.7,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 62.9,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E482321-000",
+   "candidateId": "e482321-000",
+   "brand": "UNIQLO",
+   "name": "Men's Washable 3D Knit Crew Neck Sweater",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 91,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482460-000",
+   "candidateId": "e482460-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 13,
+    "trueToSizePct": 87,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482461-000",
+   "candidateId": "e482461-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482523-000",
+   "candidateId": "e482523-000",
+   "brand": "UNIQLO",
+   "name": "Men's AIRism Cotton Crew Neck T-Shirt Short Sleeve",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 53,
+    "runsSmallPct": 2,
+    "trueToSizePct": 96,
+    "runsLargePct": 2
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 48.3,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 50.8,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 54,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 57.8,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 62.2,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 66,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E482766-000",
+   "candidateId": "e482766-000",
+   "brand": "UNIQLO",
+   "name": "Waffle Henley Neck T-Shirt | Long Sleeve",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 0,
+    "trueToSizePct": 90,
+    "runsLargePct": 10
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.8,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 53.3,
+     "length_cm": 68,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 56.5,
+     "length_cm": 71.2,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 60.3,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": 76.2,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 76.2,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E482868-000",
+   "candidateId": "e482868-000",
+   "brand": "UNIQLO",
+   "name": "Men's Baggy Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 85,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482883-000",
+   "candidateId": "e482883-000",
+   "brand": "UNIQLO",
+   "name": "Men's Wide Cargo Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 87,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E482886-000",
+   "candidateId": "e482886-000",
+   "brand": "UNIQLO",
+   "name": "Men's Smart Ankle Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 9,
+    "trueToSizePct": 86,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E483285-000",
+   "candidateId": "e483285-000",
+   "brand": "UNIQLO",
+   "name": "Women's Sweat Straight Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 0,
+    "trueToSizePct": 91,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E483458-000",
+   "candidateId": "e483458-000",
+   "brand": "UNIQLO",
+   "name": "Extra Stretch Active T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 20,
+    "trueToSizePct": 80,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 37.5,
+     "length_cm": 45.1,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 40,
+     "length_cm": 46.4,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 42.5,
+     "length_cm": 48.3,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 45.1,
+     "length_cm": 50.2,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 48.3,
+     "length_cm": 52.7,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 50.8,
+     "length_cm": 54.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 54,
+     "length_cm": 55.9,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E483461-000",
+   "candidateId": "e483461-000",
+   "brand": "UNIQLO",
+   "name": "Supima® Cotton T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 40.6,
+     "length_cm": 54,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 43.2,
+     "length_cm": 55.3,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 45.7,
+     "length_cm": 57.2,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 48.3,
+     "length_cm": 59.7,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 50.8,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 54,
+     "length_cm": 64.2,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 57.2,
+     "length_cm": 65.4,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E483463-000",
+   "candidateId": "e483463-000",
+   "brand": "UNIQLO",
+   "name": "Waffle Full Open Mini T-Shirt | Deep Neck",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 0,
+    "trueToSizePct": 95,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 36.2,
+     "length_cm": 42.6,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 38.7,
+     "length_cm": 43.9,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 41.3,
+     "length_cm": 46.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 43.8,
+     "length_cm": 48.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 47,
+     "length_cm": 50.2,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 50.2,
+     "length_cm": 52.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 52.7,
+     "length_cm": 54,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E483869-000",
+   "candidateId": "e483869-000",
+   "brand": "UNIQLO",
+   "name": "Women's Premium Linen Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 88,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E483872-000",
+   "candidateId": "e483872-000",
+   "brand": "UNIQLO",
+   "name": "Women's Premium Linen Skipper Collar 3/4 Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 44,
+    "runsSmallPct": 0,
+    "trueToSizePct": 64,
+    "runsLargePct": 36
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E483970-000",
+   "candidateId": "e483970-000",
+   "brand": "UNIQLO",
+   "name": "Men's DRY-EX T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 25,
+    "runsSmallPct": 0,
+    "trueToSizePct": 92,
+    "runsLargePct": 8
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 45.7,
+     "length_cm": 61.6,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 48.9,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 52.1,
+     "length_cm": 67.4,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 55.9,
+     "length_cm": 70.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 59.7,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 62.9,
+     "length_cm": 73.1,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E484209-000",
+   "candidateId": "e484209-000",
+   "brand": "UNIQLO",
+   "name": "Men's Jorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 80,
+    "runsLargePct": 18
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484244-000",
+   "candidateId": "e484244-000",
+   "brand": "UNIQLO",
+   "name": "Men's Oxford Oversized Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 50,
+    "runsSmallPct": 2,
+    "trueToSizePct": 68,
+    "runsLargePct": 30
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484245-000",
+   "candidateId": "e484245-000",
+   "brand": "UNIQLO",
+   "name": "Men's Denim Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 51,
+    "runsSmallPct": 0,
+    "trueToSizePct": 90,
+    "runsLargePct": 10
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484256-000",
+   "candidateId": "e484256-000",
+   "brand": "UNIQLO",
+   "name": "Women's Premium Linen Skipper Boxy Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 74,
+    "runsLargePct": 22
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484457-000",
+   "candidateId": "e484457-000",
+   "brand": "UNIQLO",
+   "name": "Ribbed Mini T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 13,
+    "trueToSizePct": 87,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 34.9,
+     "length_cm": 43.2,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 37.5,
+     "length_cm": 44.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 40,
+     "length_cm": 46.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 42.5,
+     "length_cm": 48.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 45.7,
+     "length_cm": 50.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 48.3,
+     "length_cm": 52.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 51.4,
+     "length_cm": 54.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E484780-000",
+   "candidateId": "e484780-000",
+   "brand": "UNIQLO",
+   "name": "Waffle Crew Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.8,
+     "length_cm": 62.9,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 53.3,
+     "length_cm": 64.8,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 56.5,
+     "length_cm": 68,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 60.3,
+     "length_cm": 71.2,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.8,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E484807-000",
+   "candidateId": "e484807-000",
+   "brand": "UNIQLO",
+   "name": "Women's Barrel Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 31,
+    "runsSmallPct": 0,
+    "trueToSizePct": 81,
+    "runsLargePct": 19
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484807-001",
+   "candidateId": "e484807-001",
+   "brand": "UNIQLO",
+   "name": "Women's Barrel Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484813-000",
+   "candidateId": "e484813-000",
+   "brand": "UNIQLO",
+   "name": "Women's EZY Wide Straight Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 14,
+    "trueToSizePct": 72,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484875-000",
+   "candidateId": "e484875-000",
+   "brand": "UNIQLO",
+   "name": "Men's Barrel Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 9,
+    "trueToSizePct": 76,
+    "runsLargePct": 15
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E484928-000",
+   "candidateId": "e484928-000",
+   "brand": "UNIQLO",
+   "name": "Women's Oxford Boxy Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 78,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E485307-000",
+   "candidateId": "e485307-000",
+   "brand": "UNIQLO",
+   "name": "Women's Merino Blend Polo Cardigan Short Sleeve",
+   "garmentType": "other",
+   "reviews": {
+    "total": 38,
+    "runsSmallPct": 8,
+    "trueToSizePct": 87,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E485321-000",
+   "candidateId": "e485321-000",
+   "brand": "UNIQLO",
+   "name": "Women's Women 3D Knit Merino Blend Polo Sweater",
+   "garmentType": "other",
+   "reviews": {
+    "total": 42,
+    "runsSmallPct": 10,
+    "trueToSizePct": 90,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E485522-000",
+   "candidateId": "e485522-000",
+   "brand": "UNIQLO",
+   "name": "POP MART UT Graphic T-Shirt | North America Exclusive",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 0,
+    "trueToSizePct": 95,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 45.1,
+     "length_cm": 57.2,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 47.6,
+     "length_cm": 59.1,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 50.2,
+     "length_cm": 61.6,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 52.7,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 55.9,
+     "length_cm": 65.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 59.1,
+     "length_cm": 67.4,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 62.2,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E485652-000",
+   "candidateId": "e485652-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E485653-000",
+   "candidateId": "e485653-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 20,
+    "trueToSizePct": 80,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E485735-000",
+   "candidateId": "e485735-000",
+   "brand": "UNIQLO",
+   "name": "Men's Sweat Oversized Full Zip Hoodie",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 91,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E485993-000",
+   "candidateId": "e485993-000",
+   "brand": "UNIQLO",
+   "name": "Women's Smart Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 9,
+    "trueToSizePct": 89,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486078-000",
+   "candidateId": "e486078-000",
+   "brand": "UNIQLO",
+   "name": "Men's Souffle Yarn Half Zip Sweater",
+   "garmentType": "other",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 7,
+    "trueToSizePct": 93,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486103-000",
+   "candidateId": "e486103-000",
+   "brand": "UNIQLO",
+   "name": "AIRism Cotton Striped T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 0,
+    "trueToSizePct": 80,
+    "runsLargePct": 20
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 52.1,
+     "length_cm": 64.2,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 55.2,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 57.8,
+     "length_cm": 69.9,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 62.2,
+     "length_cm": 73.1,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 66,
+     "length_cm": 75,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 69.2,
+     "length_cm": 75.6,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E486119-000",
+   "candidateId": "e486119-000",
+   "brand": "UNIQLO",
+   "name": "Men's Sweat Full-Zip Hoodie",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 89,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486129-000",
+   "candidateId": "e486129-000",
+   "brand": "UNIQLO",
+   "name": "Soft Brushed Turtleneck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50.2,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.7,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.9,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.7,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 64.1,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 67.3,
+     "length_cm": 75,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E486176-000",
+   "candidateId": "e486176-000",
+   "brand": "UNIQLO",
+   "name": "Men's Seamless Down Parka",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 11,
+    "runsSmallPct": 0,
+    "trueToSizePct": 91,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486177-000",
+   "candidateId": "e486177-000",
+   "brand": "UNIQLO",
+   "name": "Men's Light Down Volume Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486560-000",
+   "candidateId": "e486560-000",
+   "brand": "UNIQLO",
+   "name": "Men's Super Non Iron Stretch Slim Fit Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 40,
+    "runsLargePct": 60
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486579-000",
+   "candidateId": "e486579-000",
+   "brand": "UNIQLO",
+   "name": "Men's Oxford Slim Fit Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486586-18-004-000",
+   "candidateId": "e486586-18-004-000",
+   "brand": "UNIQLO",
+   "name": "Broadcloth Shirt Long Sleeve | Check",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486587-000",
+   "candidateId": "e486587-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486588-000",
+   "candidateId": "e486588-000",
+   "brand": "UNIQLO",
+   "name": "Men's Broadcloth Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 33,
+    "trueToSizePct": 67,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486590-03-004-000",
+   "candidateId": "e486590-03-004-000",
+   "brand": "UNIQLO",
+   "name": "Broadcloth Shirt Long Sleeve | Striped",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486591-63-004-000",
+   "candidateId": "e486591-63-004-000",
+   "brand": "UNIQLO",
+   "name": "Broadcloth Shirt Long Sleeve | Striped",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486594-30-004-000",
+   "candidateId": "e486594-30-004-000",
+   "brand": "UNIQLO",
+   "name": "Flannel Shirt Long Sleeve | Check",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486595-000",
+   "candidateId": "e486595-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 0,
+    "trueToSizePct": 83,
+    "runsLargePct": 17
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486596-000",
+   "candidateId": "e486596-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Checked Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486597-000",
+   "candidateId": "e486597-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Checked Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 8,
+    "trueToSizePct": 92,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486598-000",
+   "candidateId": "e486598-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Checked Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486600-000",
+   "candidateId": "e486600-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 17,
+    "runsSmallPct": 0,
+    "trueToSizePct": 88,
+    "runsLargePct": 12
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486602-000",
+   "candidateId": "e486602-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Checked Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 17,
+    "trueToSizePct": 66,
+    "runsLargePct": 17
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486604-000",
+   "candidateId": "e486604-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Checked Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 67,
+    "runsLargePct": 33
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486610-000",
+   "candidateId": "e486610-000",
+   "brand": "UNIQLO",
+   "name": "Men's Brushed Cotton Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 18,
+    "runsSmallPct": 6,
+    "trueToSizePct": 88,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486612-000",
+   "candidateId": "e486612-000",
+   "brand": "UNIQLO",
+   "name": "Men's Denim Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 17,
+    "runsSmallPct": 6,
+    "trueToSizePct": 76,
+    "runsLargePct": 18
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486614-000",
+   "candidateId": "e486614-000",
+   "brand": "UNIQLO",
+   "name": "Men's Easy Care Soft Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 18,
+    "runsSmallPct": 0,
+    "trueToSizePct": 89,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486615-000",
+   "candidateId": "e486615-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 14,
+    "trueToSizePct": 72,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E486982-000",
+   "candidateId": "e486982-000",
+   "brand": "UNIQLO",
+   "name": "Women's Utility Volume Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 74,
+    "runsLargePct": 24
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487207-000",
+   "candidateId": "e487207-000",
+   "brand": "UNIQLO",
+   "name": "Women's Barrel Jeans Corduroy",
+   "garmentType": "other",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 50,
+    "trueToSizePct": 33,
+    "runsLargePct": 17
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487209-000",
+   "candidateId": "e487209-000",
+   "brand": "UNIQLO",
+   "name": "Men's Slim Chino Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 19,
+    "runsSmallPct": 16,
+    "trueToSizePct": 79,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487214-000",
+   "candidateId": "e487214-000",
+   "brand": "UNIQLO",
+   "name": "Men's Barrel Chino Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 14,
+    "runsSmallPct": 21,
+    "trueToSizePct": 79,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487220-000",
+   "candidateId": "e487220-000",
+   "brand": "UNIQLO",
+   "name": "Men's Pleated Relaxed Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 7,
+    "trueToSizePct": 86,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487257-000",
+   "candidateId": "e487257-000",
+   "brand": "UNIQLO",
+   "name": "Men's Brushed Jersey Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 26,
+    "runsSmallPct": 0,
+    "trueToSizePct": 81,
+    "runsLargePct": 19
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487258-000",
+   "candidateId": "e487258-000",
+   "brand": "UNIQLO",
+   "name": "Men's Easy Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487261-000",
+   "candidateId": "e487261-000",
+   "brand": "UNIQLO",
+   "name": "Men's Warm Lined Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 19,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487270-000",
+   "candidateId": "e487270-000",
+   "brand": "UNIQLO",
+   "name": "Women's Easy Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 86,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487396-000",
+   "candidateId": "e487396-000",
+   "brand": "UNIQLO",
+   "name": "Women's Utility Cotton Blend Parka",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 81,
+    "runsLargePct": 15
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 55.2,
+     "length_cm": 57.2,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 57.8,
+     "length_cm": 59.7,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 59.7,
+     "length_cm": 61.6,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 62.2,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 65.4,
+     "length_cm": 65.4,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 68.6,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E487526-000",
+   "candidateId": "e487526-000",
+   "brand": "UNIQLO",
+   "name": "Women's Rayon Blouse",
+   "garmentType": "other",
+   "reviews": {
+    "total": 11,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487528-000",
+   "candidateId": "e487528-000",
+   "brand": "UNIQLO",
+   "name": "Women's Rayon Skipper Collar Blouse 3/4 Sleeve",
+   "garmentType": "other",
+   "reviews": {
+    "total": 14,
+    "runsSmallPct": 7,
+    "trueToSizePct": 93,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487579-000",
+   "candidateId": "e487579-000",
+   "brand": "UNIQLO",
+   "name": "Women's Mini T-Shirt Long Sleeve",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 13,
+    "trueToSizePct": 83,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487595-000",
+   "candidateId": "e487595-000",
+   "brand": "UNIQLO",
+   "name": "Women's Ribbed Knitted Fleece V Neck T",
+   "garmentType": "other",
+   "reviews": {
+    "total": 43,
+    "runsSmallPct": 0,
+    "trueToSizePct": 84,
+    "runsLargePct": 16
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487689-000",
+   "candidateId": "e487689-000",
+   "brand": "UNIQLO",
+   "name": "Men's Padded Short Blouson",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 38,
+    "runsSmallPct": 3,
+    "trueToSizePct": 92,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487908-000",
+   "candidateId": "e487908-000",
+   "brand": "UNIQLO",
+   "name": "Ribbed Henley Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 20,
+    "trueToSizePct": 73,
+    "runsLargePct": 7
+   },
+   "sizes": {
+    "XXS": {
+     "chest_cm": 34.3,
+     "length_cm": 46.4,
+     "sleeve_cm": null
+    },
+    "XS": {
+     "chest_cm": 36.8,
+     "length_cm": 48.3,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 39.4,
+     "length_cm": 50.2,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 41.9,
+     "length_cm": 52.7,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 45.1,
+     "length_cm": 54.7,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 48.3,
+     "length_cm": 56.6,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 50.8,
+     "length_cm": 57.8,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E487939-000",
+   "candidateId": "e487939-000",
+   "brand": "UNIQLO",
+   "name": "Men's Souffle Yarn Polo Sweater",
+   "garmentType": "other",
+   "reviews": {
+    "total": 21,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487957-000",
+   "candidateId": "e487957-000",
+   "brand": "UNIQLO",
+   "name": "Women's Smart Wide Straight Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 89,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487959-000",
+   "candidateId": "e487959-000",
+   "brand": "UNIQLO",
+   "name": "Women's Smart Easy Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 94,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E487962-000",
+   "candidateId": "e487962-000",
+   "brand": "UNIQLO",
+   "name": "Men's Boxy Cropped T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 93,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 53.3,
+     "length_cm": 57.2,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 56.5,
+     "length_cm": 60.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 59.7,
+     "length_cm": 63.5,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 63.5,
+     "length_cm": 66.7,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 67.3,
+     "length_cm": 68.6,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 70.5,
+     "length_cm": 69.3,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E488010-000",
+   "candidateId": "e488010-000",
+   "brand": "UNIQLO",
+   "name": "Women's Smart Culotte",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 5,
+    "trueToSizePct": 93,
+    "runsLargePct": 2
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488084-000",
+   "candidateId": "e488084-000",
+   "brand": "UNIQLO",
+   "name": "Women's Pleated Chino Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 60,
+    "runsLargePct": 40
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488182-000",
+   "candidateId": "e488182-000",
+   "brand": "UNIQLO",
+   "name": "Women's Long Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 60,
+    "runsLargePct": 40
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488202-000",
+   "candidateId": "e488202-000",
+   "brand": "UNIQLO",
+   "name": "Women's Corduroy Barrel Leg Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 22,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488206-000",
+   "candidateId": "e488206-000",
+   "brand": "UNIQLO",
+   "name": "Women's Denim Blouse",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 40,
+    "runsLargePct": 60
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488210-000",
+   "candidateId": "e488210-000",
+   "brand": "UNIQLO",
+   "name": "Women's Merino Blend Henley Neck Sweater",
+   "garmentType": "other",
+   "reviews": {
+    "total": 21,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488228-000",
+   "candidateId": "e488228-000",
+   "brand": "UNIQLO",
+   "name": "Men's Turtleneck Long Sleeve T-Shirt",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 17,
+    "runsSmallPct": 0,
+    "trueToSizePct": 65,
+    "runsLargePct": 35
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 48.3,
+     "length_cm": 70.5,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 50.8,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 52.7,
+     "length_cm": 75,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 55.9,
+     "length_cm": 76.9,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 59.1,
+     "length_cm": 78.8,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E488230-000",
+   "candidateId": "e488230-000",
+   "brand": "UNIQLO",
+   "name": "Women's Supima Cotton T-Shirt Long Sleeve",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 37,
+    "runsSmallPct": 14,
+    "trueToSizePct": 75,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488397-000",
+   "candidateId": "e488397-000",
+   "brand": "UNIQLO",
+   "name": "Men's EZY Barrel Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 42,
+    "runsSmallPct": 0,
+    "trueToSizePct": 88,
+    "runsLargePct": 12
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488450-000",
+   "candidateId": "e488450-000",
+   "brand": "UNIQLO",
+   "name": "Women's Baggy Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 9,
+    "trueToSizePct": 82,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488462-000",
+   "candidateId": "e488462-000",
+   "brand": "UNIQLO",
+   "name": "Women's Wide Straight Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 18,
+    "runsSmallPct": 6,
+    "trueToSizePct": 55,
+    "runsLargePct": 39
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488520-000",
+   "candidateId": "e488520-000",
+   "brand": "UNIQLO",
+   "name": "Women's Oxford Boxy Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 36,
+    "runsSmallPct": 0,
+    "trueToSizePct": 78,
+    "runsLargePct": 22
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488522-61-003-000",
+   "candidateId": "e488522-61-003-000",
+   "brand": "UNIQLO",
+   "name": "Oxford Boxy Shirt | Striped",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488559-000",
+   "candidateId": "e488559-000",
+   "brand": "UNIQLO",
+   "name": "Women's Flannel Boxy Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 50,
+    "runsLargePct": 50
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488560-000",
+   "candidateId": "e488560-000",
+   "brand": "UNIQLO",
+   "name": "Women's Cotton Volume Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 29,
+    "runsSmallPct": 3,
+    "trueToSizePct": 80,
+    "runsLargePct": 17
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488571-000",
+   "candidateId": "e488571-000",
+   "brand": "UNIQLO",
+   "name": "Women's Fleece Short Blouson",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488605-000",
+   "candidateId": "e488605-000",
+   "brand": "UNIQLO",
+   "name": "Men's Mock Neck T-Shirt Long Sleeve",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 0,
+    "trueToSizePct": 69,
+    "runsLargePct": 31
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488687-000",
+   "candidateId": "e488687-000",
+   "brand": "UNIQLO",
+   "name": "Men's EZY Barrel Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488694-000",
+   "candidateId": "e488694-000",
+   "brand": "UNIQLO",
+   "name": "Women's Denim Culotte",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 13,
+    "trueToSizePct": 82,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488739-000",
+   "candidateId": "e488739-000",
+   "brand": "UNIQLO",
+   "name": "Men's Jersey Easy Work Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 83,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488743-000",
+   "candidateId": "e488743-000",
+   "brand": "UNIQLO",
+   "name": "Men's Barrel Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 7,
+    "trueToSizePct": 82,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488751-000",
+   "candidateId": "e488751-000",
+   "brand": "UNIQLO",
+   "name": "Men's Rugger Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 0,
+    "trueToSizePct": 73,
+    "runsLargePct": 27
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488789-66-004-000",
+   "candidateId": "e488789-66-004-000",
+   "brand": "UNIQLO",
+   "name": "Broadcloth Shirt Long Sleeve | Striped",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488790-68-004-000",
+   "candidateId": "e488790-68-004-000",
+   "brand": "UNIQLO",
+   "name": "Broadcloth Shirt Long Sleeve | Striped",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488793-000",
+   "candidateId": "e488793-000",
+   "brand": "UNIQLO",
+   "name": "Men's Easy Care Soft Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 11,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488794-000",
+   "candidateId": "e488794-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488795-000",
+   "candidateId": "e488795-000",
+   "brand": "UNIQLO",
+   "name": "Men's Flannel Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 13,
+    "trueToSizePct": 74,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488796-000",
+   "candidateId": "e488796-000",
+   "brand": "UNIQLO",
+   "name": "Men's Oxford Oversized Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 11,
+    "runsSmallPct": 0,
+    "trueToSizePct": 64,
+    "runsLargePct": 36
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488797-000",
+   "candidateId": "e488797-000",
+   "brand": "UNIQLO",
+   "name": "Men's Oxford Oversized Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 18,
+    "runsSmallPct": 0,
+    "trueToSizePct": 61,
+    "runsLargePct": 39
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488798-000",
+   "candidateId": "e488798-000",
+   "brand": "UNIQLO",
+   "name": "Men's Oxford Oversized Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 5,
+    "runsSmallPct": 0,
+    "trueToSizePct": 80,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488801-000",
+   "candidateId": "e488801-000",
+   "brand": "UNIQLO",
+   "name": "Men's Drape Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 33,
+    "runsLargePct": 67
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488814-000",
+   "candidateId": "e488814-000",
+   "brand": "UNIQLO",
+   "name": "Women's Smart Culotte",
+   "garmentType": "other",
+   "reviews": {
+    "total": 14,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488849-31-003-030",
+   "candidateId": "e488849-31-003-030",
+   "brand": "UNIQLO",
+   "name": "Smart Easy Pants | Tall",
+   "garmentType": "other",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 50,
+    "runsLargePct": 50
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488853-000",
+   "candidateId": "e488853-000",
+   "brand": "UNIQLO",
+   "name": "Women's Corduroy Volume Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 57,
+    "runsLargePct": 43
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488854-000",
+   "candidateId": "e488854-000",
+   "brand": "UNIQLO",
+   "name": "Women's Utility Volume Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E488866-000",
+   "candidateId": "e488866-000",
+   "brand": "UNIQLO",
+   "name": "Women's Smart Easy Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 51,
+    "runsSmallPct": 0,
+    "trueToSizePct": 86,
+    "runsLargePct": 14
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489154-00-004-000",
+   "candidateId": "e489154-00-004-000",
+   "brand": "UNIQLO",
+   "name": "Jason Polan UT Graphic T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 48.9,
+     "length_cm": 62.3,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.1,
+     "length_cm": 65.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55.2,
+     "length_cm": 68.6,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 59.1,
+     "length_cm": 71.8,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 62.9,
+     "length_cm": 73.7,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E489190-000",
+   "candidateId": "e489190-000",
+   "brand": "UNIQLO",
+   "name": "Women's Pleated Culotte",
+   "garmentType": "other",
+   "reviews": {
+    "total": 44,
+    "runsSmallPct": 18,
+    "trueToSizePct": 82,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489191-000",
+   "candidateId": "e489191-000",
+   "brand": "UNIQLO",
+   "name": "Men's Brushed Jersey Barrel Leg Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 4,
+    "trueToSizePct": 89,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489227-000",
+   "candidateId": "e489227-000",
+   "brand": "UNIQLO",
+   "name": "Women's Rayon Blouse",
+   "garmentType": "other",
+   "reviews": {
+    "total": 42,
+    "runsSmallPct": 19,
+    "trueToSizePct": 71,
+    "runsLargePct": 10
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489372-000",
+   "candidateId": "e489372-000",
+   "brand": "UNIQLO",
+   "name": "Women's Mini T-Shirt Long Sleeve",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 52,
+    "runsSmallPct": 40,
+    "trueToSizePct": 54,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489395-000",
+   "candidateId": "e489395-000",
+   "brand": "UNIQLO",
+   "name": "Women's Brushed Jersey Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 43,
+    "runsSmallPct": 14,
+    "trueToSizePct": 86,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489396-000",
+   "candidateId": "e489396-000",
+   "brand": "UNIQLO",
+   "name": "Women's Brushed Jersey Wide Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 44,
+    "trueToSizePct": 56,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489406-000",
+   "candidateId": "e489406-000",
+   "brand": "UNIQLO",
+   "name": "Women's Flannel Boxy Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 20,
+    "runsSmallPct": 5,
+    "trueToSizePct": 75,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489407-000",
+   "candidateId": "e489407-000",
+   "brand": "UNIQLO",
+   "name": "Women's Flannel Boxy Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 87,
+    "runsLargePct": 13
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489415-000",
+   "candidateId": "e489415-000",
+   "brand": "Unknown brand",
+   "name": "UNIQLO",
+   "garmentType": "other",
+   "reviews": {
+    "total": 17,
+    "runsSmallPct": 6,
+    "trueToSizePct": 76,
+    "runsLargePct": 18
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489427-000",
+   "candidateId": "e489427-000",
+   "brand": "UNIQLO",
+   "name": "Women's Cotton Volume Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 0,
+    "trueToSizePct": 92,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489487-000",
+   "candidateId": "e489487-000",
+   "brand": "UNIQLO",
+   "name": "Men's Pile Lined Fleece Blouson",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 92,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489496-01-004-000",
+   "candidateId": "e489496-01-004-000",
+   "brand": "UNIQLO",
+   "name": "Oxford Shirt Long Sleeve",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 0,
+    "runsSmallPct": 0,
+    "trueToSizePct": 0,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": 57.2,
+     "length_cm": 72.4,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 59.7,
+     "length_cm": 74.3,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 64.1,
+     "length_cm": 77.5,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 67.9,
+     "length_cm": 78.8,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "E489508-000",
+   "candidateId": "e489508-000",
+   "brand": "UNIQLO",
+   "name": "Women's Flannel Boxy Long Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 15,
+    "runsSmallPct": 7,
+    "trueToSizePct": 73,
+    "runsLargePct": 20
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489509-000",
+   "candidateId": "e489509-000",
+   "brand": "UNIQLO",
+   "name": "Women's Cotton Volume Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 0,
+    "trueToSizePct": 89,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E489565-000",
+   "candidateId": "e489565-000",
+   "brand": "UNIQLO",
+   "name": "Men's Barrel Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 33,
+    "trueToSizePct": 67,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491086-000",
+   "candidateId": "e491086-000",
+   "brand": "UNIQLO",
+   "name": "Women's Merino Blend Henley Neck Sweater",
+   "garmentType": "other",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 17,
+    "trueToSizePct": 83,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491087-000",
+   "candidateId": "e491087-000",
+   "brand": "UNIQLO",
+   "name": "Women's Pleated Barrel Leg Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 37,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491093-000",
+   "candidateId": "e491093-000",
+   "brand": "UNIQLO",
+   "name": "Men's Warm Pile Lined Sweat Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491096-000",
+   "candidateId": "e491096-000",
+   "brand": "UNIQLO",
+   "name": "Men's Zip Up Blouson",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 55,
+    "runsSmallPct": 2,
+    "trueToSizePct": 87,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491104-000",
+   "candidateId": "e491104-000",
+   "brand": "UNIQLO",
+   "name": "Women's High Rise Wide Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 35,
+    "runsSmallPct": 0,
+    "trueToSizePct": 89,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491116-000",
+   "candidateId": "e491116-000",
+   "brand": "UNIQLO",
+   "name": "Women's Straight Jeans",
+   "garmentType": "other",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 11,
+    "trueToSizePct": 89,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491163-65-024-030",
+   "candidateId": "e491163-65-024-030",
+   "brand": "UNIQLO",
+   "name": "High Rise Wide Jeans | Tall",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491216-000",
+   "candidateId": "e491216-000",
+   "brand": "UNIQLO",
+   "name": "Men's Barrel Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 0,
+    "trueToSizePct": 89,
+    "runsLargePct": 11
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491292-000",
+   "candidateId": "e491292-000",
+   "brand": "UNIQLO",
+   "name": "Men's MA-1 Blouson",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 19,
+    "runsSmallPct": 5,
+    "trueToSizePct": 79,
+    "runsLargePct": 16
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491380-000",
+   "candidateId": "e491380-000",
+   "brand": "UNIQLO",
+   "name": "Women's Oxford Boxy Long Sleeve Shirt",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E491520-04-003-030",
+   "candidateId": "e491520-04-003-030",
+   "brand": "UNIQLO",
+   "name": "Smart Wide Straight Pants | Tall",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E492607-00-004-000",
+   "candidateId": "e492607-00-004-000",
+   "brand": "UNIQLO",
+   "name": "Super Non Iron Slim Fit Shirt Long Sleeve | Botton Down",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E492609-66-004-000",
+   "candidateId": "e492609-66-004-000",
+   "brand": "UNIQLO",
+   "name": "Super Non Iron Slim Fit Shirt Long Sleeve | Striped | Botton Down",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E492641-67-004-000",
+   "candidateId": "e492641-67-004-000",
+   "brand": "UNIQLO",
+   "name": "Super Non Iron Stretch Slim Fit Shirt | Striped | Regular Collar",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "E494543-000",
+   "candidateId": "e494543-000",
+   "brand": "UNIQLO",
+   "name": "Women's EZY Denim Relaxed Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 33,
+    "trueToSizePct": 67,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "EC90118041",
+   "candidateId": "ec90118041",
+   "brand": "Feetures",
+   "name": "Elite Grip Max Cushion Mini Crew",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 19,
+    "runsSmallPct": 16,
+    "trueToSizePct": 84,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "F1420307430-1-LtInd-2XL-LKA",
+   "candidateId": "f1420307430-1-ltind-2xl-lka",
+   "brand": "Filson",
+   "name": "11-oz. Denim Outfitter Jacket - Light Indigo",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 6,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "FM6645J-BLK/CHAR-XS",
+   "candidateId": "fm6645j-blk-char-xs",
+   "brand": "Folk",
+   "name": "1x1 Striped T-Shirt - Black / Charcoal",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 202,
+    "runsSmallPct": 2,
+    "trueToSizePct": 93,
+    "runsLargePct": 5
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": 50,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": 52.5,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": 55,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": 57.5,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": 60,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": 62.5,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "H1200575 : H1200575-372-M",
+   "candidateId": "h1200575-h1200575-372-m",
+   "brand": "HUK",
+   "name": "A1A Performance Crew",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 41,
+    "runsSmallPct": 0,
+    "trueToSizePct": 88,
+    "runsLargePct": 12
+   },
+   "sizes": null
+  },
+  {
+   "sku": "KT-13157-W-White-XS",
+   "candidateId": "kt-13157-w-white-xs",
+   "brand": "OAK + FORT USA",
+   "name": "\"REFINED\" BABY TEE",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "KTPL-BLCK-S",
+   "candidateId": "ktpl-blck-s",
+   "brand": "Unbound Merino",
+   "name": "Men's Merino Knit Long Sleeve Polo",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 40,
+    "runsSmallPct": 3,
+    "trueToSizePct": 94,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "L22HF5017",
+   "candidateId": "l22hf5017",
+   "brand": "Silver Jeans Co.",
+   "name": "Women’s Crewneck Sweatshirt",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "LS4173 PGH S",
+   "candidateId": "ls4173-pgh-s",
+   "brand": "Good Trust",
+   "name": "AC Breeze Hoodie",
+   "garmentType": "other",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "LSW4599-C221-XXS",
+   "candidateId": "lsw4599-c221-xxs",
+   "brand": "Lole",
+   "name": "Action Ankle Leggings",
+   "garmentType": "other",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 92,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "LWSD7670",
+   "candidateId": "lwsd7670",
+   "brand": "Beyond Yoga",
+   "name": "Featherweight On The Down Low Tee",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 300,
+    "runsSmallPct": 4,
+    "trueToSizePct": 87,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  },
+  {
+   "sku": "M01T41-TE-S",
+   "candidateId": "m01t41-te-s",
+   "brand": "Mack Weldon",
+   "name": "Linen Jersey Crew Neck T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "MASL0001-0000-B0003-SS",
+   "candidateId": "masl0001-0000-b0003-ss",
+   "brand": "RHOBACK",
+   "name": "All-Active Short | Solid - Bunker Blue",
+   "garmentType": "other",
+   "reviews": {
+    "total": 75,
+    "runsSmallPct": 3,
+    "trueToSizePct": 94,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "MT10300N-224-S",
+   "candidateId": "mt10300n-224-s",
+   "brand": "Cuts Clothing",
+   "name": "Riviera Knit Textured Tee | Urban Chic Signature-Fit",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 60,
+    "runsSmallPct": 8,
+    "trueToSizePct": 64,
+    "runsLargePct": 28
+   },
+   "sizes": null
+  },
+  {
+   "sku": "MT28B-MID-XS",
+   "candidateId": "mt28b-mid-xs",
+   "brand": "Janji",
+   "name": "M's Circa Daily Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 66,
+    "runsSmallPct": 0,
+    "trueToSizePct": 97,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "MWLIFE_PV_M_S_2_PACK",
+   "candidateId": "mwlife-pv-m-s-2-pack",
+   "brand": "Darn Tough Vermont",
+   "name": "Men's and Women's Knit to Give 2-Pack",
+   "garmentType": "other",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "NS31030-60466-L",
+   "candidateId": "ns31030-60466-l",
+   "brand": "Nathan Sports",
+   "name": "AeroZip 1 Liter Unisex Hydration Race Vest",
+   "garmentType": "other",
+   "reviews": {
+    "total": 9,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "NWET006844",
+   "candidateId": "nwet006844",
+   "brand": "NAADAM",
+   "name": "Lightweight Brushed Relaxed Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 25,
+    "trueToSizePct": 50,
+    "runsLargePct": 25
+   },
+   "sizes": null
+  },
+  {
+   "sku": "P040-FJORD-XS",
+   "candidateId": "p040-fjord-xs",
+   "brand": "Path Projects",
+   "name": "Altira Short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 12,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "P23092627",
+   "candidateId": "p23092627",
+   "brand": "Mountain Warehouse",
+   "name": "Montana Half Zip Fleece Sweatshirt",
+   "garmentType": "other",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "PP-OP015-AGT-NBRN",
+   "candidateId": "pp-op015-agt-nbrn",
+   "brand": "Posh Peanut",
+   "name": "Agatha Convertible One Piece",
+   "garmentType": "other",
+   "reviews": {
+    "total": 51,
+    "runsSmallPct": 4,
+    "trueToSizePct": 96,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "RX119-UTMB26-M",
+   "candidateId": "rx119-utmb26-m",
+   "brand": "0",
+   "name": "All Gender Graphic Tee | Mont Blanc",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "SANIK1162-WHITE-30C",
+   "candidateId": "sanik1162-white-30c",
+   "brand": "Cosabella",
+   "name": "Sanika Balconette Bra",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "SL-DS-AMBER-C",
+   "candidateId": "sl-ds-amber-c",
+   "brand": "State and Liberty Clothing Company",
+   "name": "\"The Amber\" Grey & Light Green Mid Check",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "SLSS-S25-ISL-M-XXL",
+   "candidateId": "slss-s25-isl-m-xxl",
+   "brand": "Cotopaxi-Amigos-24",
+   "name": "Sombra Long-Sleeve Sun Shirt - Men's",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 7,
+    "runsSmallPct": 0,
+    "trueToSizePct": 57,
+    "runsLargePct": 43
+   },
+   "sizes": null
+  },
+  {
+   "sku": "ST21070010-101",
+   "candidateId": "st21070010-101",
+   "brand": "Showpo",
+   "name": "Arianae Top - High Neck Top in Black",
+   "garmentType": "other",
+   "reviews": {
+    "total": 111,
+    "runsSmallPct": 2,
+    "trueToSizePct": 93,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "SUD50BLK",
+   "candidateId": "sud50blk",
+   "brand": "Charles Tyrwhitt",
+   "name": "Double Breasted Tuxedo Jacket - Black",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 4,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "ShrJfX",
+   "candidateId": "shrjfx",
+   "brand": "Nike",
+   "name": "Nike Sportswear Club Men's T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 311,
+    "runsSmallPct": 7,
+    "trueToSizePct": 92,
+    "runsLargePct": 1
+   },
+   "sizes": null
+  },
+  {
+   "sku": "T1000066-887-XS",
+   "candidateId": "t1000066-887-xs",
+   "brand": "Toad&Co",
+   "name": "Abele Dress",
+   "garmentType": "other",
+   "reviews": {
+    "total": 19,
+    "runsSmallPct": 5,
+    "trueToSizePct": 90,
+    "runsLargePct": 5
+   },
+   "sizes": null
+  },
+  {
+   "sku": "TMPMK85393-MILK-23",
+   "candidateId": "tmpmk85393-milk-23",
+   "brand": "Joe's® Jeans",
+   "name": "ANDREA'S LOOKBOOK X JOE'S JEANS",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 33,
+    "trueToSizePct": 34,
+    "runsLargePct": 33
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-15I8X08",
+   "candidateId": "url-15i8x08",
+   "brand": "Nike.com",
+   "name": "Reviews: Nike Sportswear Club Men's T-Shirt. Nike.com",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 8,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-8OBN02",
+   "candidateId": "url-8obn02",
+   "brand": "Unknown brand",
+   "name": "Edgartown Short-Sleeve Pocket Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-DFEPJB",
+   "candidateId": "url-dfepjb",
+   "brand": "Unknown brand",
+   "name": "The High Neck Midi Sports Bra Tank",
+   "garmentType": "other",
+   "reviews": {
+    "total": 36,
+    "runsSmallPct": 22,
+    "trueToSizePct": 75,
+    "runsLargePct": 3
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-E988A4",
+   "candidateId": "url-e988a4",
+   "brand": "Finisterre",
+   "name": "Finisterre Official Store",
+   "garmentType": "other",
+   "reviews": {
+    "total": 58,
+    "runsSmallPct": 3,
+    "trueToSizePct": 97,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-HOB9N2",
+   "candidateId": "url-hob9n2",
+   "brand": "Honeylove",
+   "name": "BlissWear Long Sleeve Top",
+   "garmentType": "other",
+   "reviews": {
+    "total": 10,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-KC8MX8",
+   "candidateId": "url-kc8mx8",
+   "brand": "Unknown brand",
+   "name": "Men’s Black Easy Short",
+   "garmentType": "other",
+   "reviews": {
+    "total": 308,
+    "runsSmallPct": 2,
+    "trueToSizePct": 92,
+    "runsLargePct": 6
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-S82ZSJ",
+   "candidateId": "url-s82zsj",
+   "brand": "Alex Mill",
+   "name": "Mill Shirt in Oxford",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 15,
+    "trueToSizePct": 62,
+    "runsLargePct": 23
+   },
+   "sizes": null
+  },
+  {
+   "sku": "URL-Z9FRHR",
+   "candidateId": "url-z9frhr",
+   "brand": "Unknown brand",
+   "name": "Lödyn Hood Jacket Men's",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "USPA2259-1204-00",
+   "candidateId": "uspa2259-1204-00",
+   "brand": "Universal Standard",
+   "name": "Roxy ComfortDenim Drawstring Jeans - Steel Blue Wash",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "VOVT-1965VTG-RD-S",
+   "candidateId": "vovt-1965vtg-rd-s",
+   "brand": "GYMREAPERS",
+   "name": "1965 Vintage Olympia Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 2,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XXL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "WB712301CAB",
+   "candidateId": "wb712301cab",
+   "brand": "Tracksmith",
+   "name": "Session Shorts",
+   "garmentType": "other",
+   "reviews": {
+    "total": 13,
+    "runsSmallPct": 0,
+    "trueToSizePct": 92,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "X000010292",
+   "candidateId": "x000010292",
+   "brand": "Arc'teryx",
+   "name": "Cormac Crew Neck Shirt SS Men's",
+   "garmentType": "button_shirt",
+   "reviews": {
+    "total": 84,
+    "runsSmallPct": 8,
+    "trueToSizePct": 69,
+    "runsLargePct": 23
+   },
+   "sizes": null
+  },
+  {
+   "sku": "XB352-001 XSM",
+   "candidateId": "xb352-001-xsm",
+   "brand": "Woolx",
+   "name": "Addie Crew Neck",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 178,
+    "runsSmallPct": 7,
+    "trueToSizePct": 89,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "access-fund-2026-anniversary-tee",
+   "candidateId": "access-fund-2026-anniversary-tee",
+   "brand": "Black Diamond",
+   "name": "Access Fund 2026 Anniversary Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 33,
+    "trueToSizePct": 67,
+    "runsLargePct": 0
+   },
+   "sizes": {
+    "XS": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "S": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "M": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "L": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    },
+    "XL": {
+     "chest_cm": null,
+     "length_cm": null,
+     "sleeve_cm": null
+    }
+   }
+  },
+  {
+   "sku": "all-weather-t-neck-baremark-green-800095_174",
+   "candidateId": "all-weather-t-neck-baremark-green-800095-174",
+   "brand": "Houdini Sportswear",
+   "name": "All Weather T-Neck - Baremark Green",
+   "garmentType": "other",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "anna-dress-38720",
+   "candidateId": "anna-dress-38720",
+   "brand": "Whistles",
+   "name": "White Anna Dress",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "copy-of-auburn-huron-featherweight-performance-polo",
+   "candidateId": "copy-of-auburn-huron-featherweight-performance-polo",
+   "brand": "Johnnie-O",
+   "name": "Auburn University Huronn Featherweight Performance Polo",
+   "garmentType": "polo",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "cwte045111-hgr-111-lila-tee",
+   "candidateId": "cwte045111-hgr-111-lila-tee",
+   "brand": "Spiritual Gangster",
+   "name": "Shop the 111 Lila Tee for Women",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "heavyweight-heathered-short-sleeve-pocket-t-shirt-dkws450hbdh",
+   "candidateId": "heavyweight-heathered-short-sleeve-pocket-t-shirt-dkws450hbdh",
+   "brand": "Dickies",
+   "name": "Heavyweight Heathered Short Sleeve Pocket T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 65,
+    "runsSmallPct": 3,
+    "trueToSizePct": 89,
+    "runsLargePct": 8
+   },
+   "sizes": null
+  },
+  {
+   "sku": "hlb50211-abi-50-s-skirt",
+   "candidateId": "hlb50211-abi-50-s-skirt",
+   "brand": "Hell Bunny",
+   "name": "Abi 50's Skirt",
+   "garmentType": "other",
+   "reviews": {
+    "total": 1,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "mens-merino-short-sleeve-tee-sw016948",
+   "candidateId": "mens-merino-short-sleeve-tee-sw016948",
+   "brand": "Smartwool",
+   "name": "Men's Merino Short Sleeve Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 185,
+    "runsSmallPct": 12,
+    "trueToSizePct": 84,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "merino-150-tech-lite-short-sleeve-t-shirt-ib0a56wl001",
+   "candidateId": "merino-150-tech-lite-short-sleeve-t-shirt-ib0a56wl001",
+   "brand": "icebreaker",
+   "name": "Men's Merino 150 Tech Lite Short Sleeve T-Shirt",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 135,
+    "runsSmallPct": 0,
+    "trueToSizePct": 96,
+    "runsLargePct": 4
+   },
+   "sizes": null
+  },
+  {
+   "sku": "mptp_troy_khak-30x30",
+   "candidateId": "mptp-troy-khak-30x30",
+   "brand": "Mott & Bow",
+   "name": "5 Pocket Travel Pants",
+   "garmentType": "other",
+   "reviews": {
+    "total": 34,
+    "runsSmallPct": 6,
+    "trueToSizePct": 76,
+    "runsLargePct": 18
+   },
+   "sizes": null
+  },
+  {
+   "sku": "of8LkiGT",
+   "candidateId": "of8lkigt",
+   "brand": "Nike",
+   "name": "Nike Tech Men's Fleece Windrunner Full-Zip Jacket",
+   "garmentType": "jacket",
+   "reviews": {
+    "total": 3,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "s17525_light-blue",
+   "candidateId": "s17525-light-blue",
+   "brand": "edikted",
+   "name": "06 Oversized Long Sleeve T Shirt",
+   "garmentType": "tee_long_sleeve",
+   "reviews": {
+    "total": 14,
+    "runsSmallPct": 0,
+    "trueToSizePct": 93,
+    "runsLargePct": 7
+   },
+   "sizes": null
+  },
+  {
+   "sku": "shopify_US_7035403370628",
+   "candidateId": "shopify-us-7035403370628",
+   "brand": "Leonisa",
+   "name": "2-Pack Bra Extenders (3 Row)",
+   "garmentType": "other",
+   "reviews": {
+    "total": 51,
+    "runsSmallPct": 0,
+    "trueToSizePct": 100,
+    "runsLargePct": 0
+   },
+   "sizes": null
+  },
+  {
+   "sku": "strato-tech-tee",
+   "candidateId": "strato-tech-tee",
+   "brand": "Vuori",
+   "name": "Strato Tech Tee",
+   "garmentType": "tee",
+   "reviews": {
+    "total": 274,
+    "runsSmallPct": 10,
+    "trueToSizePct": 81,
+    "runsLargePct": 9
+   },
+   "sizes": null
+  }
+ ]
+}

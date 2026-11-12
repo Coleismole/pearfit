@@ -22,6 +22,7 @@ The exporter writes `data/candidates.generated.json`. It never touches the hand-
 `data/candidates.json`, and neither do the runners: they only read. Point them at the generated file:
 ```bash
 node cli/export-candidates.ts [dbPath] [outPath]                        # webscraper DB -> data/candidates.generated.json
+npm run export-fit-catalog                                              # Supabase -> ../data/fit-pages/catalog.json, for the website's fit guides
 npm run recommend -- <owner> [candidateId] --candidates data/candidates.generated.json
 npm run eval -- --candidates data/candidates.generated.json --cases data/<your-cases>.json
 ```

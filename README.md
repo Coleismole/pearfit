@@ -14,6 +14,7 @@ already own it fits like.
 | `brand/` | Provisional logo files | |
 | `scripts/` | Build and check scripts for the deploy | `docs/deploy.md` |
 | `data/samples/` | Sample scraper output, for reference only | |
+| `data/fit-pages/` | The fit store snapshot the fit guide pages are built from | `website/README.md` ("Fit guides") |
 | `docs/` | Background and cross-cutting reference | `docs/README.md` |
 
 Working rules for people and AI agents are in `AGENTS.md`.

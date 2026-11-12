@@ -40,4 +40,5 @@ Each fact has one home; link to it instead of copying it.
 - A rule an agent must follow: the `AGENTS.md` of the narrowest folder that covers it.
 - Reference for one area: that area's `README.md` or `docs/` folder.
 - Reference that spans areas: here, plus a row in this index and in the root `AGENTS.md` table.
-- Sample or exported data: `data/samples/`. Data the engine runs on stays in `engine/data/`.
+- Sample or exported data: `data/samples/`. Data the engine runs on stays in `engine/data/`. The snapshot the fit
+  guide pages are built from is `data/fit-pages/catalog.json` (`website/README.md`, "Fit guides").

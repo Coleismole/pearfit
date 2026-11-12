@@ -595,6 +595,46 @@ button:focus-visible {
 .try-pick-tag { font: 600 0.68rem var(--sans); color: var(--pear); margin-left: 0.3rem; }
 .try-foot { font-size: 0.78rem; color: var(--ink-2); margin: 0; }
 
+/* Fit guide pages (website/fit/, written by scripts/build-fit-pages.mjs) */
+.fit-intro h1 { font-size: clamp(1.8rem, 3.6vw, 2.75rem); margin-bottom: 1rem; overflow-wrap: anywhere; }
+.fit-intro h2 { font-size: 1.4rem; margin-top: 2rem; }
+.fit-intro .lede { max-width: 68ch; color: var(--ink-2); }
+.fit-crumbs { font-size: 0.85rem; color: var(--ink-2); margin-bottom: 1.25rem; }
+.fit-crumbs a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; color: inherit; }
+.fit-answer { font: 600 1.2rem/1.4 var(--sans); }
+.fit-bars { display: grid; gap: 10px; margin: 1.5rem 0 0; max-width: 520px; }
+.fit-bars-row { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 12px; }
+.fit-bars-row dt { font-weight: 600; }
+.fit-bars-row dd { display: flex; align-items: center; gap: 12px; margin: 0; }
+.fit-bars-track { flex: 1; height: 10px; border-radius: 5px; background: var(--paper-2); overflow: hidden; }
+.fit-bars-fill { display: block; height: 100%; border-radius: 5px; background: var(--pear); }
+.fit-bars-value { min-width: 3.2em; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fit-chart { font-size: 0.95rem; }
+#chart-heading, #related-heading { font-size: 1.4rem; overflow-wrap: anywhere; }
+.fit-brand { font-size: 1.15rem; margin: 2rem 0 0.75rem; }
+.fit-brand:first-child { margin-top: 0; }
+.fit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.fit-list-wide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fit-list a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.fit-list a:hover { border-color: var(--pear); }
+.fit-list-name { font-weight: 600; overflow-wrap: anywhere; }
+.fit-list-meta { font-size: 0.82rem; color: var(--ink-2); }
+@media (max-width: 720px) {
+  .fit-list-wide { grid-template-columns: 1fr; }
+}
+
 /* Supported stores page */
 .stores-intro { padding-bottom: 40px; }
 .stores-intro h1 { margin-bottom: 0.5rem; }

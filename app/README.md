@@ -61,7 +61,7 @@ Both calls are in [`src/lib/api.ts`](src/lib/api.ts).
 `sizes` is `[{ size, matchPercent, fitsLike }]`, one entry per size with its closest great shirt (`null` when that size
 could not be compared). `similar` is `[{ shirtId, matchPercent }]`, the great shirts against the suggested size, closest
 first. `reviews` is `{ total, runsSmallPct, trueToSizePct, runsLargePct }`: how many reviews the catalog has and the
-share that said each thing, or `null` when it has none. An answer saved on the device before the API sent these three
+share counted as each thing (a review with no small or large comment counts as true to size), or `null` when it has none. An answer saved on the device before the API sent these three
 reads as two empty lists and `null`.
 
 When `size` is `null` the API could not suggest a size and `verdict` says why (for example, the wardrobe has no
@@ -147,8 +147,9 @@ every shirt a person owns.
 - **Most similar in your wardrobe.** The three closest shirts from the API's `similar` list are shown, each with
   its match for the suggested size. The similarity percentage between two wardrobe shirts (screens 14 and 15) is
   left out: the API does not return it, and the app does not compute scores itself.
-- **Customer reviews.** Only the fit summary is shown: the share of reviews that said runs small, true to size or
-  runs large, and how many reviews there are. Review text and star ratings are not in the API.
+- **Customer reviews.** Only the fit summary is shown: the share of reviews counted as runs small, true to size or
+  runs large, and how many reviews there are. A review with no small or large comment is counted as true to size, and
+  the screen says so. Review text and star ratings are not in the API.
 - **Measurements.** Chest width, length and sleeve length only: those are the three in the data format. The
   design also shows shoulder, waist and hem.
 - **Categories.** They are the engine's garment types (tee, long-sleeve tee, polo, button shirt, jacket, other).

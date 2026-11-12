@@ -245,7 +245,7 @@ function Reviews({ reviews }: { reviews: ReviewSummary }) {
   return (
     <section className="stack stack--tight" aria-labelledby="reviews-heading">
       <h2 className="heading" id="reviews-heading">
-        What reviewers say about the fit
+        How reviews describe the fit
       </h2>
       <div className="card stack">
         <dl className="review-bars">
@@ -261,7 +261,9 @@ function Reviews({ reviews }: { reviews: ReviewSummary }) {
             </div>
           ))}
         </dl>
-        <p className="tiny muted">From {countOf(reviews.total, "review", "reviews")} in the Pearfit catalog.</p>
+        <p className="tiny muted">
+          From {countOf(reviews.total, "review", "reviews")} in the Pearfit catalog. A review counts as true to size when it does not say the fit is small or large.
+        </p>
       </div>
     </section>
   );

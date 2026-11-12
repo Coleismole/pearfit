@@ -630,6 +630,12 @@ button:focus-visible {
 }
 .fit-list a:hover { border-color: var(--pear); }
 .fit-list-name { font-weight: 600; overflow-wrap: anywhere; }
+.fit-facts { margin: 0 0 1.5rem; padding-left: 1.25rem; }
+.fit-facts li { margin-bottom: 0.3rem; }
+.fit-list + h3, .fit-facts + h3 { margin-top: 1.75rem; }
+.fit-type { margin: 2rem 0 0.5rem; }
+.fit-more { margin: 1rem 0 0; }
+.fit-more a:not(.btn) { display: inline-flex; align-items: center; min-height: 44px; }
 .fit-list-meta { font-size: 0.82rem; color: var(--ink-2); }
 @media (max-width: 720px) {
   .fit-list-wide { grid-template-columns: 1fr; }

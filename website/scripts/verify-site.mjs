@@ -14,7 +14,7 @@
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,8 +30,12 @@ const attempts = Math.max(1, flag('--attempts', 1));
 const waitSeconds = Math.max(0, flag('--wait', 20));
 const target = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
 
-// '/fit/' is the generated list of fit guides. Its links cover every guide page, so a missing one fails here.
-const PAGES = ['/', '/stores.html', '/roi.html', '/fit/'];
+// '/fit/' is the generated list of fit guides, and every brand page (fit/brands/) is listed too: a brand page links
+// all of that brand's guides, and the list links the brand pages. A guide that is missing fails the link check on one of them.
+const brandPages = existsSync(path.join(site, 'fit', 'brands'))
+  ? readdirSync(path.join(site, 'fit', 'brands')).filter((name) => name.endsWith('.html')).sort().map((name) => `/fit/brands/${name}`)
+  : [];
+const PAGES = ['/', '/stores.html', '/roi.html', '/fit/', ...brandPages];
 const MISSING = '/this-page-does-not-exist';
 const WIDTHS = [320, 375, 414, 768, 1280];
 const INBOX = 'customerservice@pearfit.app';

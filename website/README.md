@@ -9,7 +9,8 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `styles.css` — Stylesheet, including a dark color scheme.
 - `app.js` — Sample silhouette, sample size matrix, ROI model, mobile menu, and the inquiry form.
 - `stores.html`, `stores.js`, `stores.json` — The supported-stores page and its data (see Supported stores).
-- `fit/`, `sitemap.xml` — The fit guide pages and the sitemap, both generated (see Fit guides).
+- `fit/`, `sitemap.xml` — The fit guide pages (one per product, one per brand with enough guides under `fit/brands/`, and the index) and the sitemap, all generated (see Fit guides). The block between the `fit-guides` markers in `index.html` is generated too.
+- `fit/method.html` — The methodology page, generated with the guides.
 - `scripts/build-fit-pages.mjs` — Builds them from `data/fit-pages/catalog.json`.
 - `robots.txt` — Lets crawlers read everything except `/api/`, and names the sitemap.
 - `nav.js` — The mobile menu, shared by the pages.
@@ -39,7 +40,7 @@ The Vercel project now deploys from `Coleismole/pearfit`.
 | `api/recommend.js`, `api/candidates.js` | `(cd engine && npm run build:api)` |
 | `scraper/`, `api/scraper/` | `node scripts/assemble-site.mjs` |
 | `stores.json` | `node website/scripts/build-stores.mjs` (from `webscraper/SUPPORTED_STORES.md`) |
-| `fit/`, `sitemap.xml` | `node website/scripts/build-fit-pages.mjs` (from `data/fit-pages/catalog.json`) |
+| `fit/`, `sitemap.xml`, the `fit-guides` block of `index.html` | `node website/scripts/build-fit-pages.mjs` (from `data/fit-pages/catalog.json`) |
 
 Both need `npm ci` in `webscraper/` first (esbuild and vite are installed there). The `Check generated bundles` workflow (`.github/workflows/check-bundles.yml`) rebuilds both on every pull request and push to `main` and fails, listing the changed files and the diff stat, when the committed copies are stale. Run the same check locally with `node scripts/check-bundles.mjs` from a tree where those paths are committed. The Vite file names are content hashes, so with the lockfile installed the rebuild is byte-for-byte reproducible and a plain diff is a fair test.
 
@@ -73,8 +74,10 @@ What the markdown does not say is not made up. It records the review platform an
 
 ## Fit guides
 `fit/<product>.html` is one page per product that answers "does it run small?" from the review numbers in the fit
-store, with the size chart where there is one. `fit/index.html` lists them by brand and `sitemap.xml` lists every
-page of the site. They exist so that a search for how a product fits can land on Pearfit; each page links into the
+store, with the size chart where there is one. `fit/brands/<brand>.html` answers it for a whole brand with at least
+three guides (today only UNIQLO; more brands get a page as the catalog grows). `fit/index.html` lists the guides by
+brand, the home page has a "Does it run small?" block that links the biggest brand pages and the most reviewed
+guides, and `sitemap.xml` lists every page of the site. They exist so that a search for how a product fits can land on Pearfit; each page links into the
 shopper app.
 
 The pages are built from `data/fit-pages/catalog.json`, a committed snapshot of the fit store. To pick up newly
@@ -92,13 +95,28 @@ bytes. The `Check generated bundles` workflow rebuilds the pages and fails when 
 
 Rules the script keeps, all set at the top of `scripts/build-fit-pages.mjs`:
 
+- A product the store lists under several codes is one page. Listings with identical review numbers are the same
+  reviews and count once; different ones are pooled, weighted by review count (`combineReviews`), and the page says
+  how many listings it combines. The review minimum applies to the pooled count.
 - A product gets a page only with at least 10 reviews, a real brand and a name that reads as a product. The scraper
   stores what a store's page says, which is sometimes an error page's title.
 - Every number is a stored number. The answer and the advice are picked from the shares by fixed thresholds
-  (`fitVerdict`); no language model writes them. The shares count only reviews that say how the product fits, and
-  the page says so.
+  (`fitVerdict`); no language model writes them.
+- The shares are of all the reviews read. The scraper counts a review with no small or large comment as true to size
+  (`webscraper/fitAnalyzer.ts`), so "true to size" means "not called small or large", not "said true to size". Every
+  guide says so in its own words and links `fit/method.html`, which explains how reviews are counted, how answers are
+  chosen, how listings combine, and what the numbers cannot tell you. Its figures are the generator's own settings.
+- A guide links up to six guides of the same type of garment from other brands (`similarGuides`). "Other garments" is
+  grouped by a word in the name (jeans, pants, shorts, tops and so on); a name that matches no word has no group and
+  no links. Each page starts at a different place in the list, so the links spread over every guide.
 - A chart cell with no trusted number prints "unknown". A product with no chart says it has none.
 - No review text, reviewer name or store URL is published. The snapshot does not hold any.
+- A brand page gives the brand-wide answer from all its guides together, how many guides fall in each verdict, the
+  products where at least 20% of reviewers say small (or large) when they have 20 or more reviews, and every guide by
+  type of garment. The type is read from the product name, so a few are wrong. Nothing is shown for a callout nobody
+  qualifies for.
+- The home page block sits between `<!-- fit-guides:start ... -->` and `<!-- fit-guides:end -->` in `index.html`.
+  Edit the script, not the block; `--check` fails when the block is stale. Keep both markers in place.
 - A tee with a size chart links straight to its check in the app (`/app/#/check/<id>`); anything else links to `/app`.
 
 `test/fit-pages.test.mjs` covers the rules with a hand-written catalog and checks that the committed pages match the
@@ -114,7 +132,7 @@ Privacy rule: hostnames and counts only. No review text, names, emails, full URL
 
 | Event | Properties | Sent when |
 | --- | --- | --- |
-| `section_viewed` | `section` (`hero`, `benefits`, `demo`, `try`, `how`, `roi`, `pilot`, `faq`, and `stores` on the stores page) | Any part of a section is in the top 60% of the screen, once per section per page view |
+| `section_viewed` | `section` (`hero`, `benefits`, `demo`, `try`, `how`, `fit-guides`, `roi`, `pilot`, `faq`, and `stores` on the stores page) | Any part of a section is in the top 60% of the screen, once per section per page view |
 | `scraper_link_clicked` | `location` (`header`, `footer`, or a section id) | A link to `/scraper` is clicked |
 | `stores_link_clicked` | `location` | A link to the supported-stores page is clicked |
 | `demo_started` | `source`, `host`, `candidate_id`, `wardrobe_size` | The live demo sends a request (or a pasted link is checked) |

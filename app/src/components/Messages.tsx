@@ -41,7 +41,7 @@ export function ApiErrorPanel({ title, error, onRetry }: { title: string; error:
         <ul className="hints">
           <li className="hints__title">Try this:</li>
           <li>· Check your internet connection</li>
-          <li>· Open the app on pearfit.app or on localhost. The API refuses requests from any other address.</li>
+          <li>· Open the app on pearfit.app, or on localhost when you run it yourself. The API refuses requests from any other address.</li>
         </ul>
       )}
       <button type="button" className="btn btn--primary" onClick={onRetry}>

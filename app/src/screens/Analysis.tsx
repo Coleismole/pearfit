@@ -6,11 +6,11 @@ import { ApiErrorPanel, Loading, Notice } from "../components/Messages.tsx";
 import { SaveToPlanned } from "../components/SaveToPlanned.tsx";
 import { SubScreen } from "../components/Screen.tsx";
 import { Thumb } from "../components/Thumb.tsx";
-import { CONFIDENCE_NAMES, GARMENT_NAMES, NOT_MEASURED, formatPercent } from "../lib/format.ts";
+import { CONFIDENCE_NAMES, GARMENT_NAMES, NOT_MEASURED, countOf, formatPercent } from "../lib/format.ts";
 import { ownedEntry, plannedFrom } from "../lib/items.ts";
 import { link } from "../lib/router.ts";
 import { DIMS } from "../lib/types.ts";
-import type { PickerCandidate, RecommendResponse } from "../lib/types.ts";
+import type { PickerCandidate, RecommendResponse, ReviewSummary } from "../lib/types.ts";
 import { round1 } from "../lib/units.ts";
 import { displayName } from "../lib/wardrobe.ts";
 import { useStore } from "../store.tsx";
@@ -77,6 +77,8 @@ export function Analysis({ candidateId }: { candidateId: string }) {
         </Notice>
       )}
 
+      {result?.reviews && <Reviews reviews={result.reviews} />}
+
       {candidate && <SizeChart candidate={candidate} suggested={result?.size ?? null} />}
 
       {result && (
@@ -102,6 +104,8 @@ function Sized({ candidateId, candidate, result, size }: { candidateId: string; 
         ? [{ shirtId: result.fitsLike, matchPercent: result.matchPercent }]
         : [];
   const similar = ranked.slice(0, SIMILAR_SHOWN);
+  // Every size with the owned shirt it is closest to. A size the API could not compare is left out.
+  const bySize = result.sizes.flatMap((s) => (s.fitsLike !== null && s.matchPercent !== null ? [{ ...s, fitsLike: s.fitsLike, matchPercent: s.matchPercent }] : []));
   const matchName = result.fitsLike === null ? null : displayName(result.fitsLike);
   const percent = Math.max(0, Math.min(100, result.matchPercent ?? 0));
 
@@ -158,6 +162,33 @@ function Sized({ candidateId, candidate, result, size }: { candidateId: string; 
         </section>
       )}
 
+      {bySize.length > 1 && (
+        <section className="stack stack--tight" aria-labelledby="sizes-heading">
+          <h2 className="heading" id="sizes-heading">
+            Each size next to your wardrobe
+          </h2>
+          <div className="card card--flush">
+          <ul className="plain-list">
+            {bySize.map(({ size: s, matchPercent, fitsLike }) => (
+              <li key={s}>
+                <a
+                  className={s === size ? "size-row size-row--suggested" : "size-row"}
+                  href={candidate ? link("check", candidateId, "compare", { size: s, with: fitsLike }) : link("owned", fitsLike)}
+                >
+                  <span className="size-row__size">{s}</span>
+                  <span className="size-row__text">
+                    Closest to your {displayName(fitsLike)}
+                    {s === size && <span className="sr-only"> (suggested size)</span>}
+                  </span>
+                  <span className="size-row__percent">{formatPercent(matchPercent)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          </div>
+        </section>
+      )}
+
       {similar.length > 0 && (
         <section className="stack" aria-labelledby="match-heading">
           <div className="row row--between row--baseline row--wrap">
@@ -201,6 +232,38 @@ function Sized({ candidateId, candidate, result, size }: { candidateId: string; 
         </section>
       )}
     </>
+  );
+}
+
+// What reviewers said about the fit. The numbers are the catalog's, shown as they are.
+function Reviews({ reviews }: { reviews: ReviewSummary }) {
+  const rows = [
+    { label: "Runs small", percent: reviews.runsSmallPct },
+    { label: "True to size", percent: reviews.trueToSizePct },
+    { label: "Runs large", percent: reviews.runsLargePct },
+  ];
+  return (
+    <section className="stack stack--tight" aria-labelledby="reviews-heading">
+      <h2 className="heading" id="reviews-heading">
+        What reviewers say about the fit
+      </h2>
+      <div className="card stack">
+        <dl className="review-bars">
+          {rows.map(({ label, percent }) => (
+            <div key={label} className="review-bars__row">
+              <dt>{label}</dt>
+              <dd>
+                <span className="review-bars__track" aria-hidden="true">
+                  <span className="review-bars__fill" style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
+                </span>
+                <span className="review-bars__value">{formatPercent(percent)}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="tiny muted">From {countOf(reviews.total, "review", "reviews")} in the Pearfit catalog.</p>
+      </div>
+    </section>
   );
 }
 

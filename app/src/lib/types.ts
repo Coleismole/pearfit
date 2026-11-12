@@ -59,6 +59,14 @@ export interface SimilarShirt {
   matchPercent: number;
 }
 
+// What reviewers said about the fit of a catalog shirt: how many reviews, and the share (0 to 100) that said each thing.
+export interface ReviewSummary {
+  total: number;
+  runsSmallPct: number;
+  trueToSizePct: number;
+  runsLargePct: number;
+}
+
 // The answer of POST /api/recommend. With no recommendation, size, matchPercent and fitsLike are all null,
 // `similar` is empty and `verdict` says why.
 export interface RecommendResponse {
@@ -72,6 +80,7 @@ export interface RecommendResponse {
   // Both are empty in an answer saved before the API sent them. The app then shows what it showed before.
   sizes: SizeMatch[]; // every size, smallest to largest
   similar: SimilarShirt[]; // great shirts against the suggested size, closest first
+  reviews: ReviewSummary | null; // null = the catalog has no reviews of this shirt, or the answer is an older one
 }
 
 // A catalog shirt saved under "Planning to buy", with the last answer the API gave for it.

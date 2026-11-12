@@ -32,6 +32,7 @@ const sized = {
   garmentType: "tee",
   sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }],
   similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
+  reviews: { total: 40, runsSmallPct: 60, trueToSizePct: 30, runsLargePct: 10 },
 };
 const notSized = {
   size: null,
@@ -43,6 +44,7 @@ const notSized = {
   garmentType: "polo",
   sizes: [{ size: "M", matchPercent: null, fitsLike: null }],
   similar: [],
+  reviews: null,
 };
 
 test("getCandidates sends a plain GET to {base}/api/candidates and returns the list", async () => {
@@ -159,6 +161,9 @@ test("parseRecommendResponse rejects an answer with a missing or mistyped field"
     { ...sized, similar: {} },
     { ...sized, similar: [{ shirtId: "blue-tee", matchPercent: null }] },
     { ...sized, similar: [{ matchPercent: 67.6 }] },
+    { ...sized, reviews: 40 },
+    { ...sized, reviews: { total: 40, runsSmallPct: 60, trueToSizePct: 30 } },
+    { ...sized, reviews: { total: "40", runsSmallPct: 60, trueToSizePct: 30, runsLargePct: 10 } },
   ];
   for (const raw of bad) {
     assert.throws(() => parseRecommendResponse(raw), (e: unknown) => e instanceof ApiError && e.kind === "invalid", JSON.stringify(raw));
@@ -167,7 +172,7 @@ test("parseRecommendResponse rejects an answer with a missing or mistyped field"
   assert.deepEqual(parseRecommendResponse(notSized), notSized); // a size with nothing to compare keeps its nulls
 });
 
-test("parseRecommendResponse reads an answer saved before sizes and similar existed as two empty lists", () => {
-  const { sizes: _sizes, similar: _similar, ...older } = sized;
-  assert.deepEqual(parseRecommendResponse(older), { ...sized, sizes: [], similar: [] });
+test("parseRecommendResponse reads an answer saved before sizes, similar and reviews existed as empty lists and null", () => {
+  const { sizes: _sizes, similar: _similar, reviews: _reviews, ...older } = sized;
+  assert.deepEqual(parseRecommendResponse(older), { ...sized, sizes: [], similar: [], reviews: null });
 });

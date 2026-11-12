@@ -168,6 +168,10 @@ export function buildCandidates(rows: SourceRows): ExportResult {
       review: reviewSignal(p),
       garmentType: garmentTypeFor(p.product_name),
       sizes,
+      // The stored numbers, passed on as they are. A product with no reviews gets no summary.
+      ...(p.total_reviews > 0
+        ? { reviewSummary: { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct } }
+        : {}),
     });
   }
   return { candidates, skipped };

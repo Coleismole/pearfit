@@ -101,6 +101,7 @@ test("the response carries size, confidence, matchPercent, fitsLike, verdict, no
     garmentType: "tee",
     sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }],
     similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
+    reviews: null, // this candidate has no review summary
   });
 });
 
@@ -131,6 +132,17 @@ test("sizes lists every size with its own closest shirt, and similar ranks the g
   ]);
 });
 
+test("the review summary is passed on as stored, also when no size can be suggested", () => {
+  const reviewSummary = { total: 40, runsSmallPct: 60, trueToSizePct: 30, runsLargePct: 10 };
+  const wardrobe = [{ ...blueTee, label: "great" as const }];
+  const reviewedTee: Candidate = { ...teeCandidate, reviewSummary };
+  assert.deepEqual(toRecommendResponse(recommend(wardrobe, reviewedTee), reviewedTee).reviews, reviewSummary);
+  const reviewedPolo: Candidate = { ...poloCandidate, reviewSummary }; // nothing comparable, but the reviews are still facts
+  const noSize = toRecommendResponse(recommend(wardrobe, reviewedPolo), reviewedPolo);
+  assert.equal(noSize.size, null);
+  assert.deepEqual(noSize.reviews, reviewSummary);
+});
+
 test("with no recommendation, size, matchPercent and fitsLike are null, not invented", () => {
   const wardrobe = [{ ...blueTee, label: "great" as const }]; // a tee wardrobe, a polo candidate: nothing comparable
   assert.deepEqual(toRecommendResponse(recommend(wardrobe, poloCandidate), poloCandidate), {
@@ -143,6 +155,7 @@ test("with no recommendation, size, matchPercent and fitsLike are null, not inve
     garmentType: "polo",
     sizes: [{ size: "M", matchPercent: null, fitsLike: null }],
     similar: [],
+    reviews: null,
   });
 });
 
@@ -244,11 +257,11 @@ test("with stale options, a failed reload serves the last value, waits before re
 
 // ---- CORS ----
 
-test("only pearfit.app and localhost origins are allowed", () => {
-  const allowed = ["https://pearfit.app", "https://www.pearfit.app", "http://localhost", "http://localhost:3000", "http://localhost:5173"];
+test("only pearfit.app, localhost and 127.0.0.1 origins are allowed", () => {
+  const allowed = ["https://pearfit.app", "https://www.pearfit.app", "http://localhost", "http://localhost:3000", "http://localhost:5173", "http://127.0.0.1", "http://127.0.0.1:5173"];
   const blocked = [
     undefined, "", "null", "https://example.com", "http://pearfit.app", "https://pearfit.app.evil.com",
-    "https://evilpearfit.app", "https://app.pearfit.app", "http://localhost.evil.com", "https://localhost", "http://127.0.0.1:3000",
+    "https://evilpearfit.app", "https://app.pearfit.app", "http://localhost.evil.com", "https://localhost", "https://127.0.0.1", "http://127.0.0.1.evil.com", "http://127.0.0.2", "http://127a0b0c1",
   ];
   for (const o of allowed) assert.equal(isAllowedOrigin(o), true, o);
   for (const o of blocked) assert.equal(isAllowedOrigin(o), false, String(o));
@@ -276,6 +289,7 @@ test("POST /recommend returns the engine's answer, matches the SKU in any case, 
     size: "M", confidence: "high", matchPercent: 67.6, fitsLike: "blue-tee",
     verdict: "Get the M, fits like your blue tee.", notes: [], garmentType: "tee",
     sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }], similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
+    reviews: null, // this candidate has no review summary
   });
   assert.equal(ok.headers["Access-Control-Allow-Origin"], "https://pearfit.app");
   assert.equal(ok.headers["Cache-Control"], "no-store");
@@ -313,7 +327,7 @@ test("a candidate the wardrobe cannot be compared with is a 200 with nulls, not 
   assert.deepEqual(r.body, {
     size: null, confidence: "low", matchPercent: null, fitsLike: null,
     verdict: "No comparable shirts in your wardrobe. This is a polo, and your wardrobe has none.", notes: [], garmentType: "polo",
-    sizes: [{ size: "M", matchPercent: null, fitsLike: null }], similar: [],
+    sizes: [{ size: "M", matchPercent: null, fitsLike: null }], similar: [], reviews: null,
   });
 });
 

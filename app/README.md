@@ -25,8 +25,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173**. Use `localhost`, not `127.0.0.1`: the API only accepts browser requests from
-`localhost` (see [CORS](#cors) below).
+Open **http://localhost:5173**. `http://127.0.0.1:5173` works too (see [CORS](#cors) below).
 
 ## Build
 
@@ -55,13 +54,15 @@ The app makes two calls to the API. Apart from those, the only network traffic i
 | Call | Used for | Answer |
 | --- | --- | --- |
 | `GET /api/candidates` | the catalog picker | `[{ id, name, garmentType, sizes }]` |
-| `POST /api/recommend` with `{ wardrobe: [...], candidateId }` | the size suggestion | `{ size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes, similar }` |
+| `POST /api/recommend` with `{ wardrobe: [...], candidateId }` | the size suggestion | `{ size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes, similar, reviews }` |
 
 Both calls are in [`src/lib/api.ts`](src/lib/api.ts).
 
 `sizes` is `[{ size, matchPercent, fitsLike }]`, one entry per size with its closest great shirt (`null` when that size
 could not be compared). `similar` is `[{ shirtId, matchPercent }]`, the great shirts against the suggested size, closest
-first. An answer saved on the device before the API sent these two reads as two empty lists.
+first. `reviews` is `{ total, runsSmallPct, trueToSizePct, runsLargePct }`: how many reviews the catalog has and the
+share that said each thing, or `null` when it has none. An answer saved on the device before the API sent these three
+reads as two empty lists and `null`.
 
 When `size` is `null` the API could not suggest a size and `verdict` says why (for example, the wardrobe has no
 shirt of that kind). The app shows that verdict as a normal message, not as an error. Errors are only shown when a
@@ -79,11 +80,11 @@ It is not a secret. `.env.local` is gitignored.
 The API sends CORS headers only for these origins (`ALLOWED_ORIGINS` in `engine/api/config.ts`):
 
 - `https://pearfit.app` and `https://www.pearfit.app`
-- `http://localhost` on any port
+- `http://localhost` and `http://127.0.0.1` on any port
 
-So local development on `localhost` works. **A deploy on any other domain will be blocked by the browser** until
-that origin is added to the API's allowed origins. That includes Vercel preview URLs, a subdomain such as
-`app.pearfit.app`, and `http://127.0.0.1`. When that happens the app shows "Couldn't load the catalog".
+So local development works. **A deploy on any other domain will be blocked by the browser** until
+that origin is added to the API's allowed origins. That includes Vercel preview URLs, and a subdomain such as
+`app.pearfit.app`. When that happens the app shows "Couldn't load the catalog".
 
 If the app is served from `www.pearfit.app` itself (for example under `/app/`), its requests go to the same
 origin and CORS does not apply.
@@ -146,7 +147,8 @@ every shirt a person owns.
 - **Most similar in your wardrobe.** The three closest shirts from the API's `similar` list are shown, each with
   its match for the suggested size. The similarity percentage between two wardrobe shirts (screens 14 and 15) is
   left out: the API does not return it, and the app does not compute scores itself.
-- **Customer reviews.** The API does not return review data, so the section is not there.
+- **Customer reviews.** Only the fit summary is shown: the share of reviews that said runs small, true to size or
+  runs large, and how many reviews there are. Review text and star ratings are not in the API.
 - **Measurements.** Chest width, length and sleeve length only: those are the three in the data format. The
   design also shows shoulder, waist and hem.
 - **Categories.** They are the engine's garment types (tee, long-sleeve tee, polo, button shirt, jacket, other).

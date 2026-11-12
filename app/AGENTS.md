@@ -22,8 +22,7 @@ This is the shopper app: a static Vite + React + TypeScript app with no server o
 
 ## Commands (run from `app/`; Node 22.18+)
 - Install: `npm install`
-- Run locally: `npm run dev`, then open http://localhost:5173 (not `127.0.0.1`: the API's CORS
-  allows `localhost` only)
+- Run locally: `npm run dev`, then open http://localhost:5173
 - Tests: `npm test`
 - Typecheck: `npm run typecheck`
 - Build: `npm run build`

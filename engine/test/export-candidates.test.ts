@@ -45,6 +45,7 @@ test("export subtracts the brand offset from length and nulls an unconfirmed sle
       S: { chest_cm: 50, length_cm: 68.5, sleeve_cm: null },
       M: { chest_cm: 53.2, length_cm: 72.8, sleeve_cm: null },
     },
+    reviewSummary: { total: 40, runsSmallPct: 60, trueToSizePct: 30, runsLargePct: 10 }, // the stored numbers, unchanged
   });
 });
 
@@ -56,6 +57,7 @@ test("brand with no offset row keeps chest and nulls length and sleeve; a review
     review: null, // 40 / 40 / 20 ties
     garmentType: "tee", // "Zed boxy tee"
     sizes: { L: { chest_cm: 58, length_cm: null, sleeve_cm: null } }, // chest 58.04 rounds to 58
+    reviewSummary: { total: 12, runsSmallPct: 40, trueToSizePct: 40, runsLargePct: 20 },
   });
 });
 

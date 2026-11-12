@@ -40,6 +40,15 @@ export const GARMENT_LABELS: Record<GarmentType, string> = {
 
 export type ReviewSignal = "runs_small" | "true_to_size" | "runs_large" | null;
 
+// What reviewers said about the fit, as the scraper stored it: how many reviews, and the share (0 to 100) that said
+// each thing. For display only. The engine reads `review` and never this.
+export interface ReviewSummary {
+  total: number;
+  runsSmallPct: number;
+  trueToSizePct: number;
+  runsLargePct: number;
+}
+
 // A shirt someone is thinking of buying. `sizes` must be listed smallest to largest.
 export interface Candidate {
   id: string;
@@ -47,6 +56,7 @@ export interface Candidate {
   review: ReviewSignal;
   sizes: Record<string, Measurements>;
   garmentType?: GarmentType; // missing = "tee". Only owned shirts of the same type are compared.
+  reviewSummary?: ReviewSummary; // missing = no reviews. The engine ignores it.
 }
 
 // Per-dimension difference, candidate minus owned shirt. Only dims present on both.

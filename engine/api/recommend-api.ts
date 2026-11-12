@@ -1,6 +1,6 @@
 // Request validation and response shaping for the API. Pure: no I/O, no network, so it is tested directly.
 import { garmentTypeOf } from "../src/recommend.ts";
-import type { Candidate, Confidence, GarmentType, Measurements, OwnedShirt, Recommendation } from "../src/types.ts";
+import type { Candidate, Confidence, GarmentType, Measurements, OwnedShirt, Recommendation, ReviewSummary } from "../src/types.ts";
 import { parseWardrobe } from "../cli/validate.ts";
 import { MAX_WARDROBE_SHIRTS, PICKER_GARMENT_TYPES } from "./config.ts";
 
@@ -55,6 +55,7 @@ export interface RecommendResponse {
   garmentType: GarmentType;
   sizes: SizeMatch[]; // every size, in the candidate's order (smallest to largest)
   similar: SimilarShirt[]; // great shirts against the recommended size, closest first. Empty with no recommendation.
+  reviews: ReviewSummary | null; // what reviewers said about the fit. null = the catalog has no reviews of it.
 }
 
 // Nothing is invented: with no recommendation, size, matchPercent and fitsLike are null and `similar` is empty,
@@ -76,6 +77,7 @@ export function toRecommendResponse(rec: Recommendation, candidate: Candidate): 
       fitsLike: s.matches[0]?.shirtId ?? null,
     })),
     similar: ranking.map((m) => ({ shirtId: m.shirtId, matchPercent: m.matchPct })),
+    reviews: candidate.reviewSummary ?? null,
   };
 }
 

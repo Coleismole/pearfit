@@ -62853,7 +62853,9 @@ function buildCandidates(rows) {
       name: p.product_name,
       review: reviewSignal(p),
       garmentType: garmentTypeFor(p.product_name),
-      sizes
+      sizes,
+      // The stored numbers, passed on as they are. A product with no reviews gets no summary.
+      ...p.total_reviews > 0 ? { reviewSummary: { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct } } : {}
     });
   }
   return { candidates, skipped };
@@ -62887,7 +62889,9 @@ var CANDIDATE_RETRY_MS = 30 * 1e3;
 var MAX_WARDROBE_SHIRTS = 200;
 var ALLOWED_ORIGINS = [
   /^https:\/\/(www\.)?pearfit\.app$/,
-  /^http:\/\/localhost(:\d{1,5})?$/
+  /^http:\/\/localhost(:\d{1,5})?$/,
+  /^http:\/\/127\.0\.0\.1(:\d{1,5})?$/
+  // the same machine by its address: local dev servers often print this one
 ];
 
 // api/cors.ts
@@ -63003,7 +63007,8 @@ function toRecommendResponse(rec, candidate) {
       matchPercent: s.matches[0]?.matchPct ?? null,
       fitsLike: s.matches[0]?.shirtId ?? null
     })),
-    similar: ranking.map((m) => ({ shirtId: m.shirtId, matchPercent: m.matchPct }))
+    similar: ranking.map((m) => ({ shirtId: m.shirtId, matchPercent: m.matchPct })),
+    reviews: candidate.reviewSummary ?? null
   };
 }
 

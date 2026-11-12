@@ -22,4 +22,5 @@ export const PICKER_GARMENT_TYPES: readonly GarmentType[] = ["tee"];
 export const ALLOWED_ORIGINS: readonly RegExp[] = [
   /^https:\/\/(www\.)?pearfit\.app$/,
   /^http:\/\/localhost(:\d{1,5})?$/,
+  /^http:\/\/127\.0\.0\.1(:\d{1,5})?$/, // the same machine by its address: local dev servers often print this one
 ];

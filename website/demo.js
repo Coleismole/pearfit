@@ -4,7 +4,7 @@
  *
  *   GET  /api/candidates   -> [{ id, name, garmentType, sizes: { S: { chest_cm, length_cm, sleeve_cm } } }]
  *   POST /api/recommend    <- { wardrobe: [{ id, label, measurements }], candidateId }
- *                          -> { size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes, similar }
+ *                          -> { size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes, similar, reviews }
  *
  * Built from engine/api (read only; the shapes are checked below, and a response that does not match is shown as
  * an error rather than as a guess). Every decision is the engine's: this file only collects input, validates it

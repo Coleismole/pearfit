@@ -18,6 +18,32 @@ already own it fits like.
 
 Working rules for people and AI agents are in `AGENTS.md`.
 
+## Using each app as an AI agent
+
+Rules for changing the code are in `AGENTS.md`. This section says how to use and check each part. Run every
+command from the folder named in its row. Run the tests and the typecheck before you say something works.
+
+| Part | What an agent uses it for | How |
+| --- | --- | --- |
+| `engine/` | Get a size recommendation from code, or change the matching | CLI: `npm run recommend -- sample [candidateId]` and `npm run eval`. Over HTTP: `GET https://www.pearfit.app/api/candidates`, then `POST https://www.pearfit.app/api/recommend` with `{ wardrobe, candidateId }`. The answer is `{ size, confidence, matchPercent, fitsLike, verdict, notes, garmentType }`. |
+| `webscraper/` | Collect fit values, size charts and reviews from a store page | `npm run dev`, then use the page or the endpoints on http://127.0.0.1:3000. Helpers: `webscraper/tools/README.md`. |
+| `app/` | See the shopper flow, or check a change to the API contract | `npm run dev`, then open http://localhost:5173 (not `127.0.0.1`: the API's CORS allows `localhost` only). |
+| `website/` | Edit the marketing site and its demo | Edit the files as committed. `npm test` and `node scripts/audit-site.mjs` check it. |
+
+Do:
+- Let code decide the size. Ask the engine or the API, never a language model, and treat `null` as "not measured".
+- Keep one part per change. A change in `engine/`, `webscraper/` or `app/` is not live until its generated files under
+  `website/` are rebuilt and committed (`docs/deploy.md`).
+- Check that error reports and analytics still arrive after you change them (`docs/observability.md`).
+
+Do not:
+- Call a store that refuses automated requests again, or work around it.
+- Send anything to the API except `Content-Type`, or add a request the app does not already make.
+- Put a key in code or a commit. Keys go in `.env.local`; names go in `.env.example`.
+- Add avatars, 3D, cloth simulation or a server of your own.
+
+Per-part detail: `engine/AGENTS.md`, `webscraper/AGENTS.md`, `app/AGENTS.md`, `website/README.md`.
+
 ## Run the scraper
 
 ```bash

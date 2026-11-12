@@ -7,7 +7,8 @@ This is the shopper app: a static Vite + React + TypeScript app with no server o
 ## App rules
 - The app does not compute sizes or scores. All size logic lives in the hosted API. The app makes
   two calls, `GET /api/candidates` and `POST /api/recommend`, both in `src/lib/api.ts`, and no other
-  network request.
+  request to Pearfit. The one other network traffic is Sentry error reports (`src/instrument.ts`); keep it
+  free of Session Replay and trace headers (`../docs/observability.md`).
 - `app/` is its own package and does not import `engine/`. `src/lib/types.ts` repeats the API's
   shapes from `engine/src/types.ts` and `engine/api/recommend-api.ts`. If the API contract changes,
   update that file and `src/lib/api.ts`.

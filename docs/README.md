@@ -10,6 +10,7 @@ Each fact has one home; link to it instead of copying it.
 | `data-format.md` | You read, write or convert a measurement, wardrobe or candidate |
 | `fit-store.md` | You touch Supabase, SQLite, `fit_store.sql` or a key |
 | `deploy.md` | You touch a generated file, a build script, a `vercel.json` or a workflow |
+| `observability.md` | You add or change error reporting, analytics or session recording |
 
 ## Engine (`engine/`)
 | Doc | Read it when |

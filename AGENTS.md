@@ -28,6 +28,8 @@ Never ask an LLM "which size?". Never let an LLM or any code invent a measuremen
 - No secrets in code or commits. Keys go in `.env.local` (gitignored); list their names in `.env.example`.
 - Prefer boring, readable code over clever code. Match the surrounding style.
 - Don't touch `webscraper/` when working on the engine, or the reverse, unless the task says so.
+- Errors go to Sentry and analytics and replay go to PostHog. Do not add the one to a job the other already does
+  (`docs/observability.md`).
 
 ## Where to read next
 Read the row that matches your task before you change anything. Skip the rest.
@@ -40,6 +42,7 @@ Read the row that matches your task before you change anything. Skip the rest.
 | Read, write or convert a measurement, wardrobe or candidate | `docs/data-format.md` |
 | Touch Supabase, SQLite, `fit_store.sql` or any key | `docs/fit-store.md` |
 | Edit the marketing site's pages, demo or analytics in `website/` | `website/README.md` |
+| Add or change error reporting, analytics or session recording | `docs/observability.md` |
 | Touch a generated file under `website/`, `scripts/`, a `vercel.json` or a workflow in `.github/` | `docs/deploy.md` |
 | Question why the product is shaped this way | `docs/project-background.md` |
 

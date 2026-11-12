@@ -22,6 +22,8 @@ scrapes product pages into fit values, size charts and reviews.
 - A store that refuses automated requests is reported, never worked around or retried.
 - Fit values go to Supabase and review text stays in SQLite. Read `../docs/fit-store.md` before you
   change `fit_store.sql`, `supabaseFit.ts`, `server/db.ts` or a key.
+- Analytics start only when the visitor accepted them on pearfit.app (`analytics.ts`, `analyticsConsented`). The page has no
+  banner of its own and sends nothing without that answer (`../docs/observability.md`).
 - Analytics events never carry review text, reviewer names, full product URLs, pasted HTML or error
   messages. `analyticsEvents.ts` builds each payload and its tests check this.
 - `SUPPORTED_STORES.md` is the source for `../website/stores.json`. After you change it, rebuild

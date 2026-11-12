@@ -3,8 +3,8 @@
  *
  *   PearfitAnalytics.track('demo_started', { source: 'picked_candidate' });
  *
- * Why a layer and not `posthog.capture` calls: PostHog may never load (an ad blocker, no project token, the
- * GitHub Pages copy of the site with no /api), and the page must behave the same then. `track` never throws,
+ * Why a layer and not `posthog.capture` calls: PostHog may never load (the visitor has not accepted analytics,
+ * an ad blocker, no project token, the GitHub Pages copy of the site with no /api), and the page must behave the same then. `track` never throws,
  * queues until PostHog has started, and drops the queue once it is known not to be coming.
  *
  * Privacy rule (same as webscraper/analyticsEvents.ts): send the store's hostname and counts, never review
@@ -202,6 +202,9 @@
     debug = ['localhost', '127.0.0.1'].includes(root.location.hostname);
     root.addEventListener('posthog:initialized', markReady);
     root.addEventListener('posthog:unavailable', markUnavailable);
+    root.addEventListener('pearfit:consent', (event) => {
+      if (event && event.detail && event.detail.value === 'granted') resume();
+    });
     // PostHog was already running when this script ran.
     if (root.posthog && root.posthog.__loaded) markReady();
     try {
@@ -212,6 +215,16 @@
     }
   }
 
+  /**
+   * The visitor accepted analytics after the page had given up on PostHog (no choice yet, or declined earlier): wait for
+   * it to start. Events from before the choice were dropped and stay dropped.
+   */
+  function resume() {
+    if (state !== 'unavailable') return;
+    state = 'waiting';
+    queue.length = 0;
+  }
+
   /** Back to the starting state. For tests. */
   function reset() {
     state = 'waiting';
@@ -220,5 +233,5 @@
 
   init();
 
-  return { EVENTS, track, log, hostOf, sanitize, markReady, markUnavailable, reset, MAX_QUEUE };
+  return { EVENTS, track, log, hostOf, sanitize, markReady, markUnavailable, resume, reset, MAX_QUEUE };
 });

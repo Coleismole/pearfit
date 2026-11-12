@@ -13,6 +13,9 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `fit/method.html` — The methodology page, generated with the guides.
 - `scripts/build-fit-pages.mjs` — Builds them from `data/fit-pages/catalog.json`.
 - `robots.txt` — Lets crawlers read everything except `/api/`, and names the sitemap.
+- `consent.js` — The analytics consent choice and its banner (see Privacy and consent).
+- `privacy.html`, `terms.html` — The privacy notice and the terms of use.
+- `fonts/` — The self-hosted font files and their licence. `styles.css` starts with the `@font-face` rules.
 - `nav.js` — The mobile menu, shared by the pages.
 - `scripts/build-stores.mjs` — Builds `stores.json` from `webscraper/SUPPORTED_STORES.md`.
 - `demo.js` — The live size demo (`#try`): form, validation, the two API calls, the result card.
@@ -123,8 +126,32 @@ Rules the script keeps, all set at the top of `scripts/build-fit-pages.mjs`:
 committed snapshot. The audit and the verify script both cover `fit/index.html`, and the verify script follows its
 links, so a missing guide page fails there.
 
+## Privacy and consent
+Nothing that measures visitors loads until the visitor says yes. `consent.js` shows a banner on a first visit (Accept and
+Decline, the same size) and keeps the answer in local storage as `pearfit.consent.v1`; "Privacy choices" in the footer of
+every page that has analytics brings it back. `posthog-init.js` and `speed-insights-init.js` start only on `granted`, and
+`analytics.js` drops events until PostHog is running. Declining after accepting stops PostHog, forgets the visitor and clears
+the `ph_` storage; Speed Insights stops from the next page. The `404.html` page has no analytics, so no banner. The scraper
+page reads the same key (`webscraper/analytics.ts`).
+
+Rules:
+- `privacy.html` and `terms.html` are hand-written. Update `privacy.html` before adding a service that handles visitor
+  data, a script or font from another host, or a new thing stored in the browser (`../docs/observability.md`). The tests in
+  `test/privacy.test.mjs` fail on a new outside host and on an unlisted storage key.
+- Fonts are served from `fonts/`. Do not link a font service.
+- The footer of every page says Pearfit is not affiliated with the brands and stores it names. The generated pages get it
+  from `scripts/build-fit-pages.mjs`; a test checks every page.
+- The inquiry form names FormSubmit next to its button. Keep the `ph-no-capture` class on it and on the demo form.
+- The legal pages are drafts written from what the code does, and need a lawyer's review before the team relies on them.
+  Two things in them need the team's own facts: who runs Pearfit (the legal entity and address) and which country's law
+  governs the terms. Neither is in the repo, so neither is on the pages.
+
+`scripts/verify-site.mjs` covers the banner in a real browser (it shows, both buttons, no request to PostHog before an
+answer, Accept starts it, "Privacy choices" reopens it, Decline stops it) and fails any page that requests another site
+with no answer given.
+
 ## Analytics
-PostHog is loaded by `posthog-init.js`, which reads `/api/posthog-config` (`POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` on Vercel). Every event goes through `PearfitAnalytics.track(name, props)` in `analytics.js`. It never throws and does nothing when PostHog is blocked, unconfigured or absent (the GitHub Pages copy has no `/api`): events queue (at most 50) until PostHog starts and are dropped once `posthog:unavailable` fires.
+PostHog is loaded by `posthog-init.js` once the visitor has accepted (see Privacy and consent), and reads `/api/posthog-config` (`POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` on Vercel). Every event goes through `PearfitAnalytics.track(name, props)` in `analytics.js`. It never throws and does nothing when PostHog is blocked, unconfigured, absent (the GitHub Pages copy has no `/api`) or not accepted: events queue (at most 50) until PostHog starts and are dropped once `posthog:unavailable` fires. Events from before an accept are dropped, not sent late.
 
 `EVENTS` in `analytics.js` is the allow-list and the source of truth for this table. An event that is not listed is dropped, a property not listed for it is dropped, and a string that contains `://` or `@` is dropped. Names are snake_case, object then past-tense verb, like `scrape_completed` in `webscraper/analyticsEvents.ts`. Every event also carries `app: "pearfit-marketing-site"` and `environment`, which `posthog-init.js` registers (the scraper registers `app: "pearfit-scraper"`).
 
@@ -162,4 +189,4 @@ Give it a URL to check a deploy, and `--attempts`/`--wait` to retry while the de
 node website/scripts/verify-site.mjs https://www.pearfit.app --attempts 10 --wait 30
 ```
 
-The `Verify website` workflow (`.github/workflows/verify-website.yml`) runs the unit tests, the audit on the four hand-written pages and `fit/index.html`, and this check on every pull request that changes `website/`, and on pushes to `main`.
+The `Verify website` workflow (`.github/workflows/verify-website.yml`) runs the unit tests, the audit on the six hand-written pages and `fit/index.html`, and this check on every pull request that changes `website/`, and on pushes to `main`.

@@ -25,9 +25,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preload" href="/fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/styles.css" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pearfit","item":"https://www.pearfit.app/"},{"@type":"ListItem","position":2,"name":"Fit guides","item":"https://www.pearfit.app/fit/"},{"@type":"ListItem","position":3,"name":"UNIQLO","item":"https://www.pearfit.app/fit/brands/uniqlo.html"},{"@type":"ListItem","position":4,"name":"UNIQLO Women's Wide Straight Jeans","item":"https://www.pearfit.app/fit/uniqlo-womens-wide-straight-jeans.html"}]}</script>
   <script>
@@ -137,11 +135,16 @@
         <a href="/#faq">FAQ</a>
         <a href="/#pilot">Book a pilot</a>
         <a href="/roi.html">ROI calculator</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <button type="button" data-consent-open>Privacy choices</button>
       </nav>
       <p class="footer-legal">&copy; <span data-year>2026</span> Pearfit. <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a></p>
+      <p class="footer-note">Pearfit is not affiliated with, endorsed by or sponsored by the brands and stores named on this site. Their names belong to their owners and are used only to say which product a guide or list refers to.</p>
     </div>
   </footer>
 
+  <script src="/consent.js"></script>
   <script src="/speed-insights-init.js"></script>
   <script src="/analytics.js"></script>
   <script src="/posthog-init.js"></script>

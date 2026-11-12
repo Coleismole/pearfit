@@ -25,9 +25,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="styles.css" />
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://www.pearfit.app/#organization","name":"Pearfit","url":"https://www.pearfit.app/","logo":"https://www.pearfit.app/apple-touch-icon.png","email":"customerservice@pearfit.app"},{"@type":"WebSite","@id":"https://www.pearfit.app/#website","name":"Pearfit","url":"https://www.pearfit.app/","publisher":{"@id":"https://www.pearfit.app/#organization"}}]}</script>
   <!-- Vercel Speed Insights - Queue initialization -->
@@ -230,7 +228,7 @@
         </div>
 
         <div>
-        <form class="pilot-form" id="pilot-form">
+        <form class="pilot-form ph-no-capture" id="pilot-form">
           <label class="inquiry-honey" aria-hidden="true">Company website <input name="_honey" tabindex="-1" autocomplete="off" /></label>
           <label>Full name <input name="name" required autocomplete="name" /></label>
           <label>Work email <input name="email" type="email" required autocomplete="email" inputmode="email" /></label>
@@ -246,6 +244,7 @@
           </label>
           <button type="submit" class="btn btn-block" id="pilot-submit-btn">Request 6-Week Brand Pilot</button>
           <p class="form-note" id="form-note" role="status">Sends this inquiry to <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a>.</p>
+          <p class="form-note form-disclosure">We send this form through <a href="https://formsubmit.co/" rel="noopener">FormSubmit</a>, a third-party service, which emails it to us. We use it only to reply. See the <a href="privacy.html">privacy notice</a>.</p>
         </form>
         <p class="form-alt"><a href="mailto:jchen@pearfit.app">Investor or partner? Email us</a></p>
         </div>
@@ -291,11 +290,16 @@
         <a href="#faq">FAQ</a>
         <a href="#pilot">Book a pilot</a>
         <a href="roi.html">ROI calculator</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <button type="button" data-consent-open>Privacy choices</button>
       </nav>
       <p class="footer-legal">&copy; <span data-year>2026</span> Pearfit. <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a></p>
+      <p class="footer-note">Pearfit is not affiliated with, endorsed by or sponsored by the brands and stores named on this site. Their names belong to their owners and are used only to say which product a guide or list refers to.</p>
     </div>
   </footer>
 
+  <script src="consent.js"></script>
   <script src="speed-insights-init.js"></script>
   <script src="analytics.js"></script>
   <script src="posthog-init.js"></script>

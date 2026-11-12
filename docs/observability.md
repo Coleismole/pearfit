@@ -12,8 +12,23 @@ Read this before you add, remove or change error reporting, analytics or session
 PostHog already records replays and captures browser exceptions for the project, so the website and the
 scraper page do not load Sentry. The shopper app has no PostHog, so it keeps Sentry for errors.
 
+## Consent and the privacy notice
+- PostHog and Vercel Speed Insights load only after the visitor accepts analytics in the banner (`website/consent.js`).
+  No answer means no. The answer is `pearfit.consent.v1` in local storage; the scraper page shares the origin and
+  `webscraper/analytics.ts` reads the same key, so it sends nothing unless it says `granted`. Declining after accepting
+  stops PostHog and clears what it stored; Speed Insights stops from the next page.
+- `website/privacy.html` is what visitors are told. Anything that sends visitor data to a new service, loads a script
+  or font from another host, or stores something new in the browser must be named there first. `website/test/privacy.test.mjs`
+  fails on an outside host the site code mentions that the test does not know, and on a storage key the app uses that
+  the notice does not list.
+- Fonts are served from `website/fonts/` and `webscraper/fonts/` (SIL Open Font License). Do not add a font service.
+- Sentry in the app and the API is not behind the banner: it sends errors, not usage, and no session replay. The privacy
+  notice says so. If that changes, change the notice.
+
 ## Rules
 - Do not run both tools for the same job. Browser errors and replay on a page that loads PostHog stay in PostHog.
+- Replays and autocapture must skip forms that hold what a visitor typed: give the form the `ph-no-capture` class (the demo
+  form and the inquiry form have it).
 - The shopper app sends no Session Replay and no trace headers. Its wardrobe form holds body measurements, and
   the API's CORS rules allow `Content-Type` only, so `sentry-trace` and `baggage` make the browser block the call.
 - A DSN is a public ingest key, so its default sits in code (the committed bundles are built without env vars).

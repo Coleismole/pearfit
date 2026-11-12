@@ -9,6 +9,11 @@
 // `npm run export-fit-catalog` in engine/. This script never touches the network, and the output has no clock in
 // it (the date on the pages is the snapshot's), so the same snapshot always gives byte-identical files.
 //
+// What a share means: the scraper counts every review it read as runs small, true to size or runs large, by fixed
+// phrase rules (webscraper/fitAnalyzer.ts), and a review with no small or large cue, including one that never
+// mentions fit, is counted as true to size. So the true to size share is the share of reviews that do not call the fit
+// small or large, not the share that say "true to size". Every page says this and links fit/method.html.
+//
 // Nothing is invented. Every number on a page is a stored number, or a share combined from stored numbers (see
 // combineReviews). The sentences around them are picked by the rules in fitVerdict() from those numbers; no language
 // model writes them. A product with too few reviews, no brand, or a name that is not a product name gets no page.
@@ -57,6 +62,8 @@ export const HOME_GUIDES_SHOWN = 6;
 export const HOME_GUIDES_PER_BRAND = 2;
 // ...and links to the pages of this many brands (those with the most guides).
 export const HOME_BRANDS_SHOWN = 3;
+// A product page links this many guides of the same type of garment from other brands.
+export const SIMILAR_GUIDES_SHOWN = 6;
 // The hand-written pages that also go in the sitemap.
 const STATIC_PAGES = ['/', '/stores.html', '/roi.html'];
 // The shopper app only offers these garment types (PICKER_GARMENT_TYPES in engine/api/config.ts), so only these get
@@ -66,6 +73,7 @@ const APP_GARMENT_TYPES = ['tee'];
 const DIMS = ['chest_cm', 'length_cm', 'sleeve_cm'];
 const SHARE_KEYS = ['runsSmallPct', 'trueToSizePct', 'runsLargePct'];
 const GARMENT_PLURAL = { tee: 'T-shirts', tee_long_sleeve: 'Long-sleeve tees', polo: 'Polo shirts', button_shirt: 'Shirts', jacket: 'Jackets', other: 'Other garments' };
+const METHOD_PATH = '/fit/method.html';
 export const HOME_START = '<!-- fit-guides:start (written by scripts/build-fit-pages.mjs: edit the script, not this block) -->';
 export const HOME_END = '<!-- fit-guides:end -->';
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -141,42 +149,42 @@ export function fitVerdict(reviews) {
 const VERDICTS = {
   true_to_size: {
     label: 'True to size',
-    answer: 'No. Most reviewers say it fits true to size.',
+    answer: 'No. Most reviews are counted as true to size.',
     advice: 'Your usual size in this brand is the place to start.',
   },
   true_leaning_small: {
     label: 'Mostly true to size, leaning small',
-    answer: 'Mostly no. More reviewers say true to size than anything else, but a fair share say it runs small.',
+    answer: 'Mostly no. More reviews are counted as true to size than anything else, but a fair share say it runs small.',
     advice: 'Start from your usual size. If you are between two sizes, the larger one is the safer choice.',
   },
   true_leaning_large: {
     label: 'Mostly true to size, leaning large',
-    answer: 'No. More reviewers say true to size than anything else, and a fair share say it runs large.',
+    answer: 'No. More reviews are counted as true to size than anything else, and a fair share say it runs large.',
     advice: 'Start from your usual size. If you are between two sizes, the smaller one is the safer choice.',
   },
   true_mixed: {
     label: 'Mostly true to size, with mixed reports',
-    answer: 'Mostly no. More reviewers say true to size than anything else, but the rest are divided between small and large.',
+    answer: 'Mostly no. More reviews are counted as true to size than anything else, but the rest are divided between small and large.',
     advice: 'Start from your usual size, and check the size chart against a shirt you own.',
   },
   runs_small: {
     label: 'Runs small',
-    answer: 'Yes. Most reviewers say it runs small.',
+    answer: 'Yes. Most reviews say it runs small.',
     advice: 'If you are between two sizes, the larger one is the safer choice.',
   },
   leans_small: {
     label: 'Leans small',
-    answer: 'Somewhat. More reviewers say it runs small than anything else, but they are not a majority.',
+    answer: 'Somewhat. More reviews say it runs small than anything else, but they are not a majority.',
     advice: 'If you are between two sizes, the larger one is the safer choice.',
   },
   runs_large: {
     label: 'Runs large',
-    answer: 'No, the opposite. Most reviewers say it runs large.',
+    answer: 'No, the opposite. Most reviews say it runs large.',
     advice: 'If you are between two sizes, the smaller one is the safer choice.',
   },
   leans_large: {
     label: 'Leans large',
-    answer: 'No. More reviewers say it runs large than anything else, but they are not a majority.',
+    answer: 'No. More reviews say it runs large than anything else, but they are not a majority.',
     advice: 'If you are between two sizes, the smaller one is the safer choice.',
   },
   split: {
@@ -269,11 +277,52 @@ export function selectPages(catalog) {
   const pages = kept.map((p) => ({ ...p, slug: counts.get(baseOf(p)) > 1 ? `${baseOf(p)}-${slugify(p.sku)}` : baseOf(p) }));
   const seen = new Set();
   for (const page of pages) {
-    if (page.slug === '' || page.slug === 'index' || seen.has(page.slug)) throw new Error(`fit pages: slug "${page.slug}" is empty or used twice (sku ${page.sku})`);
+    if (page.slug === '' || page.slug === 'index' || page.slug === 'method' || seen.has(page.slug)) throw new Error(`fit pages: slug "${page.slug}" is empty or used twice (sku ${page.sku})`);
     seen.add(page.slug);
   }
   const order = (p) => `${p.brand.toLowerCase()}\u0000${p.name.toLowerCase()}\u0000${p.sku}`;
   return pages.sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0));
+}
+
+// "Other garments" is too mixed to link as one group, so its guides are grouped by a word in the product name. The
+// first group whose pattern matches wins. A name that matches none (a pair of clogs, "The Pit Stop") has no group and no
+// similar guides: it is left out rather than guessed. "Short Sleeve Top" is not shorts.
+const OTHER_GROUPS = [
+  ['Jeans', /\bjeans?\b/],
+  ['Pants', /\b(pants?|trousers|joggers|chinos?)\b/],
+  ['Shorts', /\bshorts?\b(?![\s-]*sleeve)/],
+  ['Leggings', /\b(leggings?|tights)\b/],
+  ['Dresses and jumpsuits', /\b(dress(es)?|jumpsuits?)\b/],
+  ['Hoodies and sweatshirts', /\b(hoodies?|sweatshirts?)\b/],
+  ['Sweaters and cardigans', /\b(sweaters?|cardigans?)\b/],
+  ['Tops', /\b(tops?|tanks?|blouses?)\b/],
+  ['Bras', /\bbras?\b/],
+];
+
+/** The group a guide is linked with: its type of garment, or for "other garments" the word group its name matches. null when none. */
+export function similarGroup(page) {
+  const type = page.garmentType in GARMENT_PLURAL ? page.garmentType : 'other';
+  if (type !== 'other') return { key: type, label: GARMENT_PLURAL[type] };
+  const name = page.name.toLowerCase();
+  const found = OTHER_GROUPS.find(([, pattern]) => pattern.test(name));
+  return found ? { key: `other:${found[0]}`, label: found[0] } : null;
+}
+
+/**
+ * Up to SIMILAR_GUIDES_SHOWN guides of the same group (similarGroup) from other brands, so a brand with one product
+ * still links out. Each page starts at a different place in the list (its own position times the number shown, wrapping
+ * round), which spreads the links over every guide instead of sending all of them to the most reviewed ones. Nothing
+ * here is random: the same pages give the same links.
+ */
+export function similarGuides(page, pages) {
+  const group = similarGroup(page);
+  if (!group) return [];
+  const same = pages.filter((p) => similarGroup(p)?.key === group.key).sort((a, b) => (a.slug < b.slug ? -1 : 1));
+  const pool = same.filter((p) => p.brand !== page.brand);
+  if (pool.length === 0) return [];
+  const shown = Math.min(SIMILAR_GUIDES_SHOWN, pool.length);
+  const start = (same.findIndex((p) => p.slug === page.slug) * shown) % pool.length;
+  return Array.from({ length: shown }, (_, i) => pool[(start + i) % pool.length]);
 }
 
 /** The brands with a page of their own: at least MIN_BRAND_GUIDES guides each, sorted by name. */
@@ -421,15 +470,15 @@ ${Object.entries(page.sizes)
         <p class="try-foot">Chest is pit to pit with the garment laid flat, which is half the measurement around. “unknown” means Pearfit has no number it trusts for that cell; it is not filled in.${several}</p>`;
 }
 
-/** One product's page. `related` is the other pages of the same brand, already cut to RELATED_SHOWN; `brand` is that brand's own page (selectBrands), or null when it has none. */
-export function renderProductPage(page, related, exportedOn, brand = null) {
+/** One product's page. `related` is the other pages of the same brand, already cut to RELATED_SHOWN; `brand` is that brand's own page (selectBrands), or null when it has none; `similar` is similarGuides(). */
+export function renderProductPage(page, related, exportedOn, brand = null, similar = []) {
   const name = fullName(page);
   const verdict = fitVerdict(page.reviews);
   const { total, runsSmallPct, trueToSizePct, runsLargePct } = page.reviews;
   const question = `Does the ${name} run small?`;
   const title = question.length + ' — Pearfit'.length <= 65 ? `${question} — Pearfit` : question;
-  const shares = `${trueToSizePct}% say true to size, ${runsSmallPct}% say it runs small and ${runsLargePct}% say it runs large`;
-  const description = `${verdict.label}: of the reviews that say how it fits, ${trueToSizePct}% say true to size, ${runsSmallPct}% runs small, ${runsLargePct}% runs large. From ${reviewCount(total)}.`;
+  const counted = `${trueToSizePct}% of its ${reviewCount(total)} are counted as true to size, ${runsSmallPct}% as runs small and ${runsLargePct}% as runs large.`;
+  const description = [`${verdict.label}: ${counted}`, counted].find((d) => d.length <= 160) ?? counted;
   const canonical = pageUrl(page);
   const inApp = APP_GARMENT_TYPES.includes(page.garmentType) && hasChart(page);
   const appHref = inApp ? `/app/#/check/${encodeURIComponent(page.candidateId)}` : '/app';
@@ -454,7 +503,7 @@ export function renderProductPage(page, related, exportedOn, brand = null) {
         <span class="kicker">Fit guide · ${esc(page.brand)}</span>
         <h1>${esc(question)}</h1>
         <p class="fit-answer">${esc(verdict.answer)}</p>
-        <p>Of the reviews that say how it fits, ${shares}. Pearfit read ${reviewCount(total)} ${read}.${total < SMALL_SAMPLE ? ' That is a small sample, so read it as a hint.' : ''}</p>
+        <p>Pearfit read ${reviewCount(total)} ${read}. ${trueToSizePct}% were counted as true to size, ${runsSmallPct}% as runs small and ${runsLargePct}% as runs large. A review is counted as true to size when it does not say the fit is small or large.${total < SMALL_SAMPLE ? ' That is a small sample, so read it as a hint.' : ''}</p>
         ${bars(page.reviews)}
         <h2>What size to get</h2>
         <p>${esc(verdict.advice)}</p>
@@ -482,10 +531,23 @@ ${related.map((other) => listItem(other, false)).join('\n')}
     </section>
 `
     : ''
+}${
+  similar.length > 0
+    ? `
+    <section class="section section-alt" aria-labelledby="similar-heading">
+      <div class="wrap narrow-wrap">
+        <h2 id="similar-heading">${similarGroup(page).label} from other brands</h2>
+        <ul class="fit-list">
+${similar.map((other) => listItem(other, true)).join('\n')}
+        </ul>
+      </div>
+    </section>
+`
+    : ''
 }
     <section class="section section-rule">
       <div class="wrap narrow-wrap">
-        <p class="muted">Numbers as of ${formatDate(exportedOn)}. The shares are rounded to whole percents and count only reviews that say how the product fits. <a href="/fit/">All fit guides</a></p>
+        <p class="muted">Numbers as of ${formatDate(exportedOn)}. The shares are of all the reviews Pearfit read, rounded to whole percents, and a review with no small or large comment is counted as true to size. <a href="${METHOD_PATH}">How these numbers are made</a> · <a href="/fit/">All fit guides</a></p>
       </div>
     </section>
   </main>
@@ -512,10 +574,10 @@ export function renderBrandPage(info, exportedOn) {
   const verdict = fitVerdict(reviews);
   const question = `Does ${brand} run small?`;
   const title = [`${question} Fit guide for ${pages.length} products — Pearfit`, `${question} — Pearfit`, question].find((t) => t.length <= 65) ?? question;
-  const detail = `${reviews.trueToSizePct}% of reviews say true to size, ${reviews.runsSmallPct}% runs small, ${reviews.runsLargePct}% runs large. From ${reviewCount(reviews.total)}.`;
+  const detail = `${reviews.trueToSizePct}% of reviews are counted as true to size, ${reviews.runsSmallPct}% as runs small, ${reviews.runsLargePct}% as runs large. From ${reviewCount(reviews.total)}.`;
   const description = [`${verdict.label} across ${pages.length} ${brand} products: ${detail}`, `${pages.length} ${brand} products: ${detail}`].find((d) => d.length <= 160) ?? detail;
   const canonical = brandUrl(info);
-  const shares = `${reviews.trueToSizePct}% of reviews say true to size, ${reviews.runsSmallPct}% say it runs small and ${reviews.runsLargePct}% say it runs large`;
+  const shares = `${reviews.trueToSizePct}% of reviews are counted as true to size, ${reviews.runsSmallPct}% as runs small and ${reviews.runsLargePct}% as runs large`;
 
   const counts = new Map();
   for (const page of pages) counts.set(fitVerdict(page.reviews).label, (counts.get(fitVerdict(page.reviews).label) ?? 0) + 1);
@@ -593,7 +655,7 @@ ${types
     const group = combineReviews(items.map((p) => p.reviews));
     const summary =
       items.length >= TYPE_SUMMARY_MIN
-        ? `\n        <p class="muted">Across these ${items.length} guides: ${group.trueToSizePct}% of reviews say true to size, ${group.runsSmallPct}% runs small, ${group.runsLargePct}% runs large (${reviewCount(group.total)}).</p>`
+        ? `\n        <p class="muted">Across these ${items.length} guides: ${group.trueToSizePct}% of reviews are counted as true to size, ${group.runsSmallPct}% as runs small, ${group.runsLargePct}% as runs large (${reviewCount(group.total)}).</p>`
         : '';
     return `        <h3 class="fit-type">${GARMENT_PLURAL[type]}</h3>${summary}
         <ul class="fit-list">
@@ -606,7 +668,7 @@ ${items.map((page) => listItem(page, false)).join('\n')}
 
     <section class="section section-rule">
       <div class="wrap narrow-wrap">
-        <p class="muted">Numbers as of ${formatDate(exportedOn)}. A brand’s shares combine its guides, weighted by how many reviews each has, and are rounded to whole percents. The type of garment is read from the product name. <a href="/fit/">All fit guides</a></p>
+        <p class="muted">Numbers as of ${formatDate(exportedOn)}. A brand’s shares combine its guides, weighted by how many reviews each has, and are rounded to whole percents. A review with no small or large comment is counted as true to size. The type of garment is read from the product name. <a href="${METHOD_PATH}">How these numbers are made</a> · <a href="/fit/">All fit guides</a></p>
       </div>
     </section>
   </main>
@@ -636,7 +698,7 @@ export function renderIndexPage(pages, brands, exportedOn) {
         <span class="kicker">Fit guides</span>
         <h1>Does it run small?</h1>
         <p class="lede">How ${pages.length} products from ${byBrand.size} brands run, according to the reviews Pearfit read.</p>
-        <p class="muted narrow">Each guide gives the share of reviews that say true to size, runs small and runs large, and the size chart where Pearfit has one. A product needs at least ${MIN_REVIEWS} reviews to be listed. Numbers as of ${formatDate(exportedOn)}.</p>
+        <p class="muted narrow">Each guide gives the share of reviews that say true to size, runs small and runs large, and the size chart where Pearfit has one. A product needs at least ${MIN_REVIEWS} reviews to be listed. Numbers as of ${formatDate(exportedOn)}. <a href="${METHOD_PATH}">How these numbers are made</a>.</p>
       </div>
     </section>
 
@@ -657,6 +719,77 @@ ${shown.map((page) => listItem(page, false)).join('\n')}${more}
         </ul>`;
   })
   .join('\n')}
+      </div>
+    </section>
+  </main>
+${FOOT}`;
+}
+
+/**
+ * fit/method.html: where the numbers come from and what they mean. The figures in it (counts, thresholds) are the
+ * generator's own settings, so the page cannot drift from what the other pages do.
+ */
+export function renderMethodPage(pages, exportedOn) {
+  const brands = new Set(pages.map((p) => p.brand)).size;
+  const reviews = pages.reduce((sum, p) => sum + p.reviews.total, 0);
+  const canonical = `${ORIGIN}${METHOD_PATH}`;
+  const title = 'How the fit numbers are made — Pearfit';
+  const description = 'Where Pearfit’s fit guide numbers come from, how each review is counted, how the answers are chosen, and what the numbers cannot tell you.';
+  return `${head({
+    title,
+    description,
+    canonical,
+    jsonLd: crumbs([
+      ['Pearfit', `${ORIGIN}/`],
+      ['Fit guides', `${ORIGIN}/fit/`],
+      ['How the fit numbers are made', canonical],
+    ]),
+  })}
+  <main id="main" tabindex="-1">
+    <section class="section fit-intro">
+      <div class="wrap narrow-wrap">
+        <nav class="fit-crumbs" aria-label="Breadcrumb"><a href="/">Pearfit</a> <span aria-hidden="true">›</span> <a href="/fit/">Fit guides</a></nav>
+        <span class="kicker">Fit guides</span>
+        <h1>How the fit numbers are made</h1>
+        <p class="fit-answer">Every number in a fit guide is a count from real reviews or a size chart, and this page says how each is made and where it falls short.</p>
+        <p>Today that is ${pages.length} guides from ${brands} ${brands === 1 ? 'brand' : 'brands'}, built from ${reviewCount(reviews)}, as of ${formatDate(exportedOn)}.</p>
+
+        <h2>Where the numbers come from</h2>
+        <p>Pearfit’s scraper opens the public product page of a store, reads the reviews and the size chart shown there, and keeps numbers. It reads up to about 300 reviews of a product, newest first where the store offers that sort, so a product with more reviews than that is sampled. The stores it can read are on the <a href="/stores.html">supported stores</a> page, with how many reviews were read against the total each store states. A store that refuses automated requests is left out, and the scraper does not work around it.</p>
+        <p>The guides show numbers only. No review text, reviewer name or store link is published.</p>
+
+        <h2>How a review is counted</h2>
+        <p>Each review is counted as one of three things, by fixed rules in code and not by a language model. The rules look for phrases such as “runs small”, “too tight” or “size up”, for “runs large”, “too big”, “size down” or “bigger than expected”, and for the store’s own fit answer when its review form asks one, such as “a bit small”. The rules are written for English.</p>
+        <p><strong>A review with no such phrase, including one that never mentions fit, is counted as true to size.</strong> So the true to size share is the share of reviews that do not call the fit small or large. It is not the share that say “true to size”.</p>
+        <p>That makes the runs small and runs large shares the more telling numbers, because they only count reviews that said so. A high true to size share on a product that few reviews comment on is weak evidence that it is true to size.</p>
+
+        <h2>How the answer is chosen</h2>
+        <p>The one-line answer comes from the three shares by fixed rules, which are the same on every page:</p>
+        <ul class="fit-facts">
+          <li>True to size at ${CLEAR_TRUE_TO_SIZE_PCT}% or more is “true to size”.</li>
+          <li>True to size ahead of the other two but below ${CLEAR_TRUE_TO_SIZE_PCT}% is “mostly true to size”, leaning small or large when one of those is at least ${LEAN_MARGIN_PCT} points ahead of the other.</li>
+          <li>Runs small (or runs large) ahead of the others is “runs small” at ${CLEAR_RUNS_PCT}% or more, and “leans small” below that.</li>
+          <li>A tie for the lead is “split”.</li>
+        </ul>
+        <p>The advice under the answer, such as taking the larger size when between two, is picked from the same rules. Shares are rounded to whole percents.</p>
+
+        <h2>How listings are combined</h2>
+        <p>A store can list one product under several codes, for example one per colour or season. Pearfit gives such a product one guide. Listings with identical review numbers are the same reviews and count once. Different ones are pooled, weighted by how many reviews each has, and the page says how many listings it combines. A guide needs at least ${MIN_REVIEWS} reviews after pooling, and a brand page needs at least ${MIN_BRAND_GUIDES} guides. Brand and garment-type figures pool their guides the same way. The type of garment is read from the product name, so a few are in the wrong group.</p>
+
+        <h2>Size charts</h2>
+        <p>Charts are in centimetres with the garment laid flat. Chest is pit to pit, which is half the measurement around, and it is the measurement Pearfit trusts across brands. Length and sleeve are measured from different points by different brands, so they are shown only when Pearfit has worked out how that brand’s chart differs from a ruler. Otherwise the cell says “unknown”. A number is never filled in, and a product with no chart says so.</p>
+
+        <h2>What the numbers cannot tell you</h2>
+        <ul class="fit-facts">
+          <li>Reviews come from people who chose to write one, and they describe how a garment fit them, not you.</li>
+          <li>The rules read phrases, so an unusual wording can be counted wrongly, and a review in another language is counted as true to size.</li>
+          <li>A product can change between seasons or colours and keep its name. A guide reflects the reviews Pearfit read, as of the date shown.</li>
+          <li>The guides do not know your measurements. Pearfit’s <a href="/app">size check</a> answers for you by comparing a garment with shirts you already own.</li>
+        </ul>
+
+        <h2>Freshness and corrections</h2>
+        <p>The guides are rebuilt from a snapshot of the fit store taken on ${formatDate(exportedOn)}, and the snapshot is refreshed when Pearfit reads more products. If a guide looks wrong, tell us at <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a> and name the product.</p>
+        <p><a class="btn" href="/fit/">See the fit guides</a></p>
       </div>
     </section>
   </main>
@@ -685,7 +818,7 @@ export function renderHomeBlock(pages, brands) {
     <section id="fit-guides" class="section section-alt" aria-labelledby="fit-guides-heading">
       <div class="wrap">
         <h2 id="fit-guides-heading">Does it run small? Check before you buy.</h2>
-        <p class="muted narrow">Fit guides built from the reviews Pearfit read: how each product runs, and its size chart where there is one.</p>
+        <p class="muted narrow">Fit guides built from the reviews Pearfit read: how each product runs, and its size chart where there is one. <a href="${METHOD_PATH}">How the numbers are made</a>.</p>
         <ul class="fit-list fit-list-wide">
 ${[...brandItems, ...guideItems].join('\n')}
         </ul>
@@ -709,6 +842,7 @@ export function renderSitemap(pages, brands, exportedOn) {
   const urls = [
     ...STATIC_PAGES.map((p) => entry(`${ORIGIN}${p}`)),
     entry(`${ORIGIN}/fit/`, exportedOn),
+    entry(`${ORIGIN}${METHOD_PATH}`, exportedOn),
     ...brands.map((b) => entry(brandUrl(b), exportedOn)),
     ...pages.map((page) => entry(pageUrl(page), exportedOn)),
   ];
@@ -730,6 +864,7 @@ export function buildFiles(catalog, homeHtml) {
   const files = {
     'sitemap.xml': renderSitemap(pages, brands, catalog.exported_on),
     'fit/index.html': renderIndexPage(pages, brands, catalog.exported_on),
+    'fit/method.html': renderMethodPage(pages, catalog.exported_on),
   };
   for (const b of brands) files[`fit/brands/${b.slug}.html`] = renderBrandPage(b, catalog.exported_on);
   for (const page of pages) {
@@ -737,7 +872,7 @@ export function buildFiles(catalog, homeHtml) {
       .filter((other) => other.brand === page.brand && other.slug !== page.slug)
       .sort((a, b) => b.reviews.total - a.reviews.total || (a.slug < b.slug ? -1 : 1))
       .slice(0, RELATED_SHOWN);
-    files[`fit/${page.slug}.html`] = renderProductPage(page, related, catalog.exported_on, own.get(page.brand) ?? null);
+    files[`fit/${page.slug}.html`] = renderProductPage(page, related, catalog.exported_on, own.get(page.brand) ?? null, similarGuides(page, pages));
   }
   if (homeHtml !== undefined) files['index.html'] = spliceHome(homeHtml, renderHomeBlock(pages, brands));
   return { pages, brands, files };

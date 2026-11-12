@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How the fit numbers are made — Pearfit</title>
+  <meta name="description" content="Where Pearfit’s fit guide numbers come from, how each review is counted, how the answers are chosen, and what the numbers cannot tell you." />
+  <link rel="canonical" href="https://www.pearfit.app/fit/method.html" />
+  <meta name="theme-color" content="#f6f4ee" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#131512" media="(prefers-color-scheme: dark)" />
+  <meta property="og:site_name" content="Pearfit" />
+  <meta property="og:title" content="How the fit numbers are made — Pearfit" />
+  <meta property="og:description" content="Where Pearfit’s fit guide numbers come from, how each review is counted, how the answers are chosen, and what the numbers cannot tell you." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://www.pearfit.app/fit/method.html" />
+  <meta property="og:image" content="https://www.pearfit.app/apple-touch-icon.png" />
+  <meta property="og:image:width" content="180" />
+  <meta property="og:image:height" content="180" />
+  <meta property="og:image:alt" content="The Pearfit pear logo" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="How the fit numbers are made — Pearfit" />
+  <meta name="twitter:description" content="Where Pearfit’s fit guide numbers come from, how each review is counted, how the answers are chosen, and what the numbers cannot tell you." />
+  <meta name="twitter:image" content="https://www.pearfit.app/apple-touch-icon.png" />
+  <meta name="twitter:image:alt" content="The Pearfit pear logo" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pearfit","item":"https://www.pearfit.app/"},{"@type":"ListItem","position":2,"name":"Fit guides","item":"https://www.pearfit.app/fit/"},{"@type":"ListItem","position":3,"name":"How the fit numbers are made","item":"https://www.pearfit.app/fit/method.html"}]}</script>
+  <script>
+    document.documentElement.classList.add('js');
+    window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="nav" id="top">
+    <div class="wrap nav-inner">
+      <a href="/" class="brand-wordmark"><img class="brand-mark" src="/logo-mark.svg" alt="" width="20" height="30" />Pearfit</a>
+      <nav class="nav-links" id="nav-links" aria-label="Primary">
+        <a href="/#how">How it works</a>
+        <a href="/#try">Try it</a>
+        <a href="/#pilot">For brands</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/fit/">Fit guides</a>
+        <a href="/stores.html">Stores</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="/app" class="btn btn-sm">Try it live</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="nav-links"><span class="nav-toggle-bars" aria-hidden="true"></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section class="section fit-intro">
+      <div class="wrap narrow-wrap">
+        <nav class="fit-crumbs" aria-label="Breadcrumb"><a href="/">Pearfit</a> <span aria-hidden="true">›</span> <a href="/fit/">Fit guides</a></nav>
+        <span class="kicker">Fit guides</span>
+        <h1>How the fit numbers are made</h1>
+        <p class="fit-answer">Every number in a fit guide is a count from real reviews or a size chart, and this page says how each is made and where it falls short.</p>
+        <p>Today that is 236 guides from 111 brands, built from 18,419 reviews, as of 12 November 2026.</p>
+
+        <h2>Where the numbers come from</h2>
+        <p>Pearfit’s scraper opens the public product page of a store, reads the reviews and the size chart shown there, and keeps numbers. It reads up to about 300 reviews of a product, newest first where the store offers that sort, so a product with more reviews than that is sampled. The stores it can read are on the <a href="/stores.html">supported stores</a> page, with how many reviews were read against the total each store states. A store that refuses automated requests is left out, and the scraper does not work around it.</p>
+        <p>The guides show numbers only. No review text, reviewer name or store link is published.</p>
+
+        <h2>How a review is counted</h2>
+        <p>Each review is counted as one of three things, by fixed rules in code and not by a language model. The rules look for phrases such as “runs small”, “too tight” or “size up”, for “runs large”, “too big”, “size down” or “bigger than expected”, and for the store’s own fit answer when its review form asks one, such as “a bit small”. The rules are written for English.</p>
+        <p><strong>A review with no such phrase, including one that never mentions fit, is counted as true to size.</strong> So the true to size share is the share of reviews that do not call the fit small or large. It is not the share that say “true to size”.</p>
+        <p>That makes the runs small and runs large shares the more telling numbers, because they only count reviews that said so. A high true to size share on a product that few reviews comment on is weak evidence that it is true to size.</p>
+
+        <h2>How the answer is chosen</h2>
+        <p>The one-line answer comes from the three shares by fixed rules, which are the same on every page:</p>
+        <ul class="fit-facts">
+          <li>True to size at 70% or more is “true to size”.</li>
+          <li>True to size ahead of the other two but below 70% is “mostly true to size”, leaning small or large when one of those is at least 10 points ahead of the other.</li>
+          <li>Runs small (or runs large) ahead of the others is “runs small” at 50% or more, and “leans small” below that.</li>
+          <li>A tie for the lead is “split”.</li>
+        </ul>
+        <p>The advice under the answer, such as taking the larger size when between two, is picked from the same rules. Shares are rounded to whole percents.</p>
+
+        <h2>How listings are combined</h2>
+        <p>A store can list one product under several codes, for example one per colour or season. Pearfit gives such a product one guide. Listings with identical review numbers are the same reviews and count once. Different ones are pooled, weighted by how many reviews each has, and the page says how many listings it combines. A guide needs at least 10 reviews after pooling, and a brand page needs at least 3 guides. Brand and garment-type figures pool their guides the same way. The type of garment is read from the product name, so a few are in the wrong group.</p>
+
+        <h2>Size charts</h2>
+        <p>Charts are in centimetres with the garment laid flat. Chest is pit to pit, which is half the measurement around, and it is the measurement Pearfit trusts across brands. Length and sleeve are measured from different points by different brands, so they are shown only when Pearfit has worked out how that brand’s chart differs from a ruler. Otherwise the cell says “unknown”. A number is never filled in, and a product with no chart says so.</p>
+
+        <h2>What the numbers cannot tell you</h2>
+        <ul class="fit-facts">
+          <li>Reviews come from people who chose to write one, and they describe how a garment fit them, not you.</li>
+          <li>The rules read phrases, so an unusual wording can be counted wrongly, and a review in another language is counted as true to size.</li>
+          <li>A product can change between seasons or colours and keep its name. A guide reflects the reviews Pearfit read, as of the date shown.</li>
+          <li>The guides do not know your measurements. Pearfit’s <a href="/app">size check</a> answers for you by comparing a garment with shirts you already own.</li>
+        </ul>
+
+        <h2>Freshness and corrections</h2>
+        <p>The guides are rebuilt from a snapshot of the fit store taken on 12 November 2026, and the snapshot is refreshed when Pearfit reads more products. If a guide looks wrong, tell us at <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a> and name the product.</p>
+        <p><a class="btn" href="/fit/">See the fit guides</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <a href="/" class="brand-wordmark" aria-label="Pearfit home"><img class="brand-mark" src="/logo-mark.svg" alt="" width="20" height="30" loading="lazy" decoding="async" />Pearfit</a>
+      <span class="muted">Pearfit compares a shirt with the shirts you already own, and tells you what size to buy.</span>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="/#try">Try it</a>
+        <a href="/fit/">Fit guides</a>
+        <a href="/stores.html">Supported stores</a>
+        <a href="/scraper">Scraper</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/#pilot">Book a pilot</a>
+        <a href="/roi.html">ROI calculator</a>
+      </nav>
+      <p class="footer-legal">&copy; <span data-year>2026</span> Pearfit. <a href="mailto:customerservice@pearfit.app">customerservice@pearfit.app</a></p>
+    </div>
+  </footer>
+
+  <script src="/speed-insights-init.js"></script>
+  <script src="/analytics.js"></script>
+  <script src="/posthog-init.js"></script>
+  <script src="/nav.js"></script>
+</body>
+</html>

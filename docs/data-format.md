@@ -39,7 +39,9 @@ Candidate garment (used by the Pilot 1 engine; sizes listed smallest to largest)
 `review` is one of `"runs_small"`, `"true_to_size"`, `"runs_large"`, or `null`.
 
 `reviewSummary` (optional, written by the export): `{ "total": 40, "runsSmallPct": 60, "trueToSizePct": 30, "runsLargePct": 10 }`,
-the review count and shares as the scraper stored them. Missing means no reviews. It is for display only: the engine
+the review count and shares as the scraper stored them. A review with no small or large comment is counted as true
+to size (`webscraper/fitAnalyzer.ts`), so `trueToSizePct` is the share that do not call the fit small or large, not the
+share that say "true to size". Missing means no reviews. It is for display only: the engine
 reads `review` and never `reviewSummary`.
 
 ## Related

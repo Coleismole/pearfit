@@ -10,6 +10,7 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `app.js` — Sample silhouette, sample size matrix, ROI model, mobile menu, and the inquiry form.
 - `stores.html`, `stores.js`, `stores.json` — The supported-stores page and its data (see Supported stores).
 - `fit/`, `sitemap.xml` — The fit guide pages (one per product, one per brand with enough guides under `fit/brands/`, and the index) and the sitemap, all generated (see Fit guides). The block between the `fit-guides` markers in `index.html` is generated too.
+- `fit/method.html` — The methodology page, generated with the guides.
 - `scripts/build-fit-pages.mjs` — Builds them from `data/fit-pages/catalog.json`.
 - `robots.txt` — Lets crawlers read everything except `/api/`, and names the sitemap.
 - `nav.js` — The mobile menu, shared by the pages.
@@ -100,8 +101,14 @@ Rules the script keeps, all set at the top of `scripts/build-fit-pages.mjs`:
 - A product gets a page only with at least 10 reviews, a real brand and a name that reads as a product. The scraper
   stores what a store's page says, which is sometimes an error page's title.
 - Every number is a stored number. The answer and the advice are picked from the shares by fixed thresholds
-  (`fitVerdict`); no language model writes them. The shares count only reviews that say how the product fits, and
-  the page says so.
+  (`fitVerdict`); no language model writes them.
+- The shares are of all the reviews read. The scraper counts a review with no small or large comment as true to size
+  (`webscraper/fitAnalyzer.ts`), so "true to size" means "not called small or large", not "said true to size". Every
+  guide says so in its own words and links `fit/method.html`, which explains how reviews are counted, how answers are
+  chosen, how listings combine, and what the numbers cannot tell you. Its figures are the generator's own settings.
+- A guide links up to six guides of the same type of garment from other brands (`similarGuides`). "Other garments" is
+  grouped by a word in the name (jeans, pants, shorts, tops and so on); a name that matches no word has no group and
+  no links. Each page starts at a different place in the list, so the links spread over every guide.
 - A chart cell with no trusted number prints "unknown". A product with no chart says it has none.
 - No review text, reviewer name or store URL is published. The snapshot does not hold any.
 - A brand page gives the brand-wide answer from all its guides together, how many guides fall in each verdict, the

@@ -6,7 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   HOME_END, HOME_START, buildFiles, combineReviews, fitVerdict, formatCount, formatDate, fullName, mergeListings, renderBrandPage,
-  renderHomeBlock, renderIndexPage, renderProductPage, renderSitemap, selectBrands, selectPages, skipReason, slugify, spliceHome,
+  renderHomeBlock, renderIndexPage, renderMethodPage, renderProductPage, renderSitemap, selectBrands, selectPages, similarGroup, similarGuides,
+  skipReason, slugify, spliceHome,
 } from '../scripts/build-fit-pages.mjs';
 
 const reviews = (total, runsSmallPct, trueToSizePct, runsLargePct) => ({ total, runsSmallPct, trueToSizePct, runsLargePct });
@@ -93,8 +94,9 @@ test('a product page states the stored numbers, the chart with unknowns, and lin
   assert.match(html, /<title>Does the Acme Crew Tee run small\? — Pearfit<\/title>/);
   assert.match(html, /<link rel="canonical" href="https:\/\/www\.pearfit\.app\/fit\/acme-crew-tee\.html" \/>/);
   assert.match(html, /<h1>Does the Acme Crew Tee run small\?<\/h1>/);
-  assert.match(html, /Yes\. Most reviewers say it runs small\./);
-  assert.match(html, /30% say true to size, 60% say it runs small and 10% say it runs large\. Pearfit read 40 reviews of this product\.<\/p>/);
+  assert.match(html, /Yes\. Most reviews say it runs small\./);
+  assert.match(html, /Pearfit read 40 reviews of this product\. 30% were counted as true to size, 60% as runs small and 10% as runs large\. A review is counted as true to size when it does not say the fit is small or large\./);
+  assert.doesNotMatch(html, /reviews that say how it fits/); // the shares are of all the reviews read, not only those that mention fit
   assert.match(html, /<tr><th scope="row">S<\/th><td>50<\/td><td>68\.5<\/td><td class="is-unknown">unknown<\/td><\/tr>/);
   assert.match(html, /href="\/app\/#\/check\/ab-100"/);
   assert.match(html, /href="\/fit\/acme-boxy-tee\.html"><span class="fit-list-name">Boxy Tee<\/span><span class="fit-list-meta">True to size · 12 reviews<\/span>/);
@@ -136,7 +138,7 @@ test('the same catalog always builds the same files, with related guides ordered
   };
   const first = buildFiles(catalog, home).files;
   assert.deepEqual(buildFiles(structuredClone(catalog), home).files, first);
-  assert.deepEqual(Object.keys(first).sort(), ['fit/acme-boxy-tee.html', 'fit/acme-crew-tee.html', 'fit/acme-long-tee.html', 'fit/brands/acme.html', 'fit/index.html', 'index.html', 'sitemap.xml']);
+  assert.deepEqual(Object.keys(first).sort(), ['fit/acme-boxy-tee.html', 'fit/acme-crew-tee.html', 'fit/acme-long-tee.html', 'fit/brands/acme.html', 'fit/index.html', 'fit/method.html', 'index.html', 'sitemap.xml']);
   assert.match(first['fit/acme-crew-tee.html'], /<a href="\/fit\/brands\/acme\.html">Acme<\/a>/); // three guides: the brand has a page
   const crew = first['fit/acme-crew-tee.html'];
   assert.ok(crew.indexOf('/fit/acme-long-tee.html') < crew.indexOf('/fit/acme-boxy-tee.html')); // 90 reviews before 12
@@ -237,8 +239,8 @@ test('a brand page gives the brand-wide answer, how its guides break down, the c
   assert.match(html, /<title>Does Acme run small\? Fit guide for 3 products — Pearfit<\/title>/);
   assert.match(html, /<link rel="canonical" href="https:\/\/www\.pearfit\.app\/fit\/brands\/acme\.html" \/>/);
   assert.match(html, /<h1>Does Acme run small\?<\/h1>/);
-  assert.match(html, /Mostly no\. More reviewers say true to size than anything else, but a fair share say it runs small\./);
-  assert.match(html, /Across the 3 Acme products Pearfit has guides for, 62% of reviews say true to size, 27% say it runs small and 11% say it runs large\. Pearfit read 90 reviews in all\./);
+  assert.match(html, /Mostly no\. More reviews are counted as true to size than anything else, but a fair share say it runs small\./);
+  assert.match(html, /Across the 3 Acme products Pearfit has guides for, 62% of reviews are counted as true to size, 27% as runs small and 11% as runs large\. Pearfit read 90 reviews in all\./);
   // Crew Tee is "runs small" (60 is 50 or more); the other two are "true to size" (100, and 70 which is the clear mark).
   assert.match(html, /<li>True to size: 2 guides<\/li>\s*<li>Runs small: 1 guide<\/li>/);
   // Callouts: runs small 20% or more with 20 or more reviews -> Crew Tee (60%); runs large -> Polo (30%, exactly 20 reviews).
@@ -258,7 +260,7 @@ test('a brand page sums up a type of garment with three or more guides, and leav
   // Three tees of 10 reviews, all true to size: 100 / 0 / 0 over 30 reviews. No product has 20 reviews, so no callouts.
   const pages = ['One', 'Two', 'Three'].map((n) => guide('Acme', `${n} Tee`, reviews(10, 0, 100, 0)));
   const html = renderBrandPage({ brand: 'Acme', slug: 'acme', pages }, '2026-11-12');
-  assert.match(html, /Across these 3 guides: 100% of reviews say true to size, 0% runs small, 0% runs large \(30 reviews\)\./);
+  assert.match(html, /Across these 3 guides: 100% of reviews are counted as true to size, 0% as runs small, 0% as runs large \(30 reviews\)\./);
   assert.doesNotMatch(html, /Products reviewers say run/);
 });
 
@@ -301,9 +303,9 @@ test('the home block links the biggest brands, then the most reviewed guides wit
   const block = renderHomeBlock(pages, selectBrands(pages));
   assert.ok(block.startsWith(HOME_START) && block.endsWith(HOME_END));
   const links = [...block.matchAll(/href="(\/fit\/[^"]*)"/g)].map((m) => m[1]);
-  // The one brand with three guides, then guides by reviews: Acme T1 (300), Bee B1 (250), Acme T2 (200), Bee B2 (150),
+  // The method page link in the intro, the one brand with three guides, then guides by reviews: Acme T1 (300), Bee B1 (250), Acme T2 (200), Bee B2 (150),
   // [Acme T3 (100) is skipped: Acme already has two], Cee C1 (50), then the link to all of them.
-  assert.deepEqual(links, ['/fit/brands/acme.html', '/fit/acme-t1.html', '/fit/bee-b1.html', '/fit/acme-t2.html', '/fit/bee-b2.html', '/fit/cee-c1.html', '/fit/']);
+  assert.deepEqual(links, ['/fit/method.html', '/fit/brands/acme.html', '/fit/acme-t1.html', '/fit/bee-b1.html', '/fit/acme-t2.html', '/fit/bee-b2.html', '/fit/cee-c1.html', '/fit/']);
   assert.match(block, /Does Acme run small\?/);
   assert.match(block, /See all 6 fit guides/);
   assert.match(block, /<section id="fit-guides"/);
@@ -318,4 +320,84 @@ test('spliceHome replaces only what is between the markers, and runs again witho
   assert.doesNotMatch(once, /stale stuff/);
   assert.equal(spliceHome(once, block), once);
   assert.throws(() => spliceHome('<main></main>', block), /markers/);
+});
+
+// ---- similar guides from other brands ----
+
+test('similar guides come from other brands, start in a different place on each page, and wrap round', () => {
+  // Eight brands with one tee each, slugs a-tee .. h-tee. Six are shown, and a page starts at its own position
+  // (0 for a-tee, 1 for b-tee, ...) times six, wrapping round the pool of the other seven.
+  //   a-tee: pool [b c d e f g h], start 0            -> b c d e f g
+  //   b-tee: pool [a c d e f g h], start 1 * 6 % 7 = 6 -> h a c d e f
+  //   c-tee: pool [a b d e f g h], start 2 * 6 % 7 = 5 -> g h a b d e
+  const pages = 'ABCDEFGH'.split('').map((b) => guide(b, 'Tee', reviews(20, 0, 100, 0)));
+  const slugs = (page) => similarGuides(page, pages).map((p) => p.slug.replace('-tee', ''));
+  assert.deepEqual(slugs(pages[0]), ['b', 'c', 'd', 'e', 'f', 'g']);
+  assert.deepEqual(slugs(pages[1]), ['h', 'a', 'c', 'd', 'e', 'f']);
+  assert.deepEqual(slugs(pages[2]), ['g', 'h', 'a', 'b', 'd', 'e']);
+});
+
+test('similar guides never include the same brand or another type of garment, and a brand on its own gets none', () => {
+  const pages = [
+    guide('Acme', 'Crew Tee', reviews(20, 0, 100, 0)), guide('Acme', 'Boxy Tee', reviews(20, 0, 100, 0)),
+    guide('Zed', 'Zed Tee', reviews(20, 0, 100, 0)), guide('Zed', 'Zed Polo', reviews(20, 0, 100, 0), { garmentType: 'polo' }),
+  ];
+  assert.deepEqual(similarGuides(pages[0], pages).map((p) => p.slug), ['zed-zed-tee']); // not the Acme tee, not the polo
+  assert.deepEqual(similarGuides(pages[3], pages), []); // the only polo
+  assert.deepEqual(similarGuides(pages[0], pages.slice(0, 2)), []); // only Acme here
+});
+
+test('other garments are grouped by a word in the name, and a name that matches no group has no similar guides', () => {
+  const other = (brand, name) => guide(brand, name, reviews(20, 0, 100, 0), { garmentType: 'other' });
+  const pages = [
+    other('Acme', 'Barrel Jeans'), other('Zed', 'Baggy Jeans'), other('Zed', 'Wide Pants'),
+    other('Acme', 'Short Sleeve Top'), other('Zed', 'Active Short - Black'), other('Zed', 'The Casual Clog'),
+  ];
+  assert.deepEqual(pages.map((p) => similarGroup(p)?.label ?? null), ['Jeans', 'Jeans', 'Pants', 'Tops', 'Shorts', null]); // "Short Sleeve" is not shorts
+  assert.deepEqual(similarGuides(pages[0], pages).map((p) => p.slug), ['zed-baggy-jeans']);
+  assert.deepEqual(similarGuides(pages[1], pages).map((p) => p.slug), ['acme-barrel-jeans']);
+  assert.deepEqual(similarGuides(pages[2], pages), []); // the only pants
+  assert.deepEqual(similarGuides(pages[5], pages), []);
+  assert.equal(similarGroup(guide('Acme', 'Crew Tee', reviews(20, 0, 100, 0))).label, 'T-shirts');
+});
+
+test('a product page lists its similar guides under the group name, with the brand in each name', () => {
+  const page = guide('Acme', 'Crew Tee', reviews(40, 60, 30, 10));
+  const others = [guide('Zed', 'Zed Tee', reviews(20, 0, 100, 0)), guide('Bee', 'Bee Tee', reviews(15, 0, 100, 0))];
+  const html = renderProductPage(page, [], '2026-11-12', null, others);
+  assert.match(html, /<h2 id="similar-heading">T-shirts from other brands<\/h2>/);
+  assert.match(html, /href="\/fit\/zed-zed-tee\.html"><span class="fit-list-name">Zed Tee<\/span>/); // the brand is not said twice
+  assert.doesNotMatch(renderProductPage(page, [], '2026-11-12'), /similar-heading/);
+});
+
+// ---- the methodology page ----
+
+test('the method page says how a review is counted, with the generator settings and the live counts', () => {
+  const pages = [guide('Acme', 'Crew Tee', reviews(40, 60, 30, 10))];
+  const html = renderMethodPage(pages, '2026-11-12');
+  assert.match(html, /<title>How the fit numbers are made — Pearfit<\/title>/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/www\.pearfit\.app\/fit\/method\.html" \/>/);
+  assert.match(html, /<h1>How the fit numbers are made<\/h1>/);
+  assert.match(html, /Today that is 1 guides? from 1 brand, built from 40 reviews, as of 12 November 2026\./);
+  assert.match(html, /<strong>A review with no such phrase, including one that never mentions fit, is counted as true to size\.<\/strong>/);
+  assert.match(html, /It is not the share that say “true to size”\./);
+  assert.match(html, /True to size at 70% or more is “true to size”\./); // CLEAR_TRUE_TO_SIZE_PCT
+  assert.match(html, /at least 10 points ahead of the other/); // LEAN_MARGIN_PCT
+  assert.match(html, /“runs small” at 50% or more/); // CLEAR_RUNS_PCT
+  assert.match(html, /needs at least 10 reviews after pooling, and a brand page needs at least 3 guides/);
+  assert.match(html, /<a href="\/stores\.html">supported stores<\/a>/);
+  assert.match(html, /<a href="mailto:customerservice@pearfit\.app">customerservice@pearfit\.app<\/a>/);
+  assert.equal((html.match(/<h1/g) || []).length, 1);
+  const description = html.match(/<meta name="description" content="([^"]*)"/)[1];
+  assert.ok(description.length >= 70 && description.length <= 160, `description is ${description.length} characters`);
+});
+
+test('every guide links the method page, and the sitemap lists it', () => {
+  const page = guide('Acme', 'Crew Tee', reviews(40, 60, 30, 10));
+  assert.match(renderProductPage(page, [], '2026-11-12'), /<a href="\/fit\/method\.html">How these numbers are made<\/a>/);
+  const brand = { brand: 'Acme', slug: 'acme', pages: [1, 2, 3].map((n) => guide('Acme', `Tee ${n}`, reviews(12, 0, 100, 0))) };
+  assert.match(renderBrandPage(brand, '2026-11-12'), /<a href="\/fit\/method\.html">How these numbers are made<\/a>/);
+  assert.match(renderIndexPage([page], [], '2026-11-12'), /<a href="\/fit\/method\.html">How these numbers are made<\/a>/);
+  assert.match(renderHomeBlock([page], []), /<a href="\/fit\/method\.html">How the numbers are made<\/a>/);
+  assert.match(renderSitemap([page], [], '2026-11-12'), /<url><loc>https:\/\/www\.pearfit\.app\/fit\/method\.html<\/loc><lastmod>2026-11-12<\/lastmod><\/url>/);
 });

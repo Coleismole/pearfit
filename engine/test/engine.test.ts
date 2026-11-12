@@ -127,3 +127,12 @@ test("loader rejects bad labels and string numbers", () => {
   write([{ id: "a", label: "great", measurements: { chest_cm: 54, length_cm: 72 } }]);
   assert.equal(loadWardrobe("x", dir)[0].measurements.sleeve_cm, null);
 });
+
+test("a near-tie between sizes that are not neighbours is not broken by the review signal", () => {
+  const m = (chest: number) => ({ chest_cm: chest, length_cm: null, sleeve_cm: null });
+  const wardrobe = [{ id: "great-tee", label: "great" as const, measurements: m(50) }];
+  const candidate = { id: "x", name: "x", review: "runs_small" as const, sizes: { S: m(49.8), M: m(55), L: m(50.2) } };
+  const r = recommend(wardrobe, candidate);
+  assert.equal(r.size, "S");
+  assert.deepEqual(r.notes, []);
+});

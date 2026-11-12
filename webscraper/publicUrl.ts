@@ -56,6 +56,9 @@ function isBlockedIPv6(host: string): boolean {
   const bare = host.split('%')[0];
   if (bare === '::' || bare === '::1') return true;
   if (/^fe[89abcdef]/.test(bare) || bare.startsWith('fc') || bare.startsWith('fd')) return true;
+  if (/^ff[0-9a-f]{0,2}:/.test(bare)) return true; // multicast ff00::/8
+  // Teredo (2001:0::/32) tunnels to an IPv4 server, so it is not a plain public address.
+  if (/^2001:0{0,3}:/.test(bare)) return true;
   // IPv4-mapped (::ffff:a.b.c.d), IPv4-compatible (::a.b.c.d) and NAT64 (64:ff9b::a.b.c.d) addresses
   // reach the embedded IPv4 host. The URL parser rewrites the dotted form to hex, so check both.
   const sixToFour = bare.match(/^2002:([0-9a-f]{1,4}):([0-9a-f]{1,4})(?::|$)/);

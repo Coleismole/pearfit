@@ -17,6 +17,14 @@ export type RecommendationState =
 // Answers already received in this visit, keyed by the exact request. Going from the analysis to the compare
 // screen and back then needs no second request. A reload of the page starts empty.
 const answers = new Map<string, RecommendResponse>();
+const MAX_ANSWERS = 50;
+
+function remember(key: string, result: RecommendResponse): void {
+  answers.delete(key);
+  answers.set(key, result);
+  // Maps keep insertion order, so the first key is the oldest answer.
+  if (answers.size > MAX_ANSWERS) answers.delete(answers.keys().next().value!);
+}
 
 export function useRecommendation(candidateId: string): { state: RecommendationState; reload(): void } {
   const { wardrobe } = useStore();
@@ -32,7 +40,7 @@ export function useRecommendation(candidateId: string): { state: RecommendationS
     const controller = new AbortController();
     postRecommend(API_BASE_URL, { wardrobe: body, candidateId }, { signal: controller.signal })
       .then((result) => {
-        answers.set(key, result);
+        remember(key, result);
         setArrived((n) => n + 1);
       })
       .catch((e: unknown) => {

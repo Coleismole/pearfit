@@ -3,6 +3,7 @@
 
 export type Unit = "cm" | "in";
 export const CM_PER_INCH = 2.54;
+const MAX_CM = 150;
 
 // Same rounding as the engine's round(): Math.round on the scaled value.
 export function round1(n: number): number {
@@ -30,5 +31,7 @@ export function parseMeasurementInput(text: string, unit: Unit): MeasurementInpu
   const cm = toCm(Number(trimmed.replace(",", ".")), unit);
   // A value that rounds to 0.0 cm is not a measurement, and the API only accepts positive numbers.
   if (cm <= 0) return { ok: false, error: "Enter a number above 0, or leave it empty." };
+  // Same limits as the website demo: above these it is a wrong number or a wrong unit.
+  if (cm > MAX_CM) return { ok: false, error: `${cm} cm is more than a shirt can be. Check the number and the unit.` };
   return { ok: true, cm };
 }

@@ -136,3 +136,9 @@ test("parseMeasurementInput: empty means not measured, and only a positive numbe
     assert.deepEqual(parseMeasurementInput(text, "cm"), { ok: false, error: "Enter a number above 0, or leave it empty." }, text);
   }
 });
+
+test("parseMeasurementInput: a number no shirt can have is refused", () => {
+  assert.equal(parseMeasurementInput("5400", "cm").ok, false);
+  assert.equal(parseMeasurementInput("60", "in").ok, false);
+  assert.deepEqual(parseMeasurementInput("54", "cm"), { ok: true, cm: 54 });
+});

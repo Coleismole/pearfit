@@ -164,3 +164,20 @@ test("supabase env needs a url and a key, and a secret key wins over the publish
   });
   assert.equal(readSupabaseEnv({ SUPABASE_URL: "https://x.supabase.co", SUPABASE_PUBLISHABLE_KEY: "pub", SUPABASE_SECRET_KEY: "sec" }).key, "sec");
 });
+
+test("buildCandidates skips a chart with a repeated size code, an order JavaScript would change, and a duplicate id", () => {
+  const prod = (sku: string) => ({ sku, brand: "B", product_name: "B tee", total_reviews: 0, runs_small_pct: 0, true_to_size_pct: 0, runs_large_pct: 0 });
+  const row = (sku: string, size_code: string, sort_order: number) => ({ sku, size_code, sort_order, chest_cm: 50, length_cm: null, sleeve_cm: null });
+  const { candidates, skipped } = buildCandidates({
+    products: [prod("DUP-1"), prod("MIX-1"), prod("OK-1"), prod("A_1"), prod("A-1")],
+    charts: [
+      row("DUP-1", "M", 1), row("DUP-1", "M", 2),
+      row("MIX-1", "S", 1), row("MIX-1", "28", 2), // "28" would be moved before "S"
+      row("OK-1", "S", 1), row("OK-1", "M", 2),
+      row("A_1", "S", 1), row("A-1", "S", 1),
+    ],
+    offsets: [],
+  });
+  assert.deepEqual(candidates.map((c) => c.id), ["a-1", "ok-1"]);
+  assert.deepEqual(skipped.sort(), ["A_1", "DUP-1", "MIX-1"]);
+});

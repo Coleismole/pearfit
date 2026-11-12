@@ -62662,6 +62662,7 @@ function buildCandidates(rows) {
   const products = [...rows.products].sort((a, b) => a.sku < b.sku ? -1 : a.sku > b.sku ? 1 : 0);
   const candidates = [];
   const skipped = [];
+  const seenIds = /* @__PURE__ */ new Set();
   for (const p of products) {
     const chart = (chartsBySku.get(p.sku) ?? []).sort((a, b) => a.sort_order - b.sort_order);
     if (chart.length === 0) {
@@ -62669,6 +62670,11 @@ function buildCandidates(rows) {
       continue;
     }
     const offset = offsetsByBrand.get(p.brand) ?? { brand: p.brand, length_cm: null, sleeve_cm: null };
+    const codes = chart.map((r) => r.size_code);
+    if (new Set(codes).size !== codes.length) {
+      skipped.push(p.sku);
+      continue;
+    }
     const sizes = {};
     for (const row of chart) {
       sizes[row.size_code] = {
@@ -62678,8 +62684,18 @@ function buildCandidates(rows) {
         sleeve_cm: applyOffset(row.sleeve_cm, offset.sleeve_cm)
       };
     }
+    if (Object.keys(sizes).join("\n") !== codes.join("\n")) {
+      skipped.push(p.sku);
+      continue;
+    }
+    const id = slug(p.sku);
+    if (seenIds.has(id)) {
+      skipped.push(p.sku);
+      continue;
+    }
+    seenIds.add(id);
     candidates.push({
-      id: slug(p.sku),
+      id,
       name: p.product_name,
       review: reviewSignal(p),
       garmentType: garmentTypeFor(p.product_name),

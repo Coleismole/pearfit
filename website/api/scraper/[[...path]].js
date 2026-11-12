@@ -108415,6 +108415,8 @@ function isBlockedIPv6(host) {
   const bare = host.split("%")[0];
   if (bare === "::" || bare === "::1") return true;
   if (/^fe[89abcdef]/.test(bare) || bare.startsWith("fc") || bare.startsWith("fd")) return true;
+  if (/^ff[0-9a-f]{0,2}:/.test(bare)) return true;
+  if (/^2001:0{0,3}:/.test(bare)) return true;
   const sixToFour = bare.match(/^2002:([0-9a-f]{1,4}):([0-9a-f]{1,4})(?::|$)/);
   if (sixToFour) return isBlockedIPv4(embeddedIPv4(sixToFour[1], sixToFour[2]));
   const embedded = bare.match(/^(?:::(?:ffff:)?|64:ff9b::)(?:(\d{1,3}(?:\.\d{1,3}){3})|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
@@ -135610,6 +135612,22 @@ var FETCH_HEADERS = {
   "Accept-Language": "en-US,en;q=0.9"
 };
 var MAX_STATIC_HTML_BYTES = 1e7;
+async function readCapped(response, maxBytes) {
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  while (total < maxBytes) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.byteLength;
+  }
+  void reader.cancel().catch(() => {
+  });
+  const bytes = Buffer.concat(chunks).subarray(0, maxBytes);
+  return new TextDecoder("utf-8").decode(bytes);
+}
 async function fetchStaticHtml(url, options = {}) {
   const siteOf = (raw) => registrableDomain(new URL(raw).hostname);
   let current = url;
@@ -135664,7 +135682,7 @@ async function fetchStaticHtml(url, options = {}) {
       });
       return { status: 400, message: `${url} is larger than the ${MAX_STATIC_HTML_BYTES / 1e6} MB the scraper reads.`, blocked: false };
     }
-    const html3 = (await response.text()).slice(0, MAX_STATIC_HTML_BYTES);
+    const html3 = await readCapped(response, MAX_STATIC_HTML_BYTES);
     const blockedBy = blockPageTitle(html3);
     if (blockedBy) {
       return { status: 400, message: `${url} showed a block page ("${blockedBy}"): the store refuses automated requests.`, blocked: true };

@@ -59,8 +59,13 @@ export function recommend(
   let pick = scored[0];
 
   // Review signal only decides near-ties; it never overrides a clear measurement winner.
+  // Only neighbouring sizes can be a tie; a runner-up two sizes away would make the review signal skip a size.
   const runnerUp = scored[1];
-  if (runnerUp && runnerUp.matches[0].distance - pick.matches[0].distance < cfg.tieMarginCm) {
+  if (
+    runnerUp &&
+    Math.abs(sizeOrder.indexOf(pick.size) - sizeOrder.indexOf(runnerUp.size)) === 1 &&
+    runnerUp.matches[0].distance - pick.matches[0].distance < cfg.tieMarginCm
+  ) {
     const pickIdx = sizeOrder.indexOf(pick.size);
     const runIdx = sizeOrder.indexOf(runnerUp.size);
     const larger = pickIdx > runIdx ? pick : runnerUp;

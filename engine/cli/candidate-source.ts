@@ -12,7 +12,7 @@ const SUPABASE_TABLES = { products: "commercial_skus", charts: "sku_size_chart",
 
 export interface ExportResult {
   candidates: Candidate[];
-  skipped: string[]; // SKUs with no size-chart rows
+  skipped: string[]; // SKUs with no size-chart rows, a repeated size code, an unusable size order or a duplicate id
 }
 
 
@@ -142,6 +142,7 @@ export function buildCandidates(rows: SourceRows): ExportResult {
 
   const candidates: Candidate[] = [];
   const skipped: string[] = [];
+  const seenIds = new Set<string>();
   for (const p of products) {
     const chart = (chartsBySku.get(p.sku) ?? []).sort((a, b) => a.sort_order - b.sort_order);
     if (chart.length === 0) {
@@ -150,6 +151,11 @@ export function buildCandidates(rows: SourceRows): ExportResult {
     }
     // No offset row = convention unconfirmed, so length and sleeve stay null.
     const offset = offsetsByBrand.get(p.brand) ?? { brand: p.brand, length_cm: null, sleeve_cm: null };
+    const codes = chart.map((r) => r.size_code);
+    if (new Set(codes).size !== codes.length) {
+      skipped.push(p.sku); // a repeated size code would silently overwrite a row
+      continue;
+    }
     const sizes: Candidate["sizes"] = {};
     for (const row of chart) {
       sizes[row.size_code] = {
@@ -158,8 +164,20 @@ export function buildCandidates(rows: SourceRows): ExportResult {
         sleeve_cm: applyOffset(row.sleeve_cm, offset.sleeve_cm),
       };
     }
+    // Object keys that look like integers ("28", "30") are reordered by JavaScript, which would break
+    // "smallest to largest". A chart whose order does not survive is skipped rather than mis-sized.
+    if (Object.keys(sizes).join("\n") !== codes.join("\n")) {
+      skipped.push(p.sku);
+      continue;
+    }
+    const id = slug(p.sku);
+    if (seenIds.has(id)) {
+      skipped.push(p.sku); // two SKUs that slug to one id: the first wins, the rest cannot be addressed
+      continue;
+    }
+    seenIds.add(id);
     candidates.push({
-      id: slug(p.sku),
+      id,
       name: p.product_name,
       review: reviewSignal(p),
       garmentType: garmentTypeFor(p.product_name),

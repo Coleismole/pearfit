@@ -28,6 +28,23 @@ const FETCH_HEADERS = {
 
 const MAX_STATIC_HTML_BYTES = 10_000_000;
 
+/** Reads a body up to `maxBytes` and stops there, so a response with no or a wrong Content-Length cannot fill memory. */
+async function readCapped(response: Response, maxBytes: number): Promise<string> {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (total < maxBytes) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.byteLength;
+  }
+  void reader.cancel().catch(() => {});
+  const bytes = Buffer.concat(chunks).subarray(0, maxBytes);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 export async function fetchStaticHtml(
   url: string,
   options: { timeoutMs?: number; /** Refuse a redirect to another store (a size-guide page is read only on the product's own site). */ sameSite?: boolean } = {},
@@ -84,7 +101,7 @@ export async function fetchStaticHtml(
       void response.body?.cancel().catch(() => {});
       return { status: 400, message: `${url} is larger than the ${MAX_STATIC_HTML_BYTES / 1_000_000} MB the scraper reads.`, blocked: false };
     }
-    const html = (await response.text()).slice(0, MAX_STATIC_HTML_BYTES);
+    const html = await readCapped(response, MAX_STATIC_HTML_BYTES);
     // A bot check served with HTTP 200 ("Just a moment...") is a refusal too, not a product page.
     const blockedBy = blockPageTitle(html);
     if (blockedBy) {

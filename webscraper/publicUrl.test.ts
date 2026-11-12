@@ -72,3 +72,9 @@ test('blocks benchmarking, IETF-reserved, site-local and 6to4-embedded private a
   }
   assert.equal(blockedFetchTarget('http://198.20.0.1/'), null);
 });
+
+test('IPv6 multicast and Teredo addresses are not fetch targets', () => {
+  assert.equal(isBlockedHostname('ff02::1'), true);
+  assert.equal(isBlockedHostname('2001::1'), true);
+  assert.equal(isBlockedHostname('2001:db8::1'), false);
+});

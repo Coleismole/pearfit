@@ -49,8 +49,8 @@ npm run typecheck   # tsc
 
 ## The API
 
-The app makes two calls and nothing else. There are no other network requests: no analytics, and the fonts are
-bundled with the app.
+The app makes two calls to the API. Apart from those, the only network traffic is Sentry error reports
+(`src/instrument.ts`): no analytics, no Session Replay, and the fonts are bundled with the app.
 
 | Call | Used for | Answer |
 | --- | --- | --- |

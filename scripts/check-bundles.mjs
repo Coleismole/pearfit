@@ -4,7 +4,8 @@
 //   website/api/recommend.js, website/api/candidates.js   <- `npm run build:api` in engine/
 //   website/scraper/, website/app/, website/api/scraper/  <- `node scripts/assemble-site.mjs` at the repo root
 //   website/stores.json                                   <- `node website/scripts/build-stores.mjs`, from webscraper/SUPPORTED_STORES.md
-//   website/fit/, website/sitemap.xml                     <- `node website/scripts/build-fit-pages.mjs`, from data/fit-pages/catalog.json
+//   website/fit/, website/sitemap.xml, and the fit-guides block of website/index.html
+//                                                         <- `node website/scripts/build-fit-pages.mjs`, from data/fit-pages/catalog.json
 //
 // This script runs both generators and then checks the git tree. A rebuild that changes nothing means the
 // committed files are current. Run it from the repo root after `npm ci` in webscraper/ and in app/ (esbuild and the
@@ -28,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // Only what the generators own. website/api/posthog-config.js is hand-written and stays out.
-const GENERATED = ['website/api/recommend.js', 'website/api/candidates.js', 'website/api/scraper', 'website/scraper', 'website/app', 'website/stores.json', 'website/fit', 'website/sitemap.xml'];
+const GENERATED = ['website/api/recommend.js', 'website/api/candidates.js', 'website/api/scraper', 'website/scraper', 'website/app', 'website/stores.json', 'website/fit', 'website/sitemap.xml', 'website/index.html'];
 
 function run(command, args, cwd = root, capture = false) {
   if (!capture) console.log(`\n$ ${[command, ...args].join(' ')}${cwd === root ? '' : `   (in ${path.relative(root, cwd)}/)`}`);
@@ -79,7 +80,7 @@ const fix = [
   'node scripts/assemble-site.mjs',
   'node website/scripts/build-stores.mjs',
   'node website/scripts/build-fit-pages.mjs',
-  'git add website/api website/scraper website/app website/stores.json website/fit website/sitemap.xml',
+  'git add website/api website/scraper website/app website/stores.json website/fit website/sitemap.xml website/index.html',
 ].join('\n');
 
 console.error('\n=== Generated bundles are stale ===');

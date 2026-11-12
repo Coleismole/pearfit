@@ -22,12 +22,14 @@ They are committed because the `website/` project has no build step and cannot i
 | `website/scraper/`, `website/api/scraper/` | `webscraper/` | `node scripts/assemble-site.mjs` |
 | `website/app/` | `app/` | `node scripts/assemble-site.mjs` |
 | `website/stores.json` | `webscraper/SUPPORTED_STORES.md` | `node website/scripts/build-stores.mjs` |
-| `website/fit/`, `website/sitemap.xml` | `data/fit-pages/catalog.json` | `node website/scripts/build-fit-pages.mjs` |
+| `website/fit/`, `website/sitemap.xml`, the `fit-guides` block of `website/index.html` | `data/fit-pages/catalog.json` | `node website/scripts/build-fit-pages.mjs` |
 
 - The generators need `npm ci` in `webscraper/` and in `app/` first.
 - `data/fit-pages/catalog.json` is a committed snapshot of the fit store, so the fit guides rebuild without the
   network. Refresh it with `(cd engine && npm run export-fit-catalog)`, then rebuild the pages. See `website/README.md`
   ("Fit guides").
+- `website/index.html` is hand-written except the block between its `fit-guides` markers, which the fit page
+  generator rewrites.
 - `website/api/posthog-config.js` and `website/robots.txt` are hand-written. They are not generated.
 - `site/` and `/api/` at the repo root are gitignored build output.
 

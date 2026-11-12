@@ -2,6 +2,7 @@
 // store, or from the local SQLite file via export-candidates.ts) into the engine's Candidate format.
 // Kept outside src/ so the engine itself stays free of I/O and the network. It imports no SQLite, so a hosted
 // function can load it without the experimental node:sqlite module.
+import { reviewSignalFromShares } from "../src/review.ts";
 import { round } from "../src/score.ts";
 import type { Candidate, ReviewSignal } from "../src/types.ts";
 import type { BrandOffsetRow, ProductRow, SizeChartRow, SourceRows } from "./db-types.ts";
@@ -183,17 +184,9 @@ function applyOffset(chartCm: number | null, offsetCm: number | null): number | 
   return round(chartCm - offsetCm, 1);
 }
 
-// The most common review verdict. A tie, or no reviews, gives no signal.
+// See reviewSignalFromShares: only runs_small vs runs_large counts, with a minimum review count and a margin.
 function reviewSignal(p: ProductRow): ReviewSignal {
-  if (p.total_reviews === 0) return null;
-  const votes: [Exclude<ReviewSignal, null>, number][] = [
-    ["runs_small", p.runs_small_pct],
-    ["true_to_size", p.true_to_size_pct],
-    ["runs_large", p.runs_large_pct],
-  ];
-  const top = Math.max(...votes.map(([, pct]) => pct));
-  const winners = votes.filter(([, pct]) => pct === top);
-  return winners.length === 1 ? winners[0][0] : null;
+  return reviewSignalFromShares(p.total_reviews, p.runs_small_pct, p.runs_large_pct);
 }
 
 export function slug(sku: string): string {

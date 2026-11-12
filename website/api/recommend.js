@@ -62532,6 +62532,7 @@ var TOPS = {
   gapWordingCm: 0.5
 };
 var DEFAULT_GARMENT_TYPE = "tee";
+var REVIEW_SIGNAL = { minReviews: 10, marginPct: 15 };
 
 // src/types.ts
 var DIMS = ["chest_cm", "length_cm", "sleeve_cm"];
@@ -62702,6 +62703,15 @@ function displayName(id) {
   return id.replace(/-/g, " ");
 }
 
+// src/review.ts
+function reviewSignalFromShares(total, runsSmallPct, runsLargePct, cfg = REVIEW_SIGNAL) {
+  if (total < cfg.minReviews) return null;
+  const lead = runsSmallPct - runsLargePct;
+  if (lead >= cfg.marginPct) return "runs_small";
+  if (-lead >= cfg.marginPct) return "runs_large";
+  return null;
+}
+
 // cli/garment-type.ts
 var JACKET = /\b(jacket|parka|coat|blouson)\b/i;
 var DOWN = /\bdown\b/i;
@@ -62865,15 +62875,7 @@ function applyOffset(chartCm, offsetCm) {
   return round(chartCm - offsetCm, 1);
 }
 function reviewSignal(p) {
-  if (p.total_reviews === 0) return null;
-  const votes = [
-    ["runs_small", p.runs_small_pct],
-    ["true_to_size", p.true_to_size_pct],
-    ["runs_large", p.runs_large_pct]
-  ];
-  const top = Math.max(...votes.map(([, pct]) => pct));
-  const winners = votes.filter(([, pct]) => pct === top);
-  return winners.length === 1 ? winners[0][0] : null;
+  return reviewSignalFromShares(p.total_reviews, p.runs_small_pct, p.runs_large_pct);
 }
 function slug(sku) {
   return sku.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

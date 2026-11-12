@@ -49,12 +49,12 @@ test("export subtracts the brand offset from length and nulls an unconfirmed sle
   });
 });
 
-test("brand with no offset row keeps chest and nulls length and sleeve; a review tie gives no signal", () => {
+test("brand with no offset row keeps chest and nulls length and sleeve; a clear small-vs-large lead gives a signal", () => {
   const { candidates } = buildCandidates(readFromSqlite(seed()));
   assert.deepEqual(candidates[1], {
     id: "zz-200-blk",
     name: "Zed boxy tee",
-    review: null, // 40 / 40 / 20 ties
+    review: "runs_small", // 40 vs 20 = 20 points ahead, 12 reviews
     garmentType: "tee", // "Zed boxy tee"
     sizes: { L: { chest_cm: 58, length_cm: null, sleeve_cm: null } }, // chest 58.04 rounds to 58
     reviewSummary: { total: 12, runsSmallPct: 40, trueToSizePct: 40, runsLargePct: 20 },

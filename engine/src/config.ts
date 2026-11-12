@@ -24,3 +24,12 @@ export const TOPS: ScorerConfig = {
 
 // A candidate or owned shirt with no garmentType is treated as this. Only the same type is compared with the same type.
 export const DEFAULT_GARMENT_TYPE: GarmentType = "tee";
+
+// When stored review shares count as a signal. The scraper counts a review with no fit cue as true to size, so
+// true_to_size is the default bucket and says nothing. Only runs_small vs runs_large is compared.
+export interface ReviewSignalConfig {
+  minReviews: number; // fewer reviews than this = no signal
+  marginPct: number; // runs_small and runs_large must differ by at least this many percentage points
+}
+
+export const REVIEW_SIGNAL: ReviewSignalConfig = { minReviews: 10, marginPct: 15 };

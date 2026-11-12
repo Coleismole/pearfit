@@ -13,11 +13,11 @@ const greyPolo: OwnedShirt = { id: "grey-polo", label: "tight", garmentType: "po
 
 const sized: RecommendResponse = {
   size: "M", confidence: "high", matchPercent: 67.6, fitsLike: "blue-tee",
-  verdict: "Get the M, fits like your blue tee.", notes: [], garmentType: "tee",
+  verdict: "Get the M, fits like your blue tee.", notes: [], garmentType: "tee", sizes: [], similar: [], reviews: null,
 };
 const notSized: RecommendResponse = {
   size: null, confidence: "low", matchPercent: null, fitsLike: null,
-  verdict: "No shirts labelled great in this wardrobe, so there is nothing to compare against.", notes: [], garmentType: "tee",
+  verdict: "No shirts labelled great in this wardrobe, so there is nothing to compare against.", notes: [], garmentType: "tee", sizes: [], similar: [], reviews: null,
 };
 const plannedTee: PlannedItem = {
   candidateId: "e100-000", name: "Test tee", garmentType: "tee", result: sized,

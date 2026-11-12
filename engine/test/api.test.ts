@@ -88,7 +88,7 @@ test("a valid request is normalised: id trimmed, nulls and garmentType kept, ext
 
 // ---- response shape ----
 
-test("the response carries size, confidence, matchPercent, fitsLike, verdict, notes and garmentType", () => {
+test("the response carries size, confidence, matchPercent, fitsLike, verdict, notes, garmentType, sizes and similar", () => {
   const wardrobe = [{ ...blueTee, label: "great" as const }];
   const response = toRecommendResponse(recommend(wardrobe, teeCandidate), teeCandidate);
   assert.deepEqual(response, {
@@ -99,7 +99,48 @@ test("the response carries size, confidence, matchPercent, fitsLike, verdict, no
     verdict: "Get the M, fits like your blue tee.",
     notes: [],
     garmentType: "tee",
+    sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }],
+    similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
+    reviews: null, // this candidate has no review summary
   });
+});
+
+test("sizes lists every size with its own closest shirt, and similar ranks the great shirts for the suggested size", () => {
+  // Chest only, so distance = |chest difference| and match = 100 * exp(-distance / 3).
+  // Great shirts: a-tee 54, b-tee 57. The tight c-tee (50) is never a reference. XL has no measurements.
+  //   S 52: a 2 cm (51.3), b 5 cm         -> closest a-tee, 51.3
+  //   M 54: a 0 cm (100),  b 3 cm (36.8)  -> closest a-tee, 100   <- smallest distance, so the suggested size
+  //   L 58: a 4 cm,        b 1 cm (71.7)  -> closest b-tee, 71.7
+  const chest = (cm: number | null) => m(cm, null, null);
+  const wardrobe = [
+    { id: "b-tee", label: "great" as const, measurements: chest(57) },
+    { id: "a-tee", label: "great" as const, measurements: chest(54) },
+    { id: "c-tee", label: "tight" as const, measurements: chest(50) },
+  ];
+  const threeSizes: Candidate = { id: "e500-000", name: "Three sizes", review: null, sizes: { S: chest(52), M: chest(54), L: chest(58), XL: chest(null) } };
+  const response = toRecommendResponse(recommend(wardrobe, threeSizes), threeSizes);
+  assert.equal(response.size, "M");
+  assert.deepEqual(response.sizes, [
+    { size: "S", matchPercent: 51.3, fitsLike: "a-tee" },
+    { size: "M", matchPercent: 100, fitsLike: "a-tee" },
+    { size: "L", matchPercent: 71.7, fitsLike: "b-tee" },
+    { size: "XL", matchPercent: null, fitsLike: null }, // nothing to compare: null, not a guess
+  ]);
+  assert.deepEqual(response.similar, [
+    { shirtId: "a-tee", matchPercent: 100 },
+    { shirtId: "b-tee", matchPercent: 36.8 },
+  ]);
+});
+
+test("the review summary is passed on as stored, also when no size can be suggested", () => {
+  const reviewSummary = { total: 40, runsSmallPct: 60, trueToSizePct: 30, runsLargePct: 10 };
+  const wardrobe = [{ ...blueTee, label: "great" as const }];
+  const reviewedTee: Candidate = { ...teeCandidate, reviewSummary };
+  assert.deepEqual(toRecommendResponse(recommend(wardrobe, reviewedTee), reviewedTee).reviews, reviewSummary);
+  const reviewedPolo: Candidate = { ...poloCandidate, reviewSummary }; // nothing comparable, but the reviews are still facts
+  const noSize = toRecommendResponse(recommend(wardrobe, reviewedPolo), reviewedPolo);
+  assert.equal(noSize.size, null);
+  assert.deepEqual(noSize.reviews, reviewSummary);
 });
 
 test("with no recommendation, size, matchPercent and fitsLike are null, not invented", () => {
@@ -112,6 +153,9 @@ test("with no recommendation, size, matchPercent and fitsLike are null, not inve
     verdict: "No comparable shirts in your wardrobe. This is a polo, and your wardrobe has none.",
     notes: [],
     garmentType: "polo",
+    sizes: [{ size: "M", matchPercent: null, fitsLike: null }],
+    similar: [],
+    reviews: null,
   });
 });
 
@@ -170,13 +214,54 @@ test("the candidate cache loads once per 5 minutes, shares a load in flight, and
   assert.equal(attempts, 2);
 });
 
+test("with stale options, a failed reload serves the last value, waits before retrying, and gives up when too old", async () => {
+  let now = 0;
+  let fail = false;
+  let loads = 0;
+  const errors: unknown[] = [];
+  // Fresh for 1,000 ms, usable when stale until 10,000 ms old, 100 ms between retries.
+  const get = createCache(
+    async () => { loads++; if (fail) throw new Error("down"); return [loads]; },
+    1_000, () => now, { maxStaleMs: 10_000, retryMs: 100, onError: (e) => errors.push(e) },
+  );
+
+  assert.deepEqual(await get(), [1]); // loaded at 0
+  fail = true;
+  now = 1_000; // expired; the reload fails and the old value is served
+  assert.deepEqual(await get(), [1]);
+  assert.equal(loads, 2);
+  assert.equal((errors[0] as Error).message, "down");
+
+  now = 1_099; // inside the 100 ms retry wait: no new load
+  assert.deepEqual(await get(), [1]);
+  assert.equal(loads, 2);
+  now = 1_100; // the wait is over: tried again, still failing, still served
+  assert.deepEqual(await get(), [1]);
+  assert.equal(loads, 3);
+  assert.equal(errors.length, 2);
+
+  now = 10_000; // the value is now 10,000 ms old: too old to serve, so the failure is thrown
+  await assert.rejects(get(), /down/);
+  assert.equal(loads, 4);
+
+  fail = false; // the source is back: a fresh value replaces the old one
+  assert.deepEqual(await get(), [5]);
+  now = 10_500;
+  assert.deepEqual(await get(), [5]);
+  assert.equal(loads, 5);
+
+  // With nothing loaded yet there is nothing to fall back on.
+  const cold = createCache(async (): Promise<string[]> => { throw new Error("down"); }, 1_000, () => now, { maxStaleMs: 10_000, retryMs: 100 });
+  await assert.rejects(cold(), /down/);
+});
+
 // ---- CORS ----
 
-test("only pearfit.app and localhost origins are allowed", () => {
-  const allowed = ["https://pearfit.app", "https://www.pearfit.app", "http://localhost", "http://localhost:3000", "http://localhost:5173"];
+test("only pearfit.app, localhost and 127.0.0.1 origins are allowed", () => {
+  const allowed = ["https://pearfit.app", "https://www.pearfit.app", "http://localhost", "http://localhost:3000", "http://localhost:5173", "http://127.0.0.1", "http://127.0.0.1:5173"];
   const blocked = [
     undefined, "", "null", "https://example.com", "http://pearfit.app", "https://pearfit.app.evil.com",
-    "https://evilpearfit.app", "https://app.pearfit.app", "http://localhost.evil.com", "https://localhost", "http://127.0.0.1:3000",
+    "https://evilpearfit.app", "https://app.pearfit.app", "http://localhost.evil.com", "https://localhost", "https://127.0.0.1", "http://127.0.0.1.evil.com", "http://127.0.0.2", "http://127a0b0c1",
   ];
   for (const o of allowed) assert.equal(isAllowedOrigin(o), true, o);
   for (const o of blocked) assert.equal(isAllowedOrigin(o), false, String(o));
@@ -203,6 +288,8 @@ test("POST /recommend returns the engine's answer, matches the SKU in any case, 
   assert.deepEqual(ok.body, {
     size: "M", confidence: "high", matchPercent: 67.6, fitsLike: "blue-tee",
     verdict: "Get the M, fits like your blue tee.", notes: [], garmentType: "tee",
+    sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }], similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
+    reviews: null, // this candidate has no review summary
   });
   assert.equal(ok.headers["Access-Control-Allow-Origin"], "https://pearfit.app");
   assert.equal(ok.headers["Cache-Control"], "no-store");
@@ -240,6 +327,7 @@ test("a candidate the wardrobe cannot be compared with is a 200 with nulls, not 
   assert.deepEqual(r.body, {
     size: null, confidence: "low", matchPercent: null, fitsLike: null,
     verdict: "No comparable shirts in your wardrobe. This is a polo, and your wardrobe has none.", notes: [], garmentType: "polo",
+    sizes: [{ size: "M", matchPercent: null, fitsLike: null }], similar: [], reviews: null,
   });
 });
 
@@ -252,11 +340,11 @@ test("a candidate-loading failure is passed to onError and still answered as a 5
   assert.equal((seen[0] as Error).message, "Supabase down");
 });
 
-test("a candidate-loading failure is a 502 with the reason", async () => {
+test("a candidate-loading failure is a 502 with a fixed message, not the upstream reason", async () => {
   const down = createRecommendHandler({ getCandidates: async () => { throw new Error("Supabase down"); } });
   const r = await call(down, { method: "POST", body: goodBody });
   assert.equal(r.status, 502);
-  assert.deepEqual(r.body, { error: "Could not load candidates: Supabase down" });
+  assert.deepEqual(r.body, { error: "Could not load the catalog right now. Try again in a moment." });
 });
 
 test("OPTIONS preflight is a 204, with CORS headers only for allowed origins", async () => {

@@ -27,7 +27,7 @@ const planned: PlannedItem[] = [
     garmentType: "tee",
     result: {
       size: "M", confidence: "high", matchPercent: 67.6, fitsLike: "blue-tee",
-      verdict: "Get the M, fits like your blue tee.", notes: [], garmentType: "tee",
+      verdict: "Get the M, fits like your blue tee.", notes: [], garmentType: "tee", sizes: [], similar: [], reviews: null,
     },
     measurements: { chest_cm: 56, length_cm: 72, sleeve_cm: null },
     savedAt: "2026-11-10T00:00:00.000Z",

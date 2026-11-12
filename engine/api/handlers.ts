@@ -12,6 +12,8 @@ export interface Deps {
   // Called with an error the handler answers itself, so it can still be reported. Optional: tests leave it out.
   onError?: (error: unknown) => void;
 }
+export const CANDIDATES_UNAVAILABLE = "Could not load the catalog right now. Try again in a moment.";
+
 type Handler = (req: ApiRequest, res: ApiResponse) => Promise<void>;
 
 // Vercel parses a JSON body for us; a string means the client sent JSON with another content type.
@@ -28,8 +30,9 @@ async function loadCandidates(deps: Deps, res: ApiResponse): Promise<Candidate[]
   try {
     return await deps.getCandidates();
   } catch (e) {
+    // The reason (a Supabase status, body or setup hint) goes to onError only. Callers get a fixed message.
     deps.onError?.(e);
-    sendJson(res, 502, { error: `Could not load candidates: ${(e as Error).message}` });
+    sendJson(res, 502, { error: CANDIDATES_UNAVAILABLE });
     return null;
   }
 }

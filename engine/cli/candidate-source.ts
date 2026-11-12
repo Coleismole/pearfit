@@ -35,6 +35,9 @@ export function readSupabaseEnv(env: NodeJS.ProcessEnv = process.env): SupabaseE
 // PostgREST caps a response at 1000 rows by default. Paging with Range means a bigger table is never silently cut off.
 const PAGE_SIZE = 1000;
 
+// A request with no answer after this long is given up, so a hung connection fails instead of holding the caller.
+const REQUEST_TIMEOUT_MS = 10_000;
+
 async function fetchTable(
   env: SupabaseEnv,
   table: string,
@@ -52,6 +55,7 @@ async function fetchTable(
           "Range-Unit": "items",
           Range: `${from}-${from + PAGE_SIZE - 1}`,
         },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (err) {
       throw new Error(`Supabase ${table}: request failed (${err instanceof Error ? err.message : String(err)})`);
@@ -164,6 +168,10 @@ export function buildCandidates(rows: SourceRows): ExportResult {
       review: reviewSignal(p),
       garmentType: garmentTypeFor(p.product_name),
       sizes,
+      // The stored numbers, passed on as they are. A product with no reviews gets no summary.
+      ...(p.total_reviews > 0
+        ? { reviewSummary: { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct } }
+        : {}),
     });
   }
   return { candidates, skipped };

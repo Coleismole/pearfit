@@ -62739,6 +62739,7 @@ function readSupabaseEnv(env = process.env) {
   return { url, key };
 }
 var PAGE_SIZE = 1e3;
+var REQUEST_TIMEOUT_MS = 1e4;
 async function fetchTable(env, table, order, fetchFn) {
   const rows = [];
   for (let from = 0; ; from += PAGE_SIZE) {
@@ -62750,7 +62751,8 @@ async function fetchTable(env, table, order, fetchFn) {
           Authorization: `Bearer ${env.key}`,
           "Range-Unit": "items",
           Range: `${from}-${from + PAGE_SIZE - 1}`
-        }
+        },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
       });
     } catch (err) {
       throw new Error(`Supabase ${table}: request failed (${err instanceof Error ? err.message : String(err)})`);
@@ -62851,7 +62853,9 @@ function buildCandidates(rows) {
       name: p.product_name,
       review: reviewSignal(p),
       garmentType: garmentTypeFor(p.product_name),
-      sizes
+      sizes,
+      // The stored numbers, passed on as they are. A product with no reviews gets no summary.
+      ...p.total_reviews > 0 ? { reviewSummary: { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct } } : {}
     });
   }
   return { candidates, skipped };
@@ -62880,10 +62884,14 @@ async function loadCandidatesFromSupabase(env, fetchFn = fetch) {
 
 // api/config.ts
 var CANDIDATE_CACHE_MS = 5 * 60 * 1e3;
+var CANDIDATE_MAX_STALE_MS = 60 * 60 * 1e3;
+var CANDIDATE_RETRY_MS = 30 * 1e3;
 var MAX_WARDROBE_SHIRTS = 200;
 var ALLOWED_ORIGINS = [
   /^https:\/\/(www\.)?pearfit\.app$/,
-  /^http:\/\/localhost(:\d{1,5})?$/
+  /^http:\/\/localhost(:\d{1,5})?$/,
+  /^http:\/\/127\.0\.0\.1(:\d{1,5})?$/
+  // the same machine by its address: local dev servers often print this one
 ];
 
 // api/cors.ts
@@ -62984,7 +62992,8 @@ function validateRecommendRequest(body) {
   }
 }
 function toRecommendResponse(rec, candidate) {
-  const best = rec.size === null ? void 0 : rec.ranking[0];
+  const ranking = rec.size === null ? [] : rec.ranking;
+  const best = ranking[0];
   return {
     size: rec.size,
     confidence: rec.confidence,
@@ -62992,11 +63001,19 @@ function toRecommendResponse(rec, candidate) {
     fitsLike: best ? best.shirtId : null,
     verdict: rec.verdict,
     notes: rec.notes,
-    garmentType: garmentTypeOf(candidate)
+    garmentType: garmentTypeOf(candidate),
+    sizes: rec.sizes.map((s) => ({
+      size: s.size,
+      matchPercent: s.matches[0]?.matchPct ?? null,
+      fitsLike: s.matches[0]?.shirtId ?? null
+    })),
+    similar: ranking.map((m) => ({ shirtId: m.shirtId, matchPercent: m.matchPct })),
+    reviews: candidate.reviewSummary ?? null
   };
 }
 
 // api/handlers.ts
+var CANDIDATES_UNAVAILABLE = "Could not load the catalog right now. Try again in a moment.";
 function parseBody(body) {
   if (typeof body !== "string") return { ok: true, value: body };
   try {
@@ -63010,7 +63027,7 @@ async function loadCandidates(deps, res) {
     return await deps.getCandidates();
   } catch (e) {
     deps.onError?.(e);
-    sendJson(res, 502, { error: `Could not load candidates: ${e.message}` });
+    sendJson(res, 502, { error: CANDIDATES_UNAVAILABLE });
     return null;
   }
 }
@@ -63066,17 +63083,26 @@ function withSentry(handler) {
 }
 
 // api/cache.ts
-function createCache(load, ttlMs, now = Date.now) {
+function createCache(load, ttlMs, now = Date.now, stale) {
   let value;
   let loadedAt = 0;
+  let retryAt = 0;
   let inFlight = null;
   return async () => {
-    if (value !== void 0 && now() - loadedAt < ttlMs) return value;
+    if (value !== void 0 && (now() - loadedAt < ttlMs || now() < retryAt)) return value;
     if (inFlight) return inFlight;
     inFlight = load().then((fresh) => {
       value = fresh;
       loadedAt = now();
+      retryAt = 0;
       return fresh;
+    }).catch((error) => {
+      if (stale && value !== void 0 && now() - loadedAt < stale.maxStaleMs) {
+        retryAt = now() + stale.retryMs;
+        stale.onError?.(error);
+        return value;
+      }
+      throw error;
     }).finally(() => {
       inFlight = null;
     });
@@ -63085,15 +63111,17 @@ function createCache(load, ttlMs, now = Date.now) {
 }
 
 // api/supabase-candidates.ts
-function createSupabaseCandidateSource(env = process.env) {
+function createSupabaseCandidateSource(env = process.env, onError) {
   return createCache(
     () => loadCandidatesFromSupabase({ SUPABASE_URL: env.SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY }),
-    CANDIDATE_CACHE_MS
+    CANDIDATE_CACHE_MS,
+    Date.now,
+    { maxStaleMs: CANDIDATE_MAX_STALE_MS, retryMs: CANDIDATE_RETRY_MS, onError }
   );
 }
 
 // api/recommend.ts
-var recommend_default = withSentry(createRecommendHandler({ getCandidates: createSupabaseCandidateSource(), onError: reportError }));
+var recommend_default = withSentry(createRecommendHandler({ getCandidates: createSupabaseCandidateSource(process.env, reportError), onError: reportError }));
 /*! Bundled license information:
 
 @sentry/core/build/cjs/utils/env.js:

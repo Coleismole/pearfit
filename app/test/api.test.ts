@@ -30,6 +30,9 @@ const sized = {
   verdict: "Get the M, fits like your blue tee.",
   notes: [],
   garmentType: "tee",
+  sizes: [{ size: "M", matchPercent: 67.6, fitsLike: "blue-tee" }],
+  similar: [{ shirtId: "blue-tee", matchPercent: 67.6 }],
+  reviews: { total: 40, runsSmallPct: 60, trueToSizePct: 30, runsLargePct: 10 },
 };
 const notSized = {
   size: null,
@@ -39,6 +42,9 @@ const notSized = {
   verdict: "No comparable shirts in your wardrobe. This is a polo, and your wardrobe has none.",
   notes: [],
   garmentType: "polo",
+  sizes: [{ size: "M", matchPercent: null, fitsLike: null }],
+  similar: [],
+  reviews: null,
 };
 
 test("getCandidates sends a plain GET to {base}/api/candidates and returns the list", async () => {
@@ -148,9 +154,25 @@ test("parseRecommendResponse rejects an answer with a missing or mistyped field"
     { ...sized, verdict: undefined },
     { ...sized, notes: "none" },
     { ...sized, notes: [1] },
+    { ...sized, sizes: "M" },
+    { ...sized, sizes: [{ matchPercent: 67.6, fitsLike: "blue-tee" }] },
+    { ...sized, sizes: [{ size: "M", matchPercent: "67.6", fitsLike: "blue-tee" }] },
+    { ...sized, sizes: [{ size: "M", matchPercent: 67.6, fitsLike: 3 }] },
+    { ...sized, similar: {} },
+    { ...sized, similar: [{ shirtId: "blue-tee", matchPercent: null }] },
+    { ...sized, similar: [{ matchPercent: 67.6 }] },
+    { ...sized, reviews: 40 },
+    { ...sized, reviews: { total: 40, runsSmallPct: 60, trueToSizePct: 30 } },
+    { ...sized, reviews: { total: "40", runsSmallPct: 60, trueToSizePct: 30, runsLargePct: 10 } },
   ];
   for (const raw of bad) {
     assert.throws(() => parseRecommendResponse(raw), (e: unknown) => e instanceof ApiError && e.kind === "invalid", JSON.stringify(raw));
   }
   assert.deepEqual(parseRecommendResponse({ ...sized, extra: true }), sized); // extra fields are dropped
+  assert.deepEqual(parseRecommendResponse(notSized), notSized); // a size with nothing to compare keeps its nulls
+});
+
+test("parseRecommendResponse reads an answer saved before sizes, similar and reviews existed as empty lists and null", () => {
+  const { sizes: _sizes, similar: _similar, reviews: _reviews, ...older } = sized;
+  assert.deepEqual(parseRecommendResponse(older), { ...sized, sizes: [], similar: [], reviews: null });
 });

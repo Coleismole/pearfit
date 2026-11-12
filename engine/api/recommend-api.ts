@@ -1,6 +1,6 @@
 // Request validation and response shaping for the API. Pure: no I/O, no network, so it is tested directly.
 import { garmentTypeOf } from "../src/recommend.ts";
-import type { Candidate, Confidence, GarmentType, Measurements, OwnedShirt, Recommendation } from "../src/types.ts";
+import type { Candidate, Confidence, GarmentType, Measurements, OwnedShirt, Recommendation, ReviewSummary } from "../src/types.ts";
 import { parseWardrobe } from "../cli/validate.ts";
 import { MAX_WARDROBE_SHIRTS, PICKER_GARMENT_TYPES } from "./config.ts";
 
@@ -32,6 +32,19 @@ export function validateRecommendRequest(body: unknown): Validation {
   }
 }
 
+// One size of the candidate against the wardrobe: its closest "great" shirt and how close that is.
+export interface SizeMatch {
+  size: string;
+  matchPercent: number | null; // null = this size shares no measurement with any great shirt
+  fitsLike: string | null; // that shirt's id
+}
+
+// One owned "great" shirt against the recommended size.
+export interface SimilarShirt {
+  shirtId: string;
+  matchPercent: number;
+}
+
 export interface RecommendResponse {
   size: string | null;
   confidence: Confidence;
@@ -40,11 +53,16 @@ export interface RecommendResponse {
   verdict: string;
   notes: string[];
   garmentType: GarmentType;
+  sizes: SizeMatch[]; // every size, in the candidate's order (smallest to largest)
+  similar: SimilarShirt[]; // great shirts against the recommended size, closest first. Empty with no recommendation.
+  reviews: ReviewSummary | null; // what reviewers said about the fit. null = the catalog has no reviews of it.
 }
 
-// Nothing is invented: with no recommendation, size, matchPercent and fitsLike are null.
+// Nothing is invented: with no recommendation, size, matchPercent and fitsLike are null and `similar` is empty,
+// and a size that could not be scored has a null matchPercent and fitsLike.
 export function toRecommendResponse(rec: Recommendation, candidate: Candidate): RecommendResponse {
-  const best = rec.size === null ? undefined : rec.ranking[0];
+  const ranking = rec.size === null ? [] : rec.ranking;
+  const best = ranking[0];
   return {
     size: rec.size,
     confidence: rec.confidence,
@@ -53,6 +71,13 @@ export function toRecommendResponse(rec: Recommendation, candidate: Candidate): 
     verdict: rec.verdict,
     notes: rec.notes,
     garmentType: garmentTypeOf(candidate),
+    sizes: rec.sizes.map((s) => ({
+      size: s.size,
+      matchPercent: s.matches[0]?.matchPct ?? null,
+      fitsLike: s.matches[0]?.shirtId ?? null,
+    })),
+    similar: ranking.map((m) => ({ shirtId: m.shirtId, matchPercent: m.matchPct })),
+    reviews: candidate.reviewSummary ?? null,
   };
 }
 

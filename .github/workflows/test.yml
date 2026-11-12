@@ -1,0 +1,54 @@
+# Runs the unit tests and the typecheck of each package: engine/, app/ and webscraper/.
+# The website's own tests run in verify-website.yml, and check-bundles.yml checks the generated files.
+# Chromium is installed for webscraper/ only: its render tests skip themselves without a browser.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: engine
+            typecheck: npm run typecheck
+          - package: app
+            typecheck: npm run typecheck
+          - package: webscraper
+            typecheck: npm run lint
+            chromium: true
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+      - name: Install dependencies
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: npm ci
+      - name: Install Chromium for the render tests
+        if: matrix.chromium
+        run: npx playwright install --with-deps chromium
+      - name: Typecheck
+        run: ${{ matrix.typecheck }}
+      - name: Unit tests
+        run: npm test

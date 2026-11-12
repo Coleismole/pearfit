@@ -1,7 +1,7 @@
 // File loading and validation. Kept outside src/ so the engine itself stays free of I/O.
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { Candidate, EvalCase, Measurements, OwnedShirt } from "../src/types.ts";
+import type { Candidate, EvalCase, Measurements, OwnedShirt, ReviewSummary } from "../src/types.ts";
 import { fail, parseGarmentType, parseMeasurements, parseWardrobe } from "./validate.ts";
 
 export const DATA_DIR = join(import.meta.dirname, "..", "data");
@@ -34,14 +34,28 @@ export function loadCandidates(dataDir = DATA_DIR, file?: string): Candidate[] {
     const sizes: Record<string, Measurements> = {};
     for (const [size, m] of Object.entries(c.sizes)) sizes[size] = parseMeasurements(m, `${where} ${c.id} size ${size}`);
     const garmentType = parseGarmentType(c.garmentType, `${where} ${c.id}`);
+    const reviewSummary = parseReviewSummary(c.reviewSummary, `${where} ${c.id}`);
     return {
       id: c.id,
       name: typeof c.name === "string" ? c.name : c.id,
       review: c.review ?? null,
       sizes,
       ...(garmentType ? { garmentType } : {}),
+      ...(reviewSummary ? { reviewSummary } : {}),
     };
   });
+}
+
+// Optional. When it is there, all four numbers must be: a half-filled summary is a broken export.
+function parseReviewSummary(v: any, where: string): ReviewSummary | undefined {
+  if (v === undefined || v === null) return undefined;
+  const keys = ["total", "runsSmallPct", "trueToSizePct", "runsLargePct"] as const;
+  for (const key of keys) {
+    if (typeof v[key] !== "number" || !Number.isFinite(v[key]) || v[key] < 0) {
+      fail(where, `reviewSummary.${key} must be a number of 0 or more, got ${JSON.stringify(v[key])}`);
+    }
+  }
+  return { total: v.total, runsSmallPct: v.runsSmallPct, trueToSizePct: v.trueToSizePct, runsLargePct: v.runsLargePct };
 }
 
 export function loadCases(dataDir = DATA_DIR, file?: string): EvalCase[] {

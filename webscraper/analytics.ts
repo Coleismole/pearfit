@@ -5,7 +5,8 @@ import type { ScrapeMode } from './analyticsEvents.ts';
  * the same way the marketing site gets them, so nothing is baked into the build. With no token or host
  * set, every call here does nothing.
  *
- * pearfit.app and pearfit.app/scraper share one origin, so one PostHog person carries across both.
+ * pearfit.app and pearfit.app/scraper share one origin, so one PostHog person carries across both, and so does the
+ * visitor's consent choice (see analyticsConsented).
  */
 
 interface PostHogClient {
@@ -35,8 +36,35 @@ function giveUp() {
   pending.length = 0;
 }
 
-/** Loads PostHog once. Never throws: analytics must not break the app. */
+/** The key the marketing site's consent banner writes (website/consent.js). Same origin, so the scraper page reads the same answer. */
+export const CONSENT_KEY = 'pearfit.consent.v1';
+
+/** True only when the visitor accepted analytics. No answer, a decline, or storage that cannot be read all mean no. */
+export function analyticsConsented(storage: Pick<Storage, 'getItem'> | null | undefined): boolean {
+  try {
+    return storage?.getItem(CONSENT_KEY) === 'granted';
+  } catch {
+    return false;
+  }
+}
+
+function browserStorage(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Loads PostHog once, and only for a visitor who accepted analytics on pearfit.app. This page has no banner of its own:
+ * without that answer nothing is requested from PostHog. Never throws: analytics must not break the app.
+ */
 export async function initAnalytics(configUrl: string): Promise<void> {
+  if (!analyticsConsented(browserStorage())) {
+    giveUp();
+    return;
+  }
   try {
     const response = await fetch(configUrl);
     if (!response.ok) {

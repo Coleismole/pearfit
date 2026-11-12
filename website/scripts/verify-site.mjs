@@ -35,7 +35,7 @@ const target = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWi
 const brandPages = existsSync(path.join(site, 'fit', 'brands'))
   ? readdirSync(path.join(site, 'fit', 'brands')).filter((name) => name.endsWith('.html')).sort().map((name) => `/fit/brands/${name}`)
   : [];
-const PAGES = ['/', '/stores.html', '/roi.html', '/fit/', ...brandPages];
+const PAGES = ['/', '/stores.html', '/roi.html', '/privacy.html', '/terms.html', '/fit/', ...brandPages];
 const MISSING = '/this-page-does-not-exist';
 const WIDTHS = [320, 375, 414, 768, 1280];
 const INBOX = 'customerservice@pearfit.app';
@@ -75,8 +75,27 @@ function serve() {
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
+// Stands in for PostHog's script in the consent checks: records what the site asks it to do.
+const POSTHOG_STUB = `window.posthog = { __loaded: false, calls: [], init() { this.__loaded = true; this.calls.push('init'); }, register() {},
+  capture(name) { this.calls.push('capture:' + name); }, opt_in_capturing() { this.calls.push('opt_in'); },
+  opt_out_capturing() { this.calls.push('opt_out'); }, reset() { this.calls.push('reset'); } };`;
+
 async function runChecks(browser, base) {
   const results = [];
+  // Most checks run as a visitor who has already answered the analytics banner, so it never covers what they test.
+  // The "analytics consent" group below uses fresh pages, and checks the banner itself.
+  const rawNewPage = browser.newPage.bind(browser);
+  const newPage = async (options) => {
+    const page = await rawNewPage(options);
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('pearfit.consent.v1', 'denied');
+      } catch {
+        // Storage blocked: the banner would show, which these checks can live with.
+      }
+    });
+    return page;
+  };
   const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail: String(detail ?? '') });
   // A missing element fails its group and the run moves on, so one problem does not hide the rest.
   const group = async (name, fn) => {
@@ -100,9 +119,14 @@ async function runChecks(browser, base) {
 
   for (const pagePath of [...PAGES, MISSING]) {
     await group(`${pagePath}: page checks`, async () => {
-      const page = await browser.newPage({ viewport: { width: 375, height: 800 } });
+      const page = await newPage({ viewport: { width: 375, height: 800 } });
       page.setDefaultTimeout(4000);
       const failed = [];
+      const otherSites = new Set();
+      page.on('request', (r) => {
+        const u = new URL(r.url());
+        if (u.protocol.startsWith('http') && u.origin !== new URL(base).origin) otherSites.add(u.hostname);
+      });
       page.on('response', (r) => {
         const u = new URL(r.url());
         if (u.origin === new URL(base).origin && r.status() >= 400 && !u.pathname.startsWith('/api/') && u.pathname !== MISSING) {
@@ -117,6 +141,7 @@ async function runChecks(browser, base) {
         check(`${MISSING}: shows the Pearfit 404 page`, (await page.title()).includes('Page not found'), await page.title());
       }
       check(`${pagePath}: no failed requests or script errors`, failed.length === 0, failed.join(', '));
+      check(`${pagePath}: no request to another site (fonts are our own, analytics wait for consent)`, otherSites.size === 0, [...otherSites].join(', '));
 
       // Every link resolves, including a #section on another page.
       const hrefs = [...new Set(await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href'))))];
@@ -176,7 +201,7 @@ async function runChecks(browser, base) {
   }
 
   await group('inquiry form', async () => {
-    const page = await browser.newPage({ viewport: { width: 375, height: 800 } });
+    const page = await newPage({ viewport: { width: 375, height: 800 } });
     page.setDefaultTimeout(5000);
     let outcome = 'ok';
     await page.route('https://formsubmit.co/**', (route) =>
@@ -204,6 +229,54 @@ async function runChecks(browser, base) {
     check('form: a failed send shows an error with the email', error, await page.textContent(note));
     check('form: the button works again after a send', !(await page.isDisabled('#pilot-submit-btn')));
     await page.close();
+  });
+
+  await group('analytics consent', async () => {
+    const context = await browser.newContext({ viewport: { width: 375, height: 800 } });
+    const posthogRequests = [];
+    await context.route('**/api/posthog-config', (route) =>
+      route.fulfill({ contentType: 'application/json', body: JSON.stringify({ projectToken: 'phc_verify', host: 'https://ph.example.test' }) })
+    );
+    await context.route('https://ph.example.test/**', (route) => {
+      posthogRequests.push(new URL(route.request().url()).pathname);
+      return route.fulfill({ contentType: 'text/javascript', body: POSTHOG_STUB });
+    });
+    const page = await context.newPage();
+    page.setDefaultTimeout(5000);
+    const stored = () => page.evaluate(() => localStorage.getItem('pearfit.consent.v1'));
+    const calls = () => page.evaluate(() => (window.posthog ? window.posthog.calls.slice() : null));
+
+    await page.goto(url('/'), { waitUntil: 'networkidle' });
+    check('consent: the banner shows on a first visit', await page.isVisible('#consent-banner'));
+    const boxes = await page.$$eval('#consent-banner button', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
+    check('consent: Accept and Decline are both there, the same size and tappable',
+      boxes.length === 2 && boxes[0][0] === boxes[1][0] && boxes[0][1] === boxes[1][1] && boxes[0][1] >= 44, JSON.stringify(boxes));
+    check('consent: with no answer nothing is requested from PostHog and nothing is stored',
+      posthogRequests.length === 0 && (await calls()) === null && (await stored()) === null, `${posthogRequests.length} requests`);
+
+    await page.click('#consent-banner [data-consent=granted]');
+    await page.waitForFunction(() => window.posthog && window.posthog.__loaded);
+    check('consent: Accept hides the banner, remembers the answer and starts PostHog',
+      !(await page.isVisible('#consent-banner')) && (await stored()) === 'granted' && (await calls()).includes('init'), JSON.stringify(await calls()));
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForFunction(() => window.posthog && window.posthog.__loaded);
+    check('consent: the next visit starts PostHog without asking again', !(await page.isVisible('#consent-banner')));
+
+    await page.click('footer [data-consent-open]');
+    const focusedInBanner = await page.evaluate(() => Boolean(document.activeElement && document.activeElement.closest('#consent-banner')));
+    check('consent: "Privacy choices" in the footer brings the banner back, with focus on it', (await page.isVisible('#consent-banner')) && focusedInBanner);
+
+    await page.click('#consent-banner [data-consent=denied]');
+    const afterDecline = await calls();
+    check('consent: Decline after accepting stops PostHog, forgets the visitor and hides the banner',
+      !(await page.isVisible('#consent-banner')) && (await stored()) === 'denied' && afterDecline.includes('opt_out') && afterDecline.includes('reset'),
+      JSON.stringify(afterDecline));
+
+    const before = posthogRequests.length;
+    await page.reload({ waitUntil: 'networkidle' });
+    check('consent: after a decline PostHog is not requested again', posthogRequests.length === before && (await calls()) === null, `${posthogRequests.length - before} new requests`);
+    await context.close();
   });
 
   await fetcher.close();

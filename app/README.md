@@ -126,7 +126,7 @@ missing piece for a bug.
 | 6 | Suitability analysis | `#/check/<id>` | `POST /api/recommend` |
 | 7 | Side-by-side compare | `#/check/<id>/compare` | the catalog's size chart and the wardrobe |
 | 8 | Couldn't read link | a message inside the search box on Home | (none) |
-| 9 | Account | `#/account` | the device |
+| 9 | Account | `#/account` | the device; links to the privacy notice and terms on pearfit.app |
 | 11 | Category page | `#/type/<garmentType>` | the device |
 | 12 | Item page, owned | `#/owned/<id>` | the device |
 | 13 | Add category | not built | (none) |

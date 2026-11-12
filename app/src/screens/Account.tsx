@@ -131,6 +131,21 @@ export function Account() {
         }}
       />
 
+      <section className="stack stack--tight" aria-labelledby="legal-heading">
+        <h2 className="eyebrow eyebrow--muted" id="legal-heading">
+          About your data
+        </h2>
+        <div className="small muted">What Pearfit collects and how it is handled, and the terms for using it.</div>
+        <div className="row">
+          <a className="btn btn--outline btn--small btn--grow" href={`${API_BASE_URL}/privacy.html`} target="_blank" rel="noopener">
+            Privacy notice<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          <a className="btn btn--outline btn--small btn--grow" href={`${API_BASE_URL}/terms.html`} target="_blank" rel="noopener">
+            Terms of use<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </div>
+      </section>
+
       <div className="spacer" />
       <p className="tiny muted center">
         Pearfit · version {__APP_VERSION__}

@@ -92,12 +92,25 @@ scorer**, or the test is meaningless:
    length 0.4, sleeve 0.3. Missing measurements are skipped, never counted as zero.
 3. % match = 100 × e^(−distance / 3).
 4. The size with the lowest distance wins. If the top two sizes are within 0.5 cm, the review
-   signal breaks the tie.
+   signal breaks the tie: the larger size when the reviews lean small, the smaller size when they
+   lean large. Reviews never move a size that wins by more than that, and never change a % match.
 5. Confidence: under 1.5 cm is high, under 3 cm is medium, anything else is low. It drops one
    level for each of: a near-tie, missing chest data, or the pick landing within 1 cm (chest) of
    a shirt marked tight or loose.
 
 All numbers live in `src/config.ts`.
+
+### The review signal
+The signal is the skew of the reviews: the share that say "runs large" minus the share that say
+"runs small". The reviews lean when the two shares are at least 10 points apart and the product has
+at least 10 reviews. With fewer reviews there is no signal.
+
+The "true to size" share is left out. The scraper counts every review with no small or large comment
+as true to size, so that share is the largest for almost every product, and picking the largest
+share gave "true to size" nearly every time.
+
+The export writes the result into `review` (`src/review.ts`). In a hand-written candidate file you
+state `review` yourself.
 
 ## Layout
 - `src/`: the engine. Pure functions, no file or network access.

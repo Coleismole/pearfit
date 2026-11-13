@@ -38,10 +38,12 @@ export const GARMENT_LABELS: Record<GarmentType, string> = {
   other: "some other kind of garment",
 };
 
+// Which way the reviews lean. null = no reviews, or too few to say. "true_to_size" = they do not lean either way.
+// The export sets it from the review summary's skew (src/review.ts). A hand-written candidate file states it.
 export type ReviewSignal = "runs_small" | "true_to_size" | "runs_large" | null;
 
 // What reviewers said about the fit, as the scraper stored it: how many reviews, and the share (0 to 100) that said
-// each thing. For display only. The engine reads `review` and never this.
+// each thing. The scorer reads `review` and never this: it is kept on the candidate so the numbers can be shown.
 export interface ReviewSummary {
   total: number;
   runsSmallPct: number;
@@ -56,7 +58,7 @@ export interface Candidate {
   review: ReviewSignal;
   sizes: Record<string, Measurements>;
   garmentType?: GarmentType; // missing = "tee". Only owned shirts of the same type are compared.
-  reviewSummary?: ReviewSummary; // missing = no reviews. The engine ignores it.
+  reviewSummary?: ReviewSummary; // missing = no reviews. The scorer ignores it.
 }
 
 // Per-dimension difference, candidate minus owned shirt. Only dims present on both.

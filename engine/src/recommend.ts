@@ -58,7 +58,8 @@ export function recommend(
   let downgrades = 0;
   let pick = scored[0];
 
-  // Review signal only decides near-ties; it never overrides a clear measurement winner.
+  // Review signal only decides near-ties; it never overrides a clear measurement winner. The signal is which way
+  // the reviews lean (src/review.ts).
   const runnerUp = scored[1];
   if (runnerUp && runnerUp.matches[0].distance - pick.matches[0].distance < cfg.tieMarginCm) {
     const pickIdx = sizeOrder.indexOf(pick.size);
@@ -67,12 +68,14 @@ export function recommend(
     const smaller = pickIdx > runIdx ? runnerUp : pick;
     if (candidate.review === "runs_small") {
       pick = larger;
-      notes.push(`${smaller.size} and ${larger.size} are nearly tied; reviews say it runs small, so ${larger.size}.`);
+      notes.push(`${smaller.size} and ${larger.size} are nearly tied; more reviews say it runs small than large, so ${larger.size}.`);
     } else if (candidate.review === "runs_large") {
       pick = smaller;
-      notes.push(`${smaller.size} and ${larger.size} are nearly tied; reviews say it runs large, so ${smaller.size}.`);
+      notes.push(`${smaller.size} and ${larger.size} are nearly tied; more reviews say it runs large than small, so ${smaller.size}.`);
+    } else if (candidate.review === "true_to_size") {
+      notes.push(`${pick.size} and ${runnerUp.size} are nearly tied, and the reviews do not lean small or large.`);
     } else {
-      notes.push(`${pick.size} and ${runnerUp.size} are nearly tied and there is no review signal to break it.`);
+      notes.push(`${pick.size} and ${runnerUp.size} are nearly tied, and there are not enough reviews to break the tie.`);
     }
     downgrades++;
   }

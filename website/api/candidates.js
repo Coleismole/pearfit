@@ -62521,6 +62521,20 @@ __export(candidates_exports, {
 module.exports = __toCommonJS(candidates_exports);
 
 // src/config.ts
+var TOPS = {
+  // Chest makes or breaks a shirt; length and sleeve are more forgiving.
+  weights: { chest_cm: 1, length_cm: 0.4, sleeve_cm: 0.3 },
+  matchScaleCm: 3,
+  highBelowCm: 1.5,
+  mediumBelowCm: 3,
+  tieMarginCm: 0.5,
+  guardChestCm: 1,
+  gapWordingCm: 0.5,
+  // Starting values: the same two numbers the fit guide pages use to say a product leans small or large
+  // (MIN_REVIEWS and LEAN_MARGIN_PCT in website/scripts/build-fit-pages.mjs).
+  reviewMinCount: 10,
+  reviewSkewMinPct: 10
+};
 var DEFAULT_GARMENT_TYPE = "tee";
 
 // src/score.ts
@@ -62532,6 +62546,18 @@ function round(n, decimals) {
 // src/recommend.ts
 function garmentTypeOf(item) {
   return item.garmentType ?? DEFAULT_GARMENT_TYPE;
+}
+
+// src/review.ts
+function reviewSkew(summary) {
+  return summary.runsLargePct - summary.runsSmallPct;
+}
+function reviewSignalFrom(summary, cfg = TOPS) {
+  if (!summary || summary.total < cfg.reviewMinCount) return null;
+  const skew = reviewSkew(summary);
+  if (skew <= -cfg.reviewSkewMinPct) return "runs_small";
+  if (skew >= cfg.reviewSkewMinPct) return "runs_large";
+  return "true_to_size";
 }
 
 // cli/garment-type.ts
@@ -62680,14 +62706,15 @@ function buildCandidates(rows) {
         sleeve_cm: applyOffset(row.sleeve_cm, offset.sleeve_cm)
       };
     }
+    const reviewSummary = p.total_reviews > 0 ? { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct } : void 0;
     candidates.push({
       id: slug(p.sku),
       name: p.product_name,
-      review: reviewSignal(p),
+      // Which way the reviews lean, from the skew of those shares (src/review.ts). The scorer reads only this.
+      review: reviewSignalFrom(reviewSummary),
       garmentType: garmentTypeFor(p.product_name),
       sizes,
-      // The stored numbers, passed on as they are. A product with no reviews gets no summary.
-      ...p.total_reviews > 0 ? { reviewSummary: { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct } } : {}
+      ...reviewSummary ? { reviewSummary } : {}
     });
   }
   return { candidates, skipped };
@@ -62695,17 +62722,6 @@ function buildCandidates(rows) {
 function applyOffset(chartCm, offsetCm) {
   if (chartCm === null || offsetCm === null) return null;
   return round(chartCm - offsetCm, 1);
-}
-function reviewSignal(p) {
-  if (p.total_reviews === 0) return null;
-  const votes = [
-    ["runs_small", p.runs_small_pct],
-    ["true_to_size", p.true_to_size_pct],
-    ["runs_large", p.runs_large_pct]
-  ];
-  const top = Math.max(...votes.map(([, pct]) => pct));
-  const winners = votes.filter(([, pct]) => pct === top);
-  return winners.length === 1 ? winners[0][0] : null;
 }
 function slug(sku) {
   return sku.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

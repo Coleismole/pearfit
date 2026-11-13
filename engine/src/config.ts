@@ -9,6 +9,8 @@ export interface ScorerConfig {
   tieMarginCm: number; // two sizes closer than this count as a near-tie
   guardChestCm: number; // pick within this chest distance of a tight/loose shirt triggers a warning
   gapWordingCm: number; // gaps smaller than this are not mentioned in the verdict
+  reviewMinCount: number; // with fewer reviews than this there is no review signal
+  reviewSkewMinPct: number; // "runs small" and "runs large" shares this many points apart = the reviews lean (src/review.ts)
 }
 
 export const TOPS: ScorerConfig = {
@@ -20,6 +22,10 @@ export const TOPS: ScorerConfig = {
   tieMarginCm: 0.5,
   guardChestCm: 1,
   gapWordingCm: 0.5,
+  // Starting values: the same two numbers the fit guide pages use to say a product leans small or large
+  // (MIN_REVIEWS and LEAN_MARGIN_PCT in website/scripts/build-fit-pages.mjs).
+  reviewMinCount: 10,
+  reviewSkewMinPct: 10,
 };
 
 // A candidate or owned shirt with no garmentType is treated as this. Only the same type is compared with the same type.

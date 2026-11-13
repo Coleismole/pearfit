@@ -2,9 +2,10 @@
 // store, or from the local SQLite file via export-candidates.ts) into the engine's Candidate format.
 // Kept outside src/ so the engine itself stays free of I/O and the network. It imports no SQLite, so a hosted
 // function can load it without the experimental node:sqlite module.
+import { reviewSignalFrom } from "../src/review.ts";
 import { round } from "../src/score.ts";
-import type { Candidate, ReviewSignal } from "../src/types.ts";
-import type { BrandOffsetRow, ProductRow, SizeChartRow, SourceRows } from "./db-types.ts";
+import type { Candidate, ReviewSummary } from "../src/types.ts";
+import type { BrandOffsetRow, SizeChartRow, SourceRows } from "./db-types.ts";
 import { garmentTypeFor } from "./garment-type.ts";
 
 // Table names in the shared Supabase project (see webscraper/fit_store.sql).
@@ -162,16 +163,19 @@ export function buildCandidates(rows: SourceRows): ExportResult {
         sleeve_cm: applyOffset(row.sleeve_cm, offset.sleeve_cm),
       };
     }
+    // The stored numbers, passed on as they are. A product with no reviews gets no summary.
+    const reviewSummary: ReviewSummary | undefined =
+      p.total_reviews > 0
+        ? { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct }
+        : undefined;
     candidates.push({
       id: slug(p.sku),
       name: p.product_name,
-      review: reviewSignal(p),
+      // Which way the reviews lean, from the skew of those shares (src/review.ts). The scorer reads only this.
+      review: reviewSignalFrom(reviewSummary),
       garmentType: garmentTypeFor(p.product_name),
       sizes,
-      // The stored numbers, passed on as they are. A product with no reviews gets no summary.
-      ...(p.total_reviews > 0
-        ? { reviewSummary: { total: p.total_reviews, runsSmallPct: p.runs_small_pct, trueToSizePct: p.true_to_size_pct, runsLargePct: p.runs_large_pct } }
-        : {}),
+      ...(reviewSummary ? { reviewSummary } : {}),
     });
   }
   return { candidates, skipped };
@@ -181,19 +185,6 @@ export function buildCandidates(rows: SourceRows): ExportResult {
 function applyOffset(chartCm: number | null, offsetCm: number | null): number | null {
   if (chartCm === null || offsetCm === null) return null;
   return round(chartCm - offsetCm, 1);
-}
-
-// The most common review verdict. A tie, or no reviews, gives no signal.
-function reviewSignal(p: ProductRow): ReviewSignal {
-  if (p.total_reviews === 0) return null;
-  const votes: [Exclude<ReviewSignal, null>, number][] = [
-    ["runs_small", p.runs_small_pct],
-    ["true_to_size", p.true_to_size_pct],
-    ["runs_large", p.runs_large_pct],
-  ];
-  const top = Math.max(...votes.map(([, pct]) => pct));
-  const winners = votes.filter(([, pct]) => pct === top);
-  return winners.length === 1 ? winners[0][0] : null;
 }
 
 export function slug(sku: string): string {

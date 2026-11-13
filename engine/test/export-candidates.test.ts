@@ -21,11 +21,15 @@ function seed(): DatabaseSync {
     INSERT INTO commercial_skus VALUES ('AB-100-WHT', 'Acme', 'Acme crew tee', 40, 60, 30, 10);
     INSERT INTO commercial_skus VALUES ('ZZ-200-BLK', 'Zed', 'Zed boxy tee', 12, 40, 40, 20);
     INSERT INTO commercial_skus VALUES ('NO-300-GRY', 'Acme', 'Acme no chart', 5, 0, 100, 0);
+    INSERT INTO commercial_skus VALUES ('ZZ-400-RED', 'Zed', 'Zed oversized tee', 300, 0, 83, 17);
+    INSERT INTO commercial_skus VALUES ('ZZ-500-TAN', 'Zed', 'Zed slim tee', 9, 22, 78, 0);
 
     -- rows are inserted out of order on purpose: sort_order decides the sequence
     INSERT INTO size_chart VALUES ('AB-100-WHT', 'M', 2, 53.2, 75.3, 21);
     INSERT INTO size_chart VALUES ('AB-100-WHT', 'S', 1, 50, 71, 20);
     INSERT INTO size_chart VALUES ('ZZ-200-BLK', 'L', 1, 58.04, 72, 24);
+    INSERT INTO size_chart VALUES ('ZZ-400-RED', 'M', 1, 57, NULL, NULL);
+    INSERT INTO size_chart VALUES ('ZZ-500-TAN', 'M', 1, 49, NULL, NULL);
 
     INSERT INTO brand_offsets VALUES ('Acme', 2.5, NULL);
   `);
@@ -37,7 +41,7 @@ test("export subtracts the brand offset from length and nulls an unconfirmed sle
   assert.deepEqual(candidates[0], {
     id: "ab-100-wht",
     name: "Acme crew tee",
-    review: "runs_small", // 60 / 30 / 10
+    review: "runs_small", // 40 reviews, 60% small against 10% large: skew 10 - 60 = -50 points
     garmentType: "tee", // "Acme crew tee"
     sizes: {
       // Offset +2.5 = Acme's chart runs bigger. S: 71 - 2.5 = 68.5. M: 75.3 - 2.5 = 72.8.
@@ -49,21 +53,35 @@ test("export subtracts the brand offset from length and nulls an unconfirmed sle
   });
 });
 
-test("brand with no offset row keeps chest and nulls length and sleeve; a review tie gives no signal", () => {
+test("brand with no offset row keeps chest and nulls length and sleeve; the review signal follows the skew", () => {
   const { candidates } = buildCandidates(readFromSqlite(seed()));
   assert.deepEqual(candidates[1], {
     id: "zz-200-blk",
     name: "Zed boxy tee",
-    review: null, // 40 / 40 / 20 ties
+    // 12 reviews, 40% small against 20% large: skew 20 - 40 = -20 points. Small and true to size tie for the
+    // largest share, which used to mean no signal. The lean is what counts now.
+    review: "runs_small",
     garmentType: "tee", // "Zed boxy tee"
     sizes: { L: { chest_cm: 58, length_cm: null, sleeve_cm: null } }, // chest 58.04 rounds to 58
     reviewSummary: { total: 12, runsSmallPct: 40, trueToSizePct: 40, runsLargePct: 20 },
   });
 });
 
+test("the review signal is the lean of the stored shares, and too few reviews give none", () => {
+  const { candidates } = buildCandidates(readFromSqlite(seed()));
+  // 300 reviews, 0% small against 17% large: skew +17 points, though 83% are counted as true to size.
+  assert.equal(candidates[2].id, "zz-400-red");
+  assert.equal(candidates[2].review, "runs_large");
+  assert.deepEqual(candidates[2].reviewSummary, { total: 300, runsSmallPct: 0, trueToSizePct: 83, runsLargePct: 17 });
+  // 9 reviews lean small by 22 points, but 9 is under the minimum of 10: no signal. The numbers are still passed on.
+  assert.equal(candidates[3].id, "zz-500-tan");
+  assert.equal(candidates[3].review, null);
+  assert.deepEqual(candidates[3].reviewSummary, { total: 9, runsSmallPct: 22, trueToSizePct: 78, runsLargePct: 0 });
+});
+
 test("products without a size chart are skipped and reported", () => {
   const { candidates, skipped } = buildCandidates(readFromSqlite(seed()));
-  assert.equal(candidates.length, 2);
+  assert.equal(candidates.length, 4);
   assert.deepEqual(skipped, ["NO-300-GRY"]);
 });
 
@@ -91,11 +109,15 @@ const remote = {
     { sku: "ZZ-200-BLK", brand: "Zed", product_name: "Zed boxy tee", total_reviews: 12, runs_small_pct: 40, true_to_size_pct: 40, runs_large_pct: 20, category: "T-Shirts & Tops" },
     { sku: "AB-100-WHT", brand: "Acme", product_name: "Acme crew tee", total_reviews: 40, runs_small_pct: 60, true_to_size_pct: 30, runs_large_pct: 10, category: "T-Shirts & Tops" },
     { sku: "NO-300-GRY", brand: "Acme", product_name: "Acme no chart", total_reviews: 5, runs_small_pct: 0, true_to_size_pct: 100, runs_large_pct: 0, category: "T-Shirts & Tops" },
+    { sku: "ZZ-400-RED", brand: "Zed", product_name: "Zed oversized tee", total_reviews: 300, runs_small_pct: 0, true_to_size_pct: 83, runs_large_pct: 17, category: "T-Shirts & Tops" },
+    { sku: "ZZ-500-TAN", brand: "Zed", product_name: "Zed slim tee", total_reviews: 9, runs_small_pct: 22, true_to_size_pct: 78, runs_large_pct: 0, category: "T-Shirts & Tops" },
   ],
   sku_size_chart: [
     { sku: "AB-100-WHT", size_code: "M", sort_order: 2, chest_cm: 53.2, length_cm: 75.3, sleeve_cm: 21, chest_basis: "flat" },
     { sku: "AB-100-WHT", size_code: "S", sort_order: 1, chest_cm: 50, length_cm: 71, sleeve_cm: 20, chest_basis: "flat" },
     { sku: "ZZ-200-BLK", size_code: "L", sort_order: 1, chest_cm: 58.04, length_cm: 72, sleeve_cm: 24, chest_basis: "flat" },
+    { sku: "ZZ-400-RED", size_code: "M", sort_order: 1, chest_cm: 57, length_cm: null, sleeve_cm: null, chest_basis: "flat" },
+    { sku: "ZZ-500-TAN", size_code: "M", sort_order: 1, chest_cm: 49, length_cm: null, sleeve_cm: null, chest_basis: "flat" },
   ],
   brand_offsets: [{ brand: "Acme", length_cm: 2.5, sleeve_cm: null, note: "ignored" }],
 };

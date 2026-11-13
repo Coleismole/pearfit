@@ -36,13 +36,17 @@ Candidate garment (used by the Pilot 1 engine; sizes listed smallest to largest)
   "sizes": { "M": { "chest_cm": 55, "length_cm": 73, "sleeve_cm": 64 } }
 }
 ```
-`review` is one of `"runs_small"`, `"true_to_size"`, `"runs_large"`, or `null`.
+`review` is one of `"runs_small"`, `"true_to_size"`, `"runs_large"`, or `null`. It says which way the reviews lean:
+`"runs_small"` or `"runs_large"` is a lean, `"true_to_size"` means they do not lean either way, and `null` means there
+are no reviews, or too few to say. A hand-written candidate file states it. The export works it out from the skew of
+`reviewSummary`: `runsLargePct` minus `runsSmallPct` (`engine/src/review.ts`; the two thresholds are `reviewMinCount`
+and `reviewSkewMinPct` in `engine/src/config.ts`).
 
 `reviewSummary` (optional, written by the export): `{ "total": 40, "runsSmallPct": 60, "trueToSizePct": 30, "runsLargePct": 10 }`,
 the review count and shares as the scraper stored them. A review with no small or large comment is counted as true
 to size (`webscraper/fitAnalyzer.ts`), so `trueToSizePct` is the share that do not call the fit small or large, not the
-share that say "true to size". Missing means no reviews. It is for display only: the engine
-reads `review` and never `reviewSummary`.
+share that say "true to size". That is why the skew leaves it out. Missing means no reviews. The scorer reads
+`review` and never `reviewSummary`: the summary is passed on so the numbers can be shown.
 
 ## Related
 - Where each file goes and how to add real data: `engine/README.md`.

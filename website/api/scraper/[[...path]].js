@@ -135439,7 +135439,12 @@ var VALID_CATEGORIES = [
   "Shirting",
   "Dresses"
 ];
+var TEE_CATEGORY = "T-Shirts & Tops";
+var TEE_NAME = /\bt[\s-]?shirts?\b|\btees?\b/i;
+var NOT_A_NAMED_TEE = /\b(hoodies?|sweatshirts?|jackets?|coats?|parkas?|pants|trousers|dresses|shorts)\b/i;
 function inferCategory(...hints) {
+  const name = hints.filter((hint) => Boolean(hint)).at(-1);
+  if (name && TEE_NAME.test(name) && !NOT_A_NAMED_TEE.test(name)) return TEE_CATEGORY;
   for (const hint of hints) {
     if (!hint) continue;
     const exact = VALID_CATEGORIES.find((c2) => c2.toLowerCase() === hint.toLowerCase());
@@ -135448,12 +135453,12 @@ function inferCategory(...hints) {
     if (/hoodie|sweatshirt|fleece|crewneck sweat/.test(h2)) return "Fleece & Hoodies";
     if (/jacket|coat|parka|puffer|blazer|outerwear|anorak|vest/.test(h2)) return "Outerwear";
     if (/sweater|knit|cardigan|jumper|pullover/.test(h2)) return "Knitwear";
-    if (/trouser|pant|jean|chino|short|legging|jogger/.test(h2)) return "Trousers";
+    if (/\btrousers?\b|\bpants?\b|\bjeans?\b|\bchinos?\b|\bshorts?\b(?![\s-]*sleeve)|\bleggings?\b|\bjoggers?\b/.test(h2)) return "Trousers";
     if (/dress|skirt/.test(h2)) return "Dresses";
     if (/oxford|button[- ]?(down|up)|shirt(?!s? ?&)|flannel|overshirt/.test(h2) && !/t-?shirt|tee/.test(h2)) return "Shirting";
-    if (/t-?shirt|tee|tank|top|polo|henley/.test(h2)) return "T-Shirts & Tops";
+    if (/t-?shirt|tee|tank|top|polo|henley/.test(h2)) return TEE_CATEGORY;
   }
-  return "T-Shirts & Tops";
+  return TEE_CATEGORY;
 }
 function looksLikeFullHtmlDocument(input) {
   return /<!doctype html|<html[\s>]|<body[\s>]/i.test(input.slice(0, 5e3));

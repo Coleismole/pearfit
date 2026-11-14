@@ -1,0 +1,1098 @@
+[
+  {
+    "id": "e433399-000",
+    "name": "DRY-EX CREW NECK SHORT SLEEVE T-SHIRT",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 43.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 32,
+      "runsSmallPct": 34,
+      "trueToSizePct": 57,
+      "runsLargePct": 9
+    }
+  },
+  {
+    "id": "e441169-000",
+    "name": "DAIDO MORIYAMA UT (SHORT SLEEVE GRAPHIC T-SHIRT)",
+    "review": "runs_large",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 48.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 57.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 1,
+      "runsSmallPct": 0,
+      "trueToSizePct": 0,
+      "runsLargePct": 100
+    }
+  },
+  {
+    "id": "e447172-000",
+    "name": "MICKEY STANDS UT (SHORT SLEEVE GRAPHIC T-SHIRT)",
+    "review": null,
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 48.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 57.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    }
+  },
+  {
+    "id": "e455665-000",
+    "name": "UT 20TH ARCHIVE (SHORT SLEEVE GRAPHIC T-SHIRT) (ANDY WARHOL)",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 5,
+      "runsSmallPct": 20,
+      "trueToSizePct": 60,
+      "runsLargePct": 20
+    }
+  },
+  {
+    "id": "e455832-000",
+    "name": "MINECRAFT UT (SHORT SLEEVE GRAPHIC T-SHIRT)",
+    "review": null,
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    }
+  },
+  {
+    "id": "e456136-000",
+    "name": "MUSEUMS OF THE WORLD UT (SHORT SLEEVE GRAPHIC T-SHIRT)",
+    "review": null,
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    }
+  },
+  {
+    "id": "e456993-000",
+    "name": "UT 20TH ARCHIVE (SHORT SLEEVE GRAPHIC T-SHIRT) (KEITH HARING)",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 3,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e456995-000",
+    "name": "UT 20TH ARCHIVE (SHORT SLEEVE GRAPHIC T-SHIRT) (DAIDO MORIYAMA)",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 4,
+      "runsSmallPct": 25,
+      "trueToSizePct": 75,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e461337-000",
+    "name": "Mickey x Keith SHORT SLEEVE UT",
+    "review": null,
+    "garmentType": "other",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 50.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 52.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 55.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 67.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 69.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 2,
+      "runsSmallPct": 0,
+      "trueToSizePct": 50,
+      "runsLargePct": 50
+    }
+  },
+  {
+    "id": "e466910-000",
+    "name": "MAGIC FOR ALL FOREVER TIMELESS UT (SHORT SLEEVE GRAPHIC T-SHIRT)",
+    "review": null,
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    }
+  },
+  {
+    "id": "e468896-000",
+    "name": "Mickey Stands UT (Short-Sleeve Graphic T-Shirt)",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 3,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e477289-000",
+    "name": "NY POP ART UT Graphic T-Shirt | Keith Haring",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 48.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 67.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 22,
+      "runsSmallPct": 9,
+      "trueToSizePct": 77,
+      "runsLargePct": 14
+    }
+  },
+  {
+    "id": "e477527-000",
+    "name": "Curated by Tate UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 1,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e477881-000",
+    "name": "Sesame Street UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 48.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 67.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 11,
+      "runsSmallPct": 9,
+      "trueToSizePct": 91,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e477894-000",
+    "name": "MAGIC FOR ALL TIMELESS UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 22,
+      "runsSmallPct": 0,
+      "trueToSizePct": 77,
+      "runsLargePct": 23
+    }
+  },
+  {
+    "id": "e478145-000",
+    "name": "NY POP ART UT Graphic T-Shirt | Keith Haring",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 48.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 67.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 3,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e478976-000",
+    "name": "Pablo Picasso UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 11,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e478984-000",
+    "name": "AIRism Cotton T-Shirt | V-Neck",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 12,
+      "runsSmallPct": 8,
+      "trueToSizePct": 84,
+      "runsLargePct": 8
+    }
+  },
+  {
+    "id": "e479032-000",
+    "name": "MANGA curation UT Graphic T-Shirt | Uzumaki",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 48.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 67.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 28,
+      "runsSmallPct": 4,
+      "trueToSizePct": 82,
+      "runsLargePct": 14
+    }
+  },
+  {
+    "id": "e480348-000",
+    "name": "Pokemon UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 6,
+      "runsSmallPct": 0,
+      "trueToSizePct": 83,
+      "runsLargePct": 17
+    }
+  },
+  {
+    "id": "e480929-000",
+    "name": "UT ARCHIVE Super Mario Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 55.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 59.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 66,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 21,
+      "runsSmallPct": 14,
+      "trueToSizePct": 76,
+      "runsLargePct": 10
+    }
+  },
+  {
+    "id": "e482751-000",
+    "name": "PEANUTS UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 3,
+      "runsSmallPct": 0,
+      "trueToSizePct": 67,
+      "runsLargePct": 33
+    }
+  },
+  {
+    "id": "e483970-000",
+    "name": "DRY-EX T-Shirt | Patterned",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 45.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 48.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 52.1,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 55.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 59.7,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 62.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 55,
+      "runsSmallPct": 4,
+      "trueToSizePct": 89,
+      "runsLargePct": 7
+    }
+  },
+  {
+    "id": "e485482-000",
+    "name": "MAGIC FOR ALL ICONS UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 5,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "e486152-000",
+    "name": "The Louvre UT Graphic T-Shirt",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XXS": {
+        "chest_cm": 48.3,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XS": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 54,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 57.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 64.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": 67.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 5,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  }
+]

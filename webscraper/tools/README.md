@@ -10,6 +10,7 @@ code and only talk to it over HTTP, the way the front end does. Run them from `w
 | Store list | `npm run build-verified-list` | Builds `tools/verified-stores.json` from the tables in `SUPPORTED_STORES.md`. |
 | Tables | `npm run render-supported-stores` | Checks (or with `--write` rewrites) the "Reviews and fit" tables from that list. |
 | Discovery | `npm run discover-products -- <domain> ...` | Finds a real product page per store, refusing category, promo, cart, account and blog pages. See below. |
+| Men's tees | `npx tsx tools/collect-mens-tees.ts` | Screens Uniqlo, Gymshark, and Nike product pages and scrapes the ones that are adult men's short-sleeve t-shirts. |
 
 Two notes about the shared Supabase store are written down here and not run: `delete-skus.md` (how someone with the secret
 key deletes three leftover rows) and `sku-keys.md` with `sku-keys.proposed.sql` (a store-scoped key for SKUs, a proposal).

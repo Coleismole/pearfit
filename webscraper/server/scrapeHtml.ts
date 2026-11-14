@@ -33,8 +33,21 @@ const VALID_CATEGORIES: ProductFitReport['category'][] = [
   'Dresses',
 ];
 
-/** Maps a free-text category/product name onto the app's fixed category list. */
-function inferCategory(...hints: (string | null | undefined)[]): ProductFitReport['category'] {
+/** The commercial_skus.category value Supabase uses for t-shirts. */
+export const TEE_CATEGORY = 'T-Shirts & Tops' as const;
+
+const TEE_NAME = /\bt[\s-]?shirts?\b|\btees?\b/i;
+const NOT_A_NAMED_TEE = /\b(hoodies?|sweatshirts?|jackets?|coats?|parkas?|pants|trousers|dresses|shorts)\b/i;
+
+/**
+ * Maps a free-text category or product name onto the fixed list stored in Supabase.
+ * The product name is the last hint. A name that is a t-shirt stays in the t-shirt category
+ * when an earlier hint is a mixed department ("T-Shirts, Sweats & Fleece").
+ * "short-sleeve" is not shorts: the trousers rule ignores short when it introduces a sleeve.
+ */
+export function inferCategory(...hints: (string | null | undefined)[]): ProductFitReport['category'] {
+  const name = hints.filter((hint): hint is string => Boolean(hint)).at(-1);
+  if (name && TEE_NAME.test(name) && !NOT_A_NAMED_TEE.test(name)) return TEE_CATEGORY;
   for (const hint of hints) {
     if (!hint) continue;
     const exact = VALID_CATEGORIES.find((c) => c.toLowerCase() === hint.toLowerCase());
@@ -43,12 +56,12 @@ function inferCategory(...hints: (string | null | undefined)[]): ProductFitRepor
     if (/hoodie|sweatshirt|fleece|crewneck sweat/.test(h)) return 'Fleece & Hoodies';
     if (/jacket|coat|parka|puffer|blazer|outerwear|anorak|vest/.test(h)) return 'Outerwear';
     if (/sweater|knit|cardigan|jumper|pullover/.test(h)) return 'Knitwear';
-    if (/trouser|pant|jean|chino|short|legging|jogger/.test(h)) return 'Trousers';
+    if (/\btrousers?\b|\bpants?\b|\bjeans?\b|\bchinos?\b|\bshorts?\b(?![\s-]*sleeve)|\bleggings?\b|\bjoggers?\b/.test(h)) return 'Trousers';
     if (/dress|skirt/.test(h)) return 'Dresses';
     if (/oxford|button[- ]?(down|up)|shirt(?!s? ?&)|flannel|overshirt/.test(h) && !/t-?shirt|tee/.test(h)) return 'Shirting';
-    if (/t-?shirt|tee|tank|top|polo|henley/.test(h)) return 'T-Shirts & Tops';
+    if (/t-?shirt|tee|tank|top|polo|henley/.test(h)) return TEE_CATEGORY;
   }
-  return 'T-Shirts & Tops';
+  return TEE_CATEGORY;
 }
 
 export function looksLikeFullHtmlDocument(input: string): boolean {

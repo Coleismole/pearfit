@@ -1,7 +1,23 @@
-# Everything on the site may be crawled except the API, which answers requests and has no pages.
+# Everything public may be crawled. Kept out: the API (answers requests, has no pages) and the internal scraper tool.
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /scraper/api/
+Disallow: /scraper/
+
+# Search and AI-answer crawlers are welcome to read the fit guides.
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
 
 Sitemap: https://www.pearfit.app/sitemap.xml

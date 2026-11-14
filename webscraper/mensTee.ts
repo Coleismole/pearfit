@@ -162,7 +162,7 @@ export function classifyMensShortSleeveTee(evidence: TeeEvidence): TeeDecision {
   const long = sleeve === 'long' || matches(LONG_SLEEVE, lines) || segments.some((s) => LS_TOP.test(s));
   const threeQuarter = sleeve === 'three-quarter' || matches(THREE_QUARTER, lines);
   const sleeveless = sleeve === 'sleeveless' || matches(SLEEVELESS, lines);
-  const short = sleeve === 'short' || matches(SHORT_SLEEVE, lines) || segments.some((s) => SS_TOP.test(s));
+  const short = sleeve === 'short' || matches(SHORT_SLEEVE, lines) || segments.some((s) => SS_TOP.test(s) || /^ss[- ](crew|v-?neck)s?$/i.test(s));
 
   if (long && short) return { keep: false, reason: 'conflicting sleeve length' };
   if (long) return { keep: false, reason: 'long sleeve' };
@@ -384,6 +384,108 @@ function applyDom(html: string, evidence: TeeEvidence): void {
   }
 }
 
+/** A JSON array that starts at `start` (the '['). Null when it is not a string array. */
+function parseStringArray(html: string, start: number): string[] | null {
+  if (html[start] !== '[') return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < html.length && i < start + 8000; i++) {
+    const ch = html[i]!;
+    if (inString) {
+      if (escape) escape = false;
+      else if (ch === '\\') escape = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === '[') depth++;
+    else if (ch === ']') {
+      depth--;
+      if (depth === 0) {
+        try {
+          const parsed = JSON.parse(html.slice(start, i + 1)) as unknown;
+          if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === 'string')) return null;
+          return parsed as string[];
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Shopify product tags and type embedded on the product page (var meta, the product's tags array).
+ * A "ss-crew" tag is that store's short-sleeve crew. "short-length" is a body length, not a sleeve.
+ */
+function applyShopifyProduct(html: string, evidence: TeeEvidence): void {
+  // The product object names the shirt. og:title on some pages is the store slogan.
+  const predicted = asRecord(parseAssignedJson(html, 'var predictProduct = '));
+  const predictedTitle = asText(predicted?.title);
+  if (predictedTitle) evidence.title = predictedTitle;
+  else if (!evidence.title) {
+    const og = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
+    if (og?.[1]) evidence.title = og[1].replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  }
+  const meta = asRecord(parseAssignedJson(html, 'var meta = '));
+  const metaProduct = asRecord(meta?.product);
+  const productType = asText(metaProduct?.type);
+  if (productType) pushUnique(evidence.categories, productType);
+
+  const tagRe = /["']?tags["']?\s*:\s*\[/g;
+  let tags: string[] | null = null;
+  for (const match of html.matchAll(tagRe)) {
+    const start = html.indexOf('[', match.index ?? 0);
+    const parsed = parseStringArray(html, start);
+    if (!parsed || parsed.length < 2 || parsed.length > 80) continue;
+    const blob = parsed.join('\n').toLowerCase();
+    if (/\bdep_mens\b|\bmens\b|\bmale\b|short sleeve|ss-crew|ss-v-neck|subcategory:/.test(blob)) {
+      tags = parsed;
+      break;
+    }
+  }
+  for (const tag of tags ?? []) absorbShopifyTag(tag, evidence);
+  if (productType) absorbShopifyType(productType, evidence);
+}
+
+function absorbShopifyTag(tag: string, evidence: TeeEvidence): void {
+  const low = tag.trim().toLowerCase();
+  if (low === 'mens' || low === 'men' || low === 'male' || low === 'dep_mens') {
+    pushUnique(evidence.genders, 'men');
+    return;
+  }
+  if (low === 'female' || low === 'women' || low === 'womens' || low === 'dep_womens' || low.startsWith("women's") || low.startsWith('womens ')) {
+    pushUnique(evidence.genders, 'women');
+    return;
+  }
+  if (low === 'ss-crew' || low === 'ss-v-neck' || low === 'ss-vneck') {
+    pushUnique(evidence.categories, 'short sleeve');
+    pushUnique(evidence.categories, 't-shirt');
+    return;
+  }
+  if (low === 'short-length-tee' || low === 'short-length') return;
+  if (low.startsWith('subcategory:')) {
+    const sub = low.slice('subcategory:'.length).trim();
+    if (sub === 'tees and tanks') {
+      if (/\btank\b/i.test(evidence.title ?? '')) pushUnique(evidence.categories, 'tank');
+      else pushUnique(evidence.categories, 't-shirt');
+    } else if (/tee|t-shirt/.test(sub)) pushUnique(evidence.categories, sub);
+    else if (/shirt|oxford|polo/.test(sub)) pushUnique(evidence.categories, sub);
+    return;
+  }
+  if (/short sleeve|long sleeve|sleeveless|\bpolos?\b|\bhenleys?\b|\btanks?\b|\btees?\b|\bt-?shirts?\b/.test(low)) {
+    pushUnique(evidence.categories, tag.trim());
+  }
+}
+
+function absorbShopifyType(productType: string, evidence: TeeEvidence): void {
+  if (/^short sleeve (?!polo|henley|shirt\b)/i.test(productType) && /crew|v-?neck|tee/i.test(productType)) {
+    pushUnique(evidence.categories, 't-shirt');
+  }
+}
+
 /** Product fields the page states, for the short-sleeve men's check. A field the page omits stays empty. */
 export function extractTeeEvidence(html: string): TeeEvidence {
   const evidence = emptyTeeEvidence();
@@ -395,6 +497,7 @@ export function extractTeeEvidence(html: string): TeeEvidence {
     applyNikeState(nextData, evidence);
   }
   applyJsonLd(html, evidence);
+  applyShopifyProduct(html, evidence);
   const fromStore = Boolean(evidence.title) && evidence.genders.length > 0 && (evidence.categories.length > 0 || evidence.breadcrumbs.length > 0 || evidence.sleeve !== null);
   if (!fromStore) applyDom(html, evidence);
   return evidence;

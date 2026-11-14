@@ -15,6 +15,7 @@ The page describes what exists today: a scraper that stores numerical fit values
 - `robots.txt` — Lets crawlers read everything except `/api/`, and names the sitemap.
 - `consent.js` — The analytics consent choice and its banner (see Privacy and consent).
 - `privacy.html`, `terms.html` — The privacy notice and the terms of use.
+- `favicon.ico`, `favicon.svg`, `favicon-32.png`, `favicon-48.png`, `favicon-96.png`, `favicon-192.png`, `apple-touch-icon.png` — The icons (see Icons).
 - `fonts/` — The self-hosted font files and their licence. `styles.css` starts with the `@font-face` rules.
 - `nav.js` — The mobile menu, shared by the pages.
 - `scripts/build-stores.mjs` — Builds `stores.json` from `webscraper/SUPPORTED_STORES.md`.
@@ -74,6 +75,16 @@ node website/scripts/build-stores.mjs --check  # exits 1 if the committed file i
 The `Check generated bundles` workflow runs the same check. The output has no timestamp, so the same markdown always gives the same bytes. When the machine-readable verified-stores list under `webscraper/tools/` lands, switch `loadSource` and the parser in that script to it and keep the output shape.
 
 What the markdown does not say is not made up. It records the review platform and the size bought and fit answer for every store, but a size chart only for the size-chart-only store, so every other store reads "Not recorded yet" for the size chart. "Read / stated" and the "Limits we found" notes are copied from the markdown's table and its "Known limits" list. The review platform is normalised from the "Reviews come from" cell (a named platform wins over wording about how it was reached); `node website/scripts/build-stores.mjs` warns, and a test fails, when a new store's platform is not recognised.
+
+## Icons
+Every page declares the same set: `favicon.ico` (16, 32 and 48 pixels), `favicon.svg`, and PNGs at 32, 48, 96 and 192 pixels,
+plus the 180 pixel `apple-touch-icon.png`. Google shows a site's icon in search results only if it can fetch one that is a
+multiple of 48 pixels square (an SVG also counts), and many crawlers ask for `/favicon.ico` first, so keep all of them. A
+new icon takes days to weeks to appear in search results after Google next crawls the home page.
+
+The PNGs and the `.ico` were rendered from `favicon.svg` with a transparent background. If the logo changes, render them
+again at the same sizes; `test/icons.test.mjs` checks the sizes and that every page names every file, not that the
+pictures match. The generated pages get their tags from `scripts/build-fit-pages.mjs`.
 
 ## Fit guides
 `fit/<product>.html` is one page per product that answers "does it run small?" from the review numbers in the fit

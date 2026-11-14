@@ -49,7 +49,7 @@ Collected from 3 people. Last updated 2026-10-30.
     "id": "nike-tee-loose-white",
     "size": "XL",
     "label": "tight",
-    "measurements": { "chest_cm": 56, "length_cm": 69, "sleeve_cm": 20 },
+    "measurements": { "chest_cm": 52.5, "length_cm": 69, "sleeve_cm": 20 },
     "fit_note": "slightly shorter on the length, more compressed"
   },
   {

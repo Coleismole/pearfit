@@ -180,6 +180,24 @@ test('Supabase category T-Shirts & Tops is required, and short-sleeve is not cla
   assert.deepEqual(dropped, { keep: false, reason: 'not the t-shirt category' });
 });
 
+test('a Shopify product page tag for men and short sleeve is enough to keep a crew', () => {
+  const evidence = extractTeeEvidence(`<!doctype html><html><head>
+    <meta property="og:title" content="Classic Curved Hem Crew 6-Pack">
+    </head><body>
+    <script>tags: ["dep_mens","Short Sleeve","SS Crew","SS/SL Tees","Packs"];
+    var meta = {"product":{"type":"Short Sleeve Crew","handle":"classic-curved-hem-crews-6-pack"}};</script>
+    </body></html>`);
+  assert.equal(evidence.title, 'Classic Curved Hem Crew 6-Pack');
+  assert.ok(evidence.genders.includes('men'));
+  assert.equal(classifyMensShortSleeveTee(evidence).keep, true);
+
+  const lengthNotSleeve = extractTeeEvidence(`<!doctype html><html><head>
+    <meta property="og:title" content="Cabernet Crew Neck">
+    </head><body><script>tags: ["Mens","short-length-tee","Tall Tee","Crew Necks"];
+    var meta = {"product":{"type":"Crew","handle":"cabernet-crew-neck"}};</script></body></html>`);
+  assert.deepEqual(classifyMensShortSleeveTee(lengthNotSleeve), { keep: false, reason: 'ambiguous sleeve length' });
+});
+
 test('a breadcrumb and a sleeve row in the page are read when no store blob is present', () => {
   const evidence = extractTeeEvidence(`<!doctype html><html><head><meta property="og:title" content="Crew Tee"></head><body>
     <nav aria-label="Breadcrumbs"><a>Men</a><a>Short Sleeve T-Shirts</a></nav>

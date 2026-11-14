@@ -1,5 +1,249 @@
 [
   {
+    "id": "6960394272843",
+    "name": "Seasonal Colors V-Neck",
+    "review": "true_to_size",
+    "garmentType": "other",
+    "sizes": {
+      "S": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXXL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 9,
+      "runsSmallPct": 22,
+      "trueToSizePct": 56,
+      "runsLargePct": 22
+    }
+  },
+  {
+    "id": "7270170132555",
+    "name": "Chalk Pink V-Neck",
+    "review": "true_to_size",
+    "garmentType": "other",
+    "sizes": {
+      "S": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXXL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 135,
+      "runsSmallPct": 7,
+      "trueToSizePct": 83,
+      "runsLargePct": 10
+    }
+  },
+  {
+    "id": "7388753100875",
+    "name": "Fall Essentials Crew 6-Pack",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "S": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 135,
+      "runsSmallPct": 10,
+      "trueToSizePct": 85,
+      "runsLargePct": 5
+    }
+  },
+  {
+    "id": "7607695867979",
+    "name": "Heritage Black Cotton Crew",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "S": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XXXL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 46,
+      "runsSmallPct": 7,
+      "trueToSizePct": 80,
+      "runsLargePct": 13
+    }
+  },
+  {
+    "id": "7701261910102",
+    "name": "Everlane x Peace & Quiet Graphic Logo Tee | Pine",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": 43.2,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": 47,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": 50.8,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "L": {
+        "chest_cm": 55.9,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": 61,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 1,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
+    "id": "7981943881814",
+    "name": "Relaxed Heavyweight Tee | White",
+    "review": "true_to_size",
+    "garmentType": "tee",
+    "sizes": {
+      "XS": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "S": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "M": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      },
+      "XL": {
+        "chest_cm": null,
+        "length_cm": null,
+        "sleeve_cm": null
+      }
+    },
+    "reviewSummary": {
+      "total": 1,
+      "runsSmallPct": 0,
+      "trueToSizePct": 100,
+      "runsLargePct": 0
+    }
+  },
+  {
     "id": "e433399-000",
     "name": "DRY-EX CREW NECK SHORT SLEEVE T-SHIRT",
     "review": "true_to_size",

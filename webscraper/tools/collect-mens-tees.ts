@@ -33,7 +33,7 @@ const WANT = 26;
 const PROGRESS = '/tmp/mens-tees-progress.jsonl';
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'samples', 'mens-short-sleeve-tees.json');
 
-type BrandId = 'uniqlo' | 'gymshark' | 'nike';
+type BrandId = 'uniqlo' | 'gymshark' | 'nike' | 'fresh-clean' | 'true-classic' | 'everlane' | 'llbean';
 
 interface ProgressRow {
   brand: BrandId;
@@ -71,6 +71,12 @@ const NOT_REQUESTED = [
   {
     brand: 'Gymshark',
     note: 'https://www.gymshark.com/products.json returned HTTP 403 on 2026-11-13 and was not retried. Product addresses come from the sitemap. /collections/*/products is disallowed by robots.txt and was not requested.',
+  },
+  {
+    brand: 'L.L.Bean',
+    kept: 0,
+    blocked: true,
+    note: 'https://www.llbean.com/robots.txt answered with a WAF denial page on 2026-11-14. Not retried, and no product page was requested.',
   },
 ];
 
@@ -153,7 +159,89 @@ function isMensSlug(slug: string): boolean {
   return /(^|[^a-z])men'?s([^a-z]|$)|(^|-)mens(-|$)/.test(low);
 }
 
+interface FeedProduct {
+  title?: string;
+  handle?: string;
+  product_type?: string;
+  tags?: string[] | string;
+}
+
+function feedTags(product: FeedProduct): string[] {
+  const tags = product.tags ?? [];
+  return Array.isArray(tags) ? tags.map(String) : tags.split(',').map((tag) => tag.trim());
+}
+
+async function shopifyProducts(origin: string): Promise<{ products: FeedProduct[]; refused: boolean; note: string | null }> {
+  const products: FeedProduct[] = [];
+  for (let page = 1; page <= 12; page++) {
+    const url = `${origin}/products.json?limit=250&page=${page}`;
+    const got = await fetchBuffer(url);
+    if (got.refused) return { products, refused: true, note: `${url} refused (HTTP ${got.status})` };
+    if (!got.buffer) return { products, refused: false, note: page === 1 ? `product feed not readable (HTTP ${got.status})` : null };
+    let feed: { products?: FeedProduct[] };
+    try {
+      feed = JSON.parse(got.buffer.toString('utf8')) as { products?: FeedProduct[] };
+    } catch {
+      return { products, refused: false, note: 'product feed was not JSON' };
+    }
+    const batch = feed.products ?? [];
+    if (batch.length === 0) break;
+    products.push(...batch);
+    if (batch.length < 250) break;
+    await sleep(PAUSE_MS);
+  }
+  return { products, refused: false, note: null };
+}
+
+function shopifyUrl(origin: string, handle: string): string {
+  return `${origin}/products/${handle}`;
+}
+
 async function candidateUrls(brand: BrandId): Promise<{ urls: string[]; note: string | null; refused: boolean }> {
+  if (brand === 'llbean') {
+    return {
+      urls: [],
+      refused: true,
+      note: 'https://www.llbean.com/robots.txt answered with a WAF denial page on 2026-11-14. Not retried.',
+    };
+  }
+  if (brand === 'fresh-clean' || brand === 'true-classic' || brand === 'everlane') {
+    const origin = brand === 'fresh-clean' ? 'https://freshcleantees.com' : brand === 'true-classic' ? 'https://www.trueclassictees.com' : 'https://www.everlane.com';
+    const feed = await shopifyProducts(origin);
+    if (feed.refused) return { urls: [], note: feed.note, refused: true };
+    const styles = new Map<string, string>();
+    for (const product of feed.products) {
+      if (!product.handle) continue;
+      const tags = feedTags(product);
+      const low = tags.map((tag) => tag.toLowerCase());
+      const type = product.product_type ?? '';
+      const title = product.title ?? '';
+      let style: string | null = null;
+      if (brand === 'fresh-clean') {
+        if (!low.includes('mens') || low.some((tag) => tag.includes('women'))) continue;
+        if (!low.includes('ss-crew') && !low.includes('ss-v-neck')) continue;
+        if (/long|polo|button|sweat|henley/i.test(type)) continue;
+        const neck = low.includes('ss-v-neck') ? 'v' : 'crew';
+        const cut = /performance/i.test(type) ? 'performance' : /heritage/i.test(type) ? 'heritage' : /tuff/i.test(type) ? 'tuff' : 'classic';
+        const tall = low.some((tag) => tag === 'tall' || tag.startsWith('tall ')) ? 'tall' : 'regular';
+        style = `${neck}|${cut}|${tall}`;
+      } else if (brand === 'true-classic') {
+        if (!low.includes('dep_mens')) continue;
+        if (!/short sleeve/i.test(type)) continue;
+        if (/polo|henley|tank|shirt\b/i.test(type) && !/t-shirt/i.test(type)) continue;
+        const group = tags.find((tag) => tag.startsWith('YGroup_'));
+        style = group ?? `${type}|${low.some((tag) => tag.includes('curved hem')) ? 'curved' : 'straight'}`;
+      } else {
+        if (!low.includes('male') || low.includes('female')) continue;
+        const sub = low.find((tag) => tag.startsWith('subcategory:')) ?? '';
+        if (!sub.includes('tee') && !/tee|t-shirt/i.test(title)) continue;
+        if (/long[ -]sleeve|tank|polo|oxford|button/i.test(title) || sub.includes('shirt') && !sub.includes('tee')) continue;
+        style = title.split('|')[0]!.trim().toLowerCase();
+      }
+      if (style && !styles.has(style)) styles.set(style, shopifyUrl(origin, product.handle));
+    }
+    return { urls: [...styles.values()], note: feed.note, refused: false };
+  }
   if (brand === 'uniqlo') {
     const url = 'https://www.uniqlo.com/ca/en/sitemap_ca-en_products.xml.gz';
     const got = await fetchBuffer(url);
@@ -327,8 +415,16 @@ function latestByUrl(rows: ProgressRow[]): ProgressRow[] {
 
 function writeOutput(rows: ProgressRow[]): void {
   const latest = latestByUrl(rows);
-  const brands: BrandId[] = ['uniqlo', 'gymshark', 'nike'];
-  const names: Record<BrandId, string> = { uniqlo: 'Uniqlo', gymshark: 'Gymshark', nike: 'Nike' };
+  const brands: BrandId[] = ['uniqlo', 'gymshark', 'nike', 'fresh-clean', 'true-classic', 'everlane', 'llbean'];
+  const names: Record<BrandId, string> = {
+    uniqlo: 'Uniqlo',
+    gymshark: 'Gymshark',
+    nike: 'Nike',
+    'fresh-clean': 'Fresh Clean Threads',
+    'true-classic': 'True Classic',
+    everlane: 'Everlane',
+    llbean: 'L.L.Bean',
+  };
   const verification = brands.map((brand) => {
     const mine = latest.filter((row) => row.brand === brand);
     const kept = mine.filter((row) => passedCheck(row));
@@ -479,11 +575,21 @@ async function main(): Promise<void> {
   }
   const progress = loadProgress();
   const done = new Set(progress.map((row) => `${row.brand} ${row.url}`));
-  const caps: Record<BrandId, number> = { uniqlo: 1600, gymshark: 220, nike: 80 };
+  const caps: Record<BrandId, number> = {
+    uniqlo: 1600,
+    gymshark: 220,
+    nike: 80,
+    'fresh-clean': 40,
+    'true-classic': 40,
+    everlane: 24,
+    llbean: 1,
+  };
+  const only = process.argv.find((arg) => arg.startsWith('--only='));
+  const selected = (only ? only.slice('--only='.length).split(',') : ['uniqlo', 'gymshark', 'nike', 'fresh-clean', 'true-classic', 'everlane', 'llbean']) as BrandId[];
   const server = await startScraperServer({ blockSharedStore: true });
   try {
     await Promise.all(
-      (['uniqlo', 'gymshark', 'nike'] as BrandId[]).map(async (brand) => {
+      selected.map(async (brand) => {
         let candidates: { urls: string[]; note: string | null; refused: boolean };
         try {
           candidates = await candidateUrls(brand);
